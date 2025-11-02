@@ -73,6 +73,8 @@ export default defineEventHandler(async (event) => {
     return {}
   }
 
+  console.log(addressbooks)
+
   const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData));
 
   const X_LOGIN_REQUEST_TIME = 'x-login-request-time'

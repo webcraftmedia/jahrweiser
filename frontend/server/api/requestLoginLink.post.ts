@@ -18,6 +18,9 @@ const nodemailerTransportOptions: SMTPTransport.Options = {
   pool: true,
   maxConnections: config.SMTP_MAX_CONNECTIONS,
   maxMessages: config.SMTP_MAX_MESSAGES,
+  tls: {
+    rejectUnauthorized: false,
+  },
 }
 if (config.SMTP_USERNAME && config.SMTP_PASSWORD) {
   nodemailerTransportOptions.auth = {

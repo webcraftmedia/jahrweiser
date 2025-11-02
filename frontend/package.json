@@ -3,11 +3,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "build": "cross-env TZ=UTC nuxt build",
+    "dev": "cross-env TZ=UTC nuxt dev",
+    "generate": "cross-env TZ=UTC nuxt generate",
+    "preview": "cross-env TZ=UTC nuxt preview",
+    "postinstall": "cross-env TZ=UTC nuxt prepare"
   },
   "dependencies": {
     "@nuxt/eslint": "^1.9.0",
@@ -17,6 +17,7 @@
     "@nuxtjs/i18n": "^10.1.2",
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@testing-library/vue": "^8.1.0",
+    "cross-env": "^10.1.0",
     "email-templates": "^12.0.3",
     "eslint": "^9.38.0",
     "ical.js": "^2.2.1",

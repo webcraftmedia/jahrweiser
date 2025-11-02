@@ -18,6 +18,9 @@ cd $FRONTEND_ROOT
 pm2 stop $FRONTEND_SERVICE
 pm2 delete $FRONTEND_SERVICE
 
+### Config
+export TZ=UTC
+
 ### Build
 npm install --omit=dev
 npm run build

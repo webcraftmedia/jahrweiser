@@ -1,0 +1,35 @@
+doctype html
+html(lang=locale)
+  head
+    meta(
+      content="multipart/html; charset=UTF-8"
+      http-equiv="content-type"
+      )
+    meta(
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+      )
+    style.
+      .wf-force-outline-none[tabindex="-1"]:focus{outline:none;}
+    style
+      include _includes/webflow.css
+
+  - var name = name
+  body
+    div.container
+      include _includes/header.pug
+      if name
+        include _includes/salutation.pug
+      else
+        include _includes/welcome.pug
+
+      .wrapper
+        block content
+        include _includes/greeting.pug
+
+      - var supportEmail = SUPPORT_EMAIL
+      if supportEmail
+        .support
+          include _includes/support.pug
+
+      include _includes/footer.pug

@@ -1,0 +1,8 @@
+extend ../layout.pug
+
+block content
+  .content
+  p!= t('AuthenticateStart')
+    a.auth(href=authURL)!= authURL
+    != t('AuthenticateEnd')
+  a.button(href=authURL)!= t('buttons.authenticate')

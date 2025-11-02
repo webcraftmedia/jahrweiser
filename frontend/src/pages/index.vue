@@ -1,9 +1,195 @@
 <template>
-  <div id="index">
-    Calendar
+	<div class="box">
+  <div class="content row">
+    <client-only>
+      <CalendarView
+        v-bind="calendar"
+		@click-item="clickItem"
+        class="theme-default"> <!--holiday-us-traditional holiday-us-official-->
+        <template #header="{ headerProps }">
+          <CalendarViewHeader :header-props="headerProps" @input="setShowDate"/>
+        </template>
+      </CalendarView>
+    </client-only>
+	<Modal ref="modal" @x="handleModalX">
+		<template #title>
+			{{ event?.summary }}
+    	</template>
+    
+    	<template #content>
+			<table class="text-left align-top">
+				 <tbody>
+				<tr>
+					<th>Beginn:</th>
+					<td>{{ event?.startDate }}</td>
+				</tr>
+				<tr>
+					<th>Dauer:</th>
+					<td>{{ event?.duration.replace(/^PT?/,'') }}</td>
+				</tr>
+				<tr>
+					<th>Ort:</th>
+					<td>{{ event?.location }}</td>
+				</tr>
+				<tr>
+					<th class="align-top pr-2">Beschreibung:</th>
+					<td>
+						<pre class="text-left">{{  event?.description?.split('\n').map((line:string) => line.trimStart()).join('\n') }}</pre>
+					</td>
+				</tr>
+				</tbody>
+			</table>
+    	</template>
+	</Modal>
+  </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { CalendarView, CalendarViewHeader, type ICalendarItem } from "vue-simple-calendar"
+import Modal from '../components/Modal.vue'
+
+// const headerProps = {}
+
+definePageMeta({
+  middleware: ['authenticated'],
+})
+
+const modal = ref()
+
+const items = ref<ICalendarItem[]>([])
+const event = ref()
+
+async function handleModalX() {
+	modal.value.close()
+}
+
+async function clickItem(data) {
+  try {
+	console.log(data)
+	const {	originalItem: { id, occurrence } } = data
+	  const eventDate = await $fetch('/api/event', {
+	  method: 'POST',
+	  body: {
+	  id,
+	  occurrence,
+	  },
+    })
+	event.value = eventDate
+	modal.value.open()
+  } catch (error){
+    console.log(error)
+  }
+}
+
+const calendar = ref({
+      showDate: new Date(),
+      items,
+	  // message: "test",
+	  startingDayOfWeek: 1,
+	  disablePast: false,
+	  disableFuture: false,
+	  displayPeriodUom: "month",
+	  displayPeriodCount: 1,
+	  displayWeekNumbers: false,
+	  showTimes: false,
+	  // selectionStart: undefined,
+	  // selectionEnd: undefined,
+	  // newItemTitle: "",
+	  // newItemStartDate: "",
+	  // newItemEndDate: "",
+ 	  //useDefaultTheme: true,
+	  //useHolidayTheme: true,
+	  //useTodayIcons: false,
+	  // timeFormatOptions: "{ hour: 'numeric', minute: '2-digit' }",
+      periodChangedCallback: (data) => {
+        const startDate = data.value.displayFirstDate.value
+        const endDate = data.value.displayLastDate.value
+        getData(startDate,endDate)
+      },
+      /*
+				:
+				:enable-drag-drop="true"
+				:date-classes="myDateClasses"
+				:period-changed-callback="periodChanged"
+				:current-period-label="useTodayIcons ? 'icons' : ''"
+				:enable-date-selection="true"
+				:selection-start="selectionStart"
+				:selection-end="selectionEnd"
+				@date-selection-start="setSelection"
+				@date-selection="setSelection"
+				@date-selection-finish="finishSelection"
+				@drop-on-date="onDrop"
+				@click-date="onClickDay"
+        */
+})
+
+function setShowDate(d: Date) {
+  calendar.value.showDate = d;
+}
+
+async function getData(startDate, endDate) {
+  try {
+    items.value = await $fetch('/api/calendar', {
+    method: 'POST',
+    body: {
+      startDate,
+      endDate,
+    },
+  })
+
+  } catch (error){
+    console.log(error)
+  }
+}
+
+/* onMounted(async () => {
+  const startDate = new Date(calendar.value.showDate)
+  startDate.setDate(startDate.getDate() - 7)
+  const endDate = new Date(calendar.value.showDate)
+  endDate.setDate(endDate.getDate() + 42)
+  try {
+    items.value = await $fetch('/api/calendar', {
+    method: 'POST',
+    body: {
+      startDate,
+      endDate,
+    },
+  })
+
+  } catch (error){
+    success.value = false
+  }
+}) */
+
 
 </script>
+
+<style>
+@import "~/../node_modules/vue-simple-calendar/dist/vue-simple-calendar.css";
+/* The next two lines are optional themes */
+@import "~/../node_modules/vue-simple-calendar/dist/css/default.css";
+@import "~/../node_modules/vue-simple-calendar/dist/css/holidays-us.css";
+	.box {
+		display: flex;
+  		flex-flow: column;
+  		height: 100%;
+  		width: 100%;
+	}
+	.content {
+		font-family: 'Avenir', Helvetica, Arial, sans-serif;
+		color: #2c3e50;
+		width: 100%;
+		margin-left: auto;
+		margin-right: auto;
+		flex: 1 1 auto;
+	}
+	.previousYear, .nextYear {
+		display: none;
+	}
+	@media (width <= 480px) {
+		.periodLabel {
+			display: none !important;
+		}
+	}
+</style>

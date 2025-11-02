@@ -1,7 +1,7 @@
 <template>
-  <div class="h-screen">
+  <div class="flex h-screen">
     <Header />
-    <div class="content">
+    <div class="content max-w-screen-xl flex flex-wrap justify-between mx-auto">
       <slot />
     </div>
     <Footer />

@@ -39,9 +39,6 @@ service nginx start
 
 nginx config
 ```
-# This is a default site configuration which will simply return 404, preventing
-# chance access to any other virtualhost.
-
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -102,7 +99,6 @@ vi .github/webhooks/hooks.json
 # copy webhook service file
 cp .github/webhooks/webhook.template /etc/init.d/webhook
 vi /etc/init.d/webhook
-chmod +x /etc/init.d/webhook
 # adjust content of /etc/init.d/webhook
 chmod +x /etc/init.d/webhook
 
@@ -155,7 +151,7 @@ For the github webhook configure the following:
 
 | Field                                                | Value                         |
 |------------------------------------------------------|-------------------------------|
-| Payload URL                                          | https://it4c.dev/hooks/github |
+| Payload URL                                          | https://XXX/hooks/github |
 | Content type                                         | application/json              |
 | Secret                                               | A SECRET                      |
 | SSL verification                                     | Enable SSL verification       |

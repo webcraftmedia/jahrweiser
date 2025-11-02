@@ -8,12 +8,12 @@ const bodySchema = z.object({
   endDate: z.coerce.date(),
 })
 
+const config = useRuntimeConfig()
+
 export default defineEventHandler(async (event) => {
   // make sure the user is logged in
   // This will throw a 401 error if the request doesn't come from a valid user session
   await requireUserSession(event)
-
-  const config = useRuntimeConfig()
 
   const { startDate, endDate } = await readValidatedBody(event, bodySchema.parse)
   // Calendar data
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
           if (occurrence >= startDate) {
             const endDate = new Date(occurrence.getTime() + event.duration.toSeconds() * 1000)
             results.push({
-              id: event.uid,
+              id: hrefToId(data.href as string),
               occurrence: count,
               startDate: occurrence,
               endDate,
@@ -82,13 +82,13 @@ export default defineEventHandler(async (event) => {
           }
         }
       } else {
-        const sd = event.startDate.toJSDate() // new Date(new Date(event.startDate.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
-        const ed = event.endDate.toJSDate() // new Date(new Date(event.endDate.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
+        const sd = event.startDate.toJSDate()
+        const ed = event.endDate.toJSDate()
         if (event.duration.days > 0 || event.duration.weeks > 0) {
           ed.setMilliseconds(ed.getMilliseconds() - 1) // Correct Full day thingy
         }
         results.push({
-          id: event.uid,
+          id: hrefToId(data.href as string),
           startDate: sd,
           endDate: ed,
           title: event.summary,
@@ -109,4 +109,9 @@ function formatDate(date: Date): string {
   const seconds = String(date.getSeconds()).padStart(2, '0')
 
   return `${year}${month}${day}T${hours}${minutes}${seconds}`
+}
+
+function hrefToId(href: string) {
+  console.log(href)
+  return href.slice(config.DAV_URL_CAL.length, -4)
 }

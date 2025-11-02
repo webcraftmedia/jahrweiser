@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { calendarQuery, DAVNamespaceShort } from 'tsdav'
+import { fetchCalendarObjects } from 'tsdav'
 import ICAL from 'ical.js'
 import { headers } from '../helpters/dav'
 
@@ -17,40 +17,19 @@ export default defineEventHandler(async (event) => {
 
   const { id, occurrence } = await readValidatedBody(event, bodySchema.parse)
   // Calendar data
-  const caldata = await calendarQuery({
-    url: config.DAV_URL + config.DAV_URL_CAL,
-    props: {
-      [`${DAVNamespaceShort.DAV}:getetag`]: {},
-      [`${DAVNamespaceShort.CALDAV}:calendar-data`]: {},
+  const caldata = await fetchCalendarObjects({
+    calendar: {
+      url: config.DAV_URL + config.DAV_URL_CAL,
     },
-    filters: {
-      ['comp-filter']: {
-        _attributes: {
-          name: 'VCALENDAR',
-        },
-        'comp-filter': {
-          _attributes: {
-            name: 'VEVENT',
-          },
-          'prop-filter': {
-            _attributes: {
-              name: 'UID',
-            },
-            'text-match': id,
-          },
-        },
-      },
-    },
-
-    depth: '1',
+    objectUrls: [`${id}.ics`],
     headers,
   })
 
-  if (caldata.length < 1) {
+  if (caldata.length !== 1) {
     throw new Error('event not found')
   }
 
-  const vcalendar = new ICAL.Component(ICAL.parse(caldata[0].props?.calendarData))
+  const vcalendar = new ICAL.Component(ICAL.parse(caldata[0].data))
   vcalendar.getFirstPropertyValue()
   const vevent = vcalendar.getFirstSubcomponent('vevent')
 
@@ -59,6 +38,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const e = new ICAL.Event(vevent)
+  // console.log(e)
 
   if (e.isRecurring() && occurrence) {
     // Expandiere wiederkehrende Events

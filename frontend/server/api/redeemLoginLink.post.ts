@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const { token } = await readValidatedBody(event, bodySchema.parse)
   // check token in dav
   const addressbooks = await addressBookQuery({
-    url: config.DAV_URL_CARD,
+    url: config.DAV_URL + config.DAV_URL_CARD,
     headers: {
       authorization: 'Basic '+btoa(unescape(encodeURIComponent(config.DAV_USERNAME + ':' + config.DAV_PASSWORD))),
     },
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
   const etag = addressbooks[0].props?.getetag
   await updateVCard({
       vCard: {
-      url: 'https://baikal.it4c.dev' + href,
+      url: config.DAV_URL + href,
       data: vcard.toString(),
       etag: etag
       },

@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const { id, occurrence } = await readValidatedBody(event, bodySchema.parse)
   // Calendar data
   const caldata = await calendarQuery({
-    url: config.DAV_URL_CAL,
+    url: config.DAV_URL + config.DAV_URL_CAL,
     props: {
       [`${DAVNamespaceShort.DAV}:getetag`]: {},
       [`${DAVNamespaceShort.CALDAV}:calendar-data`]: {}

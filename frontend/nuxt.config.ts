@@ -37,6 +37,7 @@ export default defineNuxtConfig({
     // DAV
     DAV_USERNAME: null,
     DAV_PASSWORD: null,
+    DAV_URL: null,
     DAV_URL_CAL: null,
     DAV_URL_CARD: null,
     //SMTP
@@ -55,6 +56,7 @@ export default defineNuxtConfig({
 
 if (!process.env.NUXT_DAV_USERNAME ||
     !process.env.NUXT_DAV_PASSWORD ||
+    !process.env.NUXT_DAV_URL ||
     !process.env.NUXT_DAV_URL_CAL ||
     !process.env.NUXT_DAV_URL_CARD
 ) {

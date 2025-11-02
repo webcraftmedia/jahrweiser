@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
 
   // check if email in dav
   const addressbooks = await addressBookQuery({
-    url: config.DAV_URL_CARD,
+    url: config.DAV_URL + config.DAV_URL_CARD,
     headers: {
       authorization: 'Basic '+btoa(unescape(encodeURIComponent(config.DAV_USERNAME + ':' + config.DAV_PASSWORD))),
     },
@@ -100,7 +100,7 @@ export default defineEventHandler(async (event) => {
 
   await updateVCard({
     vCard: {
-      url: 'https://baikal.it4c.dev' + href,
+      url: config.DAV_URL + href,
       data: vcard.toString(),
       etag: etag
     },

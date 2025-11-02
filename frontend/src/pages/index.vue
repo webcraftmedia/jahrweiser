@@ -152,25 +152,6 @@ async function getData(startDate: Date, endDate: Date) {
     console.log(error)
   }
 }
-
-/* onMounted(async () => {
-  const startDate = new Date(calendar.value.showDate)
-  startDate.setDate(startDate.getDate() - 7)
-  const endDate = new Date(calendar.value.showDate)
-  endDate.setDate(endDate.getDate() + 42)
-  try {
-    items.value = await $fetch('/api/calendar', {
-    method: 'POST',
-    body: {
-      startDate,
-      endDate,
-    },
-  })
-
-  } catch (error){
-    success.value = false
-  }
-}) */
 </script>
 
 <style>

@@ -22,7 +22,7 @@ pm2 delete $FRONTEND_SERVICE
 export TZ=UTC
 
 ### Build
-npm install --omit=dev
+npm ci --omit=dev
 npm run build
 
 ### Start service

@@ -3,7 +3,7 @@ import { addressBookQuery, DAVNamespaceShort, updateVCard } from 'tsdav';
 import ICAL from 'ical.js'
 
 import { createTransport } from 'nodemailer'
-import * as SMTPTransport from 'nodemailer/lib/smtp-pool'
+import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
 
 import Email from 'email-templates'
 import path from 'node:path'
@@ -140,7 +140,7 @@ export default defineEventHandler(async (event) => {
   })
 
 
-  const to = { address: email, name }
+  const to = { address: email.toString(), name: name?.toString() ?? '' }
   try {
     await emailRenderer.send({
       template: path.join(process.cwd(), 'server/emails/requestLoginLink'),
@@ -155,7 +155,7 @@ export default defineEventHandler(async (event) => {
       },
     })
   } catch (error) {
-    throw new Error(error)
+    throw new Error(error as string)
   }
 
   // Always return success

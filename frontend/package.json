@@ -33,6 +33,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/email-templates": "^10.0.4",
     "@types/node": "^24.9.1",
     "@types/nodemailer": "^7.0.3"
   }

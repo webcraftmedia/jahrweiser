@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { CalendarView, CalendarViewHeader, type ICalendarItem } from "vue-simple-calendar"
+import { CalendarView, CalendarViewHeader, type ICalendarItem, type INormalizedCalendarItem } from "vue-simple-calendar"
 import Modal from '../components/Modal.vue'
 
 // const headerProps = {}
@@ -64,9 +64,10 @@ async function handleModalX() {
 	modal.value.close()
 }
 
-async function clickItem(data) {
+async function clickItem(data: INormalizedCalendarItem) {
   try {
-	const {	originalItem: { id, occurrence } } = data
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const {	originalItem: { id, occurrence } } = data as any
 	  const eventDate = await $fetch('/api/event', {
 	  method: 'POST',
 	  body: {
@@ -101,7 +102,8 @@ const calendar = ref({
 	  //useHolidayTheme: true,
 	  //useTodayIcons: false,
 	  // timeFormatOptions: "{ hour: 'numeric', minute: '2-digit' }",
-      periodChangedCallback: (data) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      periodChangedCallback: (data: any) => {
         const startDate = data.value.displayFirstDate.value
         const endDate = data.value.displayLastDate.value
         getData(startDate,endDate)
@@ -127,7 +129,7 @@ function setShowDate(d: Date) {
   calendar.value.showDate = d;
 }
 
-async function getData(startDate, endDate) {
+async function getData(startDate: Date, endDate: Date) {
   try {
     items.value = await $fetch('/api/calendar', {
     method: 'POST',

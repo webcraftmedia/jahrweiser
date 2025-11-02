@@ -28,9 +28,9 @@ export default defineNuxtConfig({
       alwaysRedirect: true,
     }, */
     strategy: 'no_prefix',
-    bundle: {
+    /* bundle: {
       optimizeTranslationDirective: false,
-    },
+    }, */
   },
   runtimeConfig: {
     // The private keys which are only available within server-side

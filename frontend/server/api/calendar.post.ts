@@ -65,9 +65,7 @@ export default defineEventHandler(async (event) => {
         let count = 0
         let next
         while ((next = expand.next())) {
-          // const occurrence = next.toJSDate()
-          // occurrence.setHours(occurrence.getHours() + 1)
-          const occurrence = next.toJSDate() // new Date(new Date(next.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
+          const occurrence = new Date(next.toString() + 'Z') // Fix German Time
           count += 1
           // Nur Events im gewünschten Zeitraum
           if (occurrence > endDate) break

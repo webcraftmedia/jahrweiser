@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
           next = expand.next()
       }
 
-      const rStartDate = new Date(new Date(next.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
+      const rStartDate = next.toJSDate() // new Date(new Date(next.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
       const rEndDate = new Date(rStartDate.getTime()+e.duration.toSeconds() * 1000)
       return {
         description: e.description?.toString(),

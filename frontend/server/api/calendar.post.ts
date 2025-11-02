@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
         while ((next = expand.next())) {
           // const occurrence = next.toJSDate()
           // occurrence.setHours(occurrence.getHours() + 1)
-          const occurrence = new Date(new Date(next.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
+          const occurrence = next.toJSDate()// new Date(new Date(next.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
           count += 1
           // Nur Events im gewünschten Zeitraum
           if (occurrence > endDate) break
@@ -85,8 +85,8 @@ export default defineEventHandler(async (event) => {
           }
         }
       } else {
-        const sd = new Date(new Date(event.startDate.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
-        const ed = new Date(new Date(event.endDate.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
+        const sd = event.startDate.toJSDate() // new Date(new Date(event.startDate.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
+        const ed = event.endDate.toJSDate() // new Date(new Date(event.endDate.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
         if(event.duration.days > 0 || event.duration.weeks > 0){
           ed.setMilliseconds(ed.getMilliseconds() -1) // Correct Full day thingy
         }

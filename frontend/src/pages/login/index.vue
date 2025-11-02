@@ -42,7 +42,6 @@ async function requestLoginLink () {
 }
 
 async function showLogin () {
-  console.log('showLogin')
   requestedLogin.value = false
 }
 

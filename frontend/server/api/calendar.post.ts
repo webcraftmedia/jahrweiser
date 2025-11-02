@@ -53,7 +53,6 @@ export default defineEventHandler(async (event) => {
   caldata.forEach((data)=>{
     const vcalendar = new ICAL.Component(ICAL.parse(data.props?.calendarData));
     vcalendar.getFirstPropertyValue()
-    // console.log(vcalendar.toString())
     const vevent = vcalendar.getFirstSubcomponent('vevent')
     if(vevent){
       const event = new ICAL.Event(vevent)
@@ -75,11 +74,7 @@ export default defineEventHandler(async (event) => {
           // Nur Events im gewünschten Zeitraum
           if (occurrence > endDate) break
           if (occurrence >= startDate) {
-            // console.log(occurrence.toString())
-            // const startDateJs = //new Date(occurrence.toString() + 'Z')
-            // console.log(startDateJs)
             const endDate = new Date(occurrence.getTime()+event.duration.toSeconds() * 1000)
-            // endDate.setHours(endDate.getHours() + 1)
             results.push({
               id: event.uid,
               occurrence: count,

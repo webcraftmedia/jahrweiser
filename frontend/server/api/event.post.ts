@@ -50,14 +50,11 @@ export default defineEventHandler(async (event) => {
   });
 
   if(caldata.length < 1){
-  //if(caldata.length !== 1){
-    console.log(caldata)
     throw new Error('event not found')
   }
 
   const vcalendar = new ICAL.Component(ICAL.parse(caldata[0].props?.calendarData));
   vcalendar.getFirstPropertyValue()
-  // console.log(vcalendar.toString())
   const vevent = vcalendar.getFirstSubcomponent('vevent')
   
   if(!vevent){

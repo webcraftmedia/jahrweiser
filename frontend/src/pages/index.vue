@@ -66,7 +66,6 @@ async function handleModalX() {
 
 async function clickItem(data) {
   try {
-	console.log(data)
 	const {	originalItem: { id, occurrence } } = data
 	  const eventDate = await $fetch('/api/event', {
 	  method: 'POST',

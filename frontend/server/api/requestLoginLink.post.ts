@@ -7,6 +7,7 @@ import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
 
 import Email from 'email-templates'
 import path from 'node:path'
+import { headers, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav';
 
 const config = useRuntimeConfig()
 
@@ -53,9 +54,7 @@ export default defineEventHandler(async (event) => {
   // check if email in dav
   const addressbooks = await addressBookQuery({
     url: config.DAV_URL + config.DAV_URL_CARD,
-    headers: {
-      authorization: 'Basic '+btoa(unescape(encodeURIComponent(config.DAV_USERNAME + ':' + config.DAV_PASSWORD))),
-    },
+    headers,
     props: {
       [`${DAVNamespaceShort.DAV}:getetag`]: {},
       [`${DAVNamespaceShort.CARDDAV}:address-data`]: {},
@@ -81,9 +80,6 @@ export default defineEventHandler(async (event) => {
 
   const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData));
 
-  const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
-  const X_LOGIN_TOKEN = 'x-login-token'
-
   const now = Date.now()
 
   const REQUEST_TIMEOUT = 0 // 60000
@@ -108,9 +104,7 @@ export default defineEventHandler(async (event) => {
       data: vcard.toString(),
       etag: etag
     },
-    headers: {
-      authorization: 'Basic '+btoa(unescape(encodeURIComponent(config.DAV_USERNAME + ':' + config.DAV_PASSWORD))),
-    }
+    headers
   })
   
   // send email with link

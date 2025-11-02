@@ -15,10 +15,9 @@ export default defineNuxtConfig({
   ],
   i18n: {
     restructureDir: './',
-    defaultLocale: 'en',
+    defaultLocale: 'de',
     differentDomains: process.env.NODE_ENV === 'production',
     locales: [
-      { code: 'en', name: 'English', file: 'en.json' },
       { code: 'de', name: 'Deutsch', file: 'de.json' },
     ],
     detectBrowserLanguage: false,
@@ -50,7 +49,7 @@ export default defineNuxtConfig({
     SMTP_MAX_CONNECTIONS: (process.env.NUXT_SMTP_MAX_CONNECTIONS && parseInt(process.env.NUXT_SMTP_MAX_CONNECTIONS)) || 5,
     SMTP_MAX_MESSAGES: (process.env.NUXT_SMTP_MAX_MESSAGES && parseInt(process.env.NUXT_SMTP_MAX_MESSAGES)) || 100,
     // DOMAIN
-    CLIENT_URI: 'http://localhost',
+    CLIENT_URI: 'http://localhost:3000',
 
     // Keys within public, will be also exposed to the client-side
     public: {},

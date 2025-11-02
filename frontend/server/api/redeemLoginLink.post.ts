@@ -2,15 +2,13 @@ import { z } from 'zod'
 import ICAL from 'ical.js'
 
 import { addressBookQuery, DAVNamespaceShort, updateVCard } from 'tsdav'
+import { headers, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
 
 const bodySchema = z.object({
   token: z.string(),
 })
 
 const MAX_AGE = 60*60*24*7
-
-const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
-const X_LOGIN_TOKEN = 'x-login-token'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -19,9 +17,7 @@ export default defineEventHandler(async (event) => {
   // check token in dav
   const addressbooks = await addressBookQuery({
     url: config.DAV_URL + config.DAV_URL_CARD,
-    headers: {
-      authorization: 'Basic '+btoa(unescape(encodeURIComponent(config.DAV_USERNAME + ':' + config.DAV_PASSWORD))),
-    },
+    headers,
     props: {
       [`${DAVNamespaceShort.DAV}:getetag`]: {},
       [`${DAVNamespaceShort.CARDDAV}:address-data`]: {},
@@ -60,9 +56,7 @@ export default defineEventHandler(async (event) => {
       data: vcard.toString(),
       etag: etag
       },
-      headers: {
-      authorization: 'Basic '+btoa(unescape(encodeURIComponent(config.DAV_USERNAME + ':' + config.DAV_PASSWORD))),
-      }
+      headers
   })
  
   const name = vcard.getFirstProperty('fn')?.getValues()[0]

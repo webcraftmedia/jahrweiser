@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { calendarQuery, DAVNamespaceShort } from "tsdav"
 import ICAL from 'ical.js'
+import { headers } from '../helpters/dav'
 
 const bodySchema = z.object({
   startDate: z.coerce.date(),
@@ -42,9 +43,7 @@ export default defineEventHandler(async (event) => {
         },
       },
     depth: '1',
-    headers: {
-      authorization: 'Basic '+btoa(unescape(encodeURIComponent(config.DAV_USERNAME + ':' + config.DAV_PASSWORD))),
-    },
+    headers,
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

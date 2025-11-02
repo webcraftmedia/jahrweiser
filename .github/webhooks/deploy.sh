@@ -10,7 +10,7 @@ git pull -ff
 
 ## Frontend
 FRONTEND_ROOT=$PROJECT_ROOT/frontend
-FRONTEND_SERVICE=jahrweiser-frontend
+FRONTEND_SERVICE=$PROJECT_ROOT/.github/webhooks/ecosystem.config.js
 
 cd $FRONTEND_ROOT
 
@@ -23,4 +23,4 @@ npm install --omit=dev
 npm run build
 
 ### Start service
-pm2 start 'node .output/server/index.mjs' --name $FRONTEND_SERVICE
+pm2 start $FRONTEND_SERVICE

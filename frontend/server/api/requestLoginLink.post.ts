@@ -157,7 +157,7 @@ export default defineEventHandler(async (event) => {
         ...defaultParams,
         locale: 'de',
         name,
-        authURL: new URL(`/login/${authtoken}`, 'http://localhost:3000'/*CONFIG.CLIENT_URI*/),
+        authURL: new URL(`/login/${authtoken}`, config.CLIENT_URI),
       },
     })
   } catch (error) {

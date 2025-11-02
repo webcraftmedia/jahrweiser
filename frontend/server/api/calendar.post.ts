@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { calendarQuery, DAVNamespaceShort } from "tsdav"
+import { calendarQuery, DAVNamespaceShort } from 'tsdav'
 import ICAL from 'ical.js'
 import { headers } from '../helpters/dav'
 
@@ -21,46 +21,45 @@ export default defineEventHandler(async (event) => {
     url: config.DAV_URL + config.DAV_URL_CAL,
     props: {
       [`${DAVNamespaceShort.DAV}:getetag`]: {},
-      [`${DAVNamespaceShort.CALDAV}:calendar-data`]: {}
+      [`${DAVNamespaceShort.CALDAV}:calendar-data`]: {},
     },
-    filters:
-      {
-        ['comp-filter']: {
+    filters: {
+      ['comp-filter']: {
+        _attributes: {
+          name: 'VCALENDAR',
+        },
+        'comp-filter': {
           _attributes: {
-            name: 'VCALENDAR',
+            name: 'VEVENT',
           },
-          'comp-filter': {
+          'time-range': {
             _attributes: {
-              name: 'VEVENT',
+              start: formatDate(startDate),
+              end: formatDate(endDate),
             },
-            'time-range': {
-              _attributes: {
-                start: formatDate(startDate),
-                end: formatDate(endDate),
-              }
-            },
-          }
+          },
         },
       },
+    },
     depth: '1',
     headers,
-  });
+  })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const results:any[] = []
+  const results: any[] = []
 
-  caldata.forEach((data)=>{
-    const vcalendar = new ICAL.Component(ICAL.parse(data.props?.calendarData));
+  caldata.forEach((data) => {
+    const vcalendar = new ICAL.Component(ICAL.parse(data.props?.calendarData))
     vcalendar.getFirstPropertyValue()
     const vevent = vcalendar.getFirstSubcomponent('vevent')
-    if(vevent){
+    if (vevent) {
       const event = new ICAL.Event(vevent)
 
       if (event.isRecurring()) {
         // Expandiere wiederkehrende Events
         const expand = new ICAL.RecurExpansion({
           component: vevent,
-          dtstart: vevent.getFirstPropertyValue('dtstart') as ICAL.Time
+          dtstart: vevent.getFirstPropertyValue('dtstart') as ICAL.Time,
         })
 
         let count = 0
@@ -68,27 +67,27 @@ export default defineEventHandler(async (event) => {
         while ((next = expand.next())) {
           // const occurrence = next.toJSDate()
           // occurrence.setHours(occurrence.getHours() + 1)
-          const occurrence = next.toJSDate()// new Date(new Date(next.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
+          const occurrence = next.toJSDate() // new Date(new Date(next.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
           count += 1
           // Nur Events im gewünschten Zeitraum
           if (occurrence > endDate) break
           if (occurrence >= startDate) {
-            const endDate = new Date(occurrence.getTime()+event.duration.toSeconds() * 1000)
+            const endDate = new Date(occurrence.getTime() + event.duration.toSeconds() * 1000)
             results.push({
               id: event.uid,
               occurrence: count,
               startDate: occurrence,
               endDate,
               title: event.summary,
-              isRecurring: true
+              isRecurring: true,
             })
           }
         }
       } else {
         const sd = event.startDate.toJSDate() // new Date(new Date(event.startDate.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
         const ed = event.endDate.toJSDate() // new Date(new Date(event.endDate.toString()+'Z').toLocaleString('en-US', { timeZone: 'Europe/Berlin' })) // Fix German Time
-        if(event.duration.days > 0 || event.duration.weeks > 0){
-          ed.setMilliseconds(ed.getMilliseconds() -1) // Correct Full day thingy
+        if (event.duration.days > 0 || event.duration.weeks > 0) {
+          ed.setMilliseconds(ed.getMilliseconds() - 1) // Correct Full day thingy
         }
         results.push({
           id: event.uid,
@@ -98,7 +97,6 @@ export default defineEventHandler(async (event) => {
         })
       }
     }
-
   })
 
   return results

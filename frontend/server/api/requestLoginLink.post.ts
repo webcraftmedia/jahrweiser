@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { addressBookQuery, DAVNamespaceShort, updateVCard } from 'tsdav';
+import { addressBookQuery, DAVNamespaceShort, updateVCard } from 'tsdav'
 import ICAL from 'ical.js'
 
 import { createTransport } from 'nodemailer'
@@ -7,7 +7,7 @@ import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
 
 import Email from 'email-templates'
 import path from 'node:path'
-import { headers, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav';
+import { headers, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
 
 const config = useRuntimeConfig()
 
@@ -34,13 +34,15 @@ const defaultParams = {
   APPLICATION_NAME: 'Jahrweiser',
   SUPPORT_EMAIL: 'hilfe@gg-g.info',
   ORGANIZATION_URL: 'https://gg-g.info',
-  ORGANIZATION_NAME: 'GG&G'
- }
+  ORGANIZATION_NAME: 'GG&G',
+}
 
 const transport = createTransport(nodemailerTransportOptions)
 
-const from = { name: 'Jahrweiser'/* CONFIG.EMAIL_FROM_NAME */, address: 'admin@gg-g.info' /*CONFIG.EMAIL_DEFAULT_SENDER*/ }
-
+const from = {
+  name: 'Jahrweiser' /* CONFIG.EMAIL_FROM_NAME */,
+  address: 'admin@gg-g.info' /*CONFIG.EMAIL_DEFAULT_SENDER*/,
+}
 
 const bodySchema = z.object({
   email: z.email(),
@@ -62,15 +64,15 @@ export default defineEventHandler(async (event) => {
     depth: '1',
     filters: {
       'prop-filter': {
-      _attributes: {
-        name: 'EMAIL'
+        _attributes: {
+          name: 'EMAIL',
+        },
+        'text-match': email,
       },
-      'text-match': email
-    }
-    }
-  });
+    },
+  })
 
-  if(addressbooks.length !== 1){
+  if (addressbooks.length !== 1) {
     console.log('user not found')
     return {}
   }
@@ -78,14 +80,14 @@ export default defineEventHandler(async (event) => {
   // TODO this can fail due to auth error
   // console.log(addressbooks)
 
-  const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData));
+  const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData))
 
   const now = Date.now()
 
   const REQUEST_TIMEOUT = 0 // 60000
 
   const lastRequest = vcard.getFirstPropertyValue(X_LOGIN_REQUEST_TIME) as string
-  if(new Date(parseInt(lastRequest)+REQUEST_TIMEOUT) >= new Date(now)){
+  if (new Date(parseInt(lastRequest) + REQUEST_TIMEOUT) >= new Date(now)) {
     console.log('too many requests')
     return {}
   }
@@ -102,11 +104,11 @@ export default defineEventHandler(async (event) => {
     vCard: {
       url: config.DAV_URL + href,
       data: vcard.toString(),
-      etag: etag
+      etag: etag,
     },
-    headers
+    headers,
   })
-  
+
   // send email with link
   const name = vcard.getFirstPropertyValue('fn')
 
@@ -138,7 +140,6 @@ export default defineEventHandler(async (event) => {
     },
     */
   })
-
 
   const to = { address: email.toString(), name: name?.toString() ?? '' }
   try {

@@ -11,6 +11,6 @@
 <style scoped>
 @reference "tailwindcss";
 .content {
-  @apply mt-16
+  @apply mt-16;
 }
 </style>

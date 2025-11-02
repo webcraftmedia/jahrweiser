@@ -1,21 +1,12 @@
 <template>
   <div v-if="requestedLogin">
     Wir haben dir eine E-mail gesendet. Bitte habe ein wenig Geduld und prüfe auch dein Spam-Ordner!
-    <button @click.prevent="showLogin">
-        Zurück
-    </button>
+    <button @click.prevent="showLogin">Zurück</button>
   </div>
   <div v-else>
-    <form  @submit.prevent="requestLoginLink">
-      <input
-        v-model="credentials.email"
-        type="email"
-        placeholder="Email"
-        required
-      >
-      <button type="submit">
-        Login
-      </button>
+    <form @submit.prevent="requestLoginLink">
+      <input v-model="credentials.email" type="email" placeholder="Email" required />
+      <button type="submit">Login</button>
     </form>
   </div>
 </template>
@@ -23,7 +14,7 @@
 <script setup lang="ts">
 const { loggedIn } = useUserSession()
 
-if(loggedIn.value) {
+if (loggedIn.value) {
   navigateTo('/')
 }
 
@@ -33,7 +24,7 @@ const credentials = reactive({
   email: '',
 })
 
-async function requestLoginLink () {
+async function requestLoginLink() {
   await $fetch('/api/requestLoginLink', {
     method: 'POST',
     body: credentials,
@@ -41,8 +32,7 @@ async function requestLoginLink () {
   requestedLogin.value = true
 }
 
-async function showLogin () {
+async function showLogin() {
   requestedLogin.value = false
 }
-
 </script>

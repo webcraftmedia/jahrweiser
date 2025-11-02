@@ -1,52 +1,60 @@
 <template>
-	<div class="box">
-  <div class="content row">
-    <client-only>
-      <CalendarView
-        v-bind="calendar"
-		@click-item="clickItem"
-        class="theme-default"> <!--holiday-us-traditional holiday-us-official-->
-        <template #header="{ headerProps }">
-          <CalendarViewHeader :header-props="headerProps" @input="setShowDate"/>
+  <div class="box">
+    <div class="content row">
+      <client-only>
+        <CalendarView v-bind="calendar" class="theme-default" @click-item="clickItem">
+          <!--holiday-us-traditional holiday-us-official-->
+          <template #header="{ headerProps }">
+            <CalendarViewHeader :header-props="headerProps" @input="setShowDate" />
+          </template>
+        </CalendarView>
+      </client-only>
+      <Modal ref="modal" @x="handleModalX">
+        <template #title>
+          {{ event?.summary }}
         </template>
-      </CalendarView>
-    </client-only>
-	<Modal ref="modal" @x="handleModalX">
-		<template #title>
-			{{ event?.summary }}
-    	</template>
-    
-    	<template #content>
-			<table class="text-left align-top">
-				 <tbody>
-				<tr>
-					<th>Beginn:</th>
-					<td>{{ event?.startDate }}</td>
-				</tr>
-				<tr>
-					<th>Dauer:</th>
-					<td>{{ event?.duration.replace(/^PT?/,'') }}</td>
-				</tr>
-				<tr>
-					<th>Ort:</th>
-					<td>{{ event?.location }}</td>
-				</tr>
-				<tr>
-					<th class="align-top pr-2">Beschreibung:</th>
-					<td>
-						<pre class="text-left">{{  event?.description?.split('\n').map((line:string) => line.trimStart()).join('\n') }}</pre>
-					</td>
-				</tr>
-				</tbody>
-			</table>
-    	</template>
-	</Modal>
-  </div>
+
+        <template #content>
+          <table class="text-left align-top">
+            <tbody>
+              <tr>
+                <th>Beginn:</th>
+                <td>{{ event?.startDate }}</td>
+              </tr>
+              <tr>
+                <th>Dauer:</th>
+                <td>{{ event?.duration.replace(/^PT?/, '') }}</td>
+              </tr>
+              <tr>
+                <th>Ort:</th>
+                <td>{{ event?.location }}</td>
+              </tr>
+              <tr>
+                <th class="align-top pr-2">Beschreibung:</th>
+                <td>
+                  <pre class="text-left">{{
+                    event?.description
+                      ?.split('\n')
+                      .map((line: string) => line.trimStart())
+                      .join('\n')
+                  }}</pre>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+      </Modal>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { CalendarView, CalendarViewHeader, type ICalendarItem, type INormalizedCalendarItem } from "vue-simple-calendar"
+import {
+  CalendarView,
+  CalendarViewHeader,
+  type ICalendarItem,
+  type INormalizedCalendarItem,
+} from 'vue-simple-calendar'
 import Modal from '../components/Modal.vue'
 
 // const headerProps = {}
@@ -61,54 +69,56 @@ const items = ref<ICalendarItem[]>([])
 const event = ref()
 
 async function handleModalX() {
-	modal.value.close()
+  modal.value.close()
 }
 
 async function clickItem(data: INormalizedCalendarItem) {
   try {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const {	originalItem: { id, occurrence } } = data as any
-	  const eventDate = await $fetch('/api/event', {
-	  method: 'POST',
-	  body: {
-	  id,
-	  occurrence,
-	  },
+    const {
+      originalItem: { id, occurrence },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } = data as any
+    const eventDate = await $fetch('/api/event', {
+      method: 'POST',
+      body: {
+        id,
+        occurrence,
+      },
     })
-	event.value = eventDate
-	modal.value.open()
-  } catch (error){
+    event.value = eventDate
+    modal.value.open()
+  } catch (error) {
     console.log(error)
   }
 }
 
 const calendar = ref({
-      showDate: new Date(),
-      items,
-	  // message: "test",
-	  startingDayOfWeek: 1,
-	  disablePast: false,
-	  disableFuture: false,
-	  displayPeriodUom: "month",
-	  displayPeriodCount: 1,
-	  displayWeekNumbers: false,
-	  showTimes: false,
-	  // selectionStart: undefined,
-	  // selectionEnd: undefined,
-	  // newItemTitle: "",
-	  // newItemStartDate: "",
-	  // newItemEndDate: "",
- 	  //useDefaultTheme: true,
-	  //useHolidayTheme: true,
-	  //useTodayIcons: false,
-	  // timeFormatOptions: "{ hour: 'numeric', minute: '2-digit' }",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      periodChangedCallback: (data: any) => {
-        const startDate = data.value.displayFirstDate.value
-        const endDate = data.value.displayLastDate.value
-        getData(startDate,endDate)
-      },
-      /*
+  showDate: new Date(),
+  items,
+  // message: "test",
+  startingDayOfWeek: 1,
+  disablePast: false,
+  disableFuture: false,
+  displayPeriodUom: 'month',
+  displayPeriodCount: 1,
+  displayWeekNumbers: false,
+  showTimes: false,
+  // selectionStart: undefined,
+  // selectionEnd: undefined,
+  // newItemTitle: "",
+  // newItemStartDate: "",
+  // newItemEndDate: "",
+  //useDefaultTheme: true,
+  //useHolidayTheme: true,
+  //useTodayIcons: false,
+  // timeFormatOptions: "{ hour: 'numeric', minute: '2-digit' }",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  periodChangedCallback: (data: any) => {
+    const startDate = data.value.displayFirstDate.value
+    const endDate = data.value.displayLastDate.value
+    getData(startDate, endDate)
+  },
+  /*
 				:
 				:enable-drag-drop="true"
 				:date-classes="myDateClasses"
@@ -126,20 +136,19 @@ const calendar = ref({
 })
 
 function setShowDate(d: Date) {
-  calendar.value.showDate = d;
+  calendar.value.showDate = d
 }
 
 async function getData(startDate: Date, endDate: Date) {
   try {
     items.value = await $fetch('/api/calendar', {
-    method: 'POST',
-    body: {
-      startDate,
-      endDate,
-    },
-  })
-
-  } catch (error){
+      method: 'POST',
+      body: {
+        startDate,
+        endDate,
+      },
+    })
+  } catch (error) {
     console.log(error)
   }
 }
@@ -162,35 +171,34 @@ async function getData(startDate: Date, endDate: Date) {
     success.value = false
   }
 }) */
-
-
 </script>
 
 <style>
-@import "~/../node_modules/vue-simple-calendar/dist/vue-simple-calendar.css";
+@import '~/../node_modules/vue-simple-calendar/dist/vue-simple-calendar.css';
 /* The next two lines are optional themes */
-@import "~/../node_modules/vue-simple-calendar/dist/css/default.css";
-@import "~/../node_modules/vue-simple-calendar/dist/css/holidays-us.css";
-	.box {
-		display: flex;
-  		flex-flow: column;
-  		height: 100%;
-  		width: 100%;
-	}
-	.content {
-		font-family: 'Avenir', Helvetica, Arial, sans-serif;
-		color: #2c3e50;
-		width: 100%;
-		margin-left: auto;
-		margin-right: auto;
-		flex: 1 1 auto;
-	}
-	.previousYear, .nextYear {
-		display: none;
-	}
-	@media (width <= 480px) {
-		.periodLabel {
-			display: none !important;
-		}
-	}
+@import '~/../node_modules/vue-simple-calendar/dist/css/default.css';
+@import '~/../node_modules/vue-simple-calendar/dist/css/holidays-us.css';
+.box {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  width: 100%;
+}
+.content {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  color: #2c3e50;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  flex: 1 1 auto;
+}
+.previousYear,
+.nextYear {
+  display: none;
+}
+@media (width <= 480px) {
+  .periodLabel {
+    display: none !important;
+  }
+}
 </style>

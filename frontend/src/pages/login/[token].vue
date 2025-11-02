@@ -1,19 +1,15 @@
 <template>
-  <div v-if="success">
-    Logging in
-  </div>
+  <div v-if="success">Logging in</div>
   <div v-else>
     Error
-    <button @click.prevent="navigateTo('/')">
-        Zurück
-    </button>
+    <button @click.prevent="navigateTo('/')">Zurück</button>
   </div>
 </template>
 
 <script setup lang="ts">
-const { loggedIn , fetch: refreshSession } = useUserSession()
+const { loggedIn, fetch: refreshSession } = useUserSession()
 
-if(loggedIn.value) {
+if (loggedIn.value) {
   navigateTo('/')
 }
 
@@ -29,8 +25,8 @@ onMounted(async () => {
     })
     await refreshSession()
     await navigateTo('/')
-
-  } catch (error){
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
     success.value = false
   }
 })

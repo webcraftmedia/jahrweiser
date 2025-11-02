@@ -2,10 +2,7 @@
 <template>
   <nav class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
-      <NuxtLink
-        to="/"
-        class="flex items-center space-x-3 rtl:space-x-reverse"
-      >
+      <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
         <HeaderLogo />
       </NuxtLink>
       <button
@@ -33,10 +30,10 @@
         </svg>
       </button>
       <div v-if="loggedIn" id="navbar-default" class="hidden w-full md:block md:w-auto text-right">
-        <p>Welcome <b>{{ welcomeName }}</b></p>
-        <button @click="logout">
-          ↪ Logout
-        </button>
+        <p>
+          Welcome <b>{{ welcomeName }}</b>
+        </p>
+        <button @click="logout">↪ Logout</button>
       </div>
     </div>
   </nav>
@@ -44,13 +41,14 @@
 
 <script setup lang="ts">
 const welcomeName = ref()
-const {user, loggedIn,  clear: clearSession}= useUserSession()
+const { user, loggedIn, clear: clearSession } = useUserSession()
 
-welcomeName.value = computed(() => user.value?.name ? user.value.name.split(' ').slice(-1).pop() : user.value?.email)
+welcomeName.value = computed(() =>
+  user.value?.name ? user.value.name.split(' ').slice(-1).pop() : user.value?.email,
+)
 
-async function logout () {
+async function logout() {
   await clearSession()
   await navigateTo('/login')
 }
-
 </script>

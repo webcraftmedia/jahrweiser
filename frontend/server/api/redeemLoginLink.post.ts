@@ -8,7 +8,7 @@ const bodySchema = z.object({
   token: z.string(),
 })
 
-const MAX_AGE = 60*60*24*7
+const MAX_AGE = 60 * 60 * 24 * 7
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -25,15 +25,15 @@ export default defineEventHandler(async (event) => {
     depth: '1',
     filters: {
       'prop-filter': {
-      _attributes: {
-        name: X_LOGIN_TOKEN
+        _attributes: {
+          name: X_LOGIN_TOKEN,
+        },
+        'text-match': token,
       },
-      'text-match': token
-    }
-    }
-  });
+    },
+  })
 
-  if(addressbooks.length !== 1){
+  if (addressbooks.length !== 1) {
     console.log('user not found')
     throw createError({
       statusCode: 401,
@@ -41,8 +41,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData));
-
+  const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData))
 
   // Remove token & login restriction
   vcard.removeAllProperties(X_LOGIN_REQUEST_TIME)
@@ -51,24 +50,27 @@ export default defineEventHandler(async (event) => {
   const href = addressbooks[0].href as string
   const etag = addressbooks[0].props?.getetag
   await updateVCard({
-      vCard: {
+    vCard: {
       url: config.DAV_URL + href,
       data: vcard.toString(),
-      etag: etag
-      },
-      headers
+      etag: etag,
+    },
+    headers,
   })
- 
+
   const name = vcard.getFirstProperty('fn')?.getValues()[0]
   const email = vcard.getFirstProperty('email')?.getValues()[0]
 
   // create session
-  await setUserSession(event, {
+  await setUserSession(
+    event,
+    {
       user: {
         name,
         email,
       },
-      
-  }, {maxAge: MAX_AGE})
+    },
+    { maxAge: MAX_AGE },
+  )
   return {}
 })

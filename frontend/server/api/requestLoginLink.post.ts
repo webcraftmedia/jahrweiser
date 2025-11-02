@@ -76,7 +76,8 @@ export default defineEventHandler(async (event) => {
     return {}
   }
 
-  console.log(addressbooks)
+  // TODO this can fail due to auth error
+  // console.log(addressbooks)
 
   const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData));
 

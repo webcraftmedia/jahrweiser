@@ -112,6 +112,5 @@ function formatDate(date: Date): string {
 }
 
 function hrefToId(href: string) {
-  console.log(href)
   return href.slice(config.DAV_URL_CAL.length, -4)
 }

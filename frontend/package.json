@@ -8,6 +8,7 @@
     "generate": "cross-env TZ=UTC nuxt generate",
     "preview": "cross-env TZ=UTC nuxt preview",
     "postinstall": "cross-env TZ=UTC nuxt prepare",
+    "prod:start": "nuxt start",
     "test:lint": "npm run test:lint:eslint && npm run test:lint:locales",
     "test:lint:eslint": "eslint --ext .vue,.ts,.tsx,.js,.jsx,.cjs,.mjs,.yml,.yaml --max-warnings 0 .",
     "test:lint:locales": "scripts/locales/locales.sh ./locales"

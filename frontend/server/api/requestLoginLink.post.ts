@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { addressBookQuery, DAVNamespaceShort, updateVCard } from 'tsdav'
 import ICAL from 'ical.js'
 
 import { createTransport } from 'nodemailer'
@@ -7,7 +6,7 @@ import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
 
 import Email from 'email-templates'
 import path from 'node:path'
-import { headers, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
+import { findUserByEmail, saveUser, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
 
 const config = useRuntimeConfig()
 
@@ -54,23 +53,7 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
   // check if email in dav
-  const addressbooks = await addressBookQuery({
-    url: config.DAV_URL + config.DAV_URL_CARD,
-    headers,
-    props: {
-      [`${DAVNamespaceShort.DAV}:getetag`]: {},
-      [`${DAVNamespaceShort.CARDDAV}:address-data`]: {},
-    },
-    depth: '1',
-    filters: {
-      'prop-filter': {
-        _attributes: {
-          name: 'EMAIL',
-        },
-        'text-match': email,
-      },
-    },
-  })
+  const addressbooks = await findUserByEmail(email)
 
   if (addressbooks.length !== 1) {
     console.log('user not found')
@@ -100,14 +83,7 @@ export default defineEventHandler(async (event) => {
   const href = addressbooks[0].href as string
   const etag = addressbooks[0].props?.getetag
 
-  await updateVCard({
-    vCard: {
-      url: config.DAV_URL + href,
-      data: vcard.toString(),
-      etag: etag,
-    },
-    headers,
-  })
+  await saveUser(href, etag, vcard.toString())
 
   // send email with link
   const name = vcard.getFirstPropertyValue('fn')
@@ -131,14 +107,6 @@ export default defineEventHandler(async (event) => {
     },
     send: true,
     preview: false,
-    // This is very useful to see the emails sent by the unit tests
-    /*
-    preview: {
-      open: {
-        app: 'brave-browser',
-      },
-    },
-    */
   })
 
   const to = { address: email.toString(), name: name?.toString() ?? '' }

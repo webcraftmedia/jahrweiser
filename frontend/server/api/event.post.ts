@@ -1,7 +1,6 @@
 import { z } from 'zod'
-import { fetchCalendarObjects } from 'tsdav'
 import ICAL from 'ical.js'
-import { headers } from '../helpters/dav'
+import { findEvent } from '../helpters/dav'
 
 const bodySchema = z.object({
   id: z.string(),
@@ -13,17 +12,9 @@ export default defineEventHandler(async (event) => {
   // This will throw a 401 error if the request doesn't come from a valid user session
   await requireUserSession(event)
 
-  const config = useRuntimeConfig()
-
   const { id, occurrence } = await readValidatedBody(event, bodySchema.parse)
   // Calendar data
-  const caldata = await fetchCalendarObjects({
-    calendar: {
-      url: config.DAV_URL + config.DAV_URL_CAL,
-    },
-    objectUrls: [`${id}.ics`],
-    headers,
-  })
+  const caldata = await findEvent(id)
 
   if (caldata.length !== 1) {
     throw new Error('event not found')

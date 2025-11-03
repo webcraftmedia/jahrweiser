@@ -1,8 +1,7 @@
 import { z } from 'zod'
 import ICAL from 'ical.js'
 
-import { addressBookQuery, DAVNamespaceShort, updateVCard } from 'tsdav'
-import { headers, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
+import { findUserByToken, saveUser, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
 
 const bodySchema = z.object({
   token: z.string(),
@@ -11,27 +10,9 @@ const bodySchema = z.object({
 const MAX_AGE = 60 * 60 * 24 * 7
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
   const { token } = await readValidatedBody(event, bodySchema.parse)
   // check token in dav
-  const addressbooks = await addressBookQuery({
-    url: config.DAV_URL + config.DAV_URL_CARD,
-    headers,
-    props: {
-      [`${DAVNamespaceShort.DAV}:getetag`]: {},
-      [`${DAVNamespaceShort.CARDDAV}:address-data`]: {},
-    },
-    depth: '1',
-    filters: {
-      'prop-filter': {
-        _attributes: {
-          name: X_LOGIN_TOKEN,
-        },
-        'text-match': token,
-      },
-    },
-  })
+  const addressbooks = await findUserByToken(token)
 
   if (addressbooks.length !== 1) {
     console.log('user not found')
@@ -49,14 +30,7 @@ export default defineEventHandler(async (event) => {
 
   const href = addressbooks[0].href as string
   const etag = addressbooks[0].props?.getetag
-  await updateVCard({
-    vCard: {
-      url: config.DAV_URL + href,
-      data: vcard.toString(),
-      etag: etag,
-    },
-    headers,
-  })
+  await saveUser(href, etag, vcard.toString())
 
   const name = vcard.getFirstProperty('fn')?.getValues()[0]
   const email = vcard.getFirstProperty('email')?.getValues()[0]

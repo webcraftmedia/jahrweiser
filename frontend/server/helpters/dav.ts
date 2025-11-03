@@ -8,6 +8,7 @@ import {
 
 export const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
 export const X_LOGIN_TOKEN = 'x-login-token'
+export const X_LOGIN_TIME = 'x-login-time'
 
 const config = useRuntimeConfig()
 

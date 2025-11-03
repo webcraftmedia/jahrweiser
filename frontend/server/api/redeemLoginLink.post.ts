@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import ICAL from 'ical.js'
 
-import { findUserByToken, saveUser, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
+import { findUserByToken, saveUser, X_LOGIN_REQUEST_TIME, X_LOGIN_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
 
 const bodySchema = z.object({
   token: z.string(),
@@ -27,6 +27,7 @@ export default defineEventHandler(async (event) => {
   // Remove token & login restriction
   vcard.removeAllProperties(X_LOGIN_REQUEST_TIME)
   vcard.removeAllProperties(X_LOGIN_TOKEN)
+  vcard.updatePropertyWithValue(X_LOGIN_TIME, Date.now())
 
   const href = addressbooks[0].href as string
   const etag = addressbooks[0].props?.getetag

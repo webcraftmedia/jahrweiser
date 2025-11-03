@@ -35,6 +35,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.1.7
 
+      - name: Env File
+        run: cp frontend/.env.example frontend/.env
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
       - name: Build Docker Production
         run: docker compose -f docker-compose.yml build
         working-directory: ${{env.WORKING_DIRECTORY}}
@@ -49,6 +53,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.1.7
+
+      - name: Env File
+        run: cp frontend/.env.example frontend/.env
+        working-directory: ${{env.WORKING_DIRECTORY}}
 
       - name: Build Docker Development
         run: docker compose build

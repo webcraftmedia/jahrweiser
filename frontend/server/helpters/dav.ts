@@ -39,11 +39,11 @@ export const findEvents = (from: Date, to: Date) =>
         _attributes: {
           name: 'VCALENDAR',
         },
-        'comp-filter': {
+        ['comp-filter']: {
           _attributes: {
             name: 'VEVENT',
           },
-          'time-range': {
+          ['time-range']: {
             _attributes: {
               start: formatDate(from),
               end: formatDate(to),
@@ -75,11 +75,11 @@ export const findUserByToken = (token: string) =>
     },
     depth: '1',
     filters: {
-      'prop-filter': {
+      ['prop-filter']: {
         _attributes: {
           name: X_LOGIN_TOKEN,
         },
-        'text-match': token,
+        ['text-match']: token,
       },
     },
   })
@@ -94,11 +94,11 @@ export const findUserByEmail = (email: string) =>
     },
     depth: '1',
     filters: {
-      'prop-filter': {
+      ['prop-filter']: {
         _attributes: {
           name: 'EMAIL',
         },
-        'text-match': email,
+        ['text-match']: email,
       },
     },
   })

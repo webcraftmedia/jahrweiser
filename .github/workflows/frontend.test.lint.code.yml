@@ -4,7 +4,7 @@ on: push
 
 jobs:
   # only (but most important) job from this workflow required for pull requests
-  # check results serve as run conditions for all other jobs here 
+  # check results serve as run conditions for all other jobs here
   files-changed:
     name: Detect File Changes - frontend-test-lint-code
     runs-on: ubuntu-latest
@@ -33,6 +33,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.1.7
+
+      - name: Env File
+        run: cp frontend/.env.example frontend/.env
+        working-directory: ${{env.WORKING_DIRECTORY}}
 
       - name: Frontend | Lint
         run: npm install && npm run test:lint

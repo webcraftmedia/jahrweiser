@@ -179,7 +179,8 @@ async function getData(startDate: Date, endDate: Date) {
 }
 @media (width <= 480px) {
   .periodLabel {
-    display: none !important;
+    /* display: none !important; */
+    @apply text-base !important;
   }
 }
 </style>

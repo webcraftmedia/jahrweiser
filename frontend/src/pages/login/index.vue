@@ -1,5 +1,5 @@
 <template>
-  <div class="flex w-full" v-if="requestedLogin">
+  <div v-if="requestedLogin" class="flex w-full">
     <div
       id="alert-additional-content-1"
       class="max-w-md m-auto mt-8 p-4 text-blue-800 border border-blue-300 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:border-blue-800"
@@ -27,18 +27,18 @@
       </div>
       <div class="flex">
         <button
-          @click.prevent="showLogin"
-          type="button"
-          class="text-blue-800 bg-transparent border border-blue-800 hover:bg-blue-900 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-200 font-medium rounded-lg text-xs px-3 py-1.5 text-center dark:hover:bg-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:text-white dark:focus:ring-blue-800"
           data-dismiss-target="#alert-additional-content-1"
+          class="text-blue-800 bg-transparent border border-blue-800 hover:bg-blue-900 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-200 font-medium rounded-lg text-xs px-3 py-1.5 text-center dark:hover:bg-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:text-white dark:focus:ring-blue-800"
+          type="button"
           aria-label="Close"
+          @click.prevent="showLogin"
         >
           {{ $t('pages.login.message.button') }}
         </button>
       </div>
     </div>
   </div>
-  <div class="flex w-full" v-else>
+  <div v-else class="flex w-full">
     <div
       class="m-auto mt-8 w-full max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700"
     >
@@ -68,9 +68,9 @@
               </svg>
             </div>
             <input
+              id="email-address-icon"
               v-model="credentials.email"
               type="text"
-              id="email-address-icon"
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               :placeholder="$t('pages.login.form.email.placeholder')"
             />

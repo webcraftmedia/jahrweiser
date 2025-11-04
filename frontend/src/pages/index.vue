@@ -18,15 +18,15 @@
           <table class="text-left align-top">
             <tbody>
               <tr>
-                <th>Beginn:</th>
+                <th>{{ $t('pages.index.details.start') }}</th>
                 <td>{{ event?.startDate }}</td>
               </tr>
               <tr>
-                <th>Dauer:</th>
+                <th>{{ $t('pages.index.details.duration') }}</th>
                 <td>{{ event?.duration.replace(/^PT?/, '') }}</td>
               </tr>
               <tr>
-                <th>Ort:</th>
+                <th>{{ $t('pages.index.details.location') }}</th>
                 <td>{{ event?.location }}</td>
               </tr>
               <tr></tr>

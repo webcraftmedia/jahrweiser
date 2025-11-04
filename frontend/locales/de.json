@@ -8,30 +8,45 @@
       "privacy-policy": "Datenschutz"
     },
     "Header": {
-      "community": "Community",
-      "features": "Funktionen",
+      "logout": "↪ Logout",
       "open-menu": "Open menu",
-      "pricing": "Preise"
+      "welcome": "Willkommen"
+    },
+    "Modal": {
+      "close": "Close Modal"
     }
   },
   "pages": {
-    "index": {},
+    "index": {
+      "details": {
+        "duration": "Duration:",
+        "location": "Ort:",
+        "start": "Beginn:"
+      }
+    },
     "login": {
-      "message": {
-        "info": "Info",
-        "title": "Prüfe dein Postfach",
-        "text1": "Wir haben dir eine E-mail gesendet.",
-        "text2": "Bitte habe ein wenig Geduld und prüfe auch dein Spam-Ordner!",
-        "hint": "Hinweis: Wenn du eine unberechtigte E-Mail-Adresse angegeben hast, dann bekommst du auch keine E-Mail.",
-        "button": "Zurück zum Login"
+      "error": {
+        "text": "Dein Code ist nicht mehr gültig.",
+        "title": "Ein Fehler..."
       },
       "form": {
-        "title": "Bei GG&G anmelden",
+        "button": "Einloggen",
         "email": {
           "label": "Deine E-Mail:",
           "placeholder": "name{'@'}mustermail.de"
         },
-        "button": "Einloggen"
+        "title": "Bei GG&G anmelden"
+      },
+      "message": {
+        "button": "Zurück zum Login",
+        "hint": "Hinweis: Wenn du eine unberechtigte E-Mail-Adresse angegeben hast, dann bekommst du auch keine E-Mail.",
+        "info": "Info",
+        "text1": "Wir haben dir eine E-Mail gesendet.",
+        "text2": "Bitte habe ein wenig Geduld und prüfe auch dein Spam-Ordner!",
+        "title": "Prüfe dein Postfach"
+      },
+      "token": {
+        "loading": "Loading..."
       }
     }
   }

@@ -29,19 +29,15 @@
                 <th>Ort:</th>
                 <td>{{ event?.location }}</td>
               </tr>
-              <tr>
-                <th class="align-top pr-2">Beschreibung:</th>
-                <td>
-                  <pre class="text-left">{{
-                    event?.description
-                      ?.split('\n')
-                      .map((line: string) => line.trimStart())
-                      .join('\n')
-                  }}</pre>
-                </td>
-              </tr>
+              <tr></tr>
             </tbody>
           </table>
+          <pre class="text-left whitespace-pre-wrap">{{
+            event?.description
+              ?.split('\n')
+              .map((line: string) => line.trimStart())
+              .join('\n')
+          }}</pre>
         </template>
       </Modal>
     </div>

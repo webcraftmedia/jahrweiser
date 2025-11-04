@@ -31,9 +31,9 @@
       </button>-->
       <div v-if="loggedIn" id="navbar-default" class="hidden w-full md:block md:w-auto text-right">
         <p>
-          Welcome <b>{{ welcomeName }}</b>
+          {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
         </p>
-        <button @click="logout">↪ Logout</button>
+        <button @click="logout">{{ $t('components.Header.logout') }}</button>
       </div>
     </div>
   </nav>

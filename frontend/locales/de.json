@@ -15,6 +15,24 @@
     }
   },
   "pages": {
-    "index": {}
+    "index": {},
+    "login": {
+      "message": {
+        "info": "Info",
+        "title": "Prüfe dein Postfach",
+        "text1": "Wir haben dir eine E-mail gesendet.",
+        "text2": "Bitte habe ein wenig Geduld und prüfe auch dein Spam-Ordner!",
+        "hint": "Hinweis: Wenn du eine unberechtigte E-Mail-Adresse angegeben hast, dann bekommst du auch keine E-Mail.",
+        "button": "Zurück zum Login"
+      },
+      "form": {
+        "title": "Bei GG&G anmelden",
+        "email": {
+          "label": "Deine E-Mail:",
+          "placeholder": "name{'@'}mustermail.de"
+        },
+        "button": "Einloggen"
+      }
+    }
   }
 }

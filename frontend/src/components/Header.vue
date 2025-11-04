@@ -5,7 +5,7 @@
       <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
         <HeaderLogo />
       </NuxtLink>
-      <button
+      <!--<button
         data-collapse-toggle="navbar-default"
         type="button"
         class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
@@ -28,7 +28,7 @@
             d="M1 1h15M1 7h15M1 13h15"
           />
         </svg>
-      </button>
+      </button>-->
       <div v-if="loggedIn" id="navbar-default" class="hidden w-full md:block md:w-auto text-right">
         <p>
           Welcome <b>{{ welcomeName }}</b>

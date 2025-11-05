@@ -7,11 +7,9 @@
         <a href="https://www.webcraft-media.de/" class="hover:underline">{{
           $t('components.Footer.copyright-holder')
         }}</a>
-        <p class="inline hidden md:inline"> {{ $t('components.Footer.copyright-text') }}</p>
+        <p class="inline hidden md:inline">{{ $t('components.Footer.copyright-text') }}</p>
       </span>
-      <ul
-        class="flex flex-wrap items-center text-sm font-medium text-gray-500 dark:text-gray-400"
-      >
+      <ul class="flex flex-wrap items-center text-sm font-medium text-gray-500 dark:text-gray-400">
         <li>
           <NuxtLink
             :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"

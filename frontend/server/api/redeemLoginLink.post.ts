@@ -13,7 +13,7 @@ const bodySchema = z.object({
   token: z.string(),
 })
 
-const MAX_AGE = 60 * 60 * 24 * 7
+export const MAX_AGE = 60 * 60 * 24 * 7
 
 export default defineEventHandler(async (event) => {
   const { token } = await readValidatedBody(event, bodySchema.parse)

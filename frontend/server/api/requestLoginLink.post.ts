@@ -7,6 +7,7 @@ import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
 import Email from 'email-templates'
 import path from 'node:path'
 import { findUserByEmail, saveUser, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
+import { MAX_AGE } from './redeemLoginLink.post'
 
 const config = useRuntimeConfig()
 
@@ -32,8 +33,10 @@ if (config.SMTP_USERNAME && config.SMTP_PASSWORD) {
 const defaultParams = {
   APPLICATION_NAME: 'Jahrweiser',
   SUPPORT_EMAIL: 'hilfe@gg-g.info',
-  ORGANIZATION_URL: 'https://gg-g.info',
+  ORGANIZATION_URL: config.CLIENT_URI,
   ORGANIZATION_NAME: 'GG&G',
+  welcomeImageUrl: new URL('/logo.png', config.CLIENT_URI).toString(),
+  loginDays: MAX_AGE / 60 / 60 / 24,
 }
 
 const transport = createTransport(nodemailerTransportOptions)
@@ -95,7 +98,7 @@ export default defineEventHandler(async (event) => {
     transport,
     i18n: {
       locales: ['de'],
-      defaultLocale: 'de', // CONFIG.LANGUAGE_DEFAULT,
+      defaultLocale: 'de',
       retryInDefaultLocale: false,
       directory: path.join(process.cwd(), 'server/emails/_locales'),
       updateFiles: false,

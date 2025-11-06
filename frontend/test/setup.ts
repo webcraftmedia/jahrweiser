@@ -1,7 +1,6 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { expect, vi } from 'vitest'
+import { expect } from 'vitest'
 import { config } from '@vue/test-utils'
-
 
 mockNuxtImport('useI18n', () => () => {
   return {

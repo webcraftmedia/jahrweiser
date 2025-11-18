@@ -7,6 +7,16 @@ describe('Page: Index', () => {
     const html = await (
       await renderSuspended(Page, {
         route: '/',
+        global: {
+          stubs: {
+            CalendarViewHeader: {
+              template: '<span />',
+            },
+            CalendarView: {
+              template: '<span />',
+            },
+          },
+        },
       })
     ).html()
     expect(html).toMatchSnapshot()

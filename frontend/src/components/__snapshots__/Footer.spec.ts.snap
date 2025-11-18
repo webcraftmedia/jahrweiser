@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Footer > renders 1`] = `
+"<div id="test-wrapper">
+  <footer class="bg-white dark:bg-gray-800 absolute bottom-0 w-full border-t p-1">
+    <div class="w-full mx-auto max-w-screen-xl flex items-center justify-between"><span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">components.Footer.copyright <a href="https://www.webcraft-media.de/" class="hover:underline">components.Footer.copyright-holder</a><p class="inline hidden md:inline">components.Footer.copyright-text</p></span>
+      <ul class="flex flex-wrap items-center text-sm font-medium text-gray-500 dark:text-gray-400">
+        <li><a href="https://www.webcraft-media.de#!impressum" class="hover:underline me-4 md:me-6">components.Footer.imprint</a></li>
+        <li><a href="https://www.webcraft-media.de#!datenschutz" class="hover:underline me-4 md:me-6">components.Footer.privacy-policy</a></li>
+      </ul>
+    </div>
+  </footer>
+</div>"
+`;

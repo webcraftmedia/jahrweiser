@@ -58,11 +58,13 @@ export default defineNuxtConfig({
 })
 
 if (
-  !process.env.NUXT_DAV_USERNAME ||
-  !process.env.NUXT_DAV_PASSWORD ||
-  !process.env.NUXT_DAV_URL ||
-  !process.env.NUXT_DAV_URL_CAL ||
-  !process.env.NUXT_DAV_URL_CARD
+  process.env.NODE_ENV !== 'test' &&
+  (!process.env.NUXT_DAV_USERNAME ||
+    !process.env.NUXT_DAV_PASSWORD ||
+    !process.env.NUXT_DAV_URL ||
+    !process.env.NUXT_DAV_URL_CAL ||
+    !process.env.NUXT_DAV_URL_CARD)
 ) {
+  console.log(process.env)
   throw new Error('Not all required .env values are defined!')
 }

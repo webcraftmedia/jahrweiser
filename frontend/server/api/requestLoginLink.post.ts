@@ -6,7 +6,13 @@ import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
 
 import Email from 'email-templates'
 import path from 'node:path'
-import { findUserByEmail, saveUser, X_LOGIN_REQUEST_TIME, X_LOGIN_TOKEN } from '../helpters/dav'
+import {
+  findUserByEmail,
+  saveUser,
+  X_LOGIN_DISABLED,
+  X_LOGIN_REQUEST_TIME,
+  X_LOGIN_TOKEN,
+} from '../helpters/dav'
 import { MAX_AGE } from './redeemLoginLink.post'
 
 const config = useRuntimeConfig()
@@ -70,7 +76,13 @@ export default defineEventHandler(async (event) => {
 
   const now = Date.now()
 
-  const REQUEST_TIMEOUT = 0 // 60000
+  const REQUEST_TIMEOUT = 60000
+
+  const isDisabled = vcard.getFirstPropertyValue(X_LOGIN_DISABLED) as string
+  if (isDisabled === 'true') {
+    console.log('account disabled')
+    return {}
+  }
 
   const lastRequest = vcard.getFirstPropertyValue(X_LOGIN_REQUEST_TIME) as string
   if (new Date(parseInt(lastRequest) + REQUEST_TIMEOUT) >= new Date(now)) {

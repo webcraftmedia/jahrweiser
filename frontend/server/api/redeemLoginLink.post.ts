@@ -4,6 +4,7 @@ import ICAL from 'ical.js'
 import {
   findUserByToken,
   saveUser,
+  X_LOGIN_DISABLED,
   X_LOGIN_REQUEST_TIME,
   X_LOGIN_TIME,
   X_LOGIN_TOKEN,
@@ -29,6 +30,15 @@ export default defineEventHandler(async (event) => {
   }
 
   const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData))
+
+  const isDisabled = vcard.getFirstPropertyValue(X_LOGIN_DISABLED) as string
+  if (isDisabled === 'true') {
+    console.log('account disabled')
+    throw createError({
+      statusCode: 401,
+      message: 'Bad credentials',
+    })
+  }
 
   // Remove token & login restriction
   vcard.removeAllProperties(X_LOGIN_REQUEST_TIME)

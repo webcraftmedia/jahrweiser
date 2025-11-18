@@ -18,7 +18,8 @@ expect.addSnapshotSerializer({
 expect.addSnapshotSerializer({
   test: (val) => typeof val === 'string' && /id="i\d+__/.test(val),
   print: (val) => {
-    const normalized = (val as string).replaceAll(/id="i\d+__([a-z])"/g, 'id="filter-id-$1"')
+    const normalized = (val as string)
+      .replaceAll(/id="i\d+__([a-z])"/g, 'id="filter-id-$1"')
       .replaceAll(/url\(#i\d+__([a-z])\)/g, 'url(#filter-id-$1)')
     return '"' + normalized + '"'
   },

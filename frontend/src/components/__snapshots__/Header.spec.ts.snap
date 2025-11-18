@@ -5,42 +5,42 @@ exports[`Header > renders 1`] = `
   <nav class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2"><a href="/" class="flex items-center space-x-3 rtl:space-x-reverse"><svg data-v-279a7136="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 250 70" class="nuxt-icon nuxt-icon--fill logo">
           <defs>
-            <filter id="i2074636624__a" width="1.071" height="1.071" x="-.035" y="-.035" style="color-interpolation-filters:sRGB;">
+            <filter id="filter-id-a" width="1.071" height="1.071" x="-.035" y="-.035" style="color-interpolation-filters:sRGB;">
               <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
               <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="1"></feGaussianBlur>
               <feOffset in="blur" result="offset"></feOffset>
               <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
               <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
             </filter>
-            <filter id="i2074636624__d" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
+            <filter id="filter-id-d" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
               <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
               <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation=".5"></feGaussianBlur>
               <feOffset dx=".5" dy=".5" in="blur" result="offset"></feOffset>
               <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
               <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
             </filter>
-            <filter id="i2074636624__b" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
+            <filter id="filter-id-b" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
               <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
               <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation=".5"></feGaussianBlur>
               <feOffset dx=".5" dy=".5" in="blur" result="offset"></feOffset>
               <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
               <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
             </filter>
-            <filter id="i2074636624__f" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
+            <filter id="filter-id-f" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
               <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
               <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation=".5"></feGaussianBlur>
               <feOffset dx=".5" dy=".5" in="blur" result="offset"></feOffset>
               <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
               <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
             </filter>
-            <filter id="i2074636624__c" width="1.241" height="1.242" x="-.1" y="-.1" style="color-interpolation-filters:sRGB;">
+            <filter id="filter-id-c" width="1.241" height="1.242" x="-.1" y="-.1" style="color-interpolation-filters:sRGB;">
               <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
               <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation=".5"></feGaussianBlur>
               <feOffset dx=".5" dy=".5" in="blur" result="offset"></feOffset>
               <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
               <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
             </filter>
-            <filter id="i2074636624__e" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
+            <filter id="filter-id-e" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
               <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
               <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation=".5"></feGaussianBlur>
               <feOffset dx=".5" dy=".5" in="blur" result="offset"></feOffset>
@@ -51,13 +51,13 @@ exports[`Header > renders 1`] = `
             <tspan x="79.682" y="44.302" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:33.8667px;font-family:P052;-inkscape-font-specification:P052;fill:#000;fill-opacity:1;stroke-width:0;">Jahrweiser</tspan>
           </text>
           <g style="display:inline;" transform="translate(4.24 -113.807)">
-            <circle cx="30.76" cy="148.807" r="34" style="display:inline;fill:#ffe0c6;fill-opacity:1;stroke-width:0;filter:url(#i2074636624__a);"></circle><text xml:space="preserve" x="28.654" y="168.671" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#590080;fill-opacity:1;stroke-width:0;filter:url(#i2074636624__b);">
+            <circle cx="30.76" cy="148.807" r="34" style="display:inline;fill:#ffe0c6;fill-opacity:1;stroke-width:0;filter:url(#filter-id-a);"></circle><text xml:space="preserve" x="28.654" y="168.671" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#590080;fill-opacity:1;stroke-width:0;filter:url(#filter-id-b);">
               <tspan x="28.654" y="168.671" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;fill:#590080;fill-opacity:1;stroke-width:0;">G</tspan>
-            </text><text xml:space="preserve" x="16.396" y="169.663" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:16.9333px;line-height:1;font-family:P052;-inkscape-font-specification:P052;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#000;fill-opacity:1;stroke-width:0;filter:url(#i2074636624__c);">
+            </text><text xml:space="preserve" x="16.396" y="169.663" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:16.9333px;line-height:1;font-family:P052;-inkscape-font-specification:P052;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#000;fill-opacity:1;stroke-width:0;filter:url(#filter-id-c);">
               <tspan x="16.396" y="169.663" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:16.9333px;font-family:P052;-inkscape-font-specification:P052;fill:#000;fill-opacity:1;stroke-width:0;">&amp;</tspan>
-            </text><text xml:space="preserve" x="24.822" y="141.638" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#540080;fill-opacity:1;stroke-width:0;filter:url(#i2074636624__e);">
+            </text><text xml:space="preserve" x="24.822" y="141.638" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#540080;fill-opacity:1;stroke-width:0;filter:url(#filter-id-e);">
               <tspan x="24.822" y="141.638" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;fill:#540080;fill-opacity:1;stroke-width:0;">G</tspan>
-            </text><text xml:space="preserve" x=".479" y="151.445" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#540080;fill-opacity:1;stroke-width:0;filter:url(#i2074636624__f);">
+            </text><text xml:space="preserve" x=".479" y="151.445" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#540080;fill-opacity:1;stroke-width:0;filter:url(#filter-id-f);">
               <tspan x=".479" y="151.445" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;fill:#540080;fill-opacity:1;stroke-width:0;">G</tspan>
             </text>
           </g>

@@ -3,7 +3,7 @@
 exports[`Page: Index > renders 1`] = `
 "<div id="test-wrapper">
   <div class="box">
-    <div class="content row"><span showdate="Tue Nov 18 2025 13:08:29 GMT+0100 (Central European Standard Time)" items="" startingdayofweek="1" disablepast="false" disablefuture="false" displayperioduom="month" displayperiodcount="1" displayweeknumbers="false" showtimes="false" periodchangedcallback="(data) => {
+    <div class="content row"><span showdate="Tue Nov 18 2025 13:18:55 GMT+0100 (Central European Standard Time)" items="" startingdayofweek="1" disablepast="false" disablefuture="false" displayperioduom="month" displayperiodcount="1" displayweeknumbers="false" showtimes="false" periodchangedcallback="(data) => {
         const startDate = data.value.displayFirstDate.value;
         const endDate = data.value.displayLastDate.value;
         getData(startDate, endDate);

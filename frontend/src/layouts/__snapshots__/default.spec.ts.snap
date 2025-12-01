@@ -3,7 +3,7 @@
 exports[`Layout: Default > renders 1`] = `
 "<div id="test-wrapper">
   <div data-v-433a9abd="" class="flex h-screen bg-white dark:bg-gray-800">
-    <nav data-v-433a9abd="" class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0">
+    <nav data-v-433a9abd="" class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0 z-50">
       <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2"><a href="/" class="flex items-center space-x-3 rtl:space-x-reverse"><svg data-v-279a7136="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 250 70" class="nuxt-icon nuxt-icon--fill logo text-gray-900 dark:text-white">
             <defs>
               <filter id="filter-id-a" width="1.071" height="1.071" x="-.035" y="-.035" style="color-interpolation-filters:sRGB;">
@@ -62,31 +62,11 @@ exports[`Layout: Default > renders 1`] = `
                 <tspan x=".479" y="151.445" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;fill:#540080;fill-opacity:1;stroke-width:0;">G</tspan>
               </text>
             </g>
-          </svg></a>
-        <!--<button
-        data-collapse-toggle="navbar-default"
-        type="button"
-        class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-        aria-controls="navbar-default"
-        aria-expanded="false"
-      >
-        <span class="sr-only">{{ $t('components.Header.open-menu') }}</span>
-        <svg
-          class="w-5 h-5"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 17 14"
-        >
-          <path
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M1 1h15M1 7h15M1 13h15"
-          />
-        </svg>
-      </button>-->
+          </svg></a><!-- Burger menu button (mobile only) -->
+        <!--v-if-->
+        <!-- Desktop menu -->
+        <!--v-if-->
+        <!-- Mobile menu dropdown -->
         <!--v-if-->
       </div>
     </nav>

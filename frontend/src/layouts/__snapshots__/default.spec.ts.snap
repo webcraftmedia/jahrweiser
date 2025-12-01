@@ -2,9 +2,9 @@
 
 exports[`Layout: Default > renders 1`] = `
 "<div id="test-wrapper">
-  <div data-v-433a9abd="" class="flex h-screen">
+  <div data-v-433a9abd="" class="flex h-screen bg-white dark:bg-gray-800">
     <nav data-v-433a9abd="" class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0">
-      <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2"><a href="/" class="flex items-center space-x-3 rtl:space-x-reverse"><svg data-v-279a7136="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 250 70" class="nuxt-icon nuxt-icon--fill logo">
+      <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2"><a href="/" class="flex items-center space-x-3 rtl:space-x-reverse"><svg data-v-279a7136="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 250 70" class="nuxt-icon nuxt-icon--fill logo text-gray-900 dark:text-white">
             <defs>
               <filter id="filter-id-a" width="1.071" height="1.071" x="-.035" y="-.035" style="color-interpolation-filters:sRGB;">
                 <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
@@ -48,8 +48,8 @@ exports[`Layout: Default > renders 1`] = `
                 <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
                 <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
               </filter>
-            </defs><text xml:space="preserve" x="79.682" y="44.302" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:P052;-inkscape-font-specification:P052;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#000;fill-opacity:1;stroke-width:0;">
-              <tspan x="79.682" y="44.302" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:33.8667px;font-family:P052;-inkscape-font-specification:P052;fill:#000;fill-opacity:1;stroke-width:0;">Jahrweiser</tspan>
+            </defs><text xml:space="preserve" x="79.682" y="44.302" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:P052;-inkscape-font-specification:P052;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:currentColor;fill-opacity:1;stroke-width:0;">
+              <tspan x="79.682" y="44.302" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:33.8667px;font-family:P052;-inkscape-font-specification:P052;fill:currentColor;fill-opacity:1;stroke-width:0;">Jahrweiser</tspan>
             </text>
             <g style="display:inline;" transform="translate(4.24 -113.807)">
               <circle cx="30.76" cy="148.807" r="34" style="display:inline;fill:#ffe0c6;fill-opacity:1;stroke-width:0;filter:url(#filter-id-a);"></circle><text xml:space="preserve" x="28.654" y="168.671" style="font-style:italic;font-variant:normal;font-weight:500;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;text-align:start;letter-spacing:-.396875px;word-spacing:-.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#590080;fill-opacity:1;stroke-width:0;filter:url(#filter-id-b);">

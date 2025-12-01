@@ -15,24 +15,24 @@
         </template>
 
         <template #content>
-          <table class="text-left align-top">
+          <table class="text-left align-top text-gray-900 dark:text-gray-100">
             <tbody>
               <tr>
-                <th>{{ $t('pages.index.details.start') }}</th>
+                <th class="pr-4 font-semibold">{{ $t('pages.index.details.start') }}</th>
                 <td>{{ event?.startDate }}</td>
               </tr>
               <tr>
-                <th>{{ $t('pages.index.details.duration') }}</th>
+                <th class="pr-4 font-semibold">{{ $t('pages.index.details.duration') }}</th>
                 <td>{{ event?.duration.replace(/^PT?/, '') }}</td>
               </tr>
               <tr>
-                <th>{{ $t('pages.index.details.location') }}</th>
+                <th class="pr-4 font-semibold">{{ $t('pages.index.details.location') }}</th>
                 <td>{{ event?.location }}</td>
               </tr>
               <tr></tr>
             </tbody>
           </table>
-          <pre class="text-left whitespace-pre-wrap">{{
+          <pre class="text-left whitespace-pre-wrap text-gray-900 dark:text-gray-100">{{
             event?.description
               ?.split('\n')
               .map((line: string) => line.trimStart())

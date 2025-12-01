@@ -1,5 +1,5 @@
 <template>
-  <Logo class="logo" />
+  <Logo class="logo text-gray-900 dark:text-white" />
 </template>
 
 <script setup lang="ts">

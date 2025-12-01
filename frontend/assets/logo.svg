@@ -224,14 +224,14 @@
          in2="comp1"
          id="feComposite88-4" /></filter></defs><text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:P052;-inkscape-font-specification:P052;text-align:start;letter-spacing:-0.396875px;word-spacing:-0.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke-width:0"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:33.8667px;line-height:1;font-family:P052;-inkscape-font-specification:P052;text-align:start;letter-spacing:-0.396875px;word-spacing:-0.0211667px;writing-mode:lr-tb;direction:ltr;text-anchor:start;display:inline;fill:currentColor;fill-opacity:1;stroke-width:0"
      x="79.682297"
      y="44.301533"
      id="text7"
      inkscape:label="Kalender"><tspan
        sodipodi:role="line"
        id="tspan7"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:33.8667px;font-family:P052;-inkscape-font-specification:P052;fill:#000000;fill-opacity:1;stroke-width:0"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:33.8667px;font-family:P052;-inkscape-font-specification:P052;fill:currentColor;fill-opacity:1;stroke-width:0"
        x="79.682297"
        y="44.301533">Jahrweiser</tspan></text><g
      inkscape:groupmode="layer"

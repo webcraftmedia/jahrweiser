@@ -57,10 +57,16 @@
         :class="mobileMenuOpen ? 'block' : 'hidden'"
         class="w-full md:hidden mt-2"
       >
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+        >
           <!-- User Info Header -->
-          <div class="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border-b border-gray-200 dark:border-gray-600">
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div
+            class="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border-b border-gray-200 dark:border-gray-600"
+          >
+            <p
+              class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+            >
               {{ $t('components.Header.welcome') }}
             </p>
             <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white truncate">

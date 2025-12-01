@@ -15,24 +15,24 @@
         </template>
 
         <template #content>
-          <table class="text-left align-top">
+          <table class="text-left align-top text-gray-900 dark:text-gray-100">
             <tbody>
               <tr>
-                <th>{{ $t('pages.index.details.start') }}</th>
+                <th class="pr-4 font-semibold">{{ $t('pages.index.details.start') }}</th>
                 <td>{{ event?.startDate }}</td>
               </tr>
               <tr>
-                <th>{{ $t('pages.index.details.duration') }}</th>
+                <th class="pr-4 font-semibold">{{ $t('pages.index.details.duration') }}</th>
                 <td>{{ event?.duration.replace(/^PT?/, '') }}</td>
               </tr>
               <tr>
-                <th>{{ $t('pages.index.details.location') }}</th>
+                <th class="pr-4 font-semibold">{{ $t('pages.index.details.location') }}</th>
                 <td>{{ event?.location }}</td>
               </tr>
               <tr></tr>
             </tbody>
           </table>
-          <pre class="text-left whitespace-pre-wrap">{{
+          <pre class="text-left whitespace-pre-wrap text-gray-900 dark:text-gray-100">{{
             event?.description
               ?.split('\n')
               .map((line: string) => line.trimStart())
@@ -169,14 +169,89 @@ async function getData(startDate: Date, endDate: Date) {
   margin-right: auto;
   flex: 1 1 auto;
 }
-.previousYear,
-.nextYear {
-  display: none;
-}
-@media (width <= 480px) {
-  .periodLabel {
-    /* display: none !important; */
-    @apply text-base !important;
+
+/* Dark mode support for content & calendar */
+@media (prefers-color-scheme: dark) {
+  .content {
+    color: #e5e7eb;
+  }
+
+  /* Dark mode support for calendar */
+  .theme-default .cv-header,
+  .theme-default .cv-header-day {
+    background-color: #374151;
+    color: #e5e7eb;
+  }
+
+  .theme-default .cv-header button {
+    color: #9ca3af;
+  }
+
+  .theme-default .cv-header button:disabled {
+    color: #4b5563;
+    background-color: #1f2937;
+  }
+
+  .theme-default .cv-weeknumber {
+    background-color: #1f2937;
+    border-color: #4b5563;
+    color: #9ca3af;
+  }
+
+  .theme-default .cv-day {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+
+  .theme-default .cv-day.past {
+    background-color: #111827;
+  }
+
+  .theme-default .cv-day.outsideOfMonth {
+    background-color: #0f172a;
+  }
+
+  .theme-default .cv-day.today {
+    background-color: #1e3a5f;
+  }
+
+  .theme-default .cv-day[aria-selected='true'] {
+    background-color: #1e40af;
+  }
+
+  /* Dark mode events */
+  .theme-default .cv-item {
+    border-color: #4b5563;
+    background-color: #3730a3;
+    color: #e0e7ff;
+  }
+
+  .theme-default .cv-item.purple {
+    background-color: #581c87;
+    border-color: #6b21a8;
+    color: #f3e8ff;
+  }
+
+  .theme-default .cv-item.orange {
+    background-color: #9a3412;
+    border-color: #c2410c;
+    color: #fed7aa;
+  }
+
+  .theme-default .cv-item .startTime,
+  .theme-default .cv-item .endTime {
+    color: #d1d5db;
+  }
+
+  .previousYear,
+  .nextYear {
+    display: none;
+  }
+  @media (width <= 480px) {
+    .periodLabel {
+      /* display: none !important; */
+      @apply text-base !important;
+    }
   }
 }
 </style>

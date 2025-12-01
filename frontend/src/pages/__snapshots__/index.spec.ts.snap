@@ -233,23 +233,23 @@ exports[`Page: Index > renders 1`] = `
                 </svg><span class="sr-only">components.Modal.close</span></button>
             </div><!-- Modal body -->
             <div class="p-4 md:p-5 space-y-4">
-              <table class="text-left align-top">
+              <table class="text-left align-top text-gray-900 dark:text-gray-100">
                 <tbody>
                   <tr>
-                    <th>pages.index.details.start</th>
+                    <th class="pr-4 font-semibold">pages.index.details.start</th>
                     <td></td>
                   </tr>
                   <tr>
-                    <th>pages.index.details.duration</th>
+                    <th class="pr-4 font-semibold">pages.index.details.duration</th>
                     <td></td>
                   </tr>
                   <tr>
-                    <th>pages.index.details.location</th>
+                    <th class="pr-4 font-semibold">pages.index.details.location</th>
                     <td></td>
                   </tr>
                   <tr></tr>
                 </tbody>
-              </table><pre class="text-left whitespace-pre-wrap"></pre>
+              </table><pre class="text-left whitespace-pre-wrap text-gray-900 dark:text-gray-100"></pre>
             </div>
           </div>
         </div>

@@ -29,11 +29,20 @@
           />
         </svg>
       </button>-->
-      <div v-if="loggedIn" id="navbar-default" class="hidden w-full md:block md:w-auto text-right text-gray-900 dark:text-gray-100">
+      <div
+        v-if="loggedIn"
+        id="navbar-default"
+        class="hidden w-full md:block md:w-auto text-right text-gray-900 dark:text-gray-100"
+      >
         <p>
           {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
         </p>
-        <button class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors" @click="logout">{{ $t('components.Header.logout') }}</button>
+        <button
+          class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          @click="logout"
+        >
+          {{ $t('components.Header.logout') }}
+        </button>
       </div>
     </div>
   </nav>

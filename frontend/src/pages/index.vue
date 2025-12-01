@@ -215,7 +215,7 @@ async function getData(startDate: Date, endDate: Date) {
     background-color: #1e3a5f;
   }
 
-  .theme-default .cv-day[aria-selected="true"] {
+  .theme-default .cv-day[aria-selected='true'] {
     background-color: #1e40af;
   }
 

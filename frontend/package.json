@@ -14,7 +14,7 @@
     "test:lint:locales": "scripts/locales/locales.sh ./locales",
     "test:unit": "vitest run --coverage",
     "test:unit:dev": "vitest",
-    "cli:make-admin": "npx ts-node cli/make-admin.ts"
+    "cli:make-admin": "npx tsx cli/make-admin.ts"
   },
   "dependencies": {
     "@nuxt/eslint": "^1.9.0",

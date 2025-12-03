@@ -8,6 +8,7 @@ import {
   X_LOGIN_REQUEST_TIME,
   X_LOGIN_TIME,
   X_LOGIN_TOKEN,
+  X_ROLE,
 } from '../helpers/dav'
 
 const bodySchema = z.object({
@@ -54,6 +55,8 @@ export default defineEventHandler(async (event) => {
   const name = vcard.getFirstProperty('fn')?.getValues()[0]
   const email = vcard.getFirstProperty('email')?.getValues()[0]
 
+  const role = vcard.getFirstProperty(X_ROLE)?.getValues()[0] ?? 'user'
+
   // create session
   await setUserSession(
     event,
@@ -61,6 +64,7 @@ export default defineEventHandler(async (event) => {
       user: {
         name,
         email,
+        role,
       },
     },
     { maxAge: MAX_AGE },

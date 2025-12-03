@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import ICAL from 'ical.js'
-import { findEvent } from '../helpters/dav'
+import { findEvent } from '../helpers/dav'
 
 const bodySchema = z.object({
   id: z.string(),

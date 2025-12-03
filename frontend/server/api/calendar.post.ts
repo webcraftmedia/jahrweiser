@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import ICAL from 'ical.js'
-import { findEvents } from '../helpters/dav'
+import { findEvents } from '../helpers/dav'
 
 const bodySchema = z.object({
   startDate: z.coerce.date(),

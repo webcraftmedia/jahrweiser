@@ -8,7 +8,7 @@ import {
   X_LOGIN_REQUEST_TIME,
   X_LOGIN_TIME,
   X_LOGIN_TOKEN,
-} from '../helpters/dav'
+} from '../helpers/dav'
 
 const bodySchema = z.object({
   token: z.string(),

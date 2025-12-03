@@ -12,7 +12,7 @@ import {
   X_LOGIN_DISABLED,
   X_LOGIN_REQUEST_TIME,
   X_LOGIN_TOKEN,
-} from '../helpters/dav'
+} from '../helpers/dav'
 import { MAX_AGE } from './redeemLoginLink.post'
 
 const config = useRuntimeConfig()

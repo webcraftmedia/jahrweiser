@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import { resolve } from 'path'
 import ICAL from 'ical.js'
-import { findUserByEmail, saveUser, X_ROLE, type DAV_CONFIG } from '../server/helpters/dav'
+import { findUserByEmail, saveUser, X_ROLE, type DAV_CONFIG } from '../server/helpers/dav'
 
 const email = process.argv[2]
 const revoke = !!process.argv[3]

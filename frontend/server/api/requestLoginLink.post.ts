@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
   // check if email in dav
-  const addressbooks = await findUserByEmail(email)
+  const addressbooks = await findUserByEmail(config, email)
 
   if (addressbooks.length !== 1) {
     console.log('user not found')
@@ -98,7 +98,7 @@ export default defineEventHandler(async (event) => {
   const href = addressbooks[0].href as string
   const etag = addressbooks[0].props?.getetag
 
-  await saveUser(href, etag, vcard.toString())
+  await saveUser(config, href, etag, vcard.toString())
 
   // send email with link
   const name = vcard.getFirstPropertyValue('fn')

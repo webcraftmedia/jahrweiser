@@ -16,10 +16,12 @@ const bodySchema = z.object({
 
 export const MAX_AGE = 60 * 60 * 24 * 7
 
+const config = useRuntimeConfig()
+
 export default defineEventHandler(async (event) => {
   const { token } = await readValidatedBody(event, bodySchema.parse)
   // check token in dav
-  const addressbooks = await findUserByToken(token)
+  const addressbooks = await findUserByToken(config, token)
 
   if (addressbooks.length !== 1) {
     console.log('user not found')
@@ -47,7 +49,7 @@ export default defineEventHandler(async (event) => {
 
   const href = addressbooks[0].href as string
   const etag = addressbooks[0].props?.getetag
-  await saveUser(href, etag, vcard.toString())
+  await saveUser(config, href, etag, vcard.toString())
 
   const name = vcard.getFirstProperty('fn')?.getValues()[0]
   const email = vcard.getFirstProperty('email')?.getValues()[0]

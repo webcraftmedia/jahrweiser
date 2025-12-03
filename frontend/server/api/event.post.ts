@@ -7,6 +7,8 @@ const bodySchema = z.object({
   occurrence: z.int().optional(),
 })
 
+const config = useRuntimeConfig()
+
 export default defineEventHandler(async (event) => {
   // make sure the user is logged in
   // This will throw a 401 error if the request doesn't come from a valid user session
@@ -14,7 +16,7 @@ export default defineEventHandler(async (event) => {
 
   const { id, occurrence } = await readValidatedBody(event, bodySchema.parse)
   // Calendar data
-  const caldata = await findEvent(id)
+  const caldata = await findEvent(config, id)
 
   if (caldata.length !== 1) {
     throw new Error('event not found')

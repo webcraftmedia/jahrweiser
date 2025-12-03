@@ -13,7 +13,8 @@
     "test:lint:eslint": "eslint --ext .vue,.ts,.tsx,.js,.jsx,.cjs,.mjs,.yml,.yaml --max-warnings 0 .",
     "test:lint:locales": "scripts/locales/locales.sh ./locales",
     "test:unit": "vitest run --coverage",
-    "test:unit:dev": "vitest"
+    "test:unit:dev": "vitest",
+    "cli:make-admin": "npx tsx cli/make-admin.ts"
   },
   "dependencies": {
     "@nuxt/eslint": "^1.9.0",

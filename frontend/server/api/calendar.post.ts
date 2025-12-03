@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import ICAL from 'ical.js'
-import { findEvents } from '../helpters/dav'
+import { findEvents } from '../helpers/dav'
 
 const bodySchema = z.object({
   startDate: z.coerce.date(),
@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
 
   const { startDate, endDate } = await readValidatedBody(event, bodySchema.parse)
   // Calendar data
-  const caldata = await findEvents(startDate, endDate)
+  const caldata = await findEvents(config, startDate, endDate)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: any[] = []

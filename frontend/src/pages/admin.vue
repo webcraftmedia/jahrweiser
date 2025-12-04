@@ -30,7 +30,8 @@ const isActive = (path: string) => {
           <div class="flex items-center flex-shrink-0 px-4 pt-5 pb-4">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Admin</h2>
           </div>
-          <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+          <hr class="border-gray-200 dark:border-gray-700" />
+          <nav class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto">
             <NuxtLink
               v-for="item in menuItems"
               :key="item.path"
@@ -39,7 +40,7 @@ const isActive = (path: string) => {
                 isActive(item.path)
                   ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-                'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
+                'group flex items-center px-2 py-2 text-sm font-medium rounded-lg'
               ]"
             >
               {{ item.label }}
@@ -47,18 +48,6 @@ const isActive = (path: string) => {
           </nav>
         </div>
       </aside>
-
-      <!-- Mobile Menu Button -->
-      <div class="md:hidden fixed top-20 left-4 z-50">
-        <button
-          @click="toggleMobileMenu"
-          class="bg-white dark:bg-gray-800 p-2 rounded-md text-gray-700 dark:text-gray-300 shadow-lg border border-gray-200 dark:border-gray-700"
-        >
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
 
       <!-- Mobile Drawer Backdrop -->
       <Transition
@@ -93,14 +82,15 @@ const isActive = (path: string) => {
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Admin</h2>
             <button
               @click="mobileMenuOpen = false"
-              class="ml-1 flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+              class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
             >
               <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+          <hr class="border-gray-200 dark:border-gray-700" />
+          <nav class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto">
             <NuxtLink
               v-for="item in menuItems"
               :key="item.path"
@@ -110,7 +100,7 @@ const isActive = (path: string) => {
                 isActive(item.path)
                   ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-                'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
+                'group flex items-center px-2 py-2 text-sm font-medium rounded-lg'
               ]"
             >
               {{ item.label }}
@@ -122,6 +112,19 @@ const isActive = (path: string) => {
       <!-- Main Content -->
       <div class="flex-1 overflow-auto">
         <main class="flex-1">
+          <!-- Mobile Menu Button -->
+          <div class="md:hidden px-4 pt-4 pb-3">
+            <button
+              @click="toggleMobileMenu"
+              class="p-2 text-gray-600 dark:text-gray-400 bg-transparent rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors"
+            >
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10" />
+              </svg>
+            </button>
+          </div>
+          <hr class="md:hidden border-gray-200 dark:border-gray-700" />
+
           <div class="py-6 px-4 sm:px-6 lg:px-8">
             <NuxtPage />
           </div>

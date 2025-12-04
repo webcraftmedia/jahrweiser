@@ -14,7 +14,10 @@
     "test:lint:locales": "scripts/locales/locales.sh ./locales",
     "test:unit": "vitest run --coverage",
     "test:unit:dev": "vitest",
-    "cli:make-admin": "npx tsx cli/make-admin.ts"
+    "cli:admin:grant": "npx tsx cli/admin-grant.ts",
+    "cli:admin:revoke": "npx tsx cli/admin-revoke.ts",
+    "cli:admin:tags:grant": "npx tsx cli/admin-tags-grant.ts",
+    "cli:admin:tags:revoke": "npx tsx cli/admin-tags-revoke.ts"
   },
   "dependencies": {
     "@nuxt/eslint": "^1.9.0",

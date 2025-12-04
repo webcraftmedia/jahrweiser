@@ -1,3 +1,5 @@
+import { defineNuxtConfig } from 'nuxt/config'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -32,11 +34,11 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // The private keys which are only available within server-side
     // DAV
-    DAV_USERNAME: null,
-    DAV_PASSWORD: null,
-    DAV_URL: null,
-    DAV_URL_CAL: null,
-    DAV_URL_CARD: null,
+    DAV_USERNAME: process.env.NUXT_DAV_USERNAME,
+    DAV_PASSWORD: process.env.NUXT_DAV_PASSWORD,
+    DAV_URL: process.env.NUXT_DAV_URL,
+    DAV_URL_CAL: process.env.NUXT_DAV_URL_CAL,
+    DAV_URL_CARD: process.env.NUXT_DAV_URL_CARD,
     // SMTP
     SMTP_HOST: 'localhost',
     SMTP_PORT: (process.env.NUXT_SMTP_PORT && parseInt(process.env.NUXT_SMTP_PORT)) || 1025,

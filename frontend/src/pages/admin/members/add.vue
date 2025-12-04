@@ -3,13 +3,13 @@ definePageMeta({
   middleware: ['authenticated', 'admin']
 })
 
-interface TagItem {
-  label: string
-  value: boolean
+interface Tag {
+  name: string
+  state: boolean
 }
 
 const email = ref('')
-const tags = ref<TagItem[]>([])
+const tags = ref<Tag[]>([])
 const sendWelcomeEmail = ref(true)
 
 const step = ref(1)
@@ -20,22 +20,25 @@ const isValidEmail = computed(() => {
   return emailPattern.test(email.value)
 })
 
-const mockFetchTags = async (): Promise<TagItem[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { label: 'GG&G', value: true },
-        { label: 'Kultur-Steher', value: false }
-      ])
-    }, 500)
-  })
+async function getUserTags(email: string): Promise<Tag[]> {
+  try {
+    return $fetch<Tag[]>('/api/admin/getUserTags', {
+      method: 'POST',
+      body: {
+        email,
+      },
+    })
+  } catch (error) {
+    console.log(error)
+    return []
+  }
 }
 
 const confirmEmail = async () => {
   if (!isValidEmail.value) return
 
   isLoadingTags.value = true
-  tags.value = await mockFetchTags()
+  tags.value = await getUserTags(email.value)
   isLoadingTags.value = false
 
   step.value = 2
@@ -49,7 +52,7 @@ const submitForm = () => {
   console.log('Form submitted:', {
     email: email.value,
     tags: tags.value,
-    sendWelcomeEmail: sendWelcomeEmail.value
+    sendWelcomeEmail: sendWelcomeEmail.value,
   })
   // Hier würde der finale API-Call stattfinden
 }
@@ -95,7 +98,11 @@ const submitForm = () => {
 
         <div v-if="step > 1" class="flex items-center text-green-600 dark:text-green-400">
           <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clip-rule="evenodd"
+            />
           </svg>
           <span class="text-sm font-medium">Gültige E-Mail</span>
         </div>
@@ -120,7 +127,7 @@ const submitForm = () => {
           <div v-for="(tag, index) in tags" :key="index" class="flex items-center">
             <input
               :id="`tag-${index}`"
-              v-model="tag.value"
+              v-model="tag.state"
               type="checkbox"
               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
               :disabled="step > 2"
@@ -129,7 +136,7 @@ const submitForm = () => {
               :for="`tag-${index}`"
               class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
             >
-              {{ tag.label }}
+              {{ tag.name }}
             </label>
           </div>
         </div>

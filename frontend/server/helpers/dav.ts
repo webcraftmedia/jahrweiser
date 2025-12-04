@@ -11,6 +11,7 @@ export const X_LOGIN_TOKEN = 'x-login-token'
 export const X_LOGIN_TIME = 'x-login-time'
 export const X_LOGIN_DISABLED = 'x-login-disabled'
 export const X_ROLE = 'x-role'
+export const X_ADMIN_TAGS = 'x-admin-tags'
 
 export type DAV_CONFIG = {
   DAV_USERNAME: string

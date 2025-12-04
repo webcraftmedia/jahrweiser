@@ -136,7 +136,7 @@ const currentPageTitle = computed(() => {
           </div>
           <hr class="md:hidden border-gray-200 dark:border-gray-700" />
 
-          <div class="w-full">
+          <div class="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
             <NuxtPage />
           </div>
         </main>

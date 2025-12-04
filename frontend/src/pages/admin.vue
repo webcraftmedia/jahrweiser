@@ -20,6 +20,11 @@ const toggleMobileMenu = () => {
 const isActive = (path: string) => {
   return route.path === path
 }
+
+const currentPageTitle = computed(() => {
+  const current = menuItems.value.find(item => item.path === route.path)
+  return current ? current.label : ''
+})
 </script>
 
 <template>
@@ -114,7 +119,7 @@ const isActive = (path: string) => {
       <div class="flex-1 overflow-auto w-full">
         <main class="w-full min-h-full">
           <!-- Mobile Menu Button -->
-          <div class="md:hidden px-4 pt-4 pb-3">
+          <div class="md:hidden flex items-center gap-3 px-4 pt-4 pb-3">
             <button
               @click="toggleMobileMenu"
               class="p-2 text-gray-600 dark:text-gray-400 bg-transparent rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors"
@@ -123,6 +128,11 @@ const isActive = (path: string) => {
                 <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10" />
               </svg>
             </button>
+            <div class="flex items-center gap-2 text-gray-900 dark:text-white">
+              <span class="font-semibold">Admin</span>
+              <span class="text-gray-400 dark:text-gray-500">&mdash;</span>
+              <span class="text-gray-700 dark:text-gray-300">{{ currentPageTitle }}</span>
+            </div>
           </div>
           <hr class="md:hidden border-gray-200 dark:border-gray-700" />
 

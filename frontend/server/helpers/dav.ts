@@ -2,9 +2,12 @@ import {
   addressBookQuery,
   calendarQuery,
   DAVNamespaceShort,
+  DAVResponse,
   fetchCalendarObjects,
   updateVCard,
 } from 'tsdav'
+
+import ICAL from 'ical.js'
 
 export const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
 export const X_LOGIN_TOKEN = 'x-login-token'
@@ -78,8 +81,8 @@ export const findEvent = (config: DAV_CONFIG, id: string) =>
     headers: headers(config),
   })
 
-export const findUserByToken = (config: DAV_CONFIG, token: string) =>
-  addressBookQuery({
+export const findUserByToken = async (config: DAV_CONFIG, token: string) => {
+  const users = await addressBookQuery({
     url: config.DAV_URL + config.DAV_URL_CARD,
     headers: headers(config),
     props: {
@@ -97,8 +100,19 @@ export const findUserByToken = (config: DAV_CONFIG, token: string) =>
     },
   })
 
-export const findUserByEmail = (config: DAV_CONFIG, email: string) =>
-  addressBookQuery({
+  // TODO: This also applies if more then 1 users are found - potential flaw
+  if (users.length !== 1) {
+    return false
+  }
+
+  return {
+    user: users[0]!,
+    vcard: new ICAL.Component(ICAL.parse(users[0]!.props?.addressData)),
+  }
+} 
+
+export const findUserByEmail = async (config: DAV_CONFIG, email: string) => {
+  const users = await addressBookQuery({
     url: config.DAV_URL + config.DAV_URL_CARD,
     headers: headers(config),
     props: {
@@ -116,12 +130,23 @@ export const findUserByEmail = (config: DAV_CONFIG, email: string) =>
     },
   })
 
-export const saveUser = (config: DAV_CONFIG, href: string, etag: string, vcard: string) =>
+  // TODO: This also applies if more then 1 users are found - potential flaw
+  if (users.length !== 1) {
+    return false
+  }
+
+  return {
+    user: users[0]!,
+    vcard: new ICAL.Component(ICAL.parse(users[0]!.props?.addressData)),
+  }
+}
+
+export const saveUser = (config: DAV_CONFIG, user: DAVResponse, vcard: ICAL.Component) =>
   updateVCard({
     vCard: {
-      url: config.DAV_URL + href,
+      url: config.DAV_URL + user.href,
       data: vcard,
-      etag: etag,
+      etag: user.props?.getetag,
     },
     headers: headers(config),
   })

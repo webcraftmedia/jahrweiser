@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import ICAL from 'ical.js'
 
 import { createTransport } from 'nodemailer'
 import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
@@ -62,17 +61,14 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
   // check if email in dav
-  const addressbooks = await findUserByEmail(config, email)
+  const query = await findUserByEmail(config, email)
 
-  if (addressbooks.length !== 1) {
+  if (!query) {
     console.log('user not found')
     return {}
   }
 
-  // TODO this can fail due to auth error
-  // console.log(addressbooks)
-
-  const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData))
+  const { user, vcard } = query
 
   const now = Date.now()
 
@@ -95,10 +91,7 @@ export default defineEventHandler(async (event) => {
   vcard.updatePropertyWithValue(X_LOGIN_REQUEST_TIME, now)
   vcard.updatePropertyWithValue(X_LOGIN_TOKEN, authtoken)
 
-  const href = addressbooks[0].href as string
-  const etag = addressbooks[0].props?.getetag
-
-  await saveUser(config, href, etag, vcard.toString())
+  await saveUser(config, user, vcard)
 
   // send email with link
   const name = vcard.getFirstPropertyValue('fn')

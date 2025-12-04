@@ -1,6 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: ['authenticated', 'admin']
+  middleware: ['authenticated', 'admin'],
+  layout: 'admin'
 })
 
 const router = useRouter()
@@ -110,8 +111,8 @@ const isActive = (path: string) => {
       </Transition>
 
       <!-- Main Content -->
-      <div class="flex-1 overflow-auto">
-        <main class="flex-1">
+      <div class="flex-1 overflow-auto w-full">
+        <main class="w-full min-h-full">
           <!-- Mobile Menu Button -->
           <div class="md:hidden px-4 pt-4 pb-3">
             <button
@@ -125,7 +126,7 @@ const isActive = (path: string) => {
           </div>
           <hr class="md:hidden border-gray-200 dark:border-gray-700" />
 
-          <div class="py-6 px-4 sm:px-6 lg:px-8">
+          <div class="w-full">
             <NuxtPage />
           </div>
         </main>

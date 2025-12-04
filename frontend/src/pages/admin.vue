@@ -1,15 +1,11 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: ['authenticated', 'admin'],
-  layout: 'admin'
 })
 
-const router = useRouter()
 const route = useRoute()
 
-const menuItems = ref([
-  { label: 'Mitglieder hinzufügen', path: '/admin/members/add' }
-])
+const menuItems = ref([{ label: 'Mitglieder hinzufügen', path: '/admin/members/add' }])
 
 const mobileMenuOpen = ref(false)
 
@@ -28,11 +24,13 @@ const currentPageTitle = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 w-full">
     <div class="flex h-screen overflow-hidden">
       <!-- Desktop Sidebar - Full Height -->
       <aside class="hidden md:flex md:flex-shrink-0 h-screen">
-        <div class="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full">
+        <div
+          class="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full"
+        >
           <div class="flex items-center flex-shrink-0 px-4 pt-5 pb-4">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Admin</h2>
           </div>
@@ -90,8 +88,18 @@ const currentPageTitle = computed(() => {
               @click="mobileMenuOpen = false"
               class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
             >
-              <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                class="h-6 w-6 text-gray-600 dark:text-gray-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -101,13 +109,13 @@ const currentPageTitle = computed(() => {
               v-for="item in menuItems"
               :key="item.path"
               :to="item.path"
-              @click="mobileMenuOpen = false"
               :class="[
                 isActive(item.path)
                   ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
                 'group flex items-center px-2 py-2 text-sm font-medium rounded-lg'
               ]"
+              @click="mobileMenuOpen = false"
             >
               {{ item.label }}
             </NuxtLink>
@@ -125,7 +133,12 @@ const currentPageTitle = computed(() => {
               class="p-2 text-gray-600 dark:text-gray-400 bg-transparent rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors"
             >
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10" />
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-width="2"
+                  d="M5 7h14M5 12h14M5 17h10"
+                />
               </svg>
             </button>
             <div class="flex items-center gap-2 text-gray-900 dark:text-white">

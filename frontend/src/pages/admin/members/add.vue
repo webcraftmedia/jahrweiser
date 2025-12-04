@@ -10,7 +10,7 @@ interface Tag {
 
 const email = ref('')
 const tags = ref<Tag[]>([])
-const sendWelcomeEmail = ref(true)
+const sendMail = ref(true)
 
 const step = ref(1)
 const isLoadingTags = ref(false)
@@ -49,12 +49,18 @@ const confirmTags = () => {
 }
 
 const submitForm = () => {
-  console.log('Form submitted:', {
-    email: email.value,
-    tags: tags.value,
-    sendWelcomeEmail: sendWelcomeEmail.value,
-  })
-  // Hier würde der finale API-Call stattfinden
+  try {
+    $fetch<Tag[]>('/api/admin/updateUserTags', {
+      method: 'POST',
+      body: {
+        email: email.value,
+        tags: tags.value,
+        sendMail: sendMail.value,
+      },
+    })
+  } catch (error) {
+    console.log(error)
+  }
 }
 </script>
 
@@ -172,7 +178,7 @@ const submitForm = () => {
         <div class="flex items-center">
           <input
             id="welcome-email"
-            v-model="sendWelcomeEmail"
+            v-model="sendMail"
             type="checkbox"
             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
           />

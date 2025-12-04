@@ -15,6 +15,11 @@ const sendWelcomeEmail = ref(true)
 const step = ref(1)
 const isLoadingTags = ref(false)
 
+const isValidEmail = computed(() => {
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailPattern.test(email.value)
+})
+
 const mockFetchTags = async (): Promise<TagItem[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -27,7 +32,7 @@ const mockFetchTags = async (): Promise<TagItem[]> => {
 }
 
 const confirmEmail = async () => {
-  if (!email.value) return
+  if (!isValidEmail.value) return
 
   isLoadingTags.value = true
   tags.value = await mockFetchTags()
@@ -81,7 +86,7 @@ const submitForm = () => {
         <button
           v-if="step === 1"
           type="button"
-          :disabled="!email"
+          :disabled="!isValidEmail"
           class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           @click="confirmEmail"
         >

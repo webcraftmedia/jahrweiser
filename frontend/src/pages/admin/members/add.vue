@@ -287,13 +287,6 @@ const resetForm = () => {
             <p class="mt-1 text-sm text-green-700 dark:text-green-400">
               Eine Begrüßungsmail wurde versendet.
             </p>
-            <button
-              type="button"
-              class="mt-2 text-green-700 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 text-sm font-medium underline"
-              @click="submitForm"
-            >
-              Erneut ausführen
-            </button>
           </div>
         </div>
       </div>
@@ -311,13 +304,6 @@ const resetForm = () => {
             <p class="mt-1 text-sm text-blue-700 dark:text-blue-400">
               Es wurde keine E-Mail versendet.
             </p>
-            <button
-              type="button"
-              class="mt-2 text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium underline"
-              @click="submitForm"
-            >
-              Erneut ausführen
-            </button>
           </div>
         </div>
       </div>
@@ -335,25 +321,40 @@ const resetForm = () => {
             <p class="mt-1 text-sm text-red-700 dark:text-red-400">
               {{ submitError }}
             </p>
-            <button
-              type="button"
-              class="mt-3 text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-red-700 dark:hover:bg-red-800 dark:focus:ring-red-900"
-              @click="submitForm"
-            >
-              Erneut ausführen
-            </button>
           </div>
         </div>
       </div>
 
-      <!-- Reset Button -->
-      <button
-        type="button"
-        class="mt-4 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-        @click="resetForm"
-      >
-        Neues Mitglied hinzufügen
-      </button>
+      <!-- Action Buttons -->
+      <div class="mt-4 flex items-center gap-4">
+        <button
+          type="button"
+          class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          @click="resetForm"
+        >
+          Neues Mitglied hinzufügen
+        </button>
+
+        <!-- Retry as button for error case -->
+        <button
+          v-if="submitResult === 'error'"
+          type="button"
+          class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-red-700 dark:hover:bg-red-800 dark:focus:ring-red-900"
+          @click="submitForm"
+        >
+          Erneut ausführen
+        </button>
+
+        <!-- Retry as link for success cases -->
+        <button
+          v-if="submitResult === 'success-with-email' || submitResult === 'success-without-email'"
+          type="button"
+          class="text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium underline"
+          @click="submitForm"
+        >
+          Erneut ausführen
+        </button>
+      </div>
     </div>
   </div>
 </template>

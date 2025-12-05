@@ -59,6 +59,10 @@ const goToStep = (targetStep: number) => {
   } else if (targetStep === 3 && isValidEmail.value) {
     step.value = 3
   }
+
+  // Reset result when going back to edit
+  submitResult.value = null
+  submitError.value = null
 }
 
 const submitForm = async () => {

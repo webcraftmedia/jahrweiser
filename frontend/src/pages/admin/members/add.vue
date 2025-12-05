@@ -48,6 +48,16 @@ const confirmTags = () => {
   step.value = 3
 }
 
+const goToStep = (targetStep: number) => {
+  if (targetStep === 1) {
+    step.value = 1
+  } else if (targetStep === 2 && isValidEmail.value) {
+    step.value = 2
+  } else if (targetStep === 3 && isValidEmail.value) {
+    step.value = 3
+  }
+}
+
 const submitForm = () => {
   try {
     $fetch<Tag[]>('/api/admin/updateUserTags', {
@@ -72,9 +82,19 @@ const submitForm = () => {
 
     <!-- Step 1: Email Input -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Schritt 1: E-Mail-Adresse eingeben
-      </h2>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Schritt 1: E-Mail-Adresse eingeben
+        </h2>
+        <button
+          v-if="step > 1"
+          type="button"
+          class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+          @click="goToStep(1)"
+        >
+          Bearbeiten
+        </button>
+      </div>
 
       <div class="space-y-4">
         <div>
@@ -85,9 +105,9 @@ const submitForm = () => {
             id="email"
             v-model="email"
             type="email"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder="mitglied@beispiel.de"
-            :disabled="step > 1"
+            :disabled="step !== 1"
             required
           />
         </div>
@@ -120,9 +140,19 @@ const submitForm = () => {
       v-if="step >= 2"
       class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700"
     >
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Schritt 2: Berechtigungen auswählen
-      </h2>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Schritt 2: Berechtigungen auswählen
+        </h2>
+        <button
+          v-if="step > 2"
+          type="button"
+          class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+          @click="goToStep(2)"
+        >
+          Bearbeiten
+        </button>
+      </div>
 
       <div v-if="isLoadingTags" class="flex items-center justify-center py-8">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -135,12 +165,13 @@ const submitForm = () => {
               :id="`tag-${index}`"
               v-model="tag.state"
               type="checkbox"
-              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-              :disabled="step > 2"
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="step !== 2"
             />
             <label
               :for="`tag-${index}`"
               class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+              :class="{'opacity-50': step !== 2}"
             >
               {{ tag.name }}
             </label>

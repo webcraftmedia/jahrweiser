@@ -36,6 +36,7 @@ export default defineEventHandler(async (event) => {
 
   const userQuery = await findUserByEmail(config, email)
 
+  let newTags: string[] = []
   if (!userQuery) {
     const newUser = new ICAL.Component('vcard')
     newUser.addPropertyWithValue('email', email)
@@ -45,6 +46,7 @@ export default defineEventHandler(async (event) => {
       ?.setValues(filteredTags.filter((t) => t.state).map((t) => t.name))
 
     await createUser(config, newUser)
+    newTags = filteredTags.filter((t) => t.state).map((t) => t.name)
   } else {
     const { user, vcard: userVcard } = userQuery
     let userTags = userVcard.getFirstProperty('categories')?.getValues() as string[]
@@ -52,6 +54,7 @@ export default defineEventHandler(async (event) => {
       if (t.state) {
         if (!userTags.includes(t.name)) {
           userTags.push(t.name)
+          newTags.push(t.name)
         }
       } else {
         userTags = userTags.filter((item) => item !== t.name)
@@ -62,7 +65,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // sendMail if selected and at least one new tag is set
-  if (sendMail && filteredTags.filter((t) => t.state).length > 0) {
+  if (sendMail && newTags.length > 0) {
     const to = { address: email.toString(), name: '' }
     const adminName = session.user.name
       ? session.user.name.split(' ').slice(-1).pop()
@@ -77,7 +80,7 @@ export default defineEventHandler(async (event) => {
           ...defaultParams,
           locale: 'de',
           newUser: !userQuery,
-          tags: filteredTags.filter((t) => t.state).map((t) => t.name),
+          tags: newTags,
           adminName,
         },
       })

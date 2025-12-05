@@ -35,13 +35,15 @@ export default defineEventHandler(async (event) => {
   const userQuery = await findUserByEmail(config, email)
 
   if (!userQuery) {
+    const newUser = new ICAL.Component('vcard')
+    newUser.addPropertyWithValue('email', email)
+    newUser.addPropertyWithValue('categories', '')
+    newUser
+      .getFirstProperty('categories')
+      ?.setValues(filteredTags.filter((t) => t.state).map((t) => t.name))
 
-    const newUser = new ICAL.design.vcard()
-    // create user, add tags
-    // TODO
     await createUser(config, newUser)
   } else {
-
     const { user, vcard: userVcard } = userQuery
     let userTags = userVcard.getFirstProperty('categories')?.getValues() as string[]
     filteredTags.map((t) => {

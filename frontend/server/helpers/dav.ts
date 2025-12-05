@@ -1,11 +1,9 @@
+import type { DAVResponse } from 'tsdav'
 import {
   addressBookQuery,
   calendarQuery,
   createVCard,
-  DAVAccount,
   DAVNamespaceShort,
-  DAVResponse,
-  fetchAddressBooks,
   fetchCalendarObjects,
   updateVCard,
 } from 'tsdav'
@@ -113,7 +111,7 @@ export const findUserByToken = async (config: DAV_CONFIG, token: string) => {
     user: users[0]!,
     vcard: new ICAL.Component(ICAL.parse(users[0]!.props?.addressData)),
   }
-} 
+}
 
 export const findUserByEmail = async (config: DAV_CONFIG, email: string) => {
   const users = await addressBookQuery({
@@ -155,14 +153,11 @@ export const saveUser = (config: DAV_CONFIG, user: DAVResponse, vcard: ICAL.Comp
     headers: headers(config),
   })
 
-export const createUser = async (config: DAV_CONFIG, vcard: ICAL.Component) => {
-  const addressBooks = await fetchAddressBooks({
-    account: accountCard(config),
-    headers: headers(config),
-  })
-
-  return createVCard({
-    addressBook: addressBooks[0],
+export const createUser = async (config: DAV_CONFIG, vcard: ICAL.Component) =>
+  createVCard({
+    addressBook: {
+      url: config.DAV_URL + config.DAV_URL_CARD,
+    },
     filename:
       createHash('sha256')
         .update(vcard.toString() + new Date().getTime())
@@ -170,12 +165,3 @@ export const createUser = async (config: DAV_CONFIG, vcard: ICAL.Component) => {
     vCardString: vcard.toString(),
     headers: headers(config),
   })
-}
-
-const accountCard = (config: DAV_CONFIG): DAVAccount => {
-  return {
-    accountType: 'carddav',
-    serverUrl: config.DAV_URL,
-    principalUrl: config.DAV_URL_CARD,
-  }
-}

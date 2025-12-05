@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { findUserByEmail, saveUser, X_ADMIN_TAGS } from '~~/server/helpers/dav'
+import { createUser, findUserByEmail, saveUser, X_ADMIN_TAGS } from '~~/server/helpers/dav'
+import ICAL from 'ical.js'
 
 const bodySchema = z.object({
   email: z.email(),
@@ -34,31 +35,30 @@ export default defineEventHandler(async (event) => {
   const userQuery = await findUserByEmail(config, email)
 
   if (!userQuery) {
+
+    const newUser = new ICAL.design.vcard()
     // create user, add tags
     // TODO
-    return true
-  }
+    await createUser(config, newUser)
+  } else {
 
-  const { user, vcard: userVcard } = userQuery
-  let userTags = userVcard.getFirstProperty('categories')?.getValues() as string[]
-  filteredTags.map((t) => {
-    if (t.state) {
-      if (!userTags.includes(t.name)) {
-        userTags.push(t.name)
+    const { user, vcard: userVcard } = userQuery
+    let userTags = userVcard.getFirstProperty('categories')?.getValues() as string[]
+    filteredTags.map((t) => {
+      if (t.state) {
+        if (!userTags.includes(t.name)) {
+          userTags.push(t.name)
+        }
+      } else {
+        userTags = userTags.filter((item) => item !== t.name)
       }
-    } else {
-      userTags = userTags.filter((item) => item !== t.name)
-    }
-  })
-
-  console.log(userTags)
-
-  userVcard.getFirstProperty('categories')?.setValues(userTags)
+    })
+    userVcard.getFirstProperty('categories')?.setValues(userTags)
+    await saveUser(config, user, userVcard)
+  }
 
   if (sendMail) {
     console.log('TODO: send mail')
   }
-
-  await saveUser(config, user, userVcard)
   return true
 })

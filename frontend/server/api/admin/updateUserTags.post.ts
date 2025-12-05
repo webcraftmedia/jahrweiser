@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import { createUser, findUserByEmail, saveUser, X_ADMIN_TAGS } from '~~/server/helpers/dav'
 import ICAL from 'ical.js'
+import { defaultParams, emailRenderer } from '~~/server/helpers/email'
+import path from 'path'
 
 const bodySchema = z.object({
   email: z.email(),
@@ -59,8 +61,30 @@ export default defineEventHandler(async (event) => {
     await saveUser(config, user, userVcard)
   }
 
-  if (sendMail) {
-    console.log('TODO: send mail')
+  // sendMail if selected and at least one new tag is set
+  if (sendMail && filteredTags.filter((t) => t.state).length > 0) {
+    const to = { address: email.toString(), name: '' }
+    const adminName = session.user.name
+      ? session.user.name.split(' ').slice(-1).pop()
+      : session.user.email
+    try {
+      await emailRenderer.send({
+        template: path.join(process.cwd(), 'server/emails/welcome'),
+        message: {
+          to,
+        },
+        locals: {
+          ...defaultParams,
+          locale: 'de',
+          newUser: !userQuery,
+          tags: filteredTags.filter((t) => t.state).map((t) => t.name),
+          adminName,
+        },
+      })
+    } catch (error) {
+      throw new Error(error as string)
+    }
+    return true
   }
-  return true
+  return false
 })

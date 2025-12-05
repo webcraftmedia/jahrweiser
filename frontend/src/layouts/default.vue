@@ -12,5 +12,12 @@
 @reference "tailwindcss";
 .content {
   @apply mt-16;
+  box-shadow: -10px 0 20px -10px rgba(0, 0, 0, 0.1), 10px 0 20px -10px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .content {
+    box-shadow: -10px 0 20px -10px rgba(0, 0, 0, 0.3), 10px 0 20px -10px rgba(0, 0, 0, 0.3);
+  }
 }
 </style>

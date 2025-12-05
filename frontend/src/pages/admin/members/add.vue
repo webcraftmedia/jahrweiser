@@ -14,6 +14,9 @@ const sendMail = ref(true)
 
 const step = ref(1)
 const isLoadingTags = ref(false)
+const isSubmitting = ref(false)
+const submitResult = ref<'success-with-email' | 'success-without-email' | 'error' | null>(null)
+const submitError = ref<string | null>(null)
 
 const isValidEmail = computed(() => {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -58,9 +61,13 @@ const goToStep = (targetStep: number) => {
   }
 }
 
-const submitForm = () => {
+const submitForm = async () => {
+  isSubmitting.value = true
+  submitResult.value = null
+  submitError.value = null
+
   try {
-    $fetch<Tag[]>('/api/admin/updateUserTags', {
+    const result = await $fetch<boolean>('/api/admin/updateUserTags', {
       method: 'POST',
       body: {
         email: email.value,
@@ -68,9 +75,27 @@ const submitForm = () => {
         sendMail: sendMail.value,
       },
     })
-  } catch (error) {
-    console.log(error)
+
+    if (result === true) {
+      submitResult.value = 'success-with-email'
+    } else if (result === false) {
+      submitResult.value = 'success-without-email'
+    }
+  } catch (error: any) {
+    submitResult.value = 'error'
+    submitError.value = error?.message || 'Ein unbekannter Fehler ist aufgetreten'
+  } finally {
+    isSubmitting.value = false
   }
+}
+
+const resetForm = () => {
+  email.value = ''
+  tags.value = []
+  sendMail.value = true
+  step.value = 1
+  submitResult.value = null
+  submitError.value = null
 }
 </script>
 
@@ -222,13 +247,92 @@ const submitForm = () => {
         </div>
 
         <button
+          v-if="!submitResult"
           type="button"
-          class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+          :disabled="isSubmitting"
+          class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
           @click="submitForm"
         >
-          Mitglied hinzufügen
+          <span v-if="isSubmitting" class="flex items-center">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Wird verarbeitet...
+          </span>
+          <span v-else>Mitglied hinzufügen</span>
         </button>
       </div>
+    </div>
+
+    <!-- Result Display -->
+    <div
+      v-if="submitResult"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700"
+    >
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Ergebnis
+      </h2>
+
+      <!-- Success with Email -->
+      <div v-if="submitResult === 'success-with-email'" class="space-y-4">
+        <div class="flex items-start p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <h3 class="text-sm font-medium text-green-800 dark:text-green-300">
+              Das war erfolgreich!
+            </h3>
+            <p class="mt-1 text-sm text-green-700 dark:text-green-400">
+              Eine Begrüßungsmail wurde versendet.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success without Email -->
+      <div v-if="submitResult === 'success-without-email'" class="space-y-4">
+        <div class="flex items-start p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300">
+              Das war erfolgreich!
+            </h3>
+            <p class="mt-1 text-sm text-blue-700 dark:text-blue-400">
+              Es wurde keine E-Mail versendet.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div v-if="submitResult === 'error'" class="space-y-4">
+        <div class="flex items-start p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <svg class="w-6 h-6 text-red-600 dark:text-red-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <h3 class="text-sm font-medium text-red-800 dark:text-red-300">
+              Fehler aufgetreten
+            </h3>
+            <p class="mt-1 text-sm text-red-700 dark:text-red-400">
+              {{ submitError }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset Button -->
+      <button
+        type="button"
+        class="mt-4 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+        @click="resetForm"
+      >
+        Neues Mitglied hinzufügen
+      </button>
     </div>
   </div>
 </template>

@@ -1,13 +1,17 @@
 import {
   addressBookQuery,
   calendarQuery,
+  createVCard,
+  DAVAccount,
   DAVNamespaceShort,
   DAVResponse,
+  fetchAddressBooks,
   fetchCalendarObjects,
   updateVCard,
 } from 'tsdav'
 
 import ICAL from 'ical.js'
+import { createHash } from 'node:crypto'
 
 export const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
 export const X_LOGIN_TOKEN = 'x-login-token'
@@ -150,3 +154,28 @@ export const saveUser = (config: DAV_CONFIG, user: DAVResponse, vcard: ICAL.Comp
     },
     headers: headers(config),
   })
+
+export const createUser = async (config: DAV_CONFIG, vcard: ICAL.Component) => {
+  const addressBooks = await fetchAddressBooks({
+    account: accountCard(config),
+    headers: headers(config),
+  })
+
+  return createVCard({
+    addressBook: addressBooks[0],
+    filename:
+      createHash('sha256')
+        .update(vcard.toString() + new Date().getTime())
+        .digest('hex') + '.vcf',
+    vCardString: vcard.toString(),
+    headers: headers(config),
+  })
+}
+
+const accountCard = (config: DAV_CONFIG): DAVAccount => {
+  return {
+    accountType: 'carddav',
+    serverUrl: config.DAV_URL,
+    principalUrl: config.DAV_URL_CARD,
+  }
+}

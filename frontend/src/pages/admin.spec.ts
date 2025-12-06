@@ -7,16 +7,6 @@ describe('Page: Admin', () => {
     const html = await (
       await renderSuspended(Page, {
         route: '/admin',
-        /* global: {
-          stubs: {
-            CalendarViewHeader: {
-              template: '<span />',
-            },
-            CalendarView: {
-              template: '<span />',
-            },
-          },
-        },*/
       })
     ).html()
     expect(html).toMatchSnapshot()

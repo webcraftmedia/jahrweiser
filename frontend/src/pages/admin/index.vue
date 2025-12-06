@@ -5,7 +5,3 @@ definePageMeta({
 
 await navigateTo('/admin/members/add')
 </script>
-
-<template>
-  <div></div>
-</template>

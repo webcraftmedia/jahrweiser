@@ -1,6 +1,6 @@
 import { renderSuspended } from '@nuxt/test-utils/runtime'
 import Page from './admin.vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 describe('Page: Admin', () => {
   it('renders', async () => {

@@ -18,7 +18,7 @@ const isActive = (path: string) => {
 }
 
 const currentPageTitle = computed(() => {
-  const current = menuItems.value.find(item => item.path === route.path)
+  const current = menuItems.value.find((item) => item.path === route.path)
   return current ? current.label : ''
 })
 </script>
@@ -44,7 +44,7 @@ const currentPageTitle = computed(() => {
                 isActive(item.path)
                   ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-                'group flex items-center px-2 py-2 text-sm font-medium rounded-lg'
+                'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
               ]"
             >
               {{ item.label }}
@@ -113,7 +113,7 @@ const currentPageTitle = computed(() => {
                 isActive(item.path)
                   ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-                'group flex items-center px-2 py-2 text-sm font-medium rounded-lg'
+                'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
               ]"
               @click="mobileMenuOpen = false"
             >

@@ -6,6 +6,7 @@ mockNuxtImport('useI18n', () => () => {
   return {
     ...useNuxtApp().$i18n,
     locale: 'de',
+    t: (key: string) => key,
   }
 })
 

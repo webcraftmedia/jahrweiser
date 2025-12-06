@@ -2,10 +2,19 @@
   "emails": {
     "requestLoginLink": {
       "subject": "Login-Freigabe angefordert",
-      "authenticate": "Um dich Einzuloggen drücke den nachfolgenden Knopf.",
+      "authenticate": "Um dich einzuloggen drücke den nachfolgenden Knopf.",
       "authenticateLink": "Wenn die E-Mail nicht korrekt angezeigt wird kannst du auch diesem Link folgend:",
       "button": "Anmelden",
       "hints": "Die Anmeldung ist auf dem jeweiligen Gerät für {loginDays} Tage gültig."
+    },
+    "welcome": {
+      "subject": "hat dir Kalender-Zugang gewährt",
+      "new": "Du wurdest eingeladen an folgenden Kalender-Teilen teilzunehmen:",
+      "access": "Du hast Zugang zu weiteren Kalender-Teilen erhalten:",
+      "login": "Du kannst den Kalender mithilfe des nachfolgenden Knopf besuchen.",
+      "loginInstructions": "Um den Kalender zu sehen, musst du dich dort mit deiner E-Mail-Adresse einloggen.",
+      "loginLink": "Wenn die E-Mail nicht korrekt angezeigt wird kannst du auch diesem Link folgend:",
+      "button": "Kalender besuchen"
     }
   },
   "general": {
@@ -13,6 +22,6 @@
     "seeYou": "Bis bald bei ",
     "yourTeam": "– Dein {team} Team",
     "welcome": "Willkommen bei",
-    "support": "Wenn du Fragen oder Probleme hast, kannst du dich gerne an den Support wenden:"
+    "support": "Wenn du Fragen oder Probleme hast, kannst du dich gerne an den Support wenden"
   }
 }

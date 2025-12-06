@@ -1,4 +1,3 @@
-import ICAL from 'ical.js'
 import { findUserByEmail, saveUser, X_ROLE } from '../server/helpers/dav'
 import { config } from './tools/config'
 import { check as checkEmail } from './tools/email'
@@ -9,19 +8,14 @@ checkEmail(email)
 
 console.log(`Allow admin priviledge for ${email}.`)
 
-const users = await findUserByEmail(config, email)
+const query = await findUserByEmail(config, email)
 
-if (users.length !== 1) {
+if (!query) {
   console.error('User with given email not found in dav endpoint')
   process.exit(1)
 }
 
-const user = users[0]!
-const vcard = new ICAL.Component(ICAL.parse(user.props?.addressData))
-
+const { user, vcard } = query
 vcard.updatePropertyWithValue(X_ROLE, 'admin')
 
-const href = user.href as string
-const etag = user.props?.getetag
-
-await saveUser(config, href, etag, vcard.toString())
+await saveUser(config, user, vcard)

@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import ICAL from 'ical.js'
 
 import {
   findUserByToken,
@@ -22,9 +21,9 @@ const config = useRuntimeConfig()
 export default defineEventHandler(async (event) => {
   const { token } = await readValidatedBody(event, bodySchema.parse)
   // check token in dav
-  const addressbooks = await findUserByToken(config, token)
+  const query = await findUserByToken(config, token)
 
-  if (addressbooks.length !== 1) {
+  if (!query) {
     console.log('user not found')
     throw createError({
       statusCode: 401,
@@ -32,8 +31,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const vcard = new ICAL.Component(ICAL.parse(addressbooks[0].props?.addressData))
-
+  const { user, vcard } = query
   const isDisabled = vcard.getFirstPropertyValue(X_LOGIN_DISABLED) as string
   if (isDisabled === 'true') {
     console.log('account disabled')
@@ -48,9 +46,7 @@ export default defineEventHandler(async (event) => {
   vcard.removeAllProperties(X_LOGIN_TOKEN)
   vcard.updatePropertyWithValue(X_LOGIN_TIME, Date.now())
 
-  const href = addressbooks[0].href as string
-  const etag = addressbooks[0].props?.getetag
-  await saveUser(config, href, etag, vcard.toString())
+  await saveUser(config, user, vcard)
 
   const name = vcard.getFirstProperty('fn')?.getValues()[0]
   const email = vcard.getFirstProperty('email')?.getValues()[0]

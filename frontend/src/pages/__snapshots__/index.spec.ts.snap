@@ -3,7 +3,7 @@
 exports[`Page: Index > renders 1`] = `
 "<div id="test-wrapper">
   <div class="box">
-    <div class="content row">
+    <div class="calendar row">
       <div aria-label="Calendar" class="cv-wrapper locale-en locale-en-us y2025 m01 period-month periodCount-1 theme-default">
         <div class="cv-header">
           <div class="cv-header-nav"><button class="previousYear" aria-label="Previous Year">&lt;&lt;</button><button class="previousPeriod" aria-label="Previous Period">&lt;</button><button class="currentPeriod" aria-label="Current Period">January 2025</button><button class="nextPeriod" aria-label="Next Period">&gt;</button><button class="nextYear" aria-label="Next Year">&gt;&gt;</button></div>

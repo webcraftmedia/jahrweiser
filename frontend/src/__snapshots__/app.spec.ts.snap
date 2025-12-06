@@ -2,7 +2,7 @@
 
 exports[`App > renders default page 1`] = `
 "<div id="test-wrapper">
-  <div data-v-433a9abd="" class="flex h-screen bg-white dark:bg-gray-800">
+  <div data-v-433a9abd="" class="flex flex-col h-screen bg-white dark:bg-gray-800">
     <nav data-v-433a9abd="" class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0 z-50">
       <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2"><a href="/" class="flex items-center space-x-3 rtl:space-x-reverse"><svg data-v-279a7136="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 250 70" class="nuxt-icon nuxt-icon--fill logo text-gray-900 dark:text-white">
             <defs>
@@ -70,7 +70,7 @@ exports[`App > renders default page 1`] = `
         <!--v-if-->
       </div>
     </nav>
-    <div data-v-433a9abd="" class="content max-w-screen-xl flex flex-wrap justify-between mx-auto">
+    <div data-v-433a9abd="" class="content flex-1 overflow-y-auto max-w-screen-xl flex flex-wrap justify-between mx-auto w-full">
       <div class="flex w-full">
         <div class="m-auto mt-8 w-full max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
           <form class="space-y-6">

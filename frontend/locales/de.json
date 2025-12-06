@@ -8,6 +8,7 @@
       "privacy-policy": "Datenschutz"
     },
     "Header": {
+      "admin": "Admin",
       "logout": "↪ Logout",
       "open-menu": "Open menu",
       "welcome": "Willkommen"
@@ -17,6 +18,46 @@
     }
   },
   "pages": {
+    "admin": {
+      "members": {
+        "add": {
+          "result": {
+            "button-new": "Neues Mitglied hinzufügen",
+            "button-retry": "Erneut ausführen",
+            "error-title": "Fehler aufgetreten",
+            "error-unknown": "Ein unbekannter Fehler ist aufgetreten",
+            "success-title": "Das war erfolgreich!",
+            "success-with-email": "Eine Begrüßungsmail wurde versendet.",
+            "success-without-email": "Es wurde keine E-Mail versendet.",
+            "title": "Ergebnis"
+          },
+          "step1": {
+            "button-edit": "Bearbeiten",
+            "button-next": "Weiter",
+            "email-label": "E-Mail-Adresse",
+            "email-placeholder": "mitglied{'@'}beispiel.de",
+            "title": "Schritt 1: E-Mail-Adresse eingeben",
+            "valid-email": "Gültige E-Mail"
+          },
+          "step2": {
+            "button-next": "Weiter",
+            "permissions-selected": "Berechtigungen ausgewählt",
+            "title": "Schritt 2: Berechtigungen auswählen"
+          },
+          "step3": {
+            "button-submit": "Mitglied hinzufügen",
+            "processing": "Wird verarbeitet...",
+            "send-welcome-email": "Begrüßungsmail versenden",
+            "title": "Schritt 3: Abschluss"
+          },
+          "title": "Mitglieder hinzufügen"
+        }
+      },
+      "menu": {
+        "members-add": "Mitglieder hinzufügen"
+      },
+      "title": "Admin"
+    },
     "index": {
       "details": {
         "duration": "Duration:",

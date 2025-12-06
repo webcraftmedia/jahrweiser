@@ -42,12 +42,21 @@
         <p>
           {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
         </p>
-        <button
-          class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          @click="logout"
-        >
-          {{ $t('components.Header.logout') }}
-        </button>
+        <div class="space-x-4">
+          <NuxtLink
+            v-if="user?.role === 'admin'"
+            to="/admin/members/add"
+            class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            {{ $t('components.Header.admin') }}
+          </NuxtLink>
+          <button
+            class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            @click="logout"
+          >
+            {{ $t('components.Header.logout') }}
+          </button>
+        </div>
       </div>
 
       <!-- Mobile menu dropdown -->
@@ -76,6 +85,14 @@
 
           <!-- Menu Items -->
           <nav class="py-2">
+            <NuxtLink
+              v-if="user?.role === 'admin'"
+              to="/admin/members/add"
+              class="block w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"
+              @click="toggleMobileMenu"
+            >
+              {{ $t('components.Header.admin') }}
+            </NuxtLink>
             <button
               class="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"
               @click="logout"

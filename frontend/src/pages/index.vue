@@ -1,6 +1,6 @@
 <template>
   <div class="box">
-    <div class="content row">
+    <div class="calendar row">
       <client-only>
         <CalendarView v-bind="calendar" class="theme-default" @click-item="clickItem">
           <!--holiday-us-traditional holiday-us-official-->
@@ -161,7 +161,7 @@ async function getData(startDate: Date, endDate: Date) {
   height: 100%;
   width: 100%;
 }
-.content {
+.calendar {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   color: #2c3e50;
   width: 100%;
@@ -172,7 +172,7 @@ async function getData(startDate: Date, endDate: Date) {
 
 /* Dark mode support for content & calendar */
 @media (prefers-color-scheme: dark) {
-  .content {
+  .calendar {
     color: #e5e7eb;
   }
 

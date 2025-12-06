@@ -1,0 +1,18 @@
+extend ../layout.pug
+
+block content
+  .content
+  if newUser
+    p!= t('emails.welcome.new')
+  else
+    p!= t('emails.welcome.access')
+  - var tags = tags
+  ul
+    each tag in tags
+      li= tag
+  p!= t('emails.welcome.login',)
+  p!= t('emails.welcome.loginInstructions',)
+  a.button(href=ORGANIZATION_URL)!= t('emails.welcome.button')
+  p!= t('emails.welcome.loginLink')
+    | 
+    a.auth(href=ORGANIZATION_URL)!= ORGANIZATION_URL

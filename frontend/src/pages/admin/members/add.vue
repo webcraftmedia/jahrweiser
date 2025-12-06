@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { z } from 'zod'
+
 definePageMeta({
   middleware: ['authenticated', 'admin']
 })
@@ -19,9 +21,15 @@ const submitResult = ref<'success-with-email' | 'success-without-email' | 'error
 const submitError = ref<string | null>(null)
 const isEmailShaking = ref(false)
 
+const emailSchema = z.string().email()
+
 const isValidEmail = computed(() => {
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailPattern.test(email.value)
+  try {
+    emailSchema.parse(email.value)
+    return true
+  } catch {
+    return false
+  }
 })
 
 async function getUserTags(email: string): Promise<Tag[]> {

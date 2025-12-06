@@ -7,9 +7,7 @@ const route = useRoute()
 
 const { t } = useI18n()
 
-const menuItems = ref([
-  { label: t('pages.admin.menu.members-add'), path: '/admin/members/add' },
-])
+const menuItems = ref([{ label: t('pages.admin.menu.members-add'), path: '/admin/members/add' }])
 
 const mobileMenuOpen = ref(false)
 
@@ -93,8 +91,8 @@ const currentPageTitle = computed(() => {
               {{ $t('pages.admin.title') }}
             </h2>
             <button
-              @click="mobileMenuOpen = false"
               class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+              @click="mobileMenuOpen = false"
             >
               <svg
                 class="h-6 w-6 text-gray-600 dark:text-gray-300"
@@ -137,8 +135,8 @@ const currentPageTitle = computed(() => {
           <!-- Mobile Menu Button -->
           <div class="md:hidden flex items-center gap-3 px-4 pt-4 pb-3">
             <button
-              @click="toggleMobileMenu"
               class="p-2 text-gray-600 dark:text-gray-400 bg-transparent rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors"
+              @click="toggleMobileMenu"
             >
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -151,6 +149,7 @@ const currentPageTitle = computed(() => {
             </button>
             <div class="flex items-center gap-2 text-gray-900 dark:text-white">
               <span class="font-semibold">{{ $t('pages.admin.title') }}</span>
+              <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -->
               <span class="text-gray-400 dark:text-gray-500">&mdash;</span>
               <span class="text-gray-700 dark:text-gray-300">{{ currentPageTitle }}</span>
             </div>

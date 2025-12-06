@@ -10,6 +10,8 @@ import {
 
 import ICAL from 'ical.js'
 import { createHash } from 'node:crypto'
+import { Agent as HttpAgent } from 'node:http'
+import { Agent as HttpsAgent } from 'node:https'
 
 export const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
 export const X_LOGIN_TOKEN = 'x-login-token'
@@ -25,6 +27,30 @@ export type DAV_CONFIG = {
   DAV_URL_CAL: string
   DAV_URL_CARD: string
 }
+
+const DAV_TIMEOUT_MS = 300000 // 30 seconds
+
+// Create HTTP/HTTPS agents with custom timeout settings
+const httpAgent = new HttpAgent({
+  keepAlive: true,
+  // timeout: DAV_TIMEOUT_MS,
+})
+
+const httpsAgent = new HttpsAgent({
+  keepAlive: true,
+  // timeout: DAV_TIMEOUT_MS,
+})
+
+const createTimeoutSignal = (timeoutMs: number) => {
+  const controller = new AbortController()
+  setTimeout(() => controller.abort(), timeoutMs)
+  return controller.signal
+}
+
+const getFetchOptions = () => ({
+  signal: createTimeoutSignal(DAV_TIMEOUT_MS),
+  agent: (parsedURL: URL) => (parsedURL.protocol === 'http:' ? httpAgent : httpsAgent),
+})
 
 export const headers = (config: DAV_CONFIG) => {
   return {
@@ -72,6 +98,7 @@ export const findEvents = (config: DAV_CONFIG, from: Date, to: Date) =>
     },
     depth: '1',
     headers: headers(config),
+    fetchOptions: getFetchOptions(),
   })
 
 export const findEvent = (config: DAV_CONFIG, id: string) =>
@@ -81,6 +108,7 @@ export const findEvent = (config: DAV_CONFIG, id: string) =>
     },
     objectUrls: [`${id}.ics`],
     headers: headers(config),
+    fetchOptions: getFetchOptions(),
   })
 
 export const findUserByToken = async (config: DAV_CONFIG, token: string) => {
@@ -100,6 +128,7 @@ export const findUserByToken = async (config: DAV_CONFIG, token: string) => {
         ['text-match']: token,
       },
     },
+    fetchOptions: getFetchOptions(),
   })
 
   // TODO: This also applies if more then 1 users are found - potential flaw
@@ -130,6 +159,7 @@ export const findUserByEmail = async (config: DAV_CONFIG, email: string) => {
         ['text-match']: email,
       },
     },
+    fetchOptions: getFetchOptions(),
   })
 
   // TODO: This also applies if more then 1 users are found - potential flaw
@@ -151,6 +181,7 @@ export const saveUser = (config: DAV_CONFIG, user: DAVResponse, vcard: ICAL.Comp
       etag: user.props?.getetag,
     },
     headers: headers(config),
+    fetchOptions: getFetchOptions(),
   })
 
 export const createUser = async (config: DAV_CONFIG, vcard: ICAL.Component) =>
@@ -164,4 +195,5 @@ export const createUser = async (config: DAV_CONFIG, vcard: ICAL.Component) =>
         .digest('hex') + '.vcf',
     vCardString: vcard.toString(),
     headers: headers(config),
+    fetchOptions: getFetchOptions(),
   })

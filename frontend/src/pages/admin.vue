@@ -5,7 +5,11 @@ definePageMeta({
 
 const route = useRoute()
 
-const menuItems = ref([{ label: 'Mitglieder hinzufügen', path: '/admin/members/add' }])
+const { t } = useI18n()
+
+const menuItems = ref([
+  { label: t('pages.admin.menu.members-add'), path: '/admin/members/add' },
+])
 
 const mobileMenuOpen = ref(false)
 
@@ -32,7 +36,9 @@ const currentPageTitle = computed(() => {
           class="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full"
         >
           <div class="flex items-center flex-shrink-0 px-4 pt-5 pb-4">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Admin</h2>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+              {{ $t('pages.admin.title') }}
+            </h2>
           </div>
           <hr class="border-gray-200 dark:border-gray-700" />
           <nav class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto">
@@ -83,7 +89,9 @@ const currentPageTitle = computed(() => {
           class="md:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white dark:bg-gray-800 shadow-xl"
         >
           <div class="flex items-center justify-between flex-shrink-0 px-4 pt-5 pb-4">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Admin</h2>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+              {{ $t('pages.admin.title') }}
+            </h2>
             <button
               @click="mobileMenuOpen = false"
               class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
@@ -142,7 +150,7 @@ const currentPageTitle = computed(() => {
               </svg>
             </button>
             <div class="flex items-center gap-2 text-gray-900 dark:text-white">
-              <span class="font-semibold">Admin</span>
+              <span class="font-semibold">{{ $t('pages.admin.title') }}</span>
               <span class="text-gray-400 dark:text-gray-500">&mdash;</span>
               <span class="text-gray-700 dark:text-gray-300">{{ currentPageTitle }}</span>
             </div>

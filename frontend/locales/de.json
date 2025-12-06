@@ -8,6 +8,7 @@
       "privacy-policy": "Datenschutz"
     },
     "Header": {
+      "admin": "Admin",
       "logout": "↪ Logout",
       "open-menu": "Open menu",
       "welcome": "Willkommen"
@@ -18,6 +19,10 @@
   },
   "pages": {
     "admin": {
+      "title": "Admin",
+      "menu": {
+        "members-add": "Mitglieder hinzufügen"
+      },
       "members": {
         "add": {
           "title": "Mitglieder hinzufügen",

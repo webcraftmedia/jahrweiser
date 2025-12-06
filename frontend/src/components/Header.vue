@@ -48,7 +48,7 @@
             to="/admin/members/add"
             class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
-            Admin
+            {{ $t('components.Header.admin') }}
           </NuxtLink>
           <button
             class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -91,7 +91,7 @@
               class="block w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"
               @click="toggleMobileMenu"
             >
-              Admin
+              {{ $t('components.Header.admin') }}
             </NuxtLink>
             <button
               class="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"

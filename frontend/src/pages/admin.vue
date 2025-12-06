@@ -26,7 +26,7 @@ const currentPageTitle = computed(() => {
 </script>
 
 <template>
-  <div class="bg-gray-50 dark:bg-gray-900 w-full flex-1">
+  <div class="bg-gray-50 dark:bg-gray-900 w-full flex-1 border-l border-r">
     <div class="flex overflow-hidden full-height">
       <!-- Desktop Sidebar - Full Height -->
       <aside class="hidden md:flex md:flex-shrink-0">

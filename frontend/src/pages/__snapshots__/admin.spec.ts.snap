@@ -2,7 +2,7 @@
 
 exports[`Page: Admin > renders 1`] = `
 "<div id="test-wrapper">
-  <div data-v-557e9c62="" class="bg-gray-50 dark:bg-gray-900 w-full flex-1">
+  <div data-v-557e9c62="" class="bg-gray-50 dark:bg-gray-900 w-full flex-1 border-l border-r">
     <div data-v-557e9c62="" class="flex overflow-hidden full-height">
       <!-- Desktop Sidebar - Full Height -->
       <aside data-v-557e9c62="" class="hidden md:flex md:flex-shrink-0">

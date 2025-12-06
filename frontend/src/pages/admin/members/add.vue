@@ -108,7 +108,7 @@ const submitForm = async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     submitResult.value = 'error'
-    submitError.value = error?.message || 'Ein unbekannter Fehler ist aufgetreten'
+    submitError.value = error?.message || $t('pages.admin.members.add.result.error-unknown')
   } finally {
     isSubmitting.value = false
   }
@@ -127,7 +127,7 @@ const resetForm = () => {
 <template>
   <div class="space-y-6">
     <h1 class="hidden md:block text-2xl font-semibold text-gray-900 dark:text-white">
-      Mitglieder hinzufügen
+      {{ $t('pages.admin.members.add.title') }}
     </h1>
 
     <!-- Step 1: Email Input -->
@@ -136,7 +136,7 @@ const resetForm = () => {
     >
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-          Schritt 1: E-Mail-Adresse eingeben
+          {{ $t('pages.admin.members.add.step1.title') }}
         </h2>
         <button
           v-if="step > 1"
@@ -144,14 +144,14 @@ const resetForm = () => {
           class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
           @click="goToStep(1)"
         >
-          Bearbeiten
+          {{ $t('pages.admin.members.add.step1.button-edit') }}
         </button>
       </div>
 
       <div class="space-y-4">
         <div>
           <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            E-Mail-Adresse
+            {{ $t('pages.admin.members.add.step1.email-label') }}
           </label>
           <input
             id="email"
@@ -159,7 +159,7 @@ const resetForm = () => {
             type="email"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             :class="{ 'shake border-red-500 dark:border-red-500': isEmailShaking }"
-            placeholder="mitglied@beispiel.de"
+            :placeholder="$t('pages.admin.members.add.step1.email-placeholder')"
             :disabled="step !== 1"
             required
             @keyup.enter="handleEmailEnter"
@@ -173,7 +173,7 @@ const resetForm = () => {
           class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           @click="confirmEmail"
         >
-          Weiter
+          {{ $t('pages.admin.members.add.step1.button-next') }}
         </button>
 
         <div v-if="step > 1" class="flex items-center text-green-600 dark:text-green-400">
@@ -184,7 +184,9 @@ const resetForm = () => {
               clip-rule="evenodd"
             />
           </svg>
-          <span class="text-sm font-medium">Gültige E-Mail</span>
+          <span class="text-sm font-medium">{{
+            $t('pages.admin.members.add.step1.valid-email')
+          }}</span>
         </div>
       </div>
     </div>
@@ -196,7 +198,7 @@ const resetForm = () => {
     >
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-          Schritt 2: Berechtigungen auswählen
+          {{ $t('pages.admin.members.add.step2.title') }}
         </h2>
         <button
           v-if="step > 2"
@@ -204,7 +206,7 @@ const resetForm = () => {
           class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
           @click="goToStep(2)"
         >
-          Bearbeiten
+          {{ $t('pages.admin.members.add.step1.button-edit') }}
         </button>
       </div>
 
@@ -238,7 +240,7 @@ const resetForm = () => {
           class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           @click="confirmTags"
         >
-          Weiter
+          {{ $t('pages.admin.members.add.step2.button-next') }}
         </button>
 
         <div v-if="step > 2" class="flex items-center text-green-600 dark:text-green-400">
@@ -249,7 +251,9 @@ const resetForm = () => {
               clip-rule="evenodd"
             />
           </svg>
-          <span class="text-sm font-medium">Berechtigungen ausgewählt</span>
+          <span class="text-sm font-medium">{{
+            $t('pages.admin.members.add.step2.permissions-selected')
+          }}</span>
         </div>
       </div>
     </div>
@@ -259,7 +263,9 @@ const resetForm = () => {
       v-if="step >= 3"
       class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700"
     >
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Schritt 3: Abschluss</h2>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        {{ $t('pages.admin.members.add.step3.title') }}
+      </h2>
 
       <div class="space-y-4">
         <div class="flex items-center">
@@ -273,7 +279,7 @@ const resetForm = () => {
             for="welcome-email"
             class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
           >
-            Begrüßungsmail versenden
+            {{ $t('pages.admin.members.add.step3.send-welcome-email') }}
           </label>
         </div>
 
@@ -305,9 +311,9 @@ const resetForm = () => {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Wird verarbeitet...
+            {{ $t('pages.admin.members.add.step3.processing') }}
           </span>
-          <span v-else>Mitglied hinzufügen</span>
+          <span v-else>{{ $t('pages.admin.members.add.step3.button-submit') }}</span>
         </button>
       </div>
     </div>
@@ -317,7 +323,9 @@ const resetForm = () => {
       v-if="submitResult"
       class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700"
     >
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ergebnis</h2>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        {{ $t('pages.admin.members.add.result.title') }}
+      </h2>
 
       <!-- Success with Email -->
       <div v-if="submitResult === 'success-with-email'" class="space-y-4">
@@ -337,10 +345,10 @@ const resetForm = () => {
           </svg>
           <div>
             <h3 class="text-sm font-medium text-green-800 dark:text-green-300">
-              Das war erfolgreich!
+              {{ $t('pages.admin.members.add.result.success-title') }}
             </h3>
             <p class="mt-1 text-sm text-green-700 dark:text-green-400">
-              Eine Begrüßungsmail wurde versendet.
+              {{ $t('pages.admin.members.add.result.success-with-email') }}
             </p>
           </div>
         </div>
@@ -364,10 +372,10 @@ const resetForm = () => {
           </svg>
           <div>
             <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300">
-              Das war erfolgreich!
+              {{ $t('pages.admin.members.add.result.success-title') }}
             </h3>
             <p class="mt-1 text-sm text-blue-700 dark:text-blue-400">
-              Es wurde keine E-Mail versendet.
+              {{ $t('pages.admin.members.add.result.success-without-email') }}
             </p>
           </div>
         </div>
@@ -390,7 +398,9 @@ const resetForm = () => {
             />
           </svg>
           <div>
-            <h3 class="text-sm font-medium text-red-800 dark:text-red-300">Fehler aufgetreten</h3>
+            <h3 class="text-sm font-medium text-red-800 dark:text-red-300">
+              {{ $t('pages.admin.members.add.result.error-title') }}
+            </h3>
             <p class="mt-1 text-sm text-red-700 dark:text-red-400">
               {{ submitError }}
             </p>
@@ -405,7 +415,7 @@ const resetForm = () => {
           class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           @click="resetForm"
         >
-          Neues Mitglied hinzufügen
+          {{ $t('pages.admin.members.add.result.button-new') }}
         </button>
 
         <!-- Retry as button for error case -->
@@ -415,7 +425,7 @@ const resetForm = () => {
           class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-red-700 dark:hover:bg-red-800 dark:focus:ring-red-900"
           @click="submitForm"
         >
-          Erneut ausführen
+          {{ $t('pages.admin.members.add.result.button-retry') }}
         </button>
 
         <!-- Retry as link for success cases -->
@@ -425,7 +435,7 @@ const resetForm = () => {
           class="text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium underline"
           @click="submitForm"
         >
-          Erneut ausführen
+          {{ $t('pages.admin.members.add.result.button-retry') }}
         </button>
       </div>
     </div>

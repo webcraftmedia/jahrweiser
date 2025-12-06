@@ -17,6 +17,42 @@
     }
   },
   "pages": {
+    "admin": {
+      "members": {
+        "add": {
+          "title": "Mitglieder hinzufügen",
+          "step1": {
+            "title": "Schritt 1: E-Mail-Adresse eingeben",
+            "email-label": "E-Mail-Adresse",
+            "email-placeholder": "mitglied{'@'}beispiel.de",
+            "button-next": "Weiter",
+            "valid-email": "Gültige E-Mail",
+            "button-edit": "Bearbeiten"
+          },
+          "step2": {
+            "title": "Schritt 2: Berechtigungen auswählen",
+            "button-next": "Weiter",
+            "permissions-selected": "Berechtigungen ausgewählt"
+          },
+          "step3": {
+            "title": "Schritt 3: Abschluss",
+            "send-welcome-email": "Begrüßungsmail versenden",
+            "button-submit": "Mitglied hinzufügen",
+            "processing": "Wird verarbeitet..."
+          },
+          "result": {
+            "title": "Ergebnis",
+            "success-title": "Das war erfolgreich!",
+            "success-with-email": "Eine Begrüßungsmail wurde versendet.",
+            "success-without-email": "Es wurde keine E-Mail versendet.",
+            "error-title": "Fehler aufgetreten",
+            "error-unknown": "Ein unbekannter Fehler ist aufgetreten",
+            "button-new": "Neues Mitglied hinzufügen",
+            "button-retry": "Erneut ausführen"
+          }
+        }
+      }
+    },
     "index": {
       "details": {
         "duration": "Duration:",

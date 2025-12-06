@@ -11,7 +11,7 @@
 <style scoped>
 @reference "tailwindcss";
 .content {
-  @apply pt-16 pb-4;
+  @apply mt-16 mb-7;
   box-shadow: -10px 0 20px -10px rgba(0, 0, 0, 0.1), 10px 0 20px -10px rgba(0, 0, 0, 0.1);
 }
 

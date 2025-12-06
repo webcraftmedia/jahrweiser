@@ -24,10 +24,10 @@ const currentPageTitle = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 w-full">
-    <div class="flex h-screen overflow-hidden">
+  <div class="bg-gray-50 dark:bg-gray-900 w-full flex-1">
+    <div class="flex overflow-hidden full-height">
       <!-- Desktop Sidebar - Full Height -->
-      <aside class="hidden md:flex md:flex-shrink-0 h-screen">
+      <aside class="hidden md:flex md:flex-shrink-0">
         <div
           class="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full"
         >
@@ -157,3 +157,11 @@ const currentPageTitle = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.full-height {
+  height: 100%;
+  height: -moz-available;
+  height: -webkit-fill-available;
+}
+</style>

@@ -17,6 +17,7 @@ const isLoadingTags = ref(false)
 const isSubmitting = ref(false)
 const submitResult = ref<'success-with-email' | 'success-without-email' | 'error' | null>(null)
 const submitError = ref<string | null>(null)
+const isEmailShaking = ref(false)
 
 const isValidEmail = computed(() => {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -45,6 +46,17 @@ const confirmEmail = async () => {
   isLoadingTags.value = false
 
   step.value = 2
+}
+
+const handleEmailEnter = async () => {
+  if (isValidEmail.value) {
+    await confirmEmail()
+  } else {
+    isEmailShaking.value = true
+    setTimeout(() => {
+      isEmailShaking.value = false
+    }, 500)
+  }
 }
 
 const confirmTags = () => {
@@ -103,6 +115,18 @@ const resetForm = () => {
 }
 </script>
 
+<style scoped>
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+</style>
+
 <template>
   <div class="space-y-6">
     <h1 class="hidden md:block text-2xl font-semibold text-gray-900 dark:text-white">
@@ -134,10 +158,12 @@ const resetForm = () => {
             id="email"
             v-model="email"
             type="email"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            :class="{ 'shake border-red-500 dark:border-red-500': isEmailShaking }"
             placeholder="mitglied@beispiel.de"
             :disabled="step !== 1"
             required
+            @keyup.enter="handleEmailEnter"
           />
         </div>
 

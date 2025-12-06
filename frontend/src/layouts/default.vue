@@ -1,7 +1,7 @@
 <template>
-  <div class="flex h-screen bg-white dark:bg-gray-800">
+  <div class="flex flex-col h-screen bg-white dark:bg-gray-800">
     <Header />
-    <div class="content max-w-screen-xl flex flex-wrap justify-between mx-auto">
+    <div class="content flex-1 overflow-y-auto max-w-screen-xl flex flex-wrap justify-between mx-auto w-full">
       <slot />
     </div>
     <Footer />

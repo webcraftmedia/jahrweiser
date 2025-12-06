@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Page: Add > renders 1`] = `
+"<div id="test-wrapper">
+  <div data-v-f9d8b1c9="" class="space-y-6">
+    <h1 data-v-f9d8b1c9="" class="hidden md:block text-2xl font-semibold text-gray-900 dark:text-white"> Mitglieder hinzufügen </h1><!-- Step 1: Email Input -->
+    <div data-v-f9d8b1c9="" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+      <div data-v-f9d8b1c9="" class="flex justify-between items-center mb-4">
+        <h2 data-v-f9d8b1c9="" class="text-lg font-semibold text-gray-900 dark:text-white"> Schritt 1: E-Mail-Adresse eingeben </h2>
+        <!--v-if-->
+      </div>
+      <div data-v-f9d8b1c9="" class="space-y-4">
+        <div data-v-f9d8b1c9=""><label data-v-f9d8b1c9="" for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"> E-Mail-Adresse </label><input data-v-f9d8b1c9="" id="email" type="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all" placeholder="mitglied@beispiel.de" required=""></div><button data-v-f9d8b1c9="" type="button" disabled="" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"> Weiter </button>
+        <!--v-if-->
+      </div>
+    </div><!-- Step 2: Tags Selection -->
+    <!--v-if-->
+    <!-- Step 3: Welcome Email -->
+    <!--v-if-->
+    <!-- Result Display -->
+    <!--v-if-->
+  </div>
+</div>"
+`;

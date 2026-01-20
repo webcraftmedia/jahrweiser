@@ -7,7 +7,10 @@ const route = useRoute()
 
 const { t } = useI18n()
 
-const menuItems = ref([{ label: t('pages.admin.menu.members-add'), path: '/admin/members/add' }])
+const menuItems = ref([
+  { label: t('pages.admin.menu.members-add'), path: '/admin/members/add' },
+  { label: t('pages.admin.menu.calendar'), path: '/admin/cal/', external: true },
+])
 
 const mobileMenuOpen = ref(false)
 
@@ -40,19 +43,27 @@ const currentPageTitle = computed(() => {
           </div>
           <hr class="border-gray-200 dark:border-gray-700" />
           <nav class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto">
-            <NuxtLink
-              v-for="item in menuItems"
-              :key="item.path"
-              :to="item.path"
-              :class="[
-                isActive(item.path)
-                  ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-                'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
-              ]"
-            >
-              {{ item.label }}
-            </NuxtLink>
+            <template v-for="item in menuItems" :key="item.path">
+              <a
+                v-if="item.external"
+                :href="item.path"
+                class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg"
+              >
+                {{ item.label }}
+              </a>
+              <NuxtLink
+                v-else
+                :to="item.path"
+                :class="[
+                  isActive(item.path)
+                    ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+                  'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
+                ]"
+              >
+                {{ item.label }}
+              </NuxtLink>
+            </template>
           </nav>
         </div>
       </aside>
@@ -111,20 +122,29 @@ const currentPageTitle = computed(() => {
           </div>
           <hr class="border-gray-200 dark:border-gray-700" />
           <nav class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto">
-            <NuxtLink
-              v-for="item in menuItems"
-              :key="item.path"
-              :to="item.path"
-              :class="[
-                isActive(item.path)
-                  ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-                'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
-              ]"
-              @click="mobileMenuOpen = false"
-            >
-              {{ item.label }}
-            </NuxtLink>
+            <template v-for="item in menuItems" :key="item.path">
+              <a
+                v-if="item.external"
+                :href="item.path"
+                class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg"
+                @click="mobileMenuOpen = false"
+              >
+                {{ item.label }}
+              </a>
+              <NuxtLink
+                v-else
+                :to="item.path"
+                :class="[
+                  isActive(item.path)
+                    ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+                  'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
+                ]"
+                @click="mobileMenuOpen = false"
+              >
+                {{ item.label }}
+              </NuxtLink>
+            </template>
           </nav>
         </div>
       </Transition>

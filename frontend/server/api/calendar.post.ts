@@ -1,8 +1,9 @@
 import { z } from 'zod'
 import ICAL from 'ical.js'
-import { findEvents } from '../helpers/dav'
+import { findCalendars, findEvents } from '../helpers/dav'
 
 const bodySchema = z.object({
+  calendar: z.string(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
 })
@@ -14,9 +15,18 @@ export default defineEventHandler(async (event) => {
   // This will throw a 401 error if the request doesn't come from a valid user session
   await requireUserSession(event)
 
-  const { startDate, endDate } = await readValidatedBody(event, bodySchema.parse)
+  const { calendar, startDate, endDate } = await readValidatedBody(event, bodySchema.parse)
+
+  const calendars = await findCalendars(config)
+
+  const selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
+
+  if (!selectedCalendar) {
+    throw new Error('Calendar not found')
+  }
+
   // Calendar data
-  const caldata = await findEvents(config, startDate, endDate)
+  const caldata = await findEvents(config, selectedCalendar.url, startDate, endDate)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: any[] = []
@@ -45,6 +55,11 @@ export default defineEventHandler(async (event) => {
           if (occurrence >= startDate) {
             const endDate = new Date(occurrence.getTime() + event.duration.toSeconds() * 1000)
             results.push({
+              calendar: selectedCalendar.displayName,
+              color:
+                typeof selectedCalendar.calendarColor === 'string'
+                  ? selectedCalendar.calendarColor
+                  : '#e7e7ff',
               id: hrefToId(data.href as string),
               occurrence: count,
               startDate: occurrence,
@@ -61,6 +76,11 @@ export default defineEventHandler(async (event) => {
           ed.setMilliseconds(ed.getMilliseconds() - 1) // Correct Full day thingy
         }
         results.push({
+          calendar: selectedCalendar.displayName,
+          color:
+            typeof selectedCalendar.calendarColor === 'string'
+              ? selectedCalendar.calendarColor
+              : '#e7e7ff',
           id: hrefToId(data.href as string),
           startDate: sd,
           endDate: ed,
@@ -74,5 +94,6 @@ export default defineEventHandler(async (event) => {
 })
 
 function hrefToId(href: string) {
-  return href.slice(config.DAV_URL_CAL.length, -4)
+  const lastSlashIndex = href.lastIndexOf('/')
+  return href.slice(lastSlashIndex + 1, -4)
 }

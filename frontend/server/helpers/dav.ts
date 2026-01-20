@@ -5,6 +5,7 @@ import {
   createVCard,
   DAVNamespaceShort,
   fetchCalendarObjects,
+  fetchCalendars,
   updateVCard,
 } from 'tsdav'
 
@@ -24,7 +25,6 @@ export type DAV_CONFIG = {
   DAV_USERNAME: string
   DAV_PASSWORD: string
   DAV_URL: string
-  DAV_URL_CAL: string
   DAV_URL_CARD: string
 }
 
@@ -71,9 +71,20 @@ function formatDate(date: Date): string {
   return `${year}${month}${day}T${hours}${minutes}${seconds}`
 }
 
-export const findEvents = (config: DAV_CONFIG, from: Date, to: Date) =>
+export const findCalendars = (config: DAV_CONFIG) =>
+  fetchCalendars({
+    account: {
+      serverUrl: config.DAV_URL,
+      accountType: 'caldav',
+      rootUrl: config.DAV_URL + '/dav.php/',
+      homeUrl: config.DAV_URL + `/dav.php/calendars/${config.DAV_USERNAME}/`,
+    },
+    headers: headers(config),
+  })
+
+export const findEvents = (config: DAV_CONFIG, url: string, from: Date, to: Date) =>
   calendarQuery({
-    url: config.DAV_URL + config.DAV_URL_CAL,
+    url,
     props: {
       [`${DAVNamespaceShort.DAV}:getetag`]: {},
       [`${DAVNamespaceShort.CALDAV}:calendar-data`]: {},
@@ -101,10 +112,10 @@ export const findEvents = (config: DAV_CONFIG, from: Date, to: Date) =>
     fetchOptions: getFetchOptions(),
   })
 
-export const findEvent = (config: DAV_CONFIG, id: string) =>
+export const findEvent = (config: DAV_CONFIG, url: string, id: string) =>
   fetchCalendarObjects({
     calendar: {
-      url: config.DAV_URL + config.DAV_URL_CAL,
+      url,
     },
     objectUrls: [`${id}.ics`],
     headers: headers(config),

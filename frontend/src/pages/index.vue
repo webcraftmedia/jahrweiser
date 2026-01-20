@@ -74,7 +74,7 @@ const items = computed<ICalendarItem[]>(() =>
       ...item,
       style: `background-color: ${color}`,
     }
-  })
+  }),
 )
 
 function invertColor(hex: string): string {
@@ -85,7 +85,7 @@ function invertColor(hex: string): string {
   const g = parseInt(color.substring(2, 4), 16)
   const b = parseInt(color.substring(4, 6), 16)
   // Invert and convert back to hex
-  const inverted = ((255 - r) << 16 | (255 - g) << 8 | (255 - b)).toString(16).padStart(6, '0')
+  const inverted = (((255 - r) << 16) | ((255 - g) << 8) | (255 - b)).toString(16).padStart(6, '0')
   return `#${inverted}`
 }
 
@@ -186,8 +186,8 @@ async function getData(startDate: Date, endDate: Date) {
             startDate,
             endDate,
           },
-        })
-      )
+        }),
+      ),
     )
 
     // Store raw events (colors applied via computed property)

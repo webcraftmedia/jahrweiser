@@ -61,8 +61,41 @@ definePageMeta({
 
 const modal = ref()
 
-const items = ref<ICalendarItem[]>([])
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const rawItems = ref<any[]>([])
 const event = ref()
+const calendars = ref<{ name: string; color: string }[]>([])
+const isDarkMode = ref(false)
+
+const items = computed<ICalendarItem[]>(() =>
+  rawItems.value.map((item) => {
+    const color = isDarkMode.value ? invertColor(item.color) : item.color
+    return {
+      ...item,
+      style: `background-color: ${color}`,
+    }
+  }),
+)
+
+function invertColor(hex: string): string {
+  // Remove # if present
+  const color = hex.replace('#', '')
+  // Parse RGB values
+  const r = parseInt(color.substring(0, 2), 16)
+  const g = parseInt(color.substring(2, 4), 16)
+  const b = parseInt(color.substring(4, 6), 16)
+  // Invert and convert back to hex
+  const inverted = (((255 - r) << 16) | ((255 - g) << 8) | (255 - b)).toString(16).padStart(6, '0')
+  return `#${inverted}`
+}
+
+onMounted(() => {
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  isDarkMode.value = mediaQuery.matches
+  mediaQuery.addEventListener('change', (e) => {
+    isDarkMode.value = e.matches
+  })
+})
 
 async function handleModalX() {
   modal.value.close()
@@ -71,12 +104,13 @@ async function handleModalX() {
 async function clickItem(data: INormalizedCalendarItem) {
   try {
     const {
-      originalItem: { id, occurrence },
+      originalItem: { calendar, id, occurrence },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } = data as any
     const eventDate = await $fetch('/api/event', {
       method: 'POST',
       body: {
+        calendar,
         id,
         occurrence,
       },
@@ -137,13 +171,27 @@ function setShowDate(d: Date) {
 
 async function getData(startDate: Date, endDate: Date) {
   try {
-    items.value = await $fetch('/api/calendar', {
-      method: 'POST',
-      body: {
-        startDate,
-        endDate,
-      },
-    })
+    // Fetch all calendars if not already loaded
+    if (calendars.value.length === 0) {
+      calendars.value = await $fetch('/api/calendars')
+    }
+
+    // Fetch events from all calendars in parallel
+    const results = await Promise.all(
+      calendars.value.map((cal) =>
+        $fetch('/api/calendar', {
+          method: 'POST',
+          body: {
+            calendar: cal.name,
+            startDate,
+            endDate,
+          },
+        }),
+      ),
+    )
+
+    // Store raw events (colors applied via computed property)
+    rawItems.value = results.flat()
   } catch (error) {
     console.log(error)
   }

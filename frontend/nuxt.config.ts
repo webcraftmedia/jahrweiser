@@ -37,7 +37,6 @@ export default defineNuxtConfig({
     DAV_USERNAME: process.env.NUXT_DAV_USERNAME,
     DAV_PASSWORD: process.env.NUXT_DAV_PASSWORD,
     DAV_URL: process.env.NUXT_DAV_URL,
-    DAV_URL_CAL: process.env.NUXT_DAV_URL_CAL,
     DAV_URL_CARD: process.env.NUXT_DAV_URL_CARD,
     // SMTP
     SMTP_HOST: 'localhost',
@@ -64,7 +63,6 @@ if (
   (!process.env.NUXT_DAV_USERNAME ||
     !process.env.NUXT_DAV_PASSWORD ||
     !process.env.NUXT_DAV_URL ||
-    !process.env.NUXT_DAV_URL_CAL ||
     !process.env.NUXT_DAV_URL_CARD)
 ) {
   console.log(process.env)

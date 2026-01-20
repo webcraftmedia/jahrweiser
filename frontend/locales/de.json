@@ -54,6 +54,7 @@
         }
       },
       "menu": {
+        "calendar": "Kalender verwalten",
         "members-add": "Mitglieder hinzufügen"
       },
       "title": "Admin"

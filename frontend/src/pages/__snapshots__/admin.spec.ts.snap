@@ -11,7 +11,7 @@ exports[`Page: Admin > renders 1`] = `
             <h2 data-v-557e9c62="" class="text-xl font-semibold text-gray-900 dark:text-white">pages.admin.title</h2>
           </div>
           <hr data-v-557e9c62="" class="border-gray-200 dark:border-gray-700">
-          <nav data-v-557e9c62="" class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto"><a data-v-557e9c62="" href="/admin/members/add" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.members-add</a></nav>
+          <nav data-v-557e9c62="" class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto"><a data-v-557e9c62="" href="/admin/members/add" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.members-add</a><a data-v-557e9c62="" href="/admin/cal/" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.calendar</a></nav>
         </div>
       </aside><!-- Mobile Drawer Backdrop -->
       <transition-stub data-v-557e9c62="" enteractiveclass="transition-opacity ease-linear duration-300" enterfromclass="opacity-0" entertoclass="opacity-100" leaveactiveclass="transition-opacity ease-linear duration-300" leavefromclass="opacity-100" leavetoclass="opacity-0" appear="false" persisted="false" css="true">

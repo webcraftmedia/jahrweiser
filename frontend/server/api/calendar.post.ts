@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import ICAL from 'ical.js'
-import { findCalendars, findEvents } from '../helpers/dav'
+import { findCalendars, findEvents, findUserByEmail } from '../helpers/dav'
 
 const bodySchema = z.object({
   calendar: z.string(),
@@ -13,7 +13,7 @@ const config = useRuntimeConfig()
 export default defineEventHandler(async (event) => {
   // make sure the user is logged in
   // This will throw a 401 error if the request doesn't come from a valid user session
-  await requireUserSession(event)
+  const session = await requireUserSession(event)
 
   const { calendar, startDate, endDate } = await readValidatedBody(event, bodySchema.parse)
 
@@ -24,6 +24,14 @@ export default defineEventHandler(async (event) => {
   if (!selectedCalendar) {
     throw new Error('Calendar not found')
   }
+
+  // Find dav user
+  const userQuery = await findUserByEmail(config, session.user.email)
+  const showPrivate =
+    !userQuery ||
+    (userQuery.vcard.getFirstProperty('categories')?.getValues() as string[]).find(
+      (tag) => tag === calendar,
+    )
 
   // Calendar data
   const caldata = await findEvents(config, selectedCalendar.url, startDate, endDate)
@@ -36,6 +44,9 @@ export default defineEventHandler(async (event) => {
     vcalendar.getFirstPropertyValue()
     const vevent = vcalendar.getFirstSubcomponent('vevent')
     if (vevent) {
+      if (!showPrivate && vevent.getFirstProperty('class')?.getFirstValue() === 'PRIVATE') {
+        return
+      }
       const event = new ICAL.Event(vevent)
 
       if (event.isRecurring()) {

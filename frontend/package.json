@@ -17,7 +17,8 @@
     "cli:admin:grant": "npx tsx cli/admin-grant.ts",
     "cli:admin:revoke": "npx tsx cli/admin-revoke.ts",
     "cli:admin:tags:grant": "npx tsx cli/admin-tags-grant.ts",
-    "cli:admin:tags:revoke": "npx tsx cli/admin-tags-revoke.ts"
+    "cli:admin:tags:revoke": "npx tsx cli/admin-tags-revoke.ts",
+    "cli:ics:import": "npx tsx cli/ics-import.ts"
   },
   "dependencies": {
     "@nuxt/eslint": "^1.9.0",

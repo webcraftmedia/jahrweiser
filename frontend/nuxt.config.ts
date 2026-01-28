@@ -51,12 +51,12 @@ export default defineNuxtConfig({
     DAV_URL: process.env.DAV_URL,
     DAV_URL_CARD: process.env.DAV_URL_CARD,
     // SMTP
-    SMTP_HOST: 'localhost',
+    SMTP_HOST: process.env.SMTP_HOST || 'localhost',
     SMTP_PORT: (process.env.SMTP_PORT && parseInt(process.env.SMTP_PORT)) || 1025,
     SMTP_IGNORE_TLS: process.env.SMTP_IGNORE_TLS !== 'false', // default = true
     SMTP_SECURE: process.env.SMTP_SECURE === 'true',
-    SMTP_USERNAME: '',
-    SMTP_PASSWORD: '',
+    SMTP_USERNAME: process.env.SMTP_USERNAME || '',
+    SMTP_PASSWORD: process.env.SMTP_PASSWORD || '',
     SMTP_MAX_CONNECTIONS:
       (process.env.SMTP_MAX_CONNECTIONS && parseInt(process.env.SMTP_MAX_CONNECTIONS)) || 5,
     SMTP_MAX_MESSAGES:

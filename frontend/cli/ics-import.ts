@@ -34,7 +34,7 @@ if (args.length > 1) {
   files = args.map((f) => resolve(process.cwd(), f)).sort()
 } else {
   // Single argument: could be directory, glob pattern, or single file
-  const pattern = args[0]
+  const pattern = args[0]!
   const resolvedPattern = resolve(process.cwd(), pattern)
 
   try {

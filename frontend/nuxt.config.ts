@@ -5,6 +5,18 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   srcDir: './src',
+  typescript: {
+    tsConfig: {
+      include: ['../types/**/*.d.ts'],
+    },
+  },
+  nitro: {
+    typescript: {
+      tsConfig: {
+        include: ['../types/**/*.d.ts'],
+      },
+    },
+  },
   modules: [
     '@nuxt/eslint',
     '@nuxt/icon',

@@ -5,5 +5,3 @@ declare module '#auth-utils' {
     role: string
   }
 }
-
-export {}

@@ -3,18 +3,18 @@ import { resolve, basename } from 'node:path'
 import { glob } from 'tinyglobby'
 import { runIcsImport, type ImportConfig } from './tools/ics-import-runner'
 
-const pattern = process.argv[2]
+const args = process.argv.slice(2)
 
-if (!pattern) {
-  console.error('Usage: npx tsx cli/ics-import.ts <path-or-pattern>')
+if (args.length === 0) {
+  console.error('Usage: npx tsx cli/ics-import.ts <files-or-pattern>')
   console.error('')
   console.error('Arguments:')
-  console.error('  path-or-pattern  Directory, glob pattern, or path to JSON files')
+  console.error('  files-or-pattern  Directory, glob pattern, or JSON file(s)')
   console.error('')
   console.error('Examples:')
   console.error('  npx tsx cli/ics-import.ts imports/')
   console.error('  npx tsx cli/ics-import.ts "imports/*.json"')
-  console.error('  npx tsx cli/ics-import.ts "path/to/imports/*.json"')
+  console.error('  npx tsx cli/ics-import.ts ./imports/*.json')
   console.error('')
   console.error('Each JSON file should contain a single import configuration:')
   console.error('  {')
@@ -27,33 +27,45 @@ if (!pattern) {
 
 // Find all JSON files
 let files: string[] = []
-const resolvedPattern = resolve(process.cwd(), pattern)
 
-try {
-  const stat = statSync(resolvedPattern)
-  if (stat.isDirectory()) {
-    // If it's a directory, find all .json files in it
-    const entries = readdirSync(resolvedPattern)
-    files = entries
-      .filter((f) => f.endsWith('.json'))
-      .map((f) => resolve(resolvedPattern, f))
-      .sort()
+// Check if multiple arguments were passed (shell-expanded glob)
+if (args.length > 1) {
+  // Multiple files passed directly
+  files = args.map((f) => resolve(process.cwd(), f)).sort()
+} else {
+  // Single argument: could be directory, glob pattern, or single file
+  const pattern = args[0]
+  const resolvedPattern = resolve(process.cwd(), pattern)
+
+  try {
+    const stat = statSync(resolvedPattern)
+    if (stat.isDirectory()) {
+      // If it's a directory, find all .json files in it
+      const entries = readdirSync(resolvedPattern)
+      files = entries
+        .filter((f) => f.endsWith('.json'))
+        .map((f) => resolve(resolvedPattern, f))
+        .sort()
+    } else if (stat.isFile()) {
+      // Single file
+      files = [resolvedPattern]
+    }
+  } catch {
+    // Not a directory or doesn't exist, treat as glob pattern
   }
-} catch {
-  // Not a directory or doesn't exist, treat as glob pattern
+
+  if (files.length === 0) {
+    // Use glob pattern
+    files = await glob(pattern, {
+      cwd: process.cwd(),
+      absolute: true,
+    })
+    files.sort()
+  }
 }
 
 if (files.length === 0) {
-  // Use glob pattern
-  files = await glob(pattern, {
-    cwd: process.cwd(),
-    absolute: true,
-  })
-  files.sort()
-}
-
-if (files.length === 0) {
-  console.error(`No JSON files found matching: ${pattern}`)
+  console.error(`No JSON files found matching: ${args.join(' ')}`)
   process.exit(1)
 }
 

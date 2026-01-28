@@ -1,4 +1,4 @@
-import { findUserByEmail, saveUser, X_ROLE } from '../server/helpers/dav'
+import { createCardDAVAccount, findUserByEmail, saveUser, X_ROLE } from '../server/helpers/dav'
 import { config } from './tools/config'
 import { check as checkEmail } from './tools/email'
 
@@ -8,7 +8,8 @@ checkEmail(email)
 
 console.log(`Allow admin priviledge for ${email}.`)
 
-const query = await findUserByEmail(config, email)
+const cardDavAccount = createCardDAVAccount(config)
+const query = await findUserByEmail(cardDavAccount, email)
 
 if (!query) {
   console.error('User with given email not found in dav endpoint')
@@ -18,4 +19,4 @@ if (!query) {
 const { user, vcard } = query
 vcard.updatePropertyWithValue(X_ROLE, 'admin')
 
-await saveUser(config, user, vcard)
+await saveUser(cardDavAccount, user, vcard)

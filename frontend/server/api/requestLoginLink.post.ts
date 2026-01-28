@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import path from 'node:path'
 import {
+  createCardDAVAccount,
   findUserByEmail,
   saveUser,
   X_LOGIN_DISABLED,
@@ -20,7 +21,8 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
   // check if email in dav
-  const query = await findUserByEmail(config, email)
+  const cardDavAccount = createCardDAVAccount(config)
+  const query = await findUserByEmail(cardDavAccount, email)
 
   if (!query) {
     console.log('user not found')
@@ -50,7 +52,7 @@ export default defineEventHandler(async (event) => {
   vcard.updatePropertyWithValue(X_LOGIN_REQUEST_TIME, now)
   vcard.updatePropertyWithValue(X_LOGIN_TOKEN, authtoken)
 
-  await saveUser(config, user, vcard)
+  await saveUser(cardDavAccount, user, vcard)
 
   // send email with link
   const name = vcard.getFirstPropertyValue('fn')

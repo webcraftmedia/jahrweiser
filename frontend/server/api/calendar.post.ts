@@ -1,6 +1,12 @@
 import { z } from 'zod'
 import ICAL from 'ical.js'
-import { findCalendars, findEvents, findUserByEmail } from '../helpers/dav'
+import {
+  createCalDAVAccount,
+  createCardDAVAccount,
+  findCalendars,
+  findEvents,
+  findUserByEmail,
+} from '../helpers/dav'
 
 const bodySchema = z.object({
   calendar: z.string(),
@@ -17,7 +23,8 @@ export default defineEventHandler(async (event) => {
 
   const { calendar, startDate, endDate } = await readValidatedBody(event, bodySchema.parse)
 
-  const calendars = await findCalendars(config)
+  const calDavAccount = createCalDAVAccount(config)
+  const calendars = await findCalendars(calDavAccount)
 
   const selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
 
@@ -26,7 +33,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // Find dav user
-  const userQuery = await findUserByEmail(config, session.user.email)
+  const cardDavAccount = createCardDAVAccount(config)
+  const userQuery = await findUserByEmail(cardDavAccount, session.user.email)
   const showPrivate =
     !userQuery ||
     (userQuery.vcard.getFirstProperty('categories')?.getValues() as string[]).find(
@@ -34,7 +42,7 @@ export default defineEventHandler(async (event) => {
     )
 
   // Calendar data
-  const caldata = await findEvents(config, selectedCalendar.url, startDate, endDate)
+  const caldata = await findEvents(calDavAccount, selectedCalendar.url, startDate, endDate)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: any[] = []

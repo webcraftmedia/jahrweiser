@@ -5,6 +5,18 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   srcDir: './src',
+  typescript: {
+    tsConfig: {
+      include: ['../types/**/*.d.ts'],
+    },
+  },
+  nitro: {
+    typescript: {
+      tsConfig: {
+        include: ['../types/**/*.d.ts'],
+      },
+    },
+  },
   modules: [
     '@nuxt/eslint',
     '@nuxt/icon',
@@ -34,24 +46,23 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // The private keys which are only available within server-side
     // DAV
-    DAV_USERNAME: process.env.NUXT_DAV_USERNAME,
-    DAV_PASSWORD: process.env.NUXT_DAV_PASSWORD,
-    DAV_URL: process.env.NUXT_DAV_URL,
-    DAV_URL_CARD: process.env.NUXT_DAV_URL_CARD,
+    DAV_USERNAME: process.env.DAV_USERNAME,
+    DAV_PASSWORD: process.env.DAV_PASSWORD,
+    DAV_URL: process.env.DAV_URL,
+    DAV_URL_CARD: process.env.DAV_URL_CARD,
     // SMTP
     SMTP_HOST: 'localhost',
-    SMTP_PORT: (process.env.NUXT_SMTP_PORT && parseInt(process.env.NUXT_SMTP_PORT)) || 1025,
-    SMTP_IGNORE_TLS: process.env.NUXT_SMTP_IGNORE_TLS !== 'false', // default = true
-    SMTP_SECURE: process.env.NUXT_SMTP_SECURE === 'true',
+    SMTP_PORT: (process.env.SMTP_PORT && parseInt(process.env.SMTP_PORT)) || 1025,
+    SMTP_IGNORE_TLS: process.env.SMTP_IGNORE_TLS !== 'false', // default = true
+    SMTP_SECURE: process.env.SMTP_SECURE === 'true',
     SMTP_USERNAME: '',
     SMTP_PASSWORD: '',
     SMTP_MAX_CONNECTIONS:
-      (process.env.NUXT_SMTP_MAX_CONNECTIONS && parseInt(process.env.NUXT_SMTP_MAX_CONNECTIONS)) ||
-      5,
+      (process.env.SMTP_MAX_CONNECTIONS && parseInt(process.env.SMTP_MAX_CONNECTIONS)) || 5,
     SMTP_MAX_MESSAGES:
-      (process.env.NUXT_SMTP_MAX_MESSAGES && parseInt(process.env.NUXT_SMTP_MAX_MESSAGES)) || 100,
+      (process.env.SMTP_MAX_MESSAGES && parseInt(process.env.SMTP_MAX_MESSAGES)) || 100,
     // DOMAIN
-    CLIENT_URI: 'http://localhost:3000',
+    CLIENT_URI: process.env.CLIENT_URI || 'http://localhost:3000',
 
     // Keys within public, will be also exposed to the client-side
     public: {},
@@ -60,10 +71,7 @@ export default defineNuxtConfig({
 
 if (
   process.env.NODE_ENV !== 'test' &&
-  (!process.env.NUXT_DAV_USERNAME ||
-    !process.env.NUXT_DAV_PASSWORD ||
-    !process.env.NUXT_DAV_URL ||
-    !process.env.NUXT_DAV_URL_CARD)
+  (!process.env.DAV_USERNAME || !process.env.DAV_PASSWORD || !process.env.DAV_URL)
 ) {
   console.log(process.env)
   throw new Error('Not all required .env values are defined!')

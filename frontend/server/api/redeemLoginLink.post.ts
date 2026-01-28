@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import {
+  createCardDAVAccount,
   findUserByToken,
   saveUser,
   X_LOGIN_DISABLED,
@@ -21,7 +22,8 @@ const config = useRuntimeConfig()
 export default defineEventHandler(async (event) => {
   const { token } = await readValidatedBody(event, bodySchema.parse)
   // check token in dav
-  const query = await findUserByToken(config, token)
+  const cardDavAccount = createCardDAVAccount(config)
+  const query = await findUserByToken(cardDavAccount, token)
 
   if (!query) {
     console.log('user not found')
@@ -46,7 +48,7 @@ export default defineEventHandler(async (event) => {
   vcard.removeAllProperties(X_LOGIN_TOKEN)
   vcard.updatePropertyWithValue(X_LOGIN_TIME, Date.now())
 
-  await saveUser(config, user, vcard)
+  await saveUser(cardDavAccount, user, vcard)
 
   const name = vcard.getFirstProperty('fn')?.getValues()[0]
   const email = vcard.getFirstProperty('email')?.getValues()[0]

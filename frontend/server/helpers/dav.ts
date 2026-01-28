@@ -1,4 +1,4 @@
-import type { DAVResponse } from 'tsdav'
+import type { DAVAccount, DAVResponse } from 'tsdav'
 import {
   addressBookQuery,
   calendarQuery,
@@ -28,6 +28,22 @@ export type DAV_CONFIG = {
   DAV_URL_CARD: string
 }
 
+export const createCalDAVAccount = (config: DAV_CONFIG): DAVAccount => ({
+  accountType: 'caldav',
+  serverUrl: config.DAV_URL,
+  credentials: { username: config.DAV_USERNAME, password: config.DAV_PASSWORD },
+  rootUrl: config.DAV_URL + '/dav.php/',
+  homeUrl: config.DAV_URL + `/dav.php/calendars/${config.DAV_USERNAME}/`,
+})
+
+export const createCardDAVAccount = (config: DAV_CONFIG): DAVAccount => ({
+  accountType: 'carddav',
+  serverUrl: config.DAV_URL,
+  credentials: { username: config.DAV_USERNAME, password: config.DAV_PASSWORD },
+  rootUrl: config.DAV_URL + '/dav.php/',
+  homeUrl: config.DAV_URL + `/dav.php/addressbooks/${config.DAV_USERNAME}/default/`,
+})
+
 const DAV_TIMEOUT_MS = 300000 // 30 seconds
 
 // Create HTTP/HTTPS agents with custom timeout settings
@@ -52,11 +68,11 @@ const getFetchOptions = () => ({
   agent: (parsedURL: URL) => (parsedURL.protocol === 'http:' ? httpAgent : httpsAgent),
 })
 
-export const headers = (config: DAV_CONFIG) => {
+export const headers = (account: DAVAccount) => {
+  const username = account.credentials?.username ?? ''
+  const password = account.credentials?.password ?? ''
   return {
-    authorization:
-      'Basic ' +
-      btoa(unescape(encodeURIComponent(config.DAV_USERNAME + ':' + config.DAV_PASSWORD))),
+    authorization: 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))),
   }
 }
 
@@ -71,18 +87,13 @@ function formatDate(date: Date): string {
   return `${year}${month}${day}T${hours}${minutes}${seconds}`
 }
 
-export const findCalendars = (config: DAV_CONFIG) =>
+export const findCalendars = (account: DAVAccount) =>
   fetchCalendars({
-    account: {
-      serverUrl: config.DAV_URL,
-      accountType: 'caldav',
-      rootUrl: config.DAV_URL + '/dav.php/',
-      homeUrl: config.DAV_URL + `/dav.php/calendars/${config.DAV_USERNAME}/`,
-    },
-    headers: headers(config),
+    account,
+    headers: headers(account),
   })
 
-export const findEvents = (config: DAV_CONFIG, url: string, from: Date, to: Date) =>
+export const findEvents = (account: DAVAccount, url: string, from: Date, to: Date) =>
   calendarQuery({
     url,
     props: {
@@ -108,24 +119,24 @@ export const findEvents = (config: DAV_CONFIG, url: string, from: Date, to: Date
       },
     },
     depth: '1',
-    headers: headers(config),
+    headers: headers(account),
     fetchOptions: getFetchOptions(),
   })
 
-export const findEvent = (config: DAV_CONFIG, url: string, id: string) =>
+export const findEvent = (account: DAVAccount, url: string, id: string) =>
   fetchCalendarObjects({
     calendar: {
       url,
     },
     objectUrls: [`${id}.ics`],
-    headers: headers(config),
+    headers: headers(account),
     fetchOptions: getFetchOptions(),
   })
 
-export const findUserByToken = async (config: DAV_CONFIG, token: string) => {
+export const findUserByToken = async (account: DAVAccount, token: string) => {
   const users = await addressBookQuery({
-    url: config.DAV_URL + config.DAV_URL_CARD,
-    headers: headers(config),
+    url: account.homeUrl!,
+    headers: headers(account),
     props: {
       [`${DAVNamespaceShort.DAV}:getetag`]: {},
       [`${DAVNamespaceShort.CARDDAV}:address-data`]: {},
@@ -153,10 +164,10 @@ export const findUserByToken = async (config: DAV_CONFIG, token: string) => {
   }
 }
 
-export const findUserByEmail = async (config: DAV_CONFIG, email: string) => {
+export const findUserByEmail = async (account: DAVAccount, email: string) => {
   const users = await addressBookQuery({
-    url: config.DAV_URL + config.DAV_URL_CARD,
-    headers: headers(config),
+    url: account.homeUrl!,
+    headers: headers(account),
     props: {
       [`${DAVNamespaceShort.DAV}:getetag`]: {},
       [`${DAVNamespaceShort.CARDDAV}:address-data`]: {},
@@ -184,27 +195,27 @@ export const findUserByEmail = async (config: DAV_CONFIG, email: string) => {
   }
 }
 
-export const saveUser = (config: DAV_CONFIG, user: DAVResponse, vcard: ICAL.Component) =>
+export const saveUser = (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>
   updateVCard({
     vCard: {
-      url: config.DAV_URL + user.href,
+      url: account.serverUrl + user.href,
       data: vcard,
       etag: user.props?.getetag,
     },
-    headers: headers(config),
+    headers: headers(account),
     fetchOptions: getFetchOptions(),
   })
 
-export const createUser = async (config: DAV_CONFIG, vcard: ICAL.Component) =>
+export const createUser = async (account: DAVAccount, vcard: ICAL.Component) =>
   createVCard({
     addressBook: {
-      url: config.DAV_URL + config.DAV_URL_CARD,
+      url: account.homeUrl!,
     },
     filename:
       createHash('sha256')
         .update(vcard.toString() + new Date().getTime())
         .digest('hex') + '.vcf',
     vCardString: vcard.toString(),
-    headers: headers(config),
+    headers: headers(account),
     fetchOptions: getFetchOptions(),
   })

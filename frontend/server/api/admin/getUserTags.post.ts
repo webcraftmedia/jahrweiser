@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { findUserByEmail, X_ADMIN_TAGS } from '~~/server/helpers/dav'
+import { createCardDAVAccount, findUserByEmail, X_ADMIN_TAGS } from '~~/server/helpers/dav'
 
 const bodySchema = z.object({
   email: z.email(),
@@ -17,7 +17,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // Find admin
-  const adminQuery = await findUserByEmail(config, session.user.email)
+  const cardDavAccount = createCardDAVAccount(config)
+  const adminQuery = await findUserByEmail(cardDavAccount, session.user.email)
 
   if (!adminQuery) {
     throw new Error('Huston, we have a problem')
@@ -28,7 +29,7 @@ export default defineEventHandler(async (event) => {
 
   // Find user
   const { email } = await readValidatedBody(event, bodySchema.parse)
-  const userQuery = await findUserByEmail(config, email)
+  const userQuery = await findUserByEmail(cardDavAccount, email)
 
   if (!userQuery) {
     return adminTags.map((t) => {

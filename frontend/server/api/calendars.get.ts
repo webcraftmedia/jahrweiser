@@ -1,4 +1,4 @@
-import { findCalendars } from '../helpers/dav'
+import { createCalDAVAccount, findCalendars } from '../helpers/dav'
 
 const config = useRuntimeConfig()
 
@@ -8,7 +8,8 @@ export default defineEventHandler(async (event) => {
   await requireUserSession(event)
 
   // Calendars
-  const calendars = await findCalendars(config)
+  const calDavAccount = createCalDAVAccount(config)
+  const calendars = await findCalendars(calDavAccount)
 
   return calendars.map((cal) => {
     return {

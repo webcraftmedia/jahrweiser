@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import ICAL from 'ical.js'
-import { findCalendars, findEvent } from '../helpers/dav'
+import { createCalDAVAccount, findCalendars, findEvent } from '../helpers/dav'
 
 const bodySchema = z.object({
   calendar: z.string(),
@@ -17,7 +17,8 @@ export default defineEventHandler(async (event) => {
 
   const { calendar, id, occurrence } = await readValidatedBody(event, bodySchema.parse)
 
-  const calendars = await findCalendars(config)
+  const calDavAccount = createCalDAVAccount(config)
+  const calendars = await findCalendars(calDavAccount)
 
   const selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
 
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Calendar data
-  const caldata = await findEvent(config, selectedCalendar.url, id)
+  const caldata = await findEvent(calDavAccount, selectedCalendar.url, id)
 
   if (caldata.length !== 1) {
     throw new Error('event not found')

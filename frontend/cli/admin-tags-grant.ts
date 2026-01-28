@@ -1,4 +1,10 @@
-import { findUserByEmail, saveUser, X_ADMIN_TAGS, X_ROLE } from '../server/helpers/dav'
+import {
+  createCardDAVAccount,
+  findUserByEmail,
+  saveUser,
+  X_ADMIN_TAGS,
+  X_ROLE,
+} from '../server/helpers/dav'
 import { config } from './tools/config'
 import { check as checkEmail } from './tools/email'
 
@@ -14,7 +20,8 @@ if (tags.length < 1) {
 
 console.log(`Grant admin ${email} the following admin-tags: ${tags}.`)
 
-const query = await findUserByEmail(config, email)
+const cardDavAccount = createCardDAVAccount(config)
+const query = await findUserByEmail(cardDavAccount, email)
 
 if (!query) {
   console.error('User with given email not found in dav endpoint')
@@ -36,4 +43,4 @@ vcard.updatePropertyWithValue(X_ADMIN_TAGS, newTags.join(','))
 
 console.log(`Admin ${email} now has the following admin-tags: ${newTags}`)
 
-await saveUser(config, user, vcard)
+await saveUser(cardDavAccount, user, vcard)

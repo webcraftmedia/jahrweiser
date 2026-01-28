@@ -1,5 +1,11 @@
 import { z } from 'zod'
-import { createUser, findUserByEmail, saveUser, X_ADMIN_TAGS } from '~~/server/helpers/dav'
+import {
+  createCardDAVAccount,
+  createUser,
+  findUserByEmail,
+  saveUser,
+  X_ADMIN_TAGS,
+} from '~~/server/helpers/dav'
 import ICAL from 'ical.js'
 import { defaultParams, emailRenderer } from '~~/server/helpers/email'
 import path from 'path'
@@ -22,7 +28,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // Find admin
-  const adminQuery = await findUserByEmail(config, session.user.email)
+  const cardDavAccount = createCardDAVAccount(config)
+  const adminQuery = await findUserByEmail(cardDavAccount, session.user.email)
 
   if (!adminQuery) {
     throw new Error('Huston, we have a problem')
@@ -34,7 +41,7 @@ export default defineEventHandler(async (event) => {
   const { email, tags, sendMail } = await readValidatedBody(event, bodySchema.parse)
   const filteredTags = tags.filter((t) => adminTags.includes(t.name))
 
-  const userQuery = await findUserByEmail(config, email)
+  const userQuery = await findUserByEmail(cardDavAccount, email)
 
   let newTags: string[] = []
   if (!userQuery) {
@@ -45,7 +52,7 @@ export default defineEventHandler(async (event) => {
       .getFirstProperty('categories')
       ?.setValues(filteredTags.filter((t) => t.state).map((t) => t.name))
 
-    await createUser(config, newUser)
+    await createUser(cardDavAccount, newUser)
     newTags = filteredTags.filter((t) => t.state).map((t) => t.name)
   } else {
     const { user, vcard: userVcard } = userQuery
@@ -61,7 +68,7 @@ export default defineEventHandler(async (event) => {
       }
     })
     userVcard.getFirstProperty('categories')?.setValues(userTags)
-    await saveUser(config, user, userVcard)
+    await saveUser(cardDavAccount, user, userVcard)
   }
 
   // sendMail if selected and at least one new tag is set

@@ -1,174 +1,127 @@
-import type { DAVAccount } from 'tsdav'
-import { createCalendarObject, fetchCalendarObjects, fetchCalendars } from 'tsdav'
-import ICAL from 'ical.js'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { resolve, basename } from 'node:path'
+import { glob } from 'tinyglobby'
+import { runIcsImport, type ImportConfig } from './tools/ics-import-runner'
 
-type AccountConfig = {
-  serverUrl: string
-  username: string
-  password: string
-}
+const args = process.argv.slice(2)
 
-const createCalDAVAccount = (config: AccountConfig): DAVAccount => ({
-  accountType: 'caldav',
-  serverUrl: config.serverUrl,
-  credentials: { username: config.username, password: config.password },
-  rootUrl: config.serverUrl + '/dav.php/',
-  homeUrl: config.serverUrl + `/dav.php/calendars/${config.username}/`,
-})
-
-const icsUrl = process.argv[2]
-const accountFile = process.argv[3]
-const calendarName = process.argv[4]
-
-if (!icsUrl || !accountFile || !calendarName) {
-  console.error('Usage: npx tsx cli/ics-import.ts <ics-url> <account.json> <calendar-name>')
+if (args.length === 0) {
+  console.error('Usage: npx tsx cli/ics-import.ts <files-or-pattern>')
   console.error('')
   console.error('Arguments:')
-  console.error('  ics-url       URL to the ICS file to import')
-  console.error('  account.json  Path to JSON file in accounts/ folder')
-  console.error('  calendar-name Name of the target calendar')
+  console.error('  files-or-pattern  Directory, glob pattern, or JSON file(s)')
   console.error('')
-  console.error('Example:')
-  console.error(
-    '  npx tsx cli/ics-import.ts https://example.com/cal.ics accounts/myaccount.json "My Calendar"',
-  )
+  console.error('Examples:')
+  console.error('  npx tsx cli/ics-import.ts imports/')
+  console.error('  npx tsx cli/ics-import.ts "imports/*.json"')
+  console.error('  npx tsx cli/ics-import.ts ./imports/*.json')
   console.error('')
-  console.error('See accounts/example.json for the account file format.')
+  console.error('Each JSON file should contain a single import configuration:')
+  console.error('  {')
+  console.error('    "url": "https://example.com/calendar.ics",')
+  console.error('    "account": "accounts/account.json",')
+  console.error('    "calendar": "Calendar Name"')
+  console.error('  }')
   process.exit(1)
 }
 
-// Load account config from JSON file
-const accountPath = resolve(process.cwd(), accountFile)
-let account: DAVAccount
-try {
-  const accountJson = readFileSync(accountPath, 'utf-8')
-  const config = JSON.parse(accountJson) as AccountConfig
-  if (!config.serverUrl || !config.username || !config.password) {
-    throw new Error('Missing required fields: serverUrl, username, password')
-  }
-  account = createCalDAVAccount(config)
-} catch (error) {
-  console.error(`Failed to read account file: ${accountPath}`)
-  console.error(error)
-  process.exit(1)
-}
+// Find all JSON files
+let files: string[] = []
 
-const headers = () => {
-  const username = account.credentials?.username ?? ''
-  const password = account.credentials?.password ?? ''
-  return {
-    authorization: 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))),
-  }
-}
-
-// Fetch ICS file
-console.log(`Fetching ICS from: ${icsUrl}`)
-const icsResponse = await fetch(icsUrl)
-if (!icsResponse.ok) {
-  console.error(`Failed to fetch ICS: ${icsResponse.status} ${icsResponse.statusText}`)
-  process.exit(1)
-}
-const icsData = await icsResponse.text()
-
-// Parse ICS
-const jcalData = ICAL.parse(icsData)
-const vcalendar = new ICAL.Component(jcalData)
-const vevents = vcalendar.getAllSubcomponents('vevent')
-
-console.log(`Found ${vevents.length} events in ICS file`)
-
-if (vevents.length === 0) {
-  console.log('No events to import')
-  process.exit(0)
-}
-
-// Find target calendar
-console.log(`Looking for calendar: ${calendarName}`)
-const calendars = await fetchCalendars({
-  account,
-  headers: headers(),
-})
-
-const targetCalendar = calendars.find((cal) => cal.displayName === calendarName)
-if (!targetCalendar) {
-  console.error(`Calendar not found: ${calendarName}`)
-  console.error('Available calendars:')
-  calendars.forEach((cal) => console.error(`  - ${cal.displayName}`))
-  process.exit(1)
-}
-
-console.log(`Target calendar URL: ${targetCalendar.url}`)
-
-// Fetch existing events to check for duplicates
-console.log('Fetching existing events...')
-const existingEvents = await fetchCalendarObjects({
-  calendar: targetCalendar,
-  headers: headers(),
-})
-
-// Extract UIDs from existing events
-const existingUids = new Set<string>()
-for (const event of existingEvents) {
-  if (event.data) {
-    try {
-      const existingCal = new ICAL.Component(ICAL.parse(event.data))
-      const existingEvent = existingCal.getFirstSubcomponent('vevent')
-      if (existingEvent) {
-        const uid = existingEvent.getFirstPropertyValue('uid')
-        if (uid) {
-          existingUids.add(uid.toString())
-        }
-      }
-    } catch {
-      // Skip malformed events
-    }
-  }
-}
-
-console.log(`Found ${existingUids.size} existing events in calendar`)
-
-// Import new events
-let imported = 0
-let skipped = 0
-
-for (const vevent of vevents) {
-  const uid = vevent.getFirstPropertyValue('uid')
-  if (!uid) {
-    console.warn('Skipping event without UID')
-    skipped++
-    continue
-  }
-
-  const uidStr = uid.toString()
-  if (existingUids.has(uidStr)) {
-    skipped++
-    continue
-  }
-
-  // Create a new VCALENDAR with just this event
-  const newCalendar = new ICAL.Component('vcalendar')
-  newCalendar.addPropertyWithValue('version', '2.0')
-  newCalendar.addPropertyWithValue('prodid', '-//Jahrweiser//Import//DE')
-  newCalendar.addSubcomponent(vevent)
-
-  const summary = vevent.getFirstPropertyValue('summary') || 'Untitled'
-  console.log(`Importing: ${summary}`)
+// Check if multiple arguments were passed (shell-expanded glob)
+if (args.length > 1) {
+  // Multiple files passed directly
+  files = args.map((f) => resolve(process.cwd(), f)).sort()
+} else {
+  // Single argument: could be directory, glob pattern, or single file
+  const pattern = args[0]!
+  const resolvedPattern = resolve(process.cwd(), pattern)
 
   try {
-    await createCalendarObject({
-      calendar: targetCalendar,
-      filename: `${uidStr}.ics`,
-      iCalString: newCalendar.toString(),
-      headers: headers(),
+    const stat = statSync(resolvedPattern)
+    if (stat.isDirectory()) {
+      // If it's a directory, find all .json files in it
+      const entries = readdirSync(resolvedPattern)
+      files = entries
+        .filter((f) => f.endsWith('.json'))
+        .map((f) => resolve(resolvedPattern, f))
+        .sort()
+    } else if (stat.isFile()) {
+      // Single file
+      files = [resolvedPattern]
+    }
+  } catch {
+    // Not a directory or doesn't exist, treat as glob pattern
+  }
+
+  if (files.length === 0) {
+    // Use glob pattern
+    files = await glob(pattern, {
+      cwd: process.cwd(),
+      absolute: true,
     })
-    imported++
-    existingUids.add(uidStr) // Prevent duplicates within same import
-  } catch (error) {
-    console.error(`Failed to import event ${summary}:`, error)
+    files.sort()
   }
 }
 
+if (files.length === 0) {
+  console.error(`No JSON files found matching: ${args.join(' ')}`)
+  process.exit(1)
+}
+
+console.log(`Found ${files.length} import file(s)`)
 console.log('')
-console.log(`Import complete: ${imported} imported, ${skipped} skipped (duplicates or invalid)`)
+
+let totalImported = 0
+let totalSkipped = 0
+let failures = 0
+
+for (const [index, file] of files.entries()) {
+  const filename = basename(file)
+  console.log(`=== [${index + 1}/${files.length}] ${filename} ===`)
+
+  let config: ImportConfig
+  try {
+    const configJson = readFileSync(file, 'utf-8')
+    config = JSON.parse(configJson) as ImportConfig
+
+    if (!config.url || !config.account || !config.calendar) {
+      throw new Error('Missing required fields: url, account, calendar')
+    }
+  } catch (error) {
+    console.error(`Failed to read config file: ${file}`)
+    console.error(error)
+    failures++
+    console.log('')
+    continue
+  }
+
+  console.log(`URL: ${config.url}`)
+  console.log(`Account: ${config.account}`)
+  console.log(`Calendar: ${config.calendar}`)
+  console.log('')
+
+  const result = await runIcsImport(config)
+
+  if (result.success) {
+    console.log(`Result: ${result.imported} imported, ${result.skipped} skipped`)
+    totalImported += result.imported
+    totalSkipped += result.skipped
+  } else {
+    console.error(`Failed: ${result.error}`)
+    failures++
+  }
+
+  console.log('')
+}
+
+console.log('=== Summary ===')
+console.log(`Total files: ${files.length}`)
+console.log(`Successful: ${files.length - failures}`)
+console.log(`Failed: ${failures}`)
+console.log(`Events imported: ${totalImported}`)
+console.log(`Events skipped: ${totalSkipped}`)
+
+if (failures > 0) {
+  process.exit(1)
+}

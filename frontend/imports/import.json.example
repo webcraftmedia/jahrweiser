@@ -1,0 +1,5 @@
+{
+  "url": "https://example.com/calendar.ics",
+  "account": "accounts/example.json",
+  "calendar": "My Calendar"
+}

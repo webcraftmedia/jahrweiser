@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   // Calendar data
   const caldata = await findEvent(calDavAccount, selectedCalendar.url, id)
 
-  if (caldata.length !== 1) {
+  if (caldata.length !== 1 || !caldata[0]?.data) {
     throw new Error('event not found')
   }
 

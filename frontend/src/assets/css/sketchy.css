@@ -1,0 +1,579 @@
+/* Sketchy Theme - Global Styles */
+
+/* CSS Variables */
+:root {
+  /* Paper & Background */
+  --paper-light: #faf8f3;
+  --paper-dark: #2d2a24;
+  --paper-lines: #e8e0d5;
+  --paper-lines-dark: #3d3830;
+
+  /* Ink & Text */
+  --ink-dark: #2c2416;
+  --ink-light: #f5f0e6;
+  --ink-blue: #4a6fa5;
+  --ink-blue-dark: #6a8fc5;
+  --ink-red: #a54a4a;
+  --ink-red-dark: #c56a6a;
+  --ink-green: #4a7a5a;
+  --ink-green-dark: #6a9a7a;
+
+  /* Accents */
+  --accent-gold: #c9a227;
+  --accent-gold-dark: #e9c247;
+  --accent-terracotta: #c67b5c;
+  --accent-terracotta-dark: #e69b7c;
+  --accent-sage: #87a878;
+  --accent-sage-dark: #a7c898;
+
+  /* Shadows */
+  --shadow-sketchy: 3px 3px 0 rgba(44, 36, 22, 0.2);
+  --shadow-sketchy-dark: 3px 3px 0 rgba(245, 240, 230, 0.1);
+}
+
+/* Paper Texture Background */
+.paper-bg {
+  background-color: var(--paper-light);
+  background-image:
+    linear-gradient(90deg, transparent 79px, var(--paper-lines) 79px, var(--paper-lines) 81px, transparent 81px),
+    linear-gradient(var(--paper-lines) 1px, transparent 1px);
+  background-size: 100% 28px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .paper-bg {
+    background-color: var(--paper-dark);
+    background-image:
+      linear-gradient(90deg, transparent 79px, var(--paper-lines-dark) 79px, var(--paper-lines-dark) 81px, transparent 81px),
+      linear-gradient(var(--paper-lines-dark) 1px, transparent 1px);
+  }
+}
+
+/* Simple paper without lines */
+.paper-bg-plain {
+  background-color: var(--paper-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  .paper-bg-plain {
+    background-color: var(--paper-dark);
+  }
+}
+
+/* Sketchy Border - Wavy organic look */
+.sketchy-border {
+  border: 2px solid var(--ink-dark);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  position: relative;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-border {
+    border-color: var(--ink-light);
+  }
+}
+
+/* Alternative sketchy border style */
+.sketchy-border-alt {
+  border: 2px solid var(--ink-dark);
+  border-radius: 15px 255px 15px 225px / 225px 15px 255px 15px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-border-alt {
+    border-color: var(--ink-light);
+  }
+}
+
+/* Sketchy Shadow */
+.sketchy-shadow {
+  box-shadow: var(--shadow-sketchy);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-shadow {
+    box-shadow: var(--shadow-sketchy-dark);
+  }
+}
+
+/* Sketchy Button */
+.sketchy-button {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  padding: 0.6rem 1.5rem;
+  background-color: var(--ink-blue);
+  color: var(--ink-light);
+  border: 2px solid var(--ink-dark);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: var(--shadow-sketchy);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sketchy-button:hover {
+  transform: translateY(-2px) rotate(-1deg);
+  box-shadow: 4px 4px 0 rgba(44, 36, 22, 0.25);
+}
+
+.sketchy-button:active {
+  transform: translateY(1px) rotate(0deg);
+  box-shadow: 2px 2px 0 rgba(44, 36, 22, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-button {
+    background-color: var(--ink-blue-dark);
+    border-color: var(--ink-light);
+    box-shadow: var(--shadow-sketchy-dark);
+  }
+
+  .sketchy-button:hover {
+    box-shadow: 4px 4px 0 rgba(245, 240, 230, 0.15);
+  }
+}
+
+/* Sketchy Button Variants */
+.sketchy-button-green {
+  background-color: var(--ink-green);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-button-green {
+    background-color: var(--ink-green-dark);
+  }
+}
+
+.sketchy-button-red {
+  background-color: var(--ink-red);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-button-red {
+    background-color: var(--ink-red-dark);
+  }
+}
+
+.sketchy-button-gold {
+  background-color: var(--accent-gold);
+  color: var(--ink-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-button-gold {
+    background-color: var(--accent-gold-dark);
+  }
+}
+
+/* Sketchy Button Outline */
+.sketchy-button-outline {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  padding: 0.6rem 1.5rem;
+  background-color: transparent;
+  color: var(--ink-blue);
+  border: 2px solid var(--ink-blue);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: var(--shadow-sketchy);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sketchy-button-outline:hover {
+  background-color: var(--ink-blue);
+  color: var(--ink-light);
+  transform: translateY(-2px) rotate(-1deg);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-button-outline {
+    color: var(--ink-blue-dark);
+    border-color: var(--ink-blue-dark);
+  }
+
+  .sketchy-button-outline:hover {
+    background-color: var(--ink-blue-dark);
+    color: var(--paper-dark);
+  }
+}
+
+/* Sketchy Input */
+.sketchy-input {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--paper-light);
+  color: var(--ink-dark);
+  border: none;
+  border-bottom: 2px solid var(--ink-dark);
+  border-radius: 0;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.sketchy-input:focus {
+  border-bottom-color: var(--ink-blue);
+  background-color: rgba(74, 111, 165, 0.05);
+}
+
+.sketchy-input::placeholder {
+  color: rgba(44, 36, 22, 0.4);
+  font-style: italic;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-input {
+    background-color: var(--paper-dark);
+    color: var(--ink-light);
+    border-bottom-color: var(--ink-light);
+  }
+
+  .sketchy-input:focus {
+    border-bottom-color: var(--ink-blue-dark);
+    background-color: rgba(106, 143, 197, 0.1);
+  }
+
+  .sketchy-input::placeholder {
+    color: rgba(245, 240, 230, 0.4);
+  }
+}
+
+/* Sketchy Input Box Style */
+.sketchy-input-box {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--paper-light);
+  color: var(--ink-dark);
+  border: 2px solid var(--ink-dark);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.sketchy-input-box:focus {
+  border-color: var(--ink-blue);
+  box-shadow: var(--shadow-sketchy);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-input-box {
+    background-color: var(--paper-dark);
+    color: var(--ink-light);
+    border-color: var(--ink-light);
+  }
+
+  .sketchy-input-box:focus {
+    border-color: var(--ink-blue-dark);
+  }
+}
+
+/* Sketchy Card */
+.sketchy-card {
+  font-family: 'Patrick Hand', cursive;
+  background-color: var(--paper-light);
+  border: 2px solid var(--ink-dark);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: var(--shadow-sketchy);
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.sketchy-card:hover {
+  transform: translateY(-3px) rotate(-0.5deg);
+  box-shadow: 5px 5px 0 rgba(44, 36, 22, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-card {
+    background-color: var(--paper-dark);
+    border-color: var(--ink-light);
+    box-shadow: var(--shadow-sketchy-dark);
+  }
+
+  .sketchy-card:hover {
+    box-shadow: 5px 5px 0 rgba(245, 240, 230, 0.15);
+  }
+}
+
+/* Sketchy Card - Post-it style */
+.sketchy-postit {
+  font-family: 'Kalam', cursive;
+  background-color: #fff9c4;
+  border: none;
+  box-shadow: 3px 3px 7px rgba(44, 36, 22, 0.3);
+  padding: 1.5rem;
+  transform: rotate(-1deg);
+  transition: all 0.2s ease;
+}
+
+.sketchy-postit:hover {
+  transform: rotate(0deg) scale(1.02);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-postit {
+    background-color: #5c5419;
+    color: var(--ink-light);
+    box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Post-it color variants */
+.sketchy-postit-pink {
+  background-color: #ffcdd2;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-postit-pink {
+    background-color: #5c2a2a;
+  }
+}
+
+.sketchy-postit-blue {
+  background-color: #bbdefb;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-postit-blue {
+    background-color: #1e3a5c;
+  }
+}
+
+.sketchy-postit-green {
+  background-color: #c8e6c9;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-postit-green {
+    background-color: #2a5c2e;
+  }
+}
+
+/* Sketchy Link */
+.sketchy-link {
+  font-family: 'Patrick Hand', cursive;
+  color: var(--ink-blue);
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+}
+
+.sketchy-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--ink-blue);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.sketchy-link:hover::after {
+  width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-link {
+    color: var(--ink-blue-dark);
+  }
+
+  .sketchy-link::after {
+    background-color: var(--ink-blue-dark);
+  }
+}
+
+/* Sketchy Checkbox */
+.sketchy-checkbox {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--ink-dark);
+  border-radius: 4px;
+  background-color: var(--paper-light);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.sketchy-checkbox:checked {
+  background-color: var(--ink-blue);
+  border-color: var(--ink-blue);
+}
+
+.sketchy-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--ink-light);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-checkbox {
+    background-color: var(--paper-dark);
+    border-color: var(--ink-light);
+  }
+
+  .sketchy-checkbox:checked {
+    background-color: var(--ink-blue-dark);
+    border-color: var(--ink-blue-dark);
+  }
+}
+
+/* Hand-drawn divider line */
+.sketchy-divider {
+  border: none;
+  height: 3px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='3'%3E%3Cpath d='M0 1.5 Q 25 0, 50 1.5 T 100 1.5 T 150 1.5 T 200 1.5' stroke='%232c2416' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x;
+  opacity: 0.4;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-divider {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='3'%3E%3Cpath d='M0 1.5 Q 25 0, 50 1.5 T 100 1.5 T 150 1.5 T 200 1.5' stroke='%23f5f0e6' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x;
+  }
+}
+
+/* Sketchy Heading Styles */
+.sketchy-h1 {
+  font-family: 'Caveat', cursive;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--ink-dark);
+  line-height: 1.2;
+}
+
+.sketchy-h2 {
+  font-family: 'Caveat', cursive;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--ink-dark);
+  line-height: 1.3;
+}
+
+.sketchy-h3 {
+  font-family: 'Caveat', cursive;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--ink-dark);
+  line-height: 1.4;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-h1,
+  .sketchy-h2,
+  .sketchy-h3 {
+    color: var(--ink-light);
+  }
+}
+
+/* Sketchy Text */
+.sketchy-text {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  color: var(--ink-dark);
+  line-height: 1.6;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-text {
+    color: var(--ink-light);
+  }
+}
+
+/* Sketchy accent text */
+.sketchy-accent {
+  font-family: 'Kalam', cursive;
+  color: var(--accent-terracotta);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-accent {
+    color: var(--accent-terracotta-dark);
+  }
+}
+
+/* Sketchy Badge/Tag */
+.sketchy-badge {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  background-color: var(--accent-sage);
+  color: var(--ink-dark);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  display: inline-block;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sketchy-badge {
+    background-color: var(--accent-sage-dark);
+    color: var(--paper-dark);
+  }
+}
+
+/* Notebook Spiral Effect */
+.notebook-spiral {
+  position: relative;
+}
+
+.notebook-spiral::before {
+  content: '';
+  position: absolute;
+  left: 60px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--ink-dark) 0px,
+    var(--ink-dark) 8px,
+    transparent 8px,
+    transparent 20px
+  );
+  opacity: 0.3;
+}
+
+@media (prefers-color-scheme: dark) {
+  .notebook-spiral::before {
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--ink-light) 0px,
+      var(--ink-light) 8px,
+      transparent 8px,
+      transparent 20px
+    );
+  }
+}
+
+/* Tape effect for cards */
+.tape-effect {
+  position: relative;
+}
+
+.tape-effect::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 80px;
+  height: 25px;
+  background-color: rgba(255, 235, 205, 0.7);
+  border-left: 1px dashed rgba(44, 36, 22, 0.2);
+  border-right: 1px dashed rgba(44, 36, 22, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tape-effect::before {
+    background-color: rgba(139, 119, 101, 0.5);
+    border-left-color: rgba(245, 240, 230, 0.2);
+    border-right-color: rgba(245, 240, 230, 0.2);
+  }
+}

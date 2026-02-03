@@ -2,8 +2,7 @@
   <div class="box">
     <div class="calendar row">
       <client-only>
-        <CalendarView v-bind="calendar" class="theme-default" @click-item="clickItem">
-          <!--holiday-us-traditional holiday-us-official-->
+        <CalendarView v-bind="calendar" class="theme-sketchy" @click-item="clickItem">
           <template #header="{ headerProps }">
             <CalendarViewHeader :header-props="headerProps" @input="setShowDate" />
           </template>
@@ -15,24 +14,23 @@
         </template>
 
         <template #content>
-          <table class="text-left align-top text-gray-900 dark:text-gray-100">
+          <table class="event-table">
             <tbody>
               <tr>
-                <th class="pr-4 font-semibold">{{ $t('pages.index.details.start') }}</th>
+                <th>{{ $t('pages.index.details.start') }}</th>
                 <td>{{ event?.startDate }}</td>
               </tr>
               <tr>
-                <th class="pr-4 font-semibold">{{ $t('pages.index.details.duration') }}</th>
+                <th>{{ $t('pages.index.details.duration') }}</th>
                 <td>{{ event?.duration.replace(/^PT?/, '') }}</td>
               </tr>
               <tr>
-                <th class="pr-4 font-semibold">{{ $t('pages.index.details.location') }}</th>
+                <th>{{ $t('pages.index.details.location') }}</th>
                 <td>{{ event?.location }}</td>
               </tr>
-              <tr></tr>
             </tbody>
           </table>
-          <pre class="text-left whitespace-pre-wrap text-gray-900 dark:text-gray-100">{{
+          <pre class="event-description">{{
             event?.description
               ?.split('\n')
               .map((line: string) => line.trimStart())
@@ -52,8 +50,6 @@ import {
   type INormalizedCalendarItem,
 } from 'vue-simple-calendar'
 import Modal from '../components/Modal.vue'
-
-// const headerProps = {}
 
 definePageMeta({
   middleware: ['authenticated'],
@@ -78,13 +74,10 @@ const items = computed<ICalendarItem[]>(() =>
 )
 
 function invertColor(hex: string): string {
-  // Remove # if present
   const color = hex.replace('#', '')
-  // Parse RGB values
   const r = parseInt(color.substring(0, 2), 16)
   const g = parseInt(color.substring(2, 4), 16)
   const b = parseInt(color.substring(4, 6), 16)
-  // Invert and convert back to hex
   const inverted = (((255 - r) << 16) | ((255 - g) << 8) | (255 - b)).toString(16).padStart(6, '0')
   return `#${inverted}`
 }
@@ -125,7 +118,6 @@ async function clickItem(data: INormalizedCalendarItem) {
 const calendar = ref({
   showDate: new Date(),
   items,
-  // message: "test",
   startingDayOfWeek: 1,
   disablePast: false,
   disableFuture: false,
@@ -133,36 +125,12 @@ const calendar = ref({
   displayPeriodCount: 1,
   displayWeekNumbers: false,
   showTimes: false,
-  // selectionStart: undefined,
-  // selectionEnd: undefined,
-  // newItemTitle: "",
-  // newItemStartDate: "",
-  // newItemEndDate: "",
-  //useDefaultTheme: true,
-  //useHolidayTheme: true,
-  //useTodayIcons: false,
-  // timeFormatOptions: "{ hour: 'numeric', minute: '2-digit' }",
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   periodChangedCallback: (data: any) => {
     const startDate = data.value.displayFirstDate.value
     const endDate = data.value.displayLastDate.value
     getData(startDate, endDate)
   },
-  /*
-				:
-				:enable-drag-drop="true"
-				:date-classes="myDateClasses"
-				:period-changed-callback="periodChanged"
-				:current-period-label="useTodayIcons ? 'icons' : ''"
-				:enable-date-selection="true"
-				:selection-start="selectionStart"
-				:selection-end="selectionEnd"
-				@date-selection-start="setSelection"
-				@date-selection="setSelection"
-				@date-selection-finish="finishSelection"
-				@drop-on-date="onDrop"
-				@click-date="onClickDay"
-        */
 })
 
 function setShowDate(d: Date) {
@@ -171,12 +139,10 @@ function setShowDate(d: Date) {
 
 async function getData(startDate: Date, endDate: Date) {
   try {
-    // Fetch all calendars if not already loaded
     if (calendars.value.length === 0) {
       calendars.value = await $fetch('/api/calendars')
     }
 
-    // Fetch events from all calendars in parallel
     const results = await Promise.all(
       calendars.value.map((cal) =>
         $fetch('/api/calendar', {
@@ -190,7 +156,6 @@ async function getData(startDate: Date, endDate: Date) {
       ),
     )
 
-    // Store raw events (colors applied via computed property)
     rawItems.value = results.flat()
   } catch (error) {
     console.log(error)
@@ -200,106 +165,304 @@ async function getData(startDate: Date, endDate: Date) {
 
 <style>
 @import '~/../node_modules/vue-simple-calendar/dist/vue-simple-calendar.css';
-/* The next two lines are optional themes */
-@import '~/../node_modules/vue-simple-calendar/dist/css/default.css';
-@import '~/../node_modules/vue-simple-calendar/dist/css/holidays-us.css';
+
+/* Sketchy Calendar Theme */
 .box {
   display: flex;
   flex-flow: column;
   height: 100%;
   width: 100%;
 }
+
 .calendar {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  color: #2c3e50;
+  font-family: 'Patrick Hand', cursive;
+  color: var(--ink-dark);
   width: 100%;
   margin-left: auto;
   margin-right: auto;
   flex: 1 1 auto;
 }
 
-/* Dark mode support for content & calendar */
+.event-table {
+  text-align: left;
+  vertical-align: top;
+  font-family: 'Patrick Hand', cursive;
+}
+
+.event-table th {
+  padding-right: 1rem;
+  font-weight: 600;
+  color: var(--ink-blue);
+}
+
+.event-table td {
+  color: var(--ink-dark);
+}
+
+.event-description {
+  text-align: left;
+  white-space: pre-wrap;
+  font-family: 'Kalam', cursive;
+  font-size: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--ink-dark);
+  opacity: 0.9;
+}
+
+/* Sketchy Calendar Styles */
+.theme-sketchy .cv-wrapper {
+  background-color: var(--paper-light);
+  border: 2px solid var(--ink-dark);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 4px 4px 0 rgba(44, 36, 22, 0.2);
+  overflow: hidden;
+}
+
+.theme-sketchy .cv-header {
+  background-color: var(--paper-light);
+  border-bottom: 2px solid var(--ink-dark);
+  padding: 0.75rem;
+}
+
+.theme-sketchy .cv-header .periodLabel {
+  font-family: 'Caveat', cursive;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--ink-dark);
+}
+
+.theme-sketchy .cv-header button {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1rem;
+  color: var(--ink-blue);
+  background-color: transparent;
+  border: 2px solid var(--ink-blue);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-sketchy .cv-header button:hover {
+  background-color: var(--ink-blue);
+  color: var(--ink-light);
+  transform: translateY(-1px) rotate(-1deg);
+}
+
+.theme-sketchy .cv-header button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.theme-sketchy .cv-header-day {
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--ink-dark);
+  background-color: rgba(201, 162, 39, 0.15);
+  border-bottom: 1px solid var(--paper-lines);
+  padding: 0.5rem;
+}
+
+.theme-sketchy .cv-weeknumber {
+  font-family: 'Kalam', cursive;
+  background-color: rgba(135, 168, 120, 0.2);
+  border-color: var(--paper-lines);
+  color: var(--ink-green);
+  font-size: 0.9rem;
+}
+
+.theme-sketchy .cv-day {
+  background-color: var(--paper-light);
+  border-color: var(--paper-lines);
+  min-height: 80px;
+  transition: background-color 0.2s ease;
+}
+
+.theme-sketchy .cv-day:hover {
+  background-color: rgba(74, 111, 165, 0.05);
+}
+
+.theme-sketchy .cv-day.past {
+  background-color: rgba(44, 36, 22, 0.03);
+}
+
+.theme-sketchy .cv-day.outsideOfMonth {
+  background-color: rgba(44, 36, 22, 0.08);
+}
+
+.theme-sketchy .cv-day.today {
+  background-color: rgba(74, 111, 165, 0.15);
+  border: 2px solid var(--ink-blue);
+}
+
+.theme-sketchy .cv-day[aria-selected='true'] {
+  background-color: rgba(198, 123, 92, 0.2);
+}
+
+.theme-sketchy .cv-day-number {
+  font-family: 'Caveat', cursive;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--ink-dark);
+  padding: 0.25rem 0.5rem;
+}
+
+.theme-sketchy .cv-day.today .cv-day-number {
+  color: var(--ink-blue);
+  font-weight: 700;
+}
+
+/* Event Items */
+.theme-sketchy .cv-item {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 0.95rem;
+  border: 1px solid rgba(44, 36, 22, 0.3);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 1px 1px 0 rgba(44, 36, 22, 0.15);
+}
+
+.theme-sketchy .cv-item:hover {
+  transform: translateY(-1px) rotate(-0.5deg);
+  box-shadow: 2px 2px 0 rgba(44, 36, 22, 0.2);
+  z-index: 10;
+}
+
+.theme-sketchy .cv-item .startTime,
+.theme-sketchy .cv-item .endTime {
+  font-family: 'Kalam', cursive;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Hide year navigation on small screens */
+.previousYear,
+.nextYear {
+  display: none;
+}
+
+@media (width <= 480px) {
+  .theme-sketchy .cv-header .periodLabel {
+    font-size: 1.25rem !important;
+  }
+
+  .theme-sketchy .cv-header button {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.5rem;
+  }
+}
+
+/* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .calendar {
-    color: #e5e7eb;
+    color: var(--ink-light);
   }
 
-  /* Dark mode support for calendar */
-  .theme-default .cv-header,
-  .theme-default .cv-header-day {
-    background-color: #374151;
-    color: #e5e7eb;
+  .event-table td {
+    color: var(--ink-light);
   }
 
-  .theme-default .cv-header button {
-    color: #9ca3af;
+  .event-table th {
+    color: var(--ink-blue-dark);
   }
 
-  .theme-default .cv-header button:disabled {
-    color: #4b5563;
-    background-color: #1f2937;
+  .event-description {
+    border-top-color: var(--ink-light);
   }
 
-  .theme-default .cv-weeknumber {
-    background-color: #1f2937;
-    border-color: #4b5563;
-    color: #9ca3af;
+  .theme-sketchy .cv-wrapper {
+    background-color: var(--paper-dark);
+    border-color: var(--ink-light);
+    box-shadow: 4px 4px 0 rgba(245, 240, 230, 0.1);
   }
 
-  .theme-default .cv-day {
-    background-color: #1f2937;
-    border-color: #374151;
+  .theme-sketchy .cv-header {
+    background-color: var(--paper-dark);
+    border-bottom-color: var(--ink-light);
   }
 
-  .theme-default .cv-day.past {
-    background-color: #111827;
+  .theme-sketchy .cv-header .periodLabel {
+    color: var(--ink-light);
   }
 
-  .theme-default .cv-day.outsideOfMonth {
-    background-color: #0f172a;
+  .theme-sketchy .cv-header button {
+    color: var(--ink-blue-dark);
+    border-color: var(--ink-blue-dark);
   }
 
-  .theme-default .cv-day.today {
-    background-color: #1e3a5f;
+  .theme-sketchy .cv-header button:hover {
+    background-color: var(--ink-blue-dark);
+    color: var(--paper-dark);
   }
 
-  .theme-default .cv-day[aria-selected='true'] {
-    background-color: #1e40af;
+  .theme-sketchy .cv-header button:disabled {
+    color: rgba(245, 240, 230, 0.3);
+    border-color: rgba(245, 240, 230, 0.3);
   }
 
-  /* Dark mode events */
-  .theme-default .cv-item {
-    border-color: #4b5563;
-    background-color: #3730a3;
-    color: #e0e7ff;
+  .theme-sketchy .cv-header-day {
+    color: var(--ink-light);
+    background-color: rgba(233, 194, 71, 0.1);
+    border-bottom-color: var(--paper-lines-dark);
   }
 
-  .theme-default .cv-item.purple {
-    background-color: #581c87;
-    border-color: #6b21a8;
-    color: #f3e8ff;
+  .theme-sketchy .cv-weeknumber {
+    background-color: rgba(167, 200, 152, 0.15);
+    border-color: var(--paper-lines-dark);
+    color: var(--ink-green-dark);
   }
 
-  .theme-default .cv-item.orange {
-    background-color: #9a3412;
-    border-color: #c2410c;
-    color: #fed7aa;
+  .theme-sketchy .cv-day {
+    background-color: var(--paper-dark);
+    border-color: var(--paper-lines-dark);
   }
 
-  .theme-default .cv-item .startTime,
-  .theme-default .cv-item .endTime {
-    color: #d1d5db;
+  .theme-sketchy .cv-day:hover {
+    background-color: rgba(106, 143, 197, 0.1);
   }
 
-  .previousYear,
-  .nextYear {
-    display: none;
+  .theme-sketchy .cv-day.past {
+    background-color: rgba(245, 240, 230, 0.02);
   }
-  @media (width <= 480px) {
-    .periodLabel {
-      /* display: none !important; */
-      @apply text-base !important;
-    }
+
+  .theme-sketchy .cv-day.outsideOfMonth {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .theme-sketchy .cv-day.today {
+    background-color: rgba(106, 143, 197, 0.2);
+    border-color: var(--ink-blue-dark);
+  }
+
+  .theme-sketchy .cv-day[aria-selected='true'] {
+    background-color: rgba(230, 155, 124, 0.2);
+  }
+
+  .theme-sketchy .cv-day-number {
+    color: var(--ink-light);
+  }
+
+  .theme-sketchy .cv-day.today .cv-day-number {
+    color: var(--ink-blue-dark);
+  }
+
+  .theme-sketchy .cv-item {
+    border-color: rgba(245, 240, 230, 0.3);
+    box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .theme-sketchy .cv-item:hover {
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  .theme-sketchy .cv-item .startTime,
+  .theme-sketchy .cv-item .endTime {
+    color: rgba(245, 240, 230, 0.7);
   }
 }
 </style>

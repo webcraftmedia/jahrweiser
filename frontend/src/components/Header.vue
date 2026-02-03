@@ -1,8 +1,8 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <nav class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0 z-50">
+  <nav class="header-nav w-full fixed top-0 z-50">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
-      <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
+      <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse hover-wobble">
         <HeaderLogo />
       </NuxtLink>
 
@@ -10,7 +10,7 @@
       <button
         v-if="loggedIn"
         type="button"
-        class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+        class="burger-button inline-flex items-center p-2 w-10 h-10 justify-center md:hidden"
         aria-controls="navbar-mobile"
         :aria-expanded="mobileMenuOpen"
         @click="toggleMobileMenu"
@@ -37,21 +37,21 @@
       <div
         v-if="loggedIn"
         id="navbar-desktop"
-        class="hidden md:block text-right text-gray-900 dark:text-gray-100"
+        class="hidden md:block text-right"
       >
-        <p>
-          {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
+        <p class="sketchy-text text-ink-dark dark:text-ink-light">
+          {{ $t('components.Header.welcome') }} <b class="font-sketch-accent">{{ welcomeName }}</b>
         </p>
         <div class="space-x-4">
           <NuxtLink
             v-if="user?.role === 'admin'"
             to="/admin/members/add"
-            class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            class="nav-link"
           >
             {{ $t('components.Header.admin') }}
           </NuxtLink>
           <button
-            class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            class="nav-link"
             @click="logout"
           >
             {{ $t('components.Header.logout') }}
@@ -60,48 +60,48 @@
       </div>
 
       <!-- Mobile menu dropdown -->
-      <div
-        v-if="loggedIn"
-        id="navbar-mobile"
-        :class="mobileMenuOpen ? 'block' : 'hidden'"
-        class="w-full md:hidden mt-2"
+      <Transition
+        enter-active-class="animate-unfold"
+        leave-active-class="animate-fold-away"
       >
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+          v-if="loggedIn && mobileMenuOpen"
+          id="navbar-mobile"
+          class="w-full md:hidden mt-2"
         >
-          <!-- User Info Header -->
-          <div
-            class="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border-b border-gray-200 dark:border-gray-600"
-          >
-            <p
-              class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-            >
-              {{ $t('components.Header.welcome') }}
-            </p>
-            <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white truncate">
-              {{ welcomeName }}
-            </p>
-          </div>
+          <div class="mobile-menu-card">
+            <!-- User Info Header -->
+            <div class="mobile-menu-header">
+              <p class="text-xs font-sketch-body uppercase tracking-wider opacity-70">
+                {{ $t('components.Header.welcome') }}
+              </p>
+              <p class="mt-1 font-sketch-accent text-lg truncate">
+                {{ welcomeName }}
+              </p>
+            </div>
 
-          <!-- Menu Items -->
-          <nav class="py-2">
-            <NuxtLink
-              v-if="user?.role === 'admin'"
-              to="/admin/members/add"
-              class="block w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"
-              @click="toggleMobileMenu"
-            >
-              {{ $t('components.Header.admin') }}
-            </NuxtLink>
-            <button
-              class="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"
-              @click="logout"
-            >
-              {{ $t('components.Header.logout') }}
-            </button>
-          </nav>
+            <hr class="sketchy-divider my-2" />
+
+            <!-- Menu Items -->
+            <nav class="py-2 stagger-children">
+              <NuxtLink
+                v-if="user?.role === 'admin'"
+                to="/admin/members/add"
+                class="mobile-nav-link"
+                @click="toggleMobileMenu"
+              >
+                {{ $t('components.Header.admin') }}
+              </NuxtLink>
+              <button
+                class="mobile-nav-link"
+                @click="logout"
+              >
+                {{ $t('components.Header.logout') }}
+              </button>
+            </nav>
+          </div>
         </div>
-      </div>
+      </Transition>
     </div>
   </nav>
 </template>
@@ -125,3 +125,140 @@ async function logout() {
   await navigateTo('/login')
 }
 </script>
+
+<style scoped>
+.header-nav {
+  background-color: var(--paper-light);
+  border-bottom: 2px solid var(--ink-dark);
+  box-shadow: 0 2px 0 rgba(44, 36, 22, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .header-nav {
+    background-color: var(--paper-dark);
+    border-bottom-color: var(--ink-light);
+    box-shadow: 0 2px 0 rgba(245, 240, 230, 0.05);
+  }
+}
+
+.burger-button {
+  font-family: 'Patrick Hand', cursive;
+  color: var(--ink-dark);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.burger-button:hover {
+  background-color: rgba(44, 36, 22, 0.1);
+  animation: wobble 0.5s ease-in-out;
+}
+
+@media (prefers-color-scheme: dark) {
+  .burger-button {
+    color: var(--ink-light);
+  }
+
+  .burger-button:hover {
+    background-color: rgba(245, 240, 230, 0.1);
+  }
+}
+
+.nav-link {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  color: var(--ink-blue);
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--ink-blue);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--ink-dark);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-link {
+    color: var(--ink-blue-dark);
+  }
+
+  .nav-link::after {
+    background-color: var(--ink-blue-dark);
+  }
+
+  .nav-link:hover {
+    color: var(--ink-light);
+  }
+}
+
+.mobile-menu-card {
+  background-color: var(--paper-light);
+  border: 2px solid var(--ink-dark);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 4px 4px 0 rgba(44, 36, 22, 0.2);
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mobile-menu-card {
+    background-color: var(--paper-dark);
+    border-color: var(--ink-light);
+    box-shadow: 4px 4px 0 rgba(245, 240, 230, 0.1);
+  }
+}
+
+.mobile-menu-header {
+  padding: 0.75rem 1rem;
+  color: var(--ink-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  .mobile-menu-header {
+    color: var(--ink-light);
+  }
+}
+
+.mobile-nav-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  color: var(--ink-dark);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-link:hover {
+  background-color: rgba(74, 111, 165, 0.1);
+  color: var(--ink-blue);
+  transform: translateX(4px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .mobile-nav-link {
+    color: var(--ink-light);
+  }
+
+  .mobile-nav-link:hover {
+    background-color: rgba(106, 143, 197, 0.15);
+    color: var(--ink-blue-dark);
+  }
+}
+</style>

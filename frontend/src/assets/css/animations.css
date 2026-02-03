@@ -1,0 +1,491 @@
+/* Sketchy Theme - Animations */
+
+/* Wobble Animation - for hover effects */
+@keyframes wobble {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-2deg);
+  }
+  75% {
+    transform: rotate(2deg);
+  }
+}
+
+.animate-wobble {
+  animation: wobble 0.5s ease-in-out;
+}
+
+.hover-wobble:hover {
+  animation: wobble 0.5s ease-in-out;
+}
+
+/* Continuous wobble */
+@keyframes wobble-continuous {
+  0%, 100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+}
+
+.animate-wobble-slow {
+  animation: wobble-continuous 2s ease-in-out infinite;
+}
+
+/* Draw Animation - for SVG stroke effects */
+@keyframes draw {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw 0.8s ease-out forwards;
+}
+
+/* Checkmark draw animation */
+@keyframes check-draw {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-check {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+}
+
+.animate-check.checked {
+  animation: check-draw 0.4s ease-out forwards;
+}
+
+/* Pop Animation - for appearing elements */
+@keyframes pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop {
+  animation: pop 0.3s ease-out;
+}
+
+/* Scribble Animation - quick shake effect */
+@keyframes scribble {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+.animate-scribble {
+  animation: scribble 0.3s ease-in-out;
+}
+
+/* Shake animation for validation errors */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Fade Slide Animation */
+@keyframes fade-slide {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide {
+  animation: fade-slide 0.4s ease-out;
+}
+
+/* Fade Slide Up */
+@keyframes fade-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fade-slide-up 0.4s ease-out;
+}
+
+/* Unfold Animation - for modals */
+@keyframes unfold {
+  0% {
+    transform: scaleY(0) rotateX(-10deg);
+    opacity: 0;
+    transform-origin: top;
+  }
+  100% {
+    transform: scaleY(1) rotateX(0deg);
+    opacity: 1;
+    transform-origin: top;
+  }
+}
+
+.animate-unfold {
+  animation: unfold 0.3s ease-out;
+}
+
+/* Fold Away Animation */
+@keyframes fold-away {
+  0% {
+    transform: scaleY(1) rotateX(0deg);
+    opacity: 1;
+    transform-origin: top;
+  }
+  100% {
+    transform: scaleY(0) rotateX(-10deg);
+    opacity: 0;
+    transform-origin: top;
+  }
+}
+
+.animate-fold-away {
+  animation: fold-away 0.25s ease-in forwards;
+}
+
+/* Pencil Writing Animation */
+@keyframes pencil-write {
+  0% {
+    transform: translateX(0) rotate(-45deg);
+  }
+  50% {
+    transform: translateX(10px) rotate(-45deg);
+  }
+  100% {
+    transform: translateX(0) rotate(-45deg);
+  }
+}
+
+.animate-pencil {
+  animation: pencil-write 1.5s ease-in-out infinite;
+}
+
+/* Pencil drawing circles */
+@keyframes pencil-circle {
+  0% {
+    transform: rotate(0deg) translateX(3px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(3px) rotate(-360deg);
+  }
+}
+
+.animate-pencil-circle {
+  animation: pencil-circle 1s linear infinite;
+}
+
+/* Underline Draw Animation */
+@keyframes underline-draw {
+  0% {
+    width: 0%;
+    left: 0;
+  }
+  100% {
+    width: 100%;
+    left: 0;
+  }
+}
+
+.underline-draw {
+  position: relative;
+}
+
+.underline-draw::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 2px;
+}
+
+.underline-draw:hover::after {
+  animation: underline-draw 0.3s ease-out forwards;
+}
+
+/* Wavy underline animation */
+@keyframes wavy-underline {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 0;
+  }
+}
+
+.wavy-underline {
+  position: relative;
+  text-decoration: none;
+}
+
+.wavy-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='4'%3E%3Cpath d='M0 2 Q 5 0, 10 2 T 20 2' stroke='currentColor' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") repeat-x;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.wavy-underline:hover::after {
+  opacity: 1;
+  animation: wavy-underline 0.5s linear infinite;
+}
+
+/* Stamp Animation */
+@keyframes stamp {
+  0% {
+    transform: scale(2) rotate(-10deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(0.9) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-stamp {
+  animation: stamp 0.4s ease-out;
+}
+
+/* Bounce subtle */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.hover-bounce:hover {
+  animation: bounce-subtle 0.4s ease-in-out;
+}
+
+/* Spin sketch - slightly wobbly spin */
+@keyframes spin-sketch {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(92deg);
+  }
+  50% {
+    transform: rotate(178deg);
+  }
+  75% {
+    transform: rotate(272deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-sketch {
+  animation: spin-sketch 1s ease-in-out infinite;
+}
+
+/* Page turn effect */
+@keyframes page-turn {
+  0% {
+    transform: perspective(1000px) rotateY(0deg);
+    transform-origin: left center;
+  }
+  100% {
+    transform: perspective(1000px) rotateY(-90deg);
+    transform-origin: left center;
+  }
+}
+
+.animate-page-turn {
+  animation: page-turn 0.5s ease-in forwards;
+}
+
+/* Typewriter effect for text */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 2s steps(40, end);
+}
+
+/* Cursor blink for typewriter */
+@keyframes cursor-blink {
+  0%, 100% {
+    border-right-color: currentColor;
+  }
+  50% {
+    border-right-color: transparent;
+  }
+}
+
+.typewriter-cursor {
+  border-right: 2px solid;
+  animation: cursor-blink 0.7s step-end infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(1deg);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pulse sketch */
+@keyframes pulse-sketch {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.9;
+  }
+}
+
+.animate-pulse-sketch {
+  animation: pulse-sketch 2s ease-in-out infinite;
+}
+
+/* Transition utilities */
+.transition-sketchy {
+  transition: all 0.2s ease;
+}
+
+.transition-sketchy-slow {
+  transition: all 0.4s ease;
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px) rotate(-0.5deg);
+}
+
+/* Hover tilt effect */
+.hover-tilt:hover {
+  transform: rotate(-2deg);
+  transition: transform 0.2s ease;
+}
+
+/* Entrance animations for elements */
+.enter-left {
+  animation: enter-left 0.4s ease-out;
+}
+
+@keyframes enter-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.enter-right {
+  animation: enter-right 0.4s ease-out;
+}
+
+@keyframes enter-right {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Stagger children animation helper */
+.stagger-children > * {
+  opacity: 0;
+  animation: fade-slide-up 0.4s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.5s; }

@@ -17,6 +17,19 @@ export default defineNuxtConfig({
       },
     },
   },
+  app: {
+    head: {
+      link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Dancing+Script:wght@400;500;600;700&family=Quicksand:wght@300;400;500;600;700&display=swap',
+        },
+      ],
+    },
+  },
+  css: ['~/assets/css/watercolor.css', '~/assets/css/watercolor-animations.css'],
   modules: [
     '@nuxt/eslint',
     '@nuxt/icon',

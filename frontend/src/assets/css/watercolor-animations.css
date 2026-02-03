@@ -1,0 +1,504 @@
+/* ========================================
+   Watercolor Theme - Animations
+   Soft, organic animations inspired by watercolor painting
+   ======================================== */
+
+/* ----------------------------------------
+   Bloom Animation
+   Elements appear like a watercolor wash spreading
+   ---------------------------------------- */
+@keyframes bloom {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+    filter: blur(10px);
+  }
+  50% {
+    filter: blur(5px);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.animate-bloom {
+  animation: bloom 0.6s ease-out forwards;
+}
+
+/* Staggered bloom for lists */
+.animate-bloom-stagger > * {
+  opacity: 0;
+  animation: bloom 0.5s ease-out forwards;
+}
+
+.animate-bloom-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.animate-bloom-stagger > *:nth-child(2) { animation-delay: 0.1s; }
+.animate-bloom-stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.animate-bloom-stagger > *:nth-child(4) { animation-delay: 0.2s; }
+.animate-bloom-stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.animate-bloom-stagger > *:nth-child(6) { animation-delay: 0.3s; }
+.animate-bloom-stagger > *:nth-child(7) { animation-delay: 0.35s; }
+.animate-bloom-stagger > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* ----------------------------------------
+   Float Animation
+   Gentle floating movement like petals on water
+   ---------------------------------------- */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-6px) rotate(0.5deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-4px) rotate(-0.5deg);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* ----------------------------------------
+   Paint Spread Animation
+   Organic expansion like watercolor on wet paper
+   ---------------------------------------- */
+@keyframes paintSpread {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+    border-radius: 50%;
+  }
+  30% {
+    opacity: 0.8;
+    border-radius: 45% 55% 50% 50%;
+  }
+  60% {
+    border-radius: 40% 60% 55% 45%;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    border-radius: var(--wc-radius, 20px);
+  }
+}
+
+.animate-paint-spread {
+  animation: paintSpread 0.8s ease-out forwards;
+}
+
+/* ----------------------------------------
+   Soft Pulse Animation
+   Gentle breathing effect
+   ---------------------------------------- */
+@keyframes softPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.01);
+  }
+}
+
+.animate-soft-pulse {
+  animation: softPulse 3s ease-in-out infinite;
+}
+
+/* ----------------------------------------
+   Color Shift Animation
+   Subtle hue changes like light through watercolors
+   ---------------------------------------- */
+@keyframes colorShift {
+  0%, 100% {
+    filter: hue-rotate(0deg) saturate(1);
+  }
+  33% {
+    filter: hue-rotate(10deg) saturate(1.05);
+  }
+  66% {
+    filter: hue-rotate(-10deg) saturate(0.95);
+  }
+}
+
+.animate-color-shift {
+  animation: colorShift 8s ease-in-out infinite;
+}
+
+/* ----------------------------------------
+   Gentle Bob Animation
+   Very subtle movement for static elements
+   ---------------------------------------- */
+@keyframes gentleBob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-gentle-bob {
+  animation: gentleBob 4s ease-in-out infinite;
+}
+
+/* ----------------------------------------
+   Fade In Animation
+   Simple, elegant appearance
+   ---------------------------------------- */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-fade-in-slow {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+/* ----------------------------------------
+   Slide Up Animation
+   Elements rise gently into view
+   ---------------------------------------- */
+@keyframes slideUp {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+/* ----------------------------------------
+   Ripple Animation
+   Like a drop of water hitting the surface
+   ---------------------------------------- */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.wc-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.wc-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, var(--wc-rose-light) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wc-ripple:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+/* ----------------------------------------
+   Shimmer Animation
+   Soft light moving across surface
+   ---------------------------------------- */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ----------------------------------------
+   Watercolor Drip Animation
+   For decorative elements
+   ---------------------------------------- */
+@keyframes drip {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: scaleY(1);
+    transform-origin: top;
+    opacity: 0.6;
+  }
+}
+
+.animate-drip {
+  animation: drip 1.5s ease-out forwards;
+}
+
+/* ----------------------------------------
+   Hover Transitions
+   Smooth state changes
+   ---------------------------------------- */
+.wc-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wc-transition-fast {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wc-transition-slow {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ----------------------------------------
+   Hover Effects
+   ---------------------------------------- */
+.wc-hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.wc-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -8px rgba(248, 187, 217, 0.4);
+}
+
+.wc-hover-glow {
+  transition: box-shadow 0.3s ease, filter 0.3s ease;
+}
+
+.wc-hover-glow:hover {
+  box-shadow: 0 0 20px rgba(248, 187, 217, 0.5);
+  filter: brightness(1.05);
+}
+
+.wc-hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.wc-hover-scale:hover {
+  transform: scale(1.03);
+}
+
+/* ----------------------------------------
+   Focus Effects
+   Accessible and beautiful
+   ---------------------------------------- */
+.wc-focus-ring:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--wc-cream, #faf9f7),
+    0 0 0 4px var(--wc-rose-medium, #f48fb1);
+}
+
+.wc-focus-ring:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--wc-cream, #faf9f7),
+    0 0 0 4px var(--wc-rose-medium, #f48fb1);
+}
+
+/* ----------------------------------------
+   Loading Spinner - Watercolor Style
+   ---------------------------------------- */
+@keyframes wcSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes wcPulseRing {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+.wc-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    var(--wc-rose, #f8bbd9) 90deg,
+    var(--wc-sky, #bbdefb) 180deg,
+    var(--wc-mint, #c8e6c9) 270deg,
+    transparent 360deg
+  );
+  animation: wcSpin 1.5s linear infinite;
+  position: relative;
+}
+
+.wc-spinner::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  background: var(--wc-cream, #faf9f7);
+  border-radius: 50%;
+}
+
+.wc-spinner-pulse {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--wc-rose-light) 0%, var(--wc-sky-light) 100%);
+  animation: wcPulseRing 1.5s ease-in-out infinite;
+}
+
+/* ----------------------------------------
+   Page Transitions
+   ---------------------------------------- */
+.wc-page-enter-active,
+.wc-page-leave-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.wc-page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.wc-page-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* ----------------------------------------
+   Modal Animations
+   ---------------------------------------- */
+@keyframes modalBackdropIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes modalContentIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.wc-modal-backdrop-enter {
+  animation: modalBackdropIn 0.3s ease-out forwards;
+}
+
+.wc-modal-content-enter {
+  animation: modalContentIn 0.4s ease-out forwards;
+}
+
+/* ----------------------------------------
+   Dark Mode Adjustments
+   ---------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  .wc-hover-lift:hover {
+    box-shadow: 0 12px 30px -8px rgba(206, 147, 216, 0.3);
+  }
+
+  .wc-hover-glow:hover {
+    box-shadow: 0 0 20px rgba(206, 147, 216, 0.4);
+  }
+
+  .wc-focus-ring:focus,
+  .wc-focus-ring:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--wc-dark-bg, #1a1a2e),
+      0 0 0 4px var(--wc-dark-lavender, #ce93d8);
+  }
+
+  .wc-spinner::before {
+    background: var(--wc-dark-bg, #1a1a2e);
+  }
+
+  .wc-ripple::after {
+    background: radial-gradient(circle, var(--wc-dark-lavender, #ce93d8) 0%, transparent 70%);
+  }
+}
+
+/* ----------------------------------------
+   Reduced Motion Support
+   Respect user preferences
+   ---------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-float,
+  .animate-float-slow,
+  .animate-float-fast,
+  .animate-soft-pulse,
+  .animate-color-shift,
+  .animate-gentle-bob {
+    animation: none;
+  }
+}

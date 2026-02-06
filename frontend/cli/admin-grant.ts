@@ -20,3 +20,5 @@ const { user, vcard } = query
 vcard.updatePropertyWithValue(X_ROLE, 'admin')
 
 await saveUser(cardDavAccount, user, vcard)
+
+process.exit(0)

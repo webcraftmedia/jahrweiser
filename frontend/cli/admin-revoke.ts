@@ -20,3 +20,5 @@ const { user, vcard } = query
 vcard.removeProperty(X_ROLE)
 
 await saveUser(cardDavAccount, user, vcard)
+
+process.exit(0)

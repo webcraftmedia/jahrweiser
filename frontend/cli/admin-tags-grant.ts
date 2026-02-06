@@ -44,3 +44,5 @@ vcard.updatePropertyWithValue(X_ADMIN_TAGS, newTags.join(','))
 console.log(`Admin ${email} now has the following admin-tags: ${newTags}`)
 
 await saveUser(cardDavAccount, user, vcard)
+
+process.exit(0)

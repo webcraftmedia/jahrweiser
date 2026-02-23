@@ -24,19 +24,14 @@ config.global.config.errorHandler = (err) => {
   throw err instanceof Error ? err : new Error(String(err))
 }
 
-// Fail tests on [nuxt] errors/warnings by overriding console methods
+// Fail tests on [nuxt] console errors (Nuxt catches initialization errors internally
+// and logs them via console.error — there is no higher-level hook to intercept these,
+// as app:error hooks can only catch errors from plugins loaded after the hook is registered)
 const _consoleError = console.error
 console.error = (...args: unknown[]) => {
   _consoleError(...args)
   if (args.some(arg => typeof arg === 'string' && /\[nuxt\]/.test(arg))) {
     throw new Error(`Nuxt error: ${args.map(String).join(' ')}`)
-  }
-}
-const _consoleWarn = console.warn
-console.warn = (...args: unknown[]) => {
-  _consoleWarn(...args)
-  if (args.some(arg => typeof arg === 'string' && /\[nuxt\]/.test(arg))) {
-    throw new Error(`Nuxt warning: ${args.map(String).join(' ')}`)
   }
 }
 

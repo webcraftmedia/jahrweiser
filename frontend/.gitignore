@@ -26,3 +26,9 @@ logs
 
 # Import configs (may contain sensitive URLs)
 imports/*.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -1,0 +1,57 @@
+name: "frontend:test:e2e test code with playwright"
+
+on: push
+
+jobs:
+  files-changed:
+    name: Detect File Changes - frontend-test-e2e-code
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.changes.outputs.filter }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.1.7
+      - name: Check for frontend file changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: changes
+        with:
+          token: ${{ github.token }}
+          filters: |
+            filter:
+              - 'frontend/**/*'
+              - '.github/workflows/*'
+          list-files: shell
+
+  e2e:
+    if: needs.files-changed.outputs.changes == 'true'
+    name: E2E - Frontend
+    needs: files-changed
+    runs-on: ubuntu-latest
+    env:
+      WORKING_DIRECTORY: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.1.7
+
+      - name: Env File
+        run: cp .env.example .env
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30

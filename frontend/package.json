@@ -14,6 +14,7 @@
     "test:lint:eslint": "eslint --ext .vue,.ts,.tsx,.js,.jsx,.cjs,.mjs,.yml,.yaml --max-warnings 0 .",
     "test:lint:locales": "scripts/locales/locales.sh ./locales",
     "test:size": "size-limit",
+    "test:e2e": "playwright test",
     "test:unit": "vitest run --coverage",
     "test:unit:dev": "vitest",
     "cli:admin:grant": "npx tsx cli/admin-grant.ts",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@intlify/eslint-plugin-vue-i18n": "^4.1.0",
+    "@playwright/test": "^1.58.2",
     "@size-limit/file": "^12.0.0",
     "@types/email-templates": "^10.0.4",
     "@types/node": "^24.9.1",

@@ -7,7 +7,7 @@ export default defineVitestConfig({
     coverage: {
       reporter: ['text', 'json', 'html'],
       thresholds: {
-        lines: 72,
+        100: true,
       },
       reportsDirectory: '../coverage',
     },

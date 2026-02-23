@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Headerlogo > renders 1`] = `
-"<div id="test-wrapper"><svg data-v-279a7136="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 250 70" class="nuxt-icon nuxt-icon--fill logo text-gray-900 dark:text-white">
+"<div id="test-wrapper"><svg data-v-b385937a="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 250 70" class="nuxt-icon nuxt-icon--fill logo text-gray-900 dark:text-white">
     <defs>
       <filter id="filter-id-a" width="1.071" height="1.071" x="-.035" y="-.035" style="color-interpolation-filters:sRGB;">
         <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>

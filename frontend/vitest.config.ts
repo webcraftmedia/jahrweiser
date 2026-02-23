@@ -2,18 +2,20 @@ import { defineVitestConfig } from '@nuxt/test-utils/config'
 import path from 'path'
 
 export default defineVitestConfig({
+  root: path.resolve(__dirname),
   test: {
     setupFiles: ['./test/setup.ts'],
     environment: 'nuxt',
-    environmentMatchGlobs: [['server/**/*.spec.ts', 'node']],
     include: ['src/**/*.spec.ts', 'server/**/*.spec.ts'],
     coverage: {
       reporter: ['text', 'json', 'html'],
-      exclude: ['**/server/emails/**'],
+      all: true,
+      include: ['server/helpers/*.ts', 'server/api/**/*.ts'],
+      exclude: ['server/emails/**'],
       thresholds: {
         100: true,
       },
-      reportsDirectory: '../coverage',
+      reportsDirectory: path.resolve(__dirname, '../coverage'),
     },
   },
   resolve: {

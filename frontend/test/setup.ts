@@ -1,6 +1,44 @@
+// Mock localStorage before any Nuxt plugins initialize (nuxt-auth-utils requires it)
+if (typeof globalThis.localStorage === 'undefined' || typeof globalThis.localStorage?.getItem !== 'function') {
+  const store: Record<string, string> = {}
+  globalThis.localStorage = {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value },
+    removeItem: (key: string) => { delete store[key] },
+    clear: () => { for (const key of Object.keys(store)) delete store[key] },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+    get length() { return Object.keys(store).length },
+  } as Storage
+}
+
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { expect } from 'vitest'
 import { config } from '@vue/test-utils'
+
+// Fail tests on Vue warnings and errors via Vue's built-in handlers
+config.global.config ??= {}
+config.global.config.warnHandler = (msg, _instance, trace) => {
+  throw new Error(`[Vue warn]: ${msg}\n${trace}`)
+}
+config.global.config.errorHandler = (err) => {
+  throw err instanceof Error ? err : new Error(String(err))
+}
+
+// Fail tests on [nuxt] errors/warnings by overriding console methods
+const _consoleError = console.error
+console.error = (...args: unknown[]) => {
+  _consoleError(...args)
+  if (args.some(arg => typeof arg === 'string' && /\[nuxt\]/.test(arg))) {
+    throw new Error(`Nuxt error: ${args.map(String).join(' ')}`)
+  }
+}
+const _consoleWarn = console.warn
+console.warn = (...args: unknown[]) => {
+  _consoleWarn(...args)
+  if (args.some(arg => typeof arg === 'string' && /\[nuxt\]/.test(arg))) {
+    throw new Error(`Nuxt warning: ${args.map(String).join(' ')}`)
+  }
+}
 
 mockNuxtImport('useI18n', () => () => {
   return {

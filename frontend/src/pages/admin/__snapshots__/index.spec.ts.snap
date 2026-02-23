@@ -2,6 +2,6 @@
 
 exports[`Page: Admin Index > renders 1`] = `
 "<div id="test-wrapper">
-  <!---->
+  <div></div>
 </div>"
 `;

@@ -56,12 +56,23 @@ exports[`Header > renders 1`] = `
             <path d="M44.532 133.51h.711l1.558-.949c-1.32-.101-4.165-.169-7.62-.169l-2.066 1.05v.27c1.728-.1 3.387-.168 4.945-.202l-1.22 4.876c-1.456 1.355-3.454 2.27-5.012 2.27-2.506 0-4.064-1.965-4.064-5.047 0-6.604 4.437-12.767 9.212-12.767 1.389 0 2.574.575 3.217 1.591.44.678.61 1.253.813 2.676l2.506-2.811c-.643-1.93-1.862-2.676-4.47-2.676-3.725 0-7.044 1.524-9.754 4.437-2.743 2.946-4.47 7.078-4.47 10.668 0 3.285 1.795 5.317 4.707 5.317 2.1 0 3.861-.508 6.91-2.066-.509 2.032-1.118 4.234-1.423 4.979-.677 1.828-1.66 2.573-3.455 2.573-.982 0-2.607-.135-3.657-.304l-1.423 2.235c1.22.135 1.728.17 2.439.17 2.71 0 5.012-1.22 7.247-3.794 1.457-1.693 2.066-3.116 3.048-7.044z" aria-label="G" style="font-style:italic;font-weight:500;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;letter-spacing:-.396875px;word-spacing:-.0211667px;fill:#540080;stroke-width:0;filter:url(#filter-id-e);"></path>
             <path d="M20.19 143.317h.711l1.558-.948c-1.32-.102-4.166-.17-7.62-.17l-2.066 1.05v.272c1.727-.102 3.387-.17 4.945-.204l-1.22 4.877c-1.456 1.355-3.454 2.27-5.012 2.27-2.506 0-4.064-1.965-4.064-5.047 0-6.604 4.437-12.768 9.212-12.768 1.388 0 2.574.576 3.217 1.592.44.677.61 1.253.813 2.676l2.506-2.811c-.643-1.93-1.863-2.676-4.47-2.676-3.726 0-7.045 1.524-9.754 4.437-2.743 2.946-4.47 7.078-4.47 10.668 0 3.285 1.795 5.317 4.707 5.317 2.1 0 3.861-.508 6.909-2.066-.508 2.032-1.118 4.233-1.422 4.978-.678 1.83-1.66 2.574-3.455 2.574-.982 0-2.608-.135-3.657-.305l-1.423 2.236c1.22.135 1.727.169 2.439.169 2.709 0 5.012-1.22 7.247-3.793 1.456-1.694 2.066-3.116 3.048-7.044z" aria-label="G" style="font-style:italic;font-weight:500;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;letter-spacing:-.396875px;word-spacing:-.0211667px;fill:#540080;stroke-width:0;filter:url(#filter-id-f);"></path>
           </g>
-        </svg></a><!-- Burger menu button (mobile only) -->
-      <!--v-if-->
-      <!-- Desktop menu -->
-      <!--v-if-->
-      <!-- Mobile menu dropdown -->
-      <!--v-if-->
+        </svg></a><!-- Burger menu button (mobile only) --><button type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-mobile" aria-expanded="false"><span class="sr-only">components.Header.open-menu</span><svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"></path>
+        </svg></button><!-- Desktop menu -->
+      <div id="navbar-desktop" class="hidden md:block text-right text-gray-900 dark:text-gray-100">
+        <p>components.Header.welcome <b>User</b></p>
+        <div class="space-x-4"><a href="/admin/members/add" class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">components.Header.admin</a><button class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">components.Header.logout</button></div>
+      </div><!-- Mobile menu dropdown -->
+      <div id="navbar-mobile" class="hidden w-full md:hidden mt-2">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <!-- User Info Header -->
+          <div class="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border-b border-gray-200 dark:border-gray-600">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">components.Header.welcome</p>
+            <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white truncate">User</p>
+          </div><!-- Menu Items -->
+          <nav class="py-2"><a href="/admin/members/add" class="block w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150">components.Header.admin</a><button class="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150">components.Header.logout</button></nav>
+        </div>
+      </div>
     </div>
   </nav>
 </div>"

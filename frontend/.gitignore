@@ -23,7 +23,6 @@ logs
 .env.*
 !.env.example
 
-coverage
 
 # Import configs (may contain sensitive URLs)
 imports/*.json

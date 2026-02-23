@@ -2,35 +2,35 @@
 
 exports[`Page: Admin > renders 1`] = `
 "<div id="test-wrapper">
-  <div data-v-557e9c62="" class="bg-gray-50 dark:bg-gray-900 w-full flex-1 border-l border-r">
-    <div data-v-557e9c62="" class="flex overflow-hidden full-height">
+  <div data-v-20ac04fb="" class="bg-gray-50 dark:bg-gray-900 w-full flex-1 border-l border-r">
+    <div data-v-20ac04fb="" class="flex overflow-hidden full-height">
       <!-- Desktop Sidebar - Full Height -->
-      <aside data-v-557e9c62="" class="hidden md:flex md:flex-shrink-0">
-        <div data-v-557e9c62="" class="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full">
-          <div data-v-557e9c62="" class="flex items-center flex-shrink-0 px-4 pt-5 pb-4">
-            <h2 data-v-557e9c62="" class="text-xl font-semibold text-gray-900 dark:text-white">pages.admin.title</h2>
+      <aside data-v-20ac04fb="" class="hidden md:flex md:flex-shrink-0">
+        <div data-v-20ac04fb="" class="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full">
+          <div data-v-20ac04fb="" class="flex items-center flex-shrink-0 px-4 pt-5 pb-4">
+            <h2 data-v-20ac04fb="" class="text-xl font-semibold text-gray-900 dark:text-white">pages.admin.title</h2>
           </div>
-          <hr data-v-557e9c62="" class="border-gray-200 dark:border-gray-700">
-          <nav data-v-557e9c62="" class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto"><a data-v-557e9c62="" href="/admin/members/add" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.members-add</a><a data-v-557e9c62="" href="/admin/cal/" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.calendar</a></nav>
+          <hr data-v-20ac04fb="" class="border-gray-200 dark:border-gray-700">
+          <nav data-v-20ac04fb="" class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto"><a data-v-20ac04fb="" href="/admin/members/add" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.members-add</a><a data-v-20ac04fb="" href="/admin/cal/" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.calendar</a></nav>
         </div>
       </aside><!-- Mobile Drawer Backdrop -->
-      <transition-stub data-v-557e9c62="" enteractiveclass="transition-opacity ease-linear duration-300" enterfromclass="opacity-0" entertoclass="opacity-100" leaveactiveclass="transition-opacity ease-linear duration-300" leavefromclass="opacity-100" leavetoclass="opacity-0" appear="false" persisted="false" css="true">
+      <transition-stub data-v-20ac04fb="" enteractiveclass="transition-opacity ease-linear duration-300" enterfromclass="opacity-0" entertoclass="opacity-100" leaveactiveclass="transition-opacity ease-linear duration-300" leavefromclass="opacity-100" leavetoclass="opacity-0" appear="false" persisted="false" css="true">
         <!--v-if-->
       </transition-stub><!-- Mobile Drawer -->
-      <transition-stub data-v-557e9c62="" enteractiveclass="transition ease-in-out duration-300 transform" enterfromclass="-translate-x-full" entertoclass="translate-x-0" leaveactiveclass="transition ease-in-out duration-300 transform" leavefromclass="translate-x-0" leavetoclass="-translate-x-full" appear="false" persisted="false" css="true">
+      <transition-stub data-v-20ac04fb="" enteractiveclass="transition ease-in-out duration-300 transform" enterfromclass="-translate-x-full" entertoclass="translate-x-0" leaveactiveclass="transition ease-in-out duration-300 transform" leavefromclass="translate-x-0" leavetoclass="-translate-x-full" appear="false" persisted="false" css="true">
         <!--v-if-->
       </transition-stub><!-- Main Content -->
-      <div data-v-557e9c62="" class="flex-1 overflow-auto w-full">
-        <main data-v-557e9c62="" class="w-full min-h-full">
+      <div data-v-20ac04fb="" class="flex-1 overflow-auto w-full">
+        <main data-v-20ac04fb="" class="w-full min-h-full">
           <!-- Mobile Menu Button -->
-          <div data-v-557e9c62="" class="md:hidden flex items-center gap-3 px-4 pt-4 pb-3"><button data-v-557e9c62="" class="p-2 text-gray-600 dark:text-gray-400 bg-transparent rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors"><svg data-v-557e9c62="" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path data-v-557e9c62="" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10"></path>
+          <div data-v-20ac04fb="" class="md:hidden flex items-center gap-3 px-4 pt-4 pb-3"><button data-v-20ac04fb="" class="p-2 text-gray-600 dark:text-gray-400 bg-transparent rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors"><svg data-v-20ac04fb="" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path data-v-20ac04fb="" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10"></path>
               </svg></button>
-            <div data-v-557e9c62="" class="flex items-center gap-2 text-gray-900 dark:text-white"><span data-v-557e9c62="" class="font-semibold">pages.admin.title</span><!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text --><span data-v-557e9c62="" class="text-gray-400 dark:text-gray-500">—</span><span data-v-557e9c62="" class="text-gray-700 dark:text-gray-300"></span></div>
+            <div data-v-20ac04fb="" class="flex items-center gap-2 text-gray-900 dark:text-white"><span data-v-20ac04fb="" class="font-semibold">pages.admin.title</span><!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text --><span data-v-20ac04fb="" class="text-gray-400 dark:text-gray-500">—</span><span data-v-20ac04fb="" class="text-gray-700 dark:text-gray-300"></span></div>
           </div>
-          <hr data-v-557e9c62="" class="md:hidden border-gray-200 dark:border-gray-700">
-          <div data-v-557e9c62="" class="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-            <div data-v-557e9c62="" class="flex w-full">
+          <hr data-v-20ac04fb="" class="md:hidden border-gray-200 dark:border-gray-700">
+          <div data-v-20ac04fb="" class="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+            <div data-v-20ac04fb="" class="flex w-full">
               <div class="m-auto mt-8 w-full max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
                 <form class="space-y-6">
                   <h5 class="text-xl font-medium text-gray-900 dark:text-white">pages.login.form.title</h5>

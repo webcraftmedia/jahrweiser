@@ -53,6 +53,7 @@
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "happy-dom": "^18.0.1"
+    "happy-dom": "^18.0.1",
+    "prettier": "^3.8.1"
   }
 }

@@ -2,9 +2,9 @@
 
 exports[`App > renders default page 1`] = `
 "<div id="test-wrapper">
-  <div data-v-433a9abd="" class="flex flex-col h-screen bg-white dark:bg-gray-800">
-    <nav data-v-433a9abd="" class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0 z-50">
-      <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2"><a href="/" class="flex items-center space-x-3 rtl:space-x-reverse"><svg data-v-279a7136="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 250 70" class="nuxt-icon nuxt-icon--fill logo text-gray-900 dark:text-white">
+  <div data-v-19b56bd5="" class="flex flex-col h-screen bg-white dark:bg-gray-800">
+    <nav data-v-19b56bd5="" class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0 z-50">
+      <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2"><a href="/" class="flex items-center space-x-3 rtl:space-x-reverse"><svg data-v-b385937a="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 250 70" class="nuxt-icon nuxt-icon--fill logo text-gray-900 dark:text-white">
             <defs>
               <filter id="filter-id-a" width="1.071" height="1.071" x="-.035" y="-.035" style="color-interpolation-filters:sRGB;">
                 <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
@@ -65,7 +65,7 @@ exports[`App > renders default page 1`] = `
         <!--v-if-->
       </div>
     </nav>
-    <div data-v-433a9abd="" class="content flex-1 overflow-y-auto max-w-screen-xl flex flex-wrap justify-between mx-auto w-full">
+    <div data-v-19b56bd5="" class="content flex-1 overflow-y-auto max-w-screen-xl flex flex-wrap justify-between mx-auto w-full">
       <div class="flex w-full">
         <div class="m-auto mt-8 w-full max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
           <form class="space-y-6">
@@ -82,7 +82,7 @@ exports[`App > renders default page 1`] = `
         </div>
       </div>
     </div>
-    <footer data-v-433a9abd="" class="bg-white dark:bg-gray-800 absolute bottom-0 w-full border-t p-1">
+    <footer data-v-19b56bd5="" class="bg-white dark:bg-gray-800 absolute bottom-0 w-full border-t p-1">
       <div class="w-full mx-auto max-w-screen-xl flex items-center justify-between"><span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">components.Footer.copyright <a href="https://www.webcraft-media.de/" class="hover:underline">components.Footer.copyright-holder</a><p class="inline hidden md:inline">components.Footer.copyright-text</p></span>
         <ul class="flex flex-wrap items-center text-sm font-medium text-gray-500 dark:text-gray-400">
           <li><a href="https://www.webcraft-media.de#!impressum" class="hover:underline me-4 md:me-6">components.Footer.imprint</a></li>

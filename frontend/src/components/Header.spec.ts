@@ -3,16 +3,24 @@ import Component from './Header.vue'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 const mockClear = vi.fn()
+const mockUser = ref<{ name?: string; email?: string; role?: string } | null>({
+  name: 'Test User',
+  email: 'test@example.com',
+  role: 'admin',
+})
+const mockLoggedIn = ref(true)
 
 mockNuxtImport('useUserSession', () => () => ({
-  loggedIn: ref(true),
-  user: ref({ name: 'Test User', email: 'test@example.com', role: 'admin' }),
+  loggedIn: mockLoggedIn,
+  user: mockUser,
   clear: mockClear,
 }))
 
 describe('Header', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockUser.value = { name: 'Test User', email: 'test@example.com', role: 'admin' }
+    mockLoggedIn.value = true
   })
 
   it('renders', async () => {
@@ -39,5 +47,11 @@ describe('Header', () => {
     await logoutButton.trigger('click')
 
     expect(mockClear).toHaveBeenCalled()
+  })
+
+  it('shows email when name is not set', async () => {
+    mockUser.value = { email: 'test@example.com', role: 'admin' }
+    const wrapper = await mountSuspended(Component)
+    expect(wrapper.text()).toContain('test@example.com')
   })
 })

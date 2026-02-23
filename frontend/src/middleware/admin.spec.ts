@@ -15,13 +15,13 @@ describe('admin middleware', () => {
 
   it('allows admin users', () => {
     mockUser.value = { role: 'admin' }
-    middleware({} as any, {} as any)
+    middleware({} as unknown, {} as unknown)
     expect(mockNavigateTo).not.toHaveBeenCalled()
   })
 
   it('redirects non-admin users', () => {
     mockUser.value = { role: 'user' }
-    middleware({} as any, {} as any)
+    middleware({} as unknown, {} as unknown)
     expect(mockNavigateTo).toHaveBeenCalledWith('/')
   })
 })

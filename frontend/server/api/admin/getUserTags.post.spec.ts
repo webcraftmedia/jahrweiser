@@ -1,6 +1,7 @@
 import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMockVCard } from '../../../test/fixtures/vcard-data'
+import handler from './getUserTags.post'
 
 const mockFindUserByEmail = vi.fn()
 const mockCreateCardDAVAccount = vi.fn().mockReturnValue({ accountType: 'carddav' })
@@ -10,8 +11,6 @@ vi.mock('~~/server/helpers/dav', () => ({
   findUserByEmail: (...args: unknown[]) => mockFindUserByEmail(...args),
   X_ADMIN_TAGS: 'x-admin-tags',
 }))
-
-import handler from './getUserTags.post'
 
 const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>
 

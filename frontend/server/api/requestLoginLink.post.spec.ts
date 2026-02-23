@@ -1,6 +1,7 @@
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
+import handler from './requestLoginLink.post'
 
 const mockFindUserByEmail = vi.fn()
 const mockSaveUser = vi.fn()
@@ -20,8 +21,6 @@ vi.mock('../helpers/email', () => ({
   emailRenderer: { send: (...args: unknown[]) => mockEmailSend(...args) },
   defaultParams: { APPLICATION_NAME: 'Jahrweiser', SUPPORT_EMAIL: 'test@test.com', loginDays: 7 },
 }))
-
-import handler from './requestLoginLink.post'
 
 const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>
 

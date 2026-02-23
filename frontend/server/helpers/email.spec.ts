@@ -1,5 +1,6 @@
 import '../../test/setup-server'
 import { describe, it, expect, vi } from 'vitest'
+import { emailRenderer, defaultParams } from './email'
 
 const { mockSend, mockCreateTransport } = vi.hoisted(() => ({
   mockSend: vi.fn(),
@@ -17,8 +18,6 @@ vi.mock('nodemailer', () => ({
 vi.mock('../api/redeemLoginLink.post', () => ({
   MAX_AGE: 604800,
 }))
-
-import { emailRenderer, defaultParams } from './email'
 
 describe('email helper', () => {
   it('emailRenderer has send method', () => {

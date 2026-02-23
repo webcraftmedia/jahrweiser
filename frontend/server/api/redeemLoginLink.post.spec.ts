@@ -1,6 +1,7 @@
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
+import handler, { MAX_AGE } from './redeemLoginLink.post'
 
 const mockFindUserByToken = vi.fn()
 const mockSaveUser = vi.fn()
@@ -16,8 +17,6 @@ vi.mock('../helpers/dav', () => ({
   X_LOGIN_TOKEN: 'x-login-token',
   X_ROLE: 'x-role',
 }))
-
-import handler, { MAX_AGE } from './redeemLoginLink.post'
 
 const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>
 

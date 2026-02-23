@@ -3,17 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { DAVResponse } from 'tsdav'
 import ICAL from 'ical.js'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
-
-vi.mock('tsdav', () => ({
-  addressBookQuery: vi.fn(),
-  calendarQuery: vi.fn(),
-  createVCard: vi.fn(),
-  DAVNamespaceShort: { DAV: 'd', CALDAV: 'c', CARDDAV: 'card' },
-  fetchCalendarObjects: vi.fn(),
-  fetchCalendars: vi.fn(),
-  updateVCard: vi.fn(),
-}))
-
 import {
   createCalDAVAccount,
   createCardDAVAccount,
@@ -40,6 +29,16 @@ import {
   updateVCard,
   createVCard as tsdavCreateVCard,
 } from 'tsdav'
+
+vi.mock('tsdav', () => ({
+  addressBookQuery: vi.fn(),
+  calendarQuery: vi.fn(),
+  createVCard: vi.fn(),
+  DAVNamespaceShort: { DAV: 'd', CALDAV: 'c', CARDDAV: 'card' },
+  fetchCalendarObjects: vi.fn(),
+  fetchCalendars: vi.fn(),
+  updateVCard: vi.fn(),
+}))
 
 const config = {
   DAV_USERNAME: 'testuser',
@@ -141,7 +140,10 @@ describe('dav helpers', () => {
       const to = new Date('2025-03-31T23:59:59Z')
       await findEvents(account, 'https://dav.example.com/cal/1', from, to)
       const callArgs = vi.mocked(calendarQuery).mock.calls[0]![0] as Record<string, unknown>
-      const fetchOptions = callArgs.fetchOptions as { agent: (url: URL) => unknown; signal: unknown }
+      const fetchOptions = callArgs.fetchOptions as {
+        agent: (url: URL) => unknown
+        signal: unknown
+      }
       expect(fetchOptions.signal).toBeDefined()
       expect(typeof fetchOptions.agent).toBe('function')
       // Test HTTP agent selection

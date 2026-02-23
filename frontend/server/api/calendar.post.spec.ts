@@ -7,6 +7,7 @@ import {
   PRIVATE_EVENT,
 } from '../../test/fixtures/ical-data'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
+import handler from './calendar.post'
 
 const mockFindCalendars = vi.fn()
 const mockFindEvents = vi.fn()
@@ -21,8 +22,6 @@ vi.mock('../helpers/dav', () => ({
   findEvents: (...args: unknown[]) => mockFindEvents(...args),
   findUserByEmail: (...args: unknown[]) => mockFindUserByEmail(...args),
 }))
-
-import handler from './calendar.post'
 
 const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>
 

@@ -32,8 +32,7 @@ globalThis.createError = createError
 // readValidatedBody must be a vi.fn() so tests can mock its implementation
 globalThis.readValidatedBody = vi.fn()
 
-globalThis.useRuntimeConfig = () =>
-  runtimeConfig as unknown as ReturnType<typeof useRuntimeConfig>
+globalThis.useRuntimeConfig = () => runtimeConfig as unknown as ReturnType<typeof useRuntimeConfig>
 
 globalThis.requireUserSession = vi.fn()
 globalThis.setUserSession = vi.fn()

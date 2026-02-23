@@ -6,6 +6,7 @@ import {
   RECURRING_EVENT,
   RECURRING_EVENT_WITH_DETAILS,
 } from '../../test/fixtures/ical-data'
+import handler from './event.post'
 
 const mockFindCalendars = vi.fn()
 const mockFindEvent = vi.fn()
@@ -16,8 +17,6 @@ vi.mock('../helpers/dav', () => ({
   findCalendars: (...args: unknown[]) => mockFindCalendars(...args),
   findEvent: (...args: unknown[]) => mockFindEvent(...args),
 }))
-
-import handler from './event.post'
 
 const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>
 

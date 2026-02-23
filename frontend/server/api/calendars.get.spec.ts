@@ -1,5 +1,6 @@
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import handler from './calendars.get'
 
 const mockFindCalendars = vi.fn()
 const mockCreateCalDAVAccount = vi.fn().mockReturnValue({ accountType: 'caldav' })
@@ -8,8 +9,6 @@ vi.mock('../helpers/dav', () => ({
   createCalDAVAccount: (...args: unknown[]) => mockCreateCalDAVAccount(...args),
   findCalendars: (...args: unknown[]) => mockFindCalendars(...args),
 }))
-
-import handler from './calendars.get'
 
 const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>
 

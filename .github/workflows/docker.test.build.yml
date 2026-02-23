@@ -11,7 +11,7 @@ jobs:
     outputs:
       changes: ${{ steps.changes.outputs.filter }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.1.7
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.1.7
 
       - name: Check for file changes
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
@@ -33,7 +33,7 @@ jobs:
       WORKING_DIRECTORY: ./
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.1.7
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.1.7
 
       - name: Env File
         run: cp frontend/.env.example frontend/.env
@@ -52,7 +52,7 @@ jobs:
       WORKING_DIRECTORY: ./
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.1.7
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.1.7
 
       - name: Env File
         run: cp frontend/.env.example frontend/.env

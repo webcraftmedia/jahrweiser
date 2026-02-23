@@ -9,7 +9,8 @@
     "preview": "cross-env TZ=UTC nuxt preview",
     "postinstall": "cross-env TZ=UTC nuxt prepare",
     "prod:start": "nuxt start",
-    "test:lint": "npm run test:lint:eslint && npm run test:lint:locales",
+    "test:lint": "npm run test:lint:eslint && npm run test:lint:locales && npm run test:lint:typecheck",
+    "test:lint:typecheck": "vue-tsc --noEmit",
     "test:lint:eslint": "eslint --ext .vue,.ts,.tsx,.js,.jsx,.cjs,.mjs,.yml,.yaml --max-warnings 0 .",
     "test:lint:locales": "scripts/locales/locales.sh ./locales",
     "test:unit": "vitest run --coverage",
@@ -54,6 +55,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "happy-dom": "^18.0.1",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "vue-tsc": "^3.2.5"
   }
 }

@@ -13,6 +13,7 @@
     "test:lint:typecheck": "vue-tsc --noEmit",
     "test:lint:eslint": "eslint --ext .vue,.ts,.tsx,.js,.jsx,.cjs,.mjs,.yml,.yaml --max-warnings 0 .",
     "test:lint:locales": "scripts/locales/locales.sh ./locales",
+    "test:size": "size-limit",
     "test:unit": "vitest run --coverage",
     "test:unit:dev": "vitest",
     "cli:admin:grant": "npx tsx cli/admin-grant.ts",
@@ -47,6 +48,7 @@
   },
   "devDependencies": {
     "@intlify/eslint-plugin-vue-i18n": "^4.1.0",
+    "@size-limit/file": "^12.0.0",
     "@types/email-templates": "^10.0.4",
     "@types/node": "^24.9.1",
     "@types/nodemailer": "^7.0.3",
@@ -56,6 +58,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "happy-dom": "^18.0.1",
     "prettier": "^3.8.1",
+    "size-limit": "^12.0.0",
     "vue-tsc": "^3.2.5"
   }
 }

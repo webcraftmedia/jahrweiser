@@ -1,0 +1,12 @@
+[
+  {
+    "path": ".output/public/_nuxt/*.js",
+    "limit": "200 KB",
+    "name": "JS bundles"
+  },
+  {
+    "path": ".output/public/_nuxt/*.css",
+    "limit": "25 KB",
+    "name": "CSS bundles"
+  }
+]

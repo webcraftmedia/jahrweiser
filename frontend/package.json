@@ -37,7 +37,7 @@
     "ical.js": "^2.2.1",
     "nodemailer": "^7.0.10",
     "nuxt": "^4.2.0",
-    "nuxt-auth-utils": "^0.5.25",
+    "nuxt-auth-utils": "^0.5.29",
     "nuxt-svgo": "^4.2.6",
     "pug": "^3.0.3",
     "tsdav": "^2.1.6",

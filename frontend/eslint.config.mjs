@@ -1,12 +1,26 @@
 // @ts-check
 import withNuxt from './.nuxt/eslint.config.mjs'
+import { security, comments, json, yaml, vitest, css } from 'eslint-config-it4c'
 import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 
 export default withNuxt(
-  // Your custom configs here
+  // it4c-Module (self-contained, kein Nuxt-Overlap)
+  ...security,
+  ...comments,
+  ...json,
+  ...yaml,
+  ...vitest,
+  {
+    files: ['**/*.spec.ts', '**/*.spec.js', '**/*.test.ts', '**/*.test.js'],
+    settings: { vitest: { typecheck: false } },
+  },
+  ...css,
+
+  // vue-i18n
   ...vueI18n.configs.recommended,
   {
+    ignores: ['**/*.css'],
     rules: {
       // Best Practices
       '@intlify/vue-i18n/key-format-style': 'error',
@@ -34,5 +48,11 @@ export default withNuxt(
       },
     },
   },
+
+  // Prettier (MUSS letztes sein)
   eslintPluginPrettierRecommended,
 )
+  // CSS files use a different language plugin — exclude them from JS/Vue-focused configs
+  .override('nuxt/javascript', { ignores: ['**/*.css'] })
+  .override('@intlify/vue-i18n:recommended:setup', { ignores: ['**/*.css'] })
+  .override('@intlify/vue-i18n:recommended:rules', { ignores: ['**/*.css'] })

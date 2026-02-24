@@ -337,8 +337,12 @@
   /* --- Today highlight --- */
 
   .theme-default .cv-day.today {
-    background-color: rgba(194, 65, 12, 0.06);
-    box-shadow: inset 0 0 0 1.5px rgba(194, 65, 12, 0.35);
+    background-color: #faf5eb;
+    background-image: linear-gradient(
+      225deg,
+      #c2410c 6px,
+      transparent 6px
+    );
   }
 
   .theme-default .cv-day.today .cv-day-number {
@@ -502,8 +506,12 @@
   /* --- Today (dark) --- */
 
   .dark .theme-default .cv-day.today {
-    background-color: rgba(234, 88, 12, 0.08);
-    box-shadow: inset 0 0 0 1.5px rgba(234, 88, 12, 0.4);
+    background-color: #1a1714;
+    background-image: linear-gradient(
+      225deg,
+      #ea580c 6px,
+      transparent 6px
+    );
   }
 
   .dark .theme-default .cv-day.today .cv-day-number {

@@ -23,8 +23,8 @@
       <NuxtLink to="/" class="flex items-center gap-2">
         <LogoSmall class="logo-bar" />
         <div>
-          <span class="font-display text-navy dark:text-ivory text-xl tracking-wide">Jahrweiser</span>
-          <span class="font-hand text-mustard text-xs tracking-widest ml-1"
+          <span class="font-display text-navy dark:text-ivory text-2xl tracking-wide">Jahrweiser</span>
+          <span class="font-hand text-mustard text-sm tracking-widest ml-1"
             >Bergstraße</span
           >
         </div>
@@ -179,8 +179,8 @@
 
 <style scoped>
   .logo-bar {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
   .logo-hero {
     width: 56px;

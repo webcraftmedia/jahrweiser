@@ -5,8 +5,23 @@ import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 
 export default withNuxt(
+  { ignores: ['.claude/'] },
+
   // it4c-Module (self-contained, kein Nuxt-Overlap)
   ...security,
+  {
+    files: ['cli/**'],
+    rules: {
+      // CLI-Tools nutzen legitimerweise dynamische Dateipfade
+      'security/detect-non-literal-fs-filename': 'off',
+    },
+  },
+  {
+    rules: {
+      // Zu viele False Positives bei normalem Array/Object-Zugriff
+      'security/detect-object-injection': 'off',
+    },
+  },
   ...comments,
   ...json,
   ...yaml,
@@ -14,8 +29,39 @@ export default withNuxt(
   {
     files: ['**/*.spec.ts', '**/*.spec.js', '**/*.test.ts', '**/*.test.js'],
     settings: { vitest: { typecheck: false } },
+    rules: {
+      // Projekt nutzt vitest globals via Config
+      'vitest/prefer-importing-vitest-globals': 'off',
+      // Padding-Regeln zu noisy für bestehende Codebase
+      'vitest/padding-around-all': 'off',
+      'vitest/padding-around-expect-groups': 'off',
+      // mockNuxtImport muss auf Top-Level stehen, e2e nutzt Playwright
+      'vitest/require-hook': 'off',
+      // TypeScript Type-Narrowing-Pattern (if (result) { expect(...) })
+      'vitest/no-conditional-expect': 'off',
+      'vitest/no-conditional-in-test': 'off',
+      // Zu strikt für bestehende Codebase
+      'vitest/require-mock-type-parameters': 'off',
+      'vitest/prefer-lowercase-title': 'off',
+      'vitest/prefer-describe-function-title': 'off',
+      'vitest/prefer-import-in-mock': 'off',
+      'vitest/max-expects': 'off',
+      // Auto-Fix ändert Semantik
+      'vitest/prefer-called-with': 'off',
+      'vitest/prefer-expect-type-of': 'off',
+      'vitest/prefer-to-be-truthy': 'off',
+      'vitest/prefer-to-be-falsy': 'off',
+      'vitest/prefer-strict-boolean-matchers': 'off',
+    },
   },
   ...css,
+  {
+    files: ['server/emails/**/*.css'],
+    rules: {
+      // Generierte Email-Templates nutzen Vendor-Prefixes
+      'css/no-invalid-properties': 'off',
+    },
+  },
 
   // vue-i18n
   ...vueI18n.configs.recommended,

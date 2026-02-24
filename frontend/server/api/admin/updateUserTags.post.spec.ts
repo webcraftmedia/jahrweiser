@@ -52,7 +52,7 @@ describe('updateUserTags.post', () => {
         sendMail: false,
       })
     })
-    await expect(handlerFn({})).rejects.toThrow('Not Authorized')
+    await expect(handlerFn({})).rejects.toThrowError('Not Authorized')
   })
 
   it('throws when admin not found in DAV', async () => {
@@ -67,7 +67,7 @@ describe('updateUserTags.post', () => {
       })
     })
     mockFindUserByEmail.mockResolvedValue(false)
-    await expect(handlerFn({})).rejects.toThrow('Huston, we have a problem')
+    await expect(handlerFn({})).rejects.toThrowError('Huston, we have a problem')
   })
 
   it('handles admin with no adminTags (empty fallback)', async () => {
@@ -292,6 +292,6 @@ describe('updateUserTags.post', () => {
     mockSaveUser.mockResolvedValue(undefined)
     mockEmailSend.mockRejectedValue('SMTP error')
 
-    await expect(handlerFn({})).rejects.toThrow()
+    await expect(handlerFn({})).rejects.toThrowError('SMTP error')
   })
 })

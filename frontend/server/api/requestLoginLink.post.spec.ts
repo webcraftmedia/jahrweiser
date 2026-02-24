@@ -38,7 +38,7 @@ describe('requestLoginLink.post', () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     mockFindUserByEmail.mockResolvedValue(false)
     const result = await handlerFn({})
-    expect(result).toEqual({})
+    expect(result).toStrictEqual({})
     expect(consoleSpy).toHaveBeenCalledWith('user not found')
     consoleSpy.mockRestore()
   })
@@ -55,7 +55,7 @@ describe('requestLoginLink.post', () => {
       vcard,
     })
     const result = await handlerFn({})
-    expect(result).toEqual({})
+    expect(result).toStrictEqual({})
     expect(consoleSpy).toHaveBeenCalledWith('account disabled')
     consoleSpy.mockRestore()
   })
@@ -72,7 +72,7 @@ describe('requestLoginLink.post', () => {
       vcard,
     })
     const result = await handlerFn({})
-    expect(result).toEqual({})
+    expect(result).toStrictEqual({})
     expect(consoleSpy).toHaveBeenCalledWith('too many requests')
     consoleSpy.mockRestore()
   })
@@ -91,7 +91,7 @@ describe('requestLoginLink.post', () => {
     mockEmailSend.mockResolvedValue(undefined)
 
     const result = await handlerFn({})
-    expect(result).toEqual({})
+    expect(result).toStrictEqual({})
     expect(mockSaveUser).toHaveBeenCalled()
     expect(mockEmailSend).toHaveBeenCalled()
   })
@@ -109,7 +109,7 @@ describe('requestLoginLink.post', () => {
     mockEmailSend.mockResolvedValue(undefined)
 
     const result = await handlerFn({})
-    expect(result).toEqual({})
+    expect(result).toStrictEqual({})
     expect(mockEmailSend).toHaveBeenCalledWith(
       expect.objectContaining({
         message: expect.objectContaining({
@@ -132,6 +132,6 @@ describe('requestLoginLink.post', () => {
     mockSaveUser.mockResolvedValue(undefined)
     mockEmailSend.mockRejectedValue('SMTP error')
 
-    await expect(handlerFn({})).rejects.toThrow()
+    await expect(handlerFn({})).rejects.toThrowError('SMTP error')
   })
 })

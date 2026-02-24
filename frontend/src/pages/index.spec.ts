@@ -135,17 +135,19 @@ describe('Page: Index', () => {
     const newDate = new Date('2025-06-01')
     await header.vm.$emit('input', newDate)
     const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate')).toEqual(newDate)
+    expect(calendarView.props('showDate')).toStrictEqual(newDate)
   })
 
   it('inverts colors in dark mode', async () => {
     const listeners: ((e: { matches: boolean }) => void)[] = []
-    window.matchMedia = vi.fn().mockReturnValue({
-      matches: true,
-      addEventListener: (_event: string, fn: (e: { matches: boolean }) => void) => {
-        listeners.push(fn)
-      },
-    })
+    vi.spyOn(window, 'matchMedia')
+      .mockImplementation()
+      .mockReturnValue({
+        matches: true,
+        addEventListener: (_event: string, fn: (e: { matches: boolean }) => void) => {
+          listeners.push(fn)
+        },
+      })
     const wrapper = await mountSuspended(Page, { route: '/' })
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
@@ -160,12 +162,14 @@ describe('Page: Index', () => {
 
   it('reacts to dark mode change event', async () => {
     let changeListener: ((e: { matches: boolean }) => void) | undefined
-    window.matchMedia = vi.fn().mockReturnValue({
-      matches: false,
-      addEventListener: (_event: string, fn: (e: { matches: boolean }) => void) => {
-        changeListener = fn
-      },
-    })
+    vi.spyOn(window, 'matchMedia')
+      .mockImplementation()
+      .mockReturnValue({
+        matches: false,
+        addEventListener: (_event: string, fn: (e: { matches: boolean }) => void) => {
+          changeListener = fn
+        },
+      })
     const wrapper = await mountSuspended(Page, { route: '/' })
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')

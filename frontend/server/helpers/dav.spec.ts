@@ -67,7 +67,7 @@ describe('dav helpers', () => {
   describe('createCalDAVAccount', () => {
     it('builds correct DAVAccount object', () => {
       const account = createCalDAVAccount(config)
-      expect(account).toEqual({
+      expect(account).toStrictEqual({
         accountType: 'caldav',
         serverUrl: 'https://dav.example.com',
         credentials: { username: 'testuser', password: 'testpass' },
@@ -80,7 +80,7 @@ describe('dav helpers', () => {
   describe('createCardDAVAccount', () => {
     it('builds correct DAVAccount object', () => {
       const account = createCardDAVAccount(config)
-      expect(account).toEqual({
+      expect(account).toStrictEqual({
         accountType: 'carddav',
         serverUrl: 'https://dav.example.com',
         credentials: { username: 'testuser', password: 'testpass' },
@@ -95,7 +95,7 @@ describe('dav helpers', () => {
       const account = createCalDAVAccount(config)
       const result = headers(account)
       const expected = 'Basic ' + btoa('testuser:testpass')
-      expect(result).toEqual({ authorization: expected })
+      expect(result).toStrictEqual({ authorization: expected })
     })
 
     it('handles missing credentials', () => {

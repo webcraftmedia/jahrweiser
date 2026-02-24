@@ -77,7 +77,7 @@ describe('redeemLoginLink.post', () => {
 
     const event = {}
     const result = await handlerFn(event)
-    expect(result).toEqual({})
+    expect(result).toStrictEqual({})
     expect(mockSaveUser).toHaveBeenCalled()
     expect(globalThis.setUserSession).toHaveBeenCalledWith(
       event,
@@ -106,7 +106,7 @@ describe('redeemLoginLink.post', () => {
 
     await handlerFn({})
     const sessionCall = vi.mocked(globalThis.setUserSession).mock.calls[0]!
-    expect(sessionCall[1]).toEqual({
+    expect(sessionCall[1]).toStrictEqual({
       user: { name: 'Regular User', email: 'user@example.com', role: 'user' },
     })
   })
@@ -126,7 +126,7 @@ describe('redeemLoginLink.post', () => {
 
     await handlerFn({})
     const sessionCall = vi.mocked(globalThis.setUserSession).mock.calls[0]!
-    expect(sessionCall[1]).toEqual({
+    expect(sessionCall[1]).toStrictEqual({
       user: { name: 'Admin User', email: 'admin@example.com', role: 'admin' },
     })
   })

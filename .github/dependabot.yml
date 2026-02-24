@@ -10,6 +10,7 @@ updates:
         patterns:
           - "vitest"
           - "@vitest/*"
+          - "@nuxt/test-utils"
 
   - package-ecosystem: "github-actions"
     directory: "/"

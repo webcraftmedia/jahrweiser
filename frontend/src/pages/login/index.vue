@@ -22,10 +22,7 @@
       </div>
       <div class="mb-4 text-base font-body">
         <p class="font-medium">{{ $t('pages.login.message.text1') }}</p>
-        <p>{{ $t('pages.login.message.text2') }}</p>
-        <p class="pt-2 text-sm text-navy/60 dark:text-poster-darkMuted font-light">
-          {{ $t('pages.login.message.hint') }}
-        </p>
+        <p class="mt-2">{{ $t('pages.login.message.text2') }}</p>
       </div>
       <button
         class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
@@ -35,6 +32,9 @@
         {{ $t('pages.login.message.button') }}
       </button>
     </div>
+    <p class="mt-4 text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center">
+      {{ $t('pages.login.message.hint') }}
+    </p>
   </div>
 
   <!-- Login form -->

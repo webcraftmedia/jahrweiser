@@ -84,7 +84,7 @@
       },
       "message": {
         "button": "Zurück zum Login",
-        "hint": "Hinweis: Wenn du eine unberechtigte E-Mail-Adresse angegeben hast, dann bekommst du auch keine E-Mail.",
+        "hint": "Keine E-Mail erhalten? Deine Adresse ist eventuell nicht hinterlegt. Sprich mit deinem Obmann.",
         "info": "Info",
         "text1": "Wir haben dir eine E-Mail gesendet.",
         "text2": "Bitte habe ein wenig Geduld und prüfe auch dein Spam-Ordner!",

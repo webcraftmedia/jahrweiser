@@ -64,6 +64,7 @@
       "title": "Admin"
     },
     "index": {
+      "today": "Heute",
       "details": {
         "duration": "Duration:",
         "location": "Ort:",

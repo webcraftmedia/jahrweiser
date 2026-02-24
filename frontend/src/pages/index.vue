@@ -2,7 +2,12 @@
   <div class="box">
     <div class="calendar row">
       <client-only>
-        <CalendarView v-bind="calendar" class="theme-default" @click-item="clickItem">
+        <CalendarView
+          v-bind="calendar"
+          :current-period-label="$t('pages.index.today')"
+          class="theme-default"
+          @click-item="clickItem"
+        >
           <!--holiday-us-traditional holiday-us-official-->
           <template #header="{ headerProps }">
             <CalendarViewHeader :header-props="headerProps" @input="setShowDate" />

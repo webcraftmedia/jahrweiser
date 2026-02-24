@@ -40,7 +40,7 @@ test.describe('Admin', () => {
 
   test('shows error on submit failure', async ({ page }) => {
     // Override updateUserTags to return error
-    await page.route('**/api/admin/updateUserTags', (route) =>
+    await page.route('**/api/admin/updateUserTags', async (route) =>
       route.fulfill({
         status: 500,
         contentType: 'application/json',

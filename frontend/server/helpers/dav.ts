@@ -21,7 +21,7 @@ export const X_LOGIN_DISABLED = 'x-login-disabled'
 export const X_ROLE = 'x-role'
 export const X_ADMIN_TAGS = 'x-admin-tags'
 
-export type DAV_CONFIG = {
+export interface DAV_CONFIG {
   DAV_USERNAME: string
   DAV_PASSWORD: string
   DAV_URL: string
@@ -89,13 +89,13 @@ function formatDate(date: Date): string {
   return `${year}${month}${day}T${hours}${minutes}${seconds}`
 }
 
-export const findCalendars = (account: DAVAccount) =>
+export const findCalendars = async (account: DAVAccount) =>
   fetchCalendars({
     account,
     headers: headers(account),
   })
 
-export const findEvents = (account: DAVAccount, url: string, from: Date, to: Date) =>
+export const findEvents = async (account: DAVAccount, url: string, from: Date, to: Date) =>
   calendarQuery({
     url,
     props: {
@@ -125,7 +125,7 @@ export const findEvents = (account: DAVAccount, url: string, from: Date, to: Dat
     fetchOptions: getFetchOptions(),
   })
 
-export const findEvent = (account: DAVAccount, url: string, id: string) =>
+export const findEvent = async (account: DAVAccount, url: string, id: string) =>
   fetchCalendarObjects({
     calendar: {
       url,
@@ -197,7 +197,7 @@ export const findUserByEmail = async (account: DAVAccount, email: string) => {
   }
 }
 
-export const saveUser = (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>
+export const saveUser = async (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>
   updateVCard({
     vCard: {
       url: account.serverUrl + user.href!,

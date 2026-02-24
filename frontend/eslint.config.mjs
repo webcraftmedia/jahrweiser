@@ -3,11 +3,27 @@ import withNuxt from './.nuxt/eslint.config.mjs'
 // TODO: `node` und `promise` Module aus eslint-config-it4c sind nicht self-contained —
 // sie registrieren ihr Plugin nicht selbst (eslint-plugin-n / eslint-plugin-promise).
 // Bug in eslint-config-it4c melden, dann hier einbinden.
-import { security, comments, json, yaml, vitest, css, prettier } from 'eslint-config-it4c'
+import {
+  security,
+  comments,
+  json,
+  yaml,
+  vitest,
+  css,
+  prettier,
+  typescript as it4cTypescript,
+} from 'eslint-config-it4c'
 import vueI18n from '@intlify/eslint-plugin-vue-i18n'
+
+// it4c TypeScript-Regeln ohne Plugin/Parser-Setup (wird von Nuxt via tsconfigPath bereitgestellt)
+const it4cTsRules = it4cTypescript.filter(
+  (config) => !config.languageOptions && !config.plugins?.['@typescript-eslint'],
+)
 
 export default withNuxt(
   { ignores: ['.nuxt.old/', '.claude/'] },
+  // it4c TypeScript-Regeln (no-catch-all Plugin + strictTypeChecked + custom Rules)
+  ...it4cTsRules,
   // it4c-Module (self-contained, kein Nuxt-Overlap)
   ...security,
   {
@@ -50,6 +66,8 @@ export default withNuxt(
       '@typescript-eslint/require-await': 'off',
       // @nuxt/test-utils Typen deklarieren renderSuspended/mountSuspended nicht als Promise
       '@typescript-eslint/await-thenable': 'off',
+      // Auto-Fix von async auf Mock-Callbacks verursacht Timing-Probleme (extra Microtask-Tick)
+      '@typescript-eslint/promise-function-async': 'off',
       // Auto-Fix ändert Semantik
       'vitest/prefer-called-with': 'off',
       'vitest/prefer-expect-type-of': 'off',
@@ -99,7 +117,7 @@ export default withNuxt(
     },
   },
 
-  // Type-aware TypeScript-Regeln (durch tsconfigPath aktiviert)
+  // Overrides für TypeScript-Regeln (it4c strictTypeChecked + custom)
   {
     rules: {
       // Zu viele False Positives durch `any` aus Mocks und externen APIs
@@ -112,6 +130,14 @@ export default withNuxt(
       '@typescript-eslint/restrict-template-expressions': 'off',
       // Methoden-Referenzen sind ein gängiges Pattern
       '@typescript-eslint/unbound-method': 'off',
+      // Non-null assertion (!) ist ein gängiges Pattern (z.B. find()!, Array-Zugriff nach Validierung)
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      // JavaScript hat keine typisierten Catches — generisches catch ist unvermeidbar
+      'no-catch-all/no-catch-all': 'off',
+      // Return-Types auf Exports: nützlich für Libraries, zu strikt für Projekt-Code
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      // Projekt nutzt || für Env-Vars und optionale Strings (leerer String = fehlend)
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
     },
   },
 

@@ -4,19 +4,19 @@ import ICAL from 'ical.js'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-type AccountConfig = {
+interface AccountConfig {
   serverUrl: string
   username: string
   password: string
 }
 
-export type ImportConfig = {
+export interface ImportConfig {
   url: string
   account: string
   calendar: string
 }
 
-export type ImportResult = {
+export interface ImportResult {
   success: boolean
   imported: number
   skipped: number

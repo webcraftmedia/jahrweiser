@@ -17,7 +17,7 @@ config.global.config.errorHandler = (err) => {
 const _consoleError = console.error
 console.error = (...args: unknown[]) => {
   _consoleError(...args)
-  if (args.some((arg) => typeof arg === 'string' && /\[nuxt\]/.test(arg))) {
+  if (args.some((arg) => typeof arg === 'string' && arg.includes('[nuxt]'))) {
     throw new Error(`Nuxt error: ${args.map(String).join(' ')}`)
   }
 }

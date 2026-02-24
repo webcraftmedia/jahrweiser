@@ -366,10 +366,14 @@ describe('Page: Index', () => {
   it('navigates via today button', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
     const navButtons = wrapper.findAll('.cv-header-nav button')
-    const todayButton = navButtons[1]!
-    await todayButton.trigger('click')
+    // Navigate away first so "today" button is not disabled
+    await navButtons[0]!.trigger('click')
+    await navButtons[1]!.trigger('click')
     const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate')).toStrictEqual(new Date('2025-01-15'))
+    const showDate = calendarView.props('showDate') as Date
+    expect(showDate.getFullYear()).toBe(2025)
+    expect(showDate.getMonth()).toBe(0)
+    expect(showDate.getDate()).toBe(15)
   })
 
   it('handles keyboard navigation ArrowRight', async () => {

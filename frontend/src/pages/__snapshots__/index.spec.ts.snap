@@ -8,7 +8,7 @@ exports[`Page: Index > renders 1`] = `
         <div class="calendar-view theme-default" locale="de">
           <div class="cv-header"><span class="periodLabel">January 2025</span>
             <div class="cv-header-nav">
-              <!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button> ‹ </button><!-- eslint-enable @intlify/vue-i18n/no-raw-text --><button>pages.index.today</button><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button> › </button><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+              <!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button> ‹ </button><!-- eslint-enable @intlify/vue-i18n/no-raw-text --><button disabled="">pages.index.today</button><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button> › </button><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
             </div>
           </div>
         </div><!-- Loading overlay -->

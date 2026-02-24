@@ -9,30 +9,14 @@
         <slot />
       </div>
     </div>
-    <Footer v-model:zoom="zoomLevel" />
+    <Footer />
   </div>
 </template>
 
 <script setup lang="ts">
-  const ZOOM_KEY = 'jahrweiser-zoom'
+  import { useZoom } from '../composables/useZoom'
 
-  const zoomLevel = ref(1.0)
-
-  onMounted(() => {
-    const stored = localStorage.getItem(ZOOM_KEY)
-    if (stored !== null) {
-      const parsed = parseFloat(stored)
-      if (!Number.isNaN(parsed) && parsed >= 0.8 && parsed <= 1.8) {
-        zoomLevel.value = parsed
-      }
-    }
-  })
-
-  watch(zoomLevel, (val) => {
-    if (import.meta.client) {
-      localStorage.setItem(ZOOM_KEY, String(val))
-    }
-  })
+  const { zoomLevel } = useZoom()
 </script>
 
 <style scoped>

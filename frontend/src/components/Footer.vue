@@ -1,6 +1,9 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <footer class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-1 md:py-3">
+  <footer
+    class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-1 md:py-3"
+    :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
+  >
     <div
       class="max-w-screen-xl mx-auto px-2 md:px-4 flex items-center justify-center md:justify-between text-xs text-navy/60 dark:text-ivory/60"
     >
@@ -87,8 +90,9 @@
 
 <script setup lang="ts">
   import { useColorMode } from '../composables/useColorMode'
+  import { useZoom } from '../composables/useZoom'
 
-  const zoom = defineModel<number>('zoom', { default: 1.0 })
+  const { zoomLevel: zoom, chromeZoom } = useZoom()
   const { isDark, toggle: toggleDark } = useColorMode()
 </script>
 

@@ -32,7 +32,7 @@
         {{ $t('pages.login.message.button') }}
       </button>
     </div>
-    <p class="mt-4 text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center">
+    <p class="my-4 text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center">
       {{ $t('pages.login.message.hint') }}
     </p>
   </div>
@@ -95,7 +95,7 @@
         </button>
       </form>
     </div>
-    <p class="mt-4 text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center">
+    <p class="my-4 text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center">
       {{ $t('pages.login.form.description2') }}
     </p>
   </div>

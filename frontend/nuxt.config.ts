@@ -67,12 +67,14 @@ export default defineNuxtConfig({
     // Keys within public, will be also exposed to the client-side
     public: {},
   },
+  hooks: {
+    ready() {
+      if (
+        process.env.NODE_ENV !== 'test' &&
+        (!process.env.DAV_USERNAME || !process.env.DAV_PASSWORD || !process.env.DAV_URL)
+      ) {
+        throw new Error('Not all required .env values are defined!')
+      }
+    },
+  },
 })
-
-if (
-  process.env.NODE_ENV !== 'test' &&
-  (!process.env.DAV_USERNAME || !process.env.DAV_PASSWORD || !process.env.DAV_URL)
-) {
-  console.log(process.env)
-  throw new Error('Not all required .env values are defined!')
-}

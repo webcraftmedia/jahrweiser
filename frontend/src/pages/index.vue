@@ -505,7 +505,9 @@
     border-color: rgba(30, 41, 59, 0.15);
     border-radius: 3px;
     border-left-width: 3px;
-    font-weight: 600;
+    font-weight: 400;
+    font-size: 0.9em;
+    letter-spacing: 0.01em;
     text-overflow: ellipsis;
     cursor: pointer;
     max-height: 1.4em;

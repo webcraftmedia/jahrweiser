@@ -214,26 +214,12 @@ tailwindcss.config = {
         </div>
       </div>
 
-      <!-- Right: User + Controls -->
+      <!-- Right: User -->
       <div class="flex items-center gap-3">
-        <!-- Zoom -->
-        <div class="hidden sm:flex items-center gap-1 bg-ivory/10 rounded-lg px-1 py-0.5">
-          <button onclick="changeZoom(-0.1)" class="zoom-btn text-ivory/80 hover:bg-ivory/10 hover:text-ivory" title="Kleiner">−</button>
-          <button onclick="resetZoom()" class="zoom-btn text-ivory/80 hover:bg-ivory/10 hover:text-ivory text-xs font-body" id="zoomLabel" title="Zurücksetzen">100%</button>
-          <button onclick="changeZoom(0.1)" class="zoom-btn text-ivory/80 hover:bg-ivory/10 hover:text-ivory" title="Größer">+</button>
-        </div>
-
-        <div class="h-6 w-px bg-ivory/20 hidden sm:block"></div>
-
         <span class="text-ivory/90 text-sm font-body hidden md:block">
           <span class="text-ivory font-medium">Marlene K.</span>
         </span>
         <a href="#" class="text-mustard-light/80 hover:text-mustard-light text-sm font-medium hidden sm:block">Admin</a>
-        <button onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('jahrweiser-dark', document.documentElement.classList.contains('dark'))"
-          class="text-ivory/90 hover:text-ivory transition-colors p-1" title="Dunkel-/Hellmodus" aria-label="Dunkel-/Hellmodus umschalten">
-          <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-          <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-        </button>
         <a href="#" class="text-ivory/60 hover:text-sienna-light text-sm hidden sm:block">Abmelden</a>
       </div>
     </div>
@@ -407,6 +393,19 @@ tailwindcss.config = {
         <span class="vintage-badge border-olive text-olive-light dark:text-olive-light dark:border-olive/50 bg-olive/20 dark:bg-olive/30 shrink-0">🍇 Wein</span>
         <span class="vintage-badge border-olive text-olive-light dark:text-olive-light dark:border-olive/50 bg-olive/20 dark:bg-olive/30 shrink-0">✂️ Workshop</span>
         <span class="vintage-badge border-mustard text-mustard-light dark:text-mustard-light dark:border-mustard/50 bg-mustard/20 dark:bg-mustard/30 shrink-0">🎉 Fest</span>
+      </div>
+      <!-- Center: Zoom + Dark mode -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center gap-0.5 bg-ivory/10 rounded-lg px-1 py-0.5">
+          <button onclick="changeZoom(-0.1)" class="zoom-btn text-ivory/80 hover:bg-ivory/10 hover:text-ivory" title="Kleiner">−</button>
+          <button onclick="resetZoom()" class="zoom-btn text-ivory/80 hover:bg-ivory/10 hover:text-ivory text-xs font-body" id="zoomLabel" title="Zurücksetzen">100%</button>
+          <button onclick="changeZoom(0.1)" class="zoom-btn text-ivory/80 hover:bg-ivory/10 hover:text-ivory" title="Größer">+</button>
+        </div>
+        <button onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('jahrweiser-dark', document.documentElement.classList.contains('dark'))"
+          class="text-ivory/80 hover:text-ivory transition-colors p-1.5 bg-ivory/10 rounded-lg" title="Dunkel-/Hellmodus" aria-label="Dunkel-/Hellmodus umschalten">
+          <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
       </div>
       <!-- Right: copyright + links -->
       <div class="flex items-center gap-3 shrink-0 text-ivory/60">

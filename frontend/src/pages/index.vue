@@ -74,7 +74,7 @@
 
   import type { ICalendarItem, INormalizedCalendarItem } from 'vue-simple-calendar'
 
-  // const headerProps = {}
+  const { locale } = useI18n()
 
   definePageMeta({
     middleware: ['authenticated'],
@@ -153,7 +153,7 @@
     showDate: new Date(),
     items,
     // message: "test",
-    locale: 'de-DE',
+    locale,
     startingDayOfWeek: 1,
     disablePast: false,
     disableFuture: false,

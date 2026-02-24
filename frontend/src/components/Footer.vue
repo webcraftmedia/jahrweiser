@@ -1,10 +1,10 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <footer class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-3">
+  <footer class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-1 md:py-3">
     <div
-      class="max-w-screen-xl mx-auto px-4 flex items-center justify-between text-xs text-navy/60 dark:text-ivory/60"
+      class="max-w-screen-xl mx-auto px-2 md:px-4 flex items-center justify-center md:justify-between text-xs text-navy/60 dark:text-ivory/60"
     >
-      <span>
+      <span class="hidden md:inline">
         {{ $t('components.Footer.copyright') }}
         <a href="https://www.webcraft-media.de/" class="hover:text-sienna transition-colors">
           {{ $t('components.Footer.copyright-holder') }}
@@ -12,7 +12,7 @@
       </span>
 
       <!-- Zoom + Dark mode -->
-      <div class="flex items-center gap-2 shrink-0">
+      <div class="flex items-center gap-1 md:gap-2 shrink-0">
         <div class="flex items-center gap-0.5 bg-navy/10 dark:bg-ivory/10 rounded-lg px-1 py-0.5">
           <button
             class="zoom-btn"
@@ -39,13 +39,13 @@
           </button>
         </div>
         <button
-          class="text-navy/60 dark:text-ivory/60 hover:text-navy dark:hover:text-ivory transition-colors p-1.5 bg-navy/10 dark:bg-ivory/10 rounded-lg"
+          class="text-navy/60 dark:text-ivory/60 hover:text-navy dark:hover:text-ivory transition-colors p-1 md:p-1.5 bg-navy/10 dark:bg-ivory/10 rounded-lg"
           :title="$t('components.Footer.dark-mode')"
           :aria-label="$t('components.Footer.dark-mode')"
           @click="toggleDark"
         >
           <!-- Sun icon (shown in dark mode) -->
-          <svg v-if="isDark" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-if="isDark" class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -54,7 +54,7 @@
             />
           </svg>
           <!-- Moon icon (shown in light mode) -->
-          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-else class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"

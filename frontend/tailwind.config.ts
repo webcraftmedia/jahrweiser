@@ -10,6 +10,15 @@ export default {
         hand: ['"Permanent Marker"', 'cursive'],
         body: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
       },
+      fontSize: {
+        xs: ['0.9375rem', { lineHeight: '1.375rem' }], // 15px
+        sm: ['1.0625rem', { lineHeight: '1.5rem' }], // 17px
+        base: ['1.25rem', { lineHeight: '1.75rem' }], // 20px
+        lg: ['1.375rem', { lineHeight: '1.875rem' }], // 22px
+        xl: ['1.5625rem', { lineHeight: '2.125rem' }], // 25px
+        '2xl': ['1.875rem', { lineHeight: '2.25rem' }], // 30px
+        '3xl': ['2.375rem', { lineHeight: '2.75rem' }], // 38px
+      },
       colors: {
         navy: { DEFAULT: '#1e293b', light: '#334155', dark: '#0f172a' },
         ivory: { DEFAULT: '#faf5eb', dark: '#f5edd9' },

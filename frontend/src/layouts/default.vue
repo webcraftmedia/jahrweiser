@@ -3,7 +3,7 @@
     <Header />
     <div class="content flex-1 overflow-y-auto flex flex-col">
       <div
-        class="max-w-screen-xl flex flex-wrap justify-between mx-auto w-full flex-1"
+        class="max-w-screen-2xl flex flex-wrap justify-between mx-auto w-full flex-1"
         :style="zoomLevel !== 1 ? { zoom: zoomLevel } : undefined"
       >
         <slot />

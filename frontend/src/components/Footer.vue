@@ -5,7 +5,7 @@
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
     <div
-      class="max-w-screen-xl mx-auto px-2 md:px-4 flex items-center justify-center md:justify-between text-xs text-navy/60 dark:text-ivory/60"
+      class="max-w-screen-2xl mx-auto px-2 md:px-4 flex items-center justify-center md:justify-between text-sm text-navy/60 dark:text-ivory/60"
     >
       <span class="hidden md:inline">
         {{ $t('components.Footer.copyright') }}
@@ -26,7 +26,7 @@
             −
           </button>
           <button
-            class="zoom-btn text-xs font-body"
+            class="zoom-btn text-sm font-body"
             :title="$t('components.Footer.zoom-reset')"
             @click="zoom = 1.0"
           >
@@ -48,7 +48,7 @@
           @click="toggleDark"
         >
           <!-- Sun icon (shown in dark mode) -->
-          <svg v-if="isDark" class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-if="isDark" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -57,7 +57,7 @@
             />
           </svg>
           <!-- Moon icon (shown in light mode) -->
-          <svg v-else class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-else class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"

@@ -19,7 +19,7 @@
     class="bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full fixed top-0 z-50"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
-    <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
+    <div class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto p-2">
       <NuxtLink to="/" class="flex items-center gap-2">
         <LogoSmall class="logo-bar" />
         <div>

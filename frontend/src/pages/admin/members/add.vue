@@ -293,9 +293,7 @@
             <span class="loading-dot !w-[6px] !h-[6px] !bg-ivory" />
             <span class="loading-dot !w-[6px] !h-[6px] !bg-ivory" style="animation-delay: 0.15s" />
             <span class="loading-dot !w-[6px] !h-[6px] !bg-ivory" style="animation-delay: 0.3s" />
-            <span class="ml-1">{{
-              $t('pages.admin.members.add.step3.processing')
-            }}</span>
+            <span class="ml-1">{{ $t('pages.admin.members.add.step3.processing') }}</span>
           </span>
           <span v-else>{{ $t('pages.admin.members.add.step3.button-submit') }}</span>
         </button>

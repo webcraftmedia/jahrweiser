@@ -33,7 +33,7 @@
       </client-only>
       <Modal ref="modal" @x="handleModalX">
         <template #title>
-          {{ event?.summary ? event.summary.charAt(0).toUpperCase() + event.summary.slice(1) : '' }}
+          {{ eventTitle }}
         </template>
 
         <template #content>
@@ -107,6 +107,7 @@
   const rawItems = ref<any[]>([])
   const event = ref()
   const eventLoading = ref(false)
+  const eventTitle = ref('')
   const calendars = ref<{ name: string; color: string }[]>([])
   const { isDark } = useColorMode()
 
@@ -163,6 +164,7 @@
       } = data as any
       event.value = null
       eventLoading.value = true
+      eventTitle.value = capitalize((data as any).title || '')
       modal.value.open()
       const eventData = await $fetch('/api/event', {
         method: 'POST',

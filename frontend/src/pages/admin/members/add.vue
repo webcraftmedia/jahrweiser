@@ -364,10 +364,10 @@
             />
           </svg>
           <div class="font-body">
-            <h3 class="text-sm font-medium text-mustard-dark dark:text-mustard-light">
+            <h3 class="text-sm font-medium text-navy dark:text-ivory">
               {{ $t('pages.admin.members.add.result.success-title') }}
             </h3>
-            <p class="mt-1 text-sm text-mustard-dark/80 dark:text-mustard-light/80">
+            <p class="mt-1 text-sm text-navy/80 dark:text-ivory/80">
               {{ $t('pages.admin.members.add.result.success-without-email') }}
             </p>
           </div>

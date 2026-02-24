@@ -80,56 +80,56 @@ const currentPageTitle = computed(() => {
         class="md:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white dark:bg-gray-800 shadow-xl transition-transform ease-in-out duration-300"
         :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
       >
-          <div class="flex items-center justify-between flex-shrink-0 px-4 pt-5 pb-4">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-              {{ $t('pages.admin.title') }}
-            </h2>
-            <button
-              class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+        <div class="flex items-center justify-between flex-shrink-0 px-4 pt-5 pb-4">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+            {{ $t('pages.admin.title') }}
+          </h2>
+          <button
+            class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+            @click="mobileMenuOpen = false"
+          >
+            <svg
+              class="h-6 w-6 text-gray-600 dark:text-gray-300"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <hr class="border-gray-200 dark:border-gray-700" />
+        <nav class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto">
+          <template v-for="item in menuItems" :key="item.path">
+            <a
+              v-if="item.external"
+              :href="item.path"
+              class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg"
               @click="mobileMenuOpen = false"
             >
-              <svg
-                class="h-6 w-6 text-gray-600 dark:text-gray-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-          <hr class="border-gray-200 dark:border-gray-700" />
-          <nav class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto">
-            <template v-for="item in menuItems" :key="item.path">
-              <a
-                v-if="item.external"
-                :href="item.path"
-                class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg"
-                @click="mobileMenuOpen = false"
-              >
-                {{ item.label }}
-              </a>
-              <NuxtLink
-                v-else
-                :to="item.path"
-                :class="[
-                  isActive(item.path)
-                    ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-                  'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
-                ]"
-                @click="mobileMenuOpen = false"
-              >
-                {{ item.label }}
-              </NuxtLink>
-            </template>
-          </nav>
-        </div>
+              {{ item.label }}
+            </a>
+            <NuxtLink
+              v-else
+              :to="item.path"
+              :class="[
+                isActive(item.path)
+                  ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+                'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
+              ]"
+              @click="mobileMenuOpen = false"
+            >
+              {{ item.label }}
+            </NuxtLink>
+          </template>
+        </nav>
+      </div>
 
       <!-- Main Content -->
       <div class="flex-1 overflow-auto w-full">

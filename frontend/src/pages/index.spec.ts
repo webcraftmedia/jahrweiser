@@ -53,7 +53,13 @@ describe('Page: Index', () => {
       }
       if (url === '/api/calendar') {
         return Promise.resolve([
-          { id: 'event-1', title: 'Test', color: '#ff0000', startDate: '2025-01-15', endDate: '2025-01-15' },
+          {
+            id: 'event-1',
+            title: 'Test',
+            color: '#ff0000',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+          },
         ])
       }
       if (url === '/api/event') {
@@ -84,7 +90,10 @@ describe('Page: Index', () => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
     })
     await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendar', expect.objectContaining({ method: 'POST' }))
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/calendar',
+        expect.objectContaining({ method: 'POST' }),
+      )
     })
   })
 
@@ -211,7 +220,10 @@ describe('Page: Index', () => {
       },
     })
     await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendar', expect.objectContaining({ method: 'POST' }))
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/calendar',
+        expect.objectContaining({ method: 'POST' }),
+      )
     })
     // Should NOT have fetched calendars again
     expect(mock$fetch).not.toHaveBeenCalledWith('/api/calendars')

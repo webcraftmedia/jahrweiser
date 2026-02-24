@@ -47,10 +47,13 @@ describe('Page: Add', () => {
     await wrapper.find('#email').setValue('test@example.com')
     await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
     await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/admin/getUserTags', expect.objectContaining({
-        method: 'POST',
-        body: { email: 'test@example.com' },
-      }))
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/admin/getUserTags',
+        expect.objectContaining({
+          method: 'POST',
+          body: { email: 'test@example.com' },
+        }),
+      )
     })
     // Tags should be rendered
     expect(wrapper.findAll('input[type="checkbox"]').length).toBeGreaterThanOrEqual(2)
@@ -84,15 +87,22 @@ describe('Page: Add', () => {
     await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
     await vi.waitFor(() => expect(wrapper.find('#tag-0').exists()).toBe(true))
     // Step 2
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
     // Step 3 - submit
-    const submitButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step3.button-submit'))
+    const submitButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
     await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/admin/updateUserTags', expect.objectContaining({
-        method: 'POST',
-      }))
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/admin/updateUserTags',
+        expect.objectContaining({
+          method: 'POST',
+        }),
+      )
     })
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('result.success-with-email')
@@ -112,9 +122,13 @@ describe('Page: Add', () => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
     })
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
-    const submitButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step3.button-submit'))
+    const submitButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('result.success-without-email')
@@ -134,9 +148,13 @@ describe('Page: Add', () => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
     })
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
-    const submitButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step3.button-submit'))
+    const submitButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('result.error-title')
@@ -156,15 +174,21 @@ describe('Page: Add', () => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
     })
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
-    const submitButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step3.button-submit'))
+    const submitButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('result.button-new')
     })
     // Click "new" button to reset
-    const resetButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('result.button-new'))
+    const resetButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('result.button-new'))
     await resetButton!.trigger('click')
     // Should be back at step 1
     expect((wrapper.find('#email').element as HTMLInputElement).value).toBe('')
@@ -176,7 +200,9 @@ describe('Page: Add', () => {
     await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
     await vi.waitFor(() => expect(wrapper.find('#tag-0').exists()).toBe(true))
     // Click edit button to go back to step 1
-    const editButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step1.button-edit'))
+    const editButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step1.button-edit'))
     await editButton!.trigger('click')
     // Email input should be enabled again
     expect(wrapper.find('#email').attributes('disabled')).toBeUndefined()
@@ -187,13 +213,19 @@ describe('Page: Add', () => {
     await wrapper.find('#email').setValue('test@example.com')
     await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
     await vi.waitFor(() => expect(wrapper.find('#tag-0').exists()).toBe(true))
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
     expect(wrapper.find('#welcome-email').exists()).toBe(true)
     // Click edit button for step 2
-    const editButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step1.button-edit'))
+    const editButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step1.button-edit'))
     // There should be two edit buttons - step1 and step2. The second one goes to step 2.
-    const editButtons = wrapper.findAll('button[type="button"]').filter((b) => b.text().includes('step1.button-edit'))
+    const editButtons = wrapper
+      .findAll('button[type="button"]')
+      .filter((b) => b.text().includes('step1.button-edit'))
     await editButtons[1]!.trigger('click')
     // Tag checkboxes should be enabled again
     expect(wrapper.find('#tag-0').attributes('disabled')).toBeUndefined()
@@ -239,7 +271,9 @@ describe('Page: Add', () => {
     let resolveGetUserTags!: (value: unknown) => void
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/admin/getUserTags') {
-        return new Promise((resolve) => { resolveGetUserTags = resolve })
+        return new Promise((resolve) => {
+          resolveGetUserTags = resolve
+        })
       }
       return Promise.resolve({})
     })
@@ -259,7 +293,9 @@ describe('Page: Add', () => {
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/admin/getUserTags') return Promise.resolve([])
       if (url === '/api/admin/updateUserTags') {
-        return new Promise((resolve) => { resolveSubmit = resolve })
+        return new Promise((resolve) => {
+          resolveSubmit = resolve
+        })
       }
       return Promise.resolve({})
     })
@@ -270,9 +306,13 @@ describe('Page: Add', () => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
     })
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
-    const submitButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step3.button-submit'))
+    const submitButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
     await nextTick()
     // Submit button should show loading spinner
@@ -295,9 +335,13 @@ describe('Page: Add', () => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
     })
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
-    const submitButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step3.button-submit'))
+    const submitButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('result.error-title')
@@ -322,13 +366,19 @@ describe('Page: Add', () => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
     })
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
-    const submitButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step3.button-submit'))
+    const submitButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
     await vi.waitFor(() => expect(wrapper.text()).toContain('result.error-title'))
     // Click retry button
-    const retryButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('result.button-retry'))
+    const retryButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('result.button-retry'))
     await retryButton!.trigger('click')
     await vi.waitFor(() => expect(wrapper.text()).toContain('result.success-with-email'))
   })
@@ -346,13 +396,19 @@ describe('Page: Add', () => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
     })
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
-    const submitButton = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step3.button-submit'))
+    const submitButton = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
     await vi.waitFor(() => expect(wrapper.text()).toContain('result.success-with-email'))
     // Click retry link (for success state)
-    const retryLink = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('result.button-retry'))
+    const retryLink = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('result.button-retry'))
     await retryLink!.trigger('click')
     await vi.waitFor(() => expect(wrapper.text()).toContain('result.success-with-email'))
   })
@@ -380,7 +436,9 @@ describe('Page: Add', () => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
     })
-    const step2Button = wrapper.findAll('button[type="button"]').find((b) => b.text().includes('step2.button-next'))
+    const step2Button = wrapper
+      .findAll('button[type="button"]')
+      .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
     const checkbox = wrapper.find('#welcome-email')
     expect((checkbox.element as HTMLInputElement).checked).toBe(true)

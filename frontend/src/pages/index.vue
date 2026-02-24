@@ -364,15 +364,18 @@
     border-left-width: 3px;
     font-weight: 600;
     text-overflow: ellipsis;
+    cursor: pointer;
+    max-height: 1.4em;
+    overflow: hidden;
     transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
+      max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.3s ease;
   }
 
   .theme-default .cv-item:hover {
     white-space: normal;
     word-break: break-all;
-    overflow: visible;
+    max-height: 10em;
     z-index: 10 !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }

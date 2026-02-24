@@ -51,7 +51,7 @@
           @click="toggleDark"
         >
           <!-- Sun icon (shown in dark mode) -->
-          <svg v-if="isDark" class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-if="isDark" class="dark-toggle-icon w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -60,7 +60,7 @@
             />
           </svg>
           <!-- Moon icon (shown in light mode) -->
-          <svg v-else class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-else class="dark-toggle-icon w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -104,5 +104,19 @@
 
   .zoom-btn {
     @apply px-2 py-0.5 rounded text-navy/60 dark:text-ivory/60 hover:bg-navy/10 dark:hover:bg-ivory/10 hover:text-navy dark:hover:text-ivory transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed;
+  }
+
+  .zoom-btn:active:not(:disabled) {
+    transform: scale(1.15);
+    transition: transform 0.1s ease;
+  }
+
+  .dark-toggle-icon {
+    animation: toggleSpin 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes toggleSpin {
+    from { transform: rotate(-180deg) scale(0.5); opacity: 0; }
+    to { transform: rotate(0) scale(1); opacity: 1; }
   }
 </style>

@@ -6,8 +6,8 @@
     id="default-modal"
     tabindex="-1"
     aria-hidden="false"
-    :class="isOpen ? 'open' : 'hidden'"
-    class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+    :class="isOpen ? 'modal-open' : 'modal-hidden'"
+    class="modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
     @click="handleX"
   >
     <div class="relative p-4 w-full max-h-full">
@@ -21,7 +21,7 @@
           class="flex items-center justify-between px-5 py-3 md:px-6 md:py-4 border-b-2 border-navy/15 dark:border-poster-darkBorder bg-navy/3 dark:bg-poster-dark shrink-0"
         >
           <div class="flex items-center gap-3">
-            <LogoSmall class="logo-modal" />
+            <LogoSmall class="logo-modal hidden md:block" />
             <h3 class="text-xl font-semibold text-navy dark:text-ivory font-display tracking-wide">
               <slot name="title" />
             </h3>
@@ -58,8 +58,8 @@
     </div>
   </div>
   <div
-    class="bg-navy/50 dark:bg-navy-dark/80 fixed inset-0 z-40"
-    :class="isOpen ? 'open' : 'hidden'"
+    class="modal-backdrop bg-navy/50 dark:bg-navy-dark/80 fixed inset-0 z-40"
+    :class="isOpen ? 'modal-open' : 'modal-hidden'"
     @click="handleX"
   />
 </template>
@@ -111,6 +111,26 @@
     box-shadow:
       0 4px 24px rgba(0, 0, 0, 0.4),
       0 0 0 1px rgba(61, 54, 48, 0.3);
+  }
+
+  /* Backdrop */
+  .modal-backdrop.modal-hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  .modal-backdrop.modal-open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Modal overlay */
+  .modal-overlay.modal-hidden {
+    pointer-events: none;
+    visibility: hidden;
+  }
+  .modal-overlay.modal-open {
+    visibility: visible;
   }
 </style>
 

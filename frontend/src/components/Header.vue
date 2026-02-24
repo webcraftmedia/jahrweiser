@@ -3,7 +3,7 @@
   <!-- Hero variant (login page) -->
   <div v-if="variant === 'hero'" class="pt-10 pb-4 flex justify-center">
     <NuxtLink to="/" class="flex items-center gap-3">
-      <LogoSmall class="logo-hero" />
+      <LogoSmall class="logo-hero logo-float" />
       <div>
         <span class="font-display text-navy dark:text-ivory text-3xl tracking-wide"
           >Jahrweiser</span
@@ -70,11 +70,11 @@
           <NuxtLink
             v-if="user?.role === 'admin'"
             to="/admin/members/add"
-            class="hover:text-sienna transition-colors"
+            class="nav-link hover:text-sienna transition-colors"
           >
             {{ $t('components.Header.admin') }}
           </NuxtLink>
-          <button class="hover:text-sienna transition-colors" @click="logout">
+          <button class="nav-link hover:text-sienna transition-colors" @click="logout">
             {{ $t('components.Header.logout') }}
           </button>
         </div>
@@ -84,8 +84,8 @@
       <div
         v-if="loggedIn"
         id="navbar-mobile"
-        :class="mobileMenuOpen ? 'block' : 'hidden'"
-        class="w-full md:hidden mt-2"
+        :class="mobileMenuOpen ? 'menu-open' : ''"
+        class="mobile-menu w-full md:hidden"
       >
         <div
           class="bg-ivory dark:bg-poster-darkCard rounded-lg shadow-xl border border-navy/15 dark:border-poster-darkBorder overflow-hidden"
@@ -185,6 +185,42 @@
   .logo-hero {
     width: 56px;
     height: 56px;
+  }
+
+  /* Hero logo gentle float */
+  .logo-float {
+    animation: gentleFloat 4s ease-in-out infinite;
+  }
+
+  /* Mobile menu smooth expand */
+  .mobile-menu {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  }
+  .mobile-menu.menu-open {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 0.5rem;
+  }
+
+  /* Nav link hover underline */
+  .nav-link {
+    position: relative;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    height: 2px;
+    width: 0;
+    background-color: currentColor;
+    transition: width 0.3s ease;
+  }
+  .nav-link:hover::after {
+    width: 100%;
   }
 </style>
 

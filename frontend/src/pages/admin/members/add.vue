@@ -117,7 +117,7 @@
 
     <!-- Step 1: Email Input -->
     <div
-      class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
+      class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-display text-navy dark:text-ivory">
@@ -185,7 +185,7 @@
     <!-- Step 2: Tags Selection -->
     <div
       v-if="step >= 2"
-      class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
+      class="animate-fade-slide-up stagger-1 bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-display text-navy dark:text-ivory">
@@ -207,7 +207,12 @@
 
       <div v-else class="space-y-4">
         <div class="space-y-3">
-          <div v-for="(tag, index) in tags" :key="index" class="flex items-center">
+          <div
+            v-for="(tag, index) in tags"
+            :key="index"
+            class="flex items-center animate-fade-slide-up"
+            :style="{ animationDelay: `${index * 50}ms` }"
+          >
             <input
               :id="`tag-${index}`"
               v-model="tag.state"
@@ -253,7 +258,7 @@
     <!-- Step 3: Welcome Email -->
     <div
       v-if="step >= 3"
-      class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
+      class="animate-fade-slide-up stagger-2 bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <h2 class="text-lg font-display text-navy dark:text-ivory mb-4">
         {{ $t('pages.admin.members.add.step3.title') }}
@@ -314,7 +319,7 @@
     <!-- Result Display -->
     <div
       v-if="submitResult"
-      class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
+      class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <h2 class="text-lg font-display text-navy dark:text-ivory mb-4">
         {{ $t('pages.admin.members.add.result.title') }}
@@ -326,7 +331,7 @@
           class="flex items-start p-4 bg-olive/10 dark:bg-olive/5 border-2 border-olive/50 dark:border-olive/30 rounded"
         >
           <svg
-            class="w-6 h-6 text-olive dark:text-olive-light mr-3 flex-shrink-0"
+            class="animate-stamp w-6 h-6 text-olive dark:text-olive-light mr-3 flex-shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -353,7 +358,7 @@
           class="flex items-start p-4 bg-mustard/10 dark:bg-mustard/5 border-2 border-mustard/50 dark:border-mustard/30 rounded"
         >
           <svg
-            class="w-6 h-6 text-mustard dark:text-mustard-light mr-3 flex-shrink-0"
+            class="animate-stamp w-6 h-6 text-mustard dark:text-mustard-light mr-3 flex-shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -453,4 +458,7 @@
   .shake {
     animation: shake 0.5s ease-in-out;
   }
+
+  .stagger-1 { animation-delay: 0.1s; }
+  .stagger-2 { animation-delay: 0.2s; }
 </style>

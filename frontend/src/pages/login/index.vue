@@ -1,6 +1,7 @@
 <template>
+  <Transition name="login-switch" mode="out-in">
   <!-- Email sent confirmation -->
-  <div v-if="requestedLogin" class="w-full max-w-md mt-8">
+  <div v-if="requestedLogin" key="confirmation" class="w-full max-w-md mt-8">
     <div
       class="p-5 border-2 border-mustard/50 dark:border-mustard/30 rounded bg-mustard/10 dark:bg-mustard/5 text-navy dark:text-ivory"
       role="alert"
@@ -38,7 +39,7 @@
   </div>
 
   <!-- Login form -->
-  <div v-else class="w-full max-w-sm mt-8">
+  <div v-else key="form" class="w-full max-w-sm mt-8 animate-fade-slide-up">
     <div
       class="p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded shadow-lg"
     >
@@ -89,7 +90,7 @@
         </div>
         <button
           type="submit"
-          class="w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center transition-all"
+          class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center transition-all"
         >
           {{ $t('pages.login.form.button') }}
         </button>
@@ -99,6 +100,7 @@
       {{ $t('pages.login.form.description2') }}
     </p>
   </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -137,3 +139,17 @@
     requestedLogin.value = false
   }
 </script>
+
+<style scoped>
+  .login-switch-enter-active { animation: fadeSlideUp 0.4s ease-out; }
+  .login-switch-leave-active { animation: fadeSlideUp 0.25s ease-in reverse; }
+
+  .login-submit:hover {
+    animation: subtlePulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes subtlePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+</style>

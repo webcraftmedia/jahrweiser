@@ -77,7 +77,7 @@
 
       <!-- Mobile Drawer -->
       <div
-        class="md:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-ivory dark:bg-poster-darkCard shadow-xl transition-transform ease-in-out duration-300"
+        class="md:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-ivory dark:bg-poster-darkCard shadow-xl drawer-slide"
         :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
       >
         <div class="flex items-center justify-between flex-shrink-0 px-4 pt-5 pb-4">
@@ -172,5 +172,20 @@
     height: 100%;
     height: -moz-available;
     height: -webkit-fill-available;
+  }
+
+  /* Drawer bounce transition */
+  .drawer-slide {
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Sidebar links hover slide */
+  :deep(nav a),
+  :deep(nav .group) {
+    transition: transform 0.2s ease, background-color 0.15s ease;
+  }
+  :deep(nav a:hover),
+  :deep(nav .group:hover) {
+    transform: translateX(3px);
   }
 </style>

@@ -37,38 +37,49 @@
         </template>
 
         <template #content>
-          <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
-            <tbody>
-              <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
-                <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
-                  {{ $t('pages.index.details.start') }}
-                </th>
-                <td class="py-1.5">{{ event?.startDate }}</td>
-              </tr>
-              <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
-                <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
-                  {{ $t('pages.index.details.duration') }}
-                </th>
-                <td class="py-1.5">{{ event?.duration.replace(/^PT?/, '') }}</td>
-              </tr>
-              <tr v-if="event?.location">
-                <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
-                  {{ $t('pages.index.details.location') }}
-                </th>
-                <td class="py-1.5">{{ event?.location }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div
-            v-if="event?.description"
-            class="mt-3 pt-3 border-t border-navy/10 dark:border-poster-darkBorder"
-          >
-            <pre class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed">{{
-              event?.description
-                ?.split('\n')
-                .map((line: string) => line.trimStart())
-                .join('\n')
-            }}</pre>
+          <!-- Loading dots -->
+          <div v-if="eventLoading" class="flex justify-center items-center gap-2 py-4">
+            <span class="loading-dot" />
+            <span class="loading-dot" style="animation-delay: 0.15s" />
+            <span class="loading-dot" style="animation-delay: 0.3s" />
+          </div>
+          <!-- Event content — rolls down when loaded -->
+          <div v-else class="modal-content-reveal">
+            <div class="modal-content-inner">
+              <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
+                <tbody>
+                  <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                    <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
+                      {{ $t('pages.index.details.start') }}
+                    </th>
+                    <td class="py-1.5">{{ event?.startDate }}</td>
+                  </tr>
+                  <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                    <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
+                      {{ $t('pages.index.details.duration') }}
+                    </th>
+                    <td class="py-1.5">{{ event?.duration.replace(/^PT?/, '') }}</td>
+                  </tr>
+                  <tr v-if="event?.location">
+                    <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
+                      {{ $t('pages.index.details.location') }}
+                    </th>
+                    <td class="py-1.5">{{ event?.location }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div
+                v-if="event?.description"
+                class="mt-3 pt-3 border-t border-navy/10 dark:border-poster-darkBorder"
+              >
+                <pre class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed">{{
+                  event?.description
+                    ?.split('\n')
+                    .map((line: string) => line.trimStart())
+                    .join('\n')
+                }}</pre>
+              </div>
+            </div>
           </div>
         </template>
       </Modal>
@@ -95,6 +106,7 @@
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rawItems = ref<any[]>([])
   const event = ref()
+  const eventLoading = ref(false)
   const calendars = ref<{ name: string; color: string }[]>([])
   const { isDark } = useColorMode()
 
@@ -144,7 +156,10 @@
         originalItem: { calendar, id, occurrence },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } = data as any
-      const eventDate = await $fetch('/api/event', {
+      event.value = null
+      eventLoading.value = true
+      modal.value.open()
+      const eventData = await $fetch('/api/event', {
         method: 'POST',
         body: {
           calendar,
@@ -152,10 +167,12 @@
           occurrence,
         },
       })
-      event.value = eventDate
-      modal.value.open()
+      event.value = eventData
     } catch (error) {
       console.error(error)
+      modal.value.close()
+    } finally {
+      eventLoading.value = false
     }
   }
 
@@ -318,6 +335,11 @@
     border-color: #c2410c;
   }
 
+  .theme-default .cv-header button:active:not(:disabled) {
+    transform: scale(0.93);
+    transition: transform 0.1s ease;
+  }
+
   .theme-default .cv-header button:disabled {
     color: rgba(30, 41, 59, 0.3);
     background-color: transparent;
@@ -395,6 +417,7 @@
     font-weight: 600;
     text-overflow: ellipsis;
     cursor: pointer;
+    text-transform: capitalize;
     max-height: 1.4em;
     overflow: hidden;
     transition:
@@ -595,6 +618,48 @@
 
   .dark .theme-default .cv-day.draghover {
     box-shadow: inset 0 0 0.2em 0.2em #d97706;
+  }
+
+  /* ===== Modal loading dots ===== */
+
+  .loading-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #c2410c;
+    animation: dotPulse 0.8s ease-in-out infinite;
+  }
+
+  .dark .loading-dot {
+    background-color: #ea580c;
+  }
+
+  @keyframes dotPulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1); }
+  }
+
+  /* ===== Modal content reveal ===== */
+
+  .modal-content-reveal {
+    display: grid;
+    grid-template-rows: 1fr;
+    animation: revealDown 0.6s ease-out;
+  }
+
+  .modal-content-inner {
+    overflow: hidden;
+  }
+
+  @keyframes revealDown {
+    from {
+      grid-template-rows: 0fr;
+      opacity: 0;
+    }
+    to {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
   }
 
   /* ===== Utility ===== */

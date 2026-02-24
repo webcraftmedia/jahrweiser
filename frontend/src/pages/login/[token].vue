@@ -1,6 +1,6 @@
 <template>
   <!-- Loading spinner -->
-  <div v-if="success" class="mt-8">
+  <div v-if="success" class="mt-8 animate-fade-slide-up">
     <div role="status">
       <svg
         aria-hidden="true"
@@ -23,7 +23,7 @@
   </div>
 
   <!-- Error alert -->
-  <div v-else class="w-full max-w-md mt-8">
+  <div v-else class="w-full max-w-md mt-8 animate-tilt-in">
     <div
       class="p-5 border-2 border-sienna/50 dark:border-sienna-dark/50 rounded bg-sienna/10 dark:bg-sienna/5 text-navy dark:text-ivory"
       role="alert"

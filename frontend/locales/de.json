@@ -64,12 +64,12 @@
       "title": "Admin"
     },
     "index": {
-      "today": "Heute",
       "details": {
         "duration": "Duration:",
         "location": "Ort:",
         "start": "Beginn:"
-      }
+      },
+      "today": "Heute"
     },
     "login": {
       "error": {

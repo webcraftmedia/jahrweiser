@@ -73,11 +73,13 @@
       },
       "form": {
         "button": "Einloggen",
+        "description1": "Hier gehts zum Kalender.",
+        "description2": "Kein Zugriff? Kein Problem! Sprich mit deinem Obmann.",
         "email": {
           "label": "Deine E-Mail:",
           "placeholder": "name{'@'}mustermail.de"
         },
-        "title": "Bei GG&G anmelden"
+        "title": "Willkommen bei GG&G"
       },
       "message": {
         "button": "Zurück zum Login",

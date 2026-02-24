@@ -35,8 +35,6 @@ export default defineNuxtConfig({
   },
   modules: [
     ['@nuxt/eslint', { config: { typescript: { tsconfigPath: 'tsconfig.json' } } }],
-    '@nuxt/icon',
-    '@nuxt/image',
     '@nuxt/test-utils',
     '@nuxtjs/tailwindcss',
     '@nuxtjs/i18n',

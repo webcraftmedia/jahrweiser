@@ -20,15 +20,15 @@
         <span class="sr-only">{{ $t('pages.login.message.info') }}</span>
         <h3 class="text-lg font-display">{{ $t('pages.login.message.title') }}</h3>
       </div>
-      <div class="mb-4 text-sm font-body">
-        <p class="font-bold">{{ $t('pages.login.message.text1') }}</p>
+      <div class="mb-4 text-base font-body">
+        <p class="font-medium">{{ $t('pages.login.message.text1') }}</p>
         <p>{{ $t('pages.login.message.text2') }}</p>
-        <p class="pt-2 text-navy/70 dark:text-poster-darkMuted">
+        <p class="pt-2 text-sm text-navy/60 dark:text-poster-darkMuted font-light">
           {{ $t('pages.login.message.hint') }}
         </p>
       </div>
       <button
-        class="px-4 py-1.5 text-sm font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
+        class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
         type="button"
         @click.prevent="showLogin"
       >
@@ -43,20 +43,25 @@
       class="p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded shadow-lg"
     >
       <form class="space-y-6" @submit.prevent="requestLoginLink">
-        <h5 class="text-2xl font-display text-navy dark:text-ivory">
-          {{ $t('pages.login.form.title') }}
-        </h5>
+        <div>
+          <h5 class="text-xl font-display text-navy dark:text-ivory">
+            {{ $t('pages.login.form.title') }}
+          </h5>
+          <p class="mt-1 text-sm font-body text-navy/70 dark:text-poster-darkMuted">
+            {{ $t('pages.login.form.description1') }}
+          </p>
+        </div>
         <div>
           <label
             for="email-address-icon"
-            class="block mb-2 text-sm font-semibold font-body text-navy dark:text-ivory"
+            class="block mb-2 text-base font-medium font-body text-navy dark:text-ivory"
           >
             {{ $t('pages.login.form.email.label') }}
           </label>
           <div class="relative">
             <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
               <svg
-                class="w-4 h-4 text-navy/40 dark:text-poster-darkMuted"
+                class="w-5 h-5 text-navy/40 dark:text-poster-darkMuted"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -74,19 +79,22 @@
               id="email-address-icon"
               v-model="credentials.email"
               type="text"
-              class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-sm rounded font-body focus:ring-sienna focus:border-sienna dark:focus:ring-sienna-dark dark:focus:border-sienna-dark block w-full ps-10 p-2.5 placeholder-navy/40 dark:placeholder-poster-darkMuted"
+              class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded font-body focus:ring-sienna focus:border-sienna dark:focus:ring-sienna-dark dark:focus:border-sienna-dark block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
               :placeholder="$t('pages.login.form.email.placeholder')"
             />
           </div>
         </div>
         <button
           type="submit"
-          class="w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-5 py-2.5 text-center transition-all"
+          class="w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center transition-all"
         >
           {{ $t('pages.login.form.button') }}
         </button>
       </form>
     </div>
+    <p class="mt-4 text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center">
+      {{ $t('pages.login.form.description2') }}
+    </p>
   </div>
 </template>
 

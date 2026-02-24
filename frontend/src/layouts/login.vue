@@ -2,8 +2,14 @@
   <div class="flex flex-col min-h-screen bg-ivory dark:bg-poster-dark relative">
     <!-- Logo -->
     <div class="pt-10 pb-4 flex justify-center">
-      <NuxtLink to="/" class="flex items-center">
-        <HeaderLogo />
+      <NuxtLink to="/" class="flex items-center gap-3">
+        <LogoSmall class="logo-small" />
+        <div>
+          <span class="font-display text-navy dark:text-ivory text-3xl tracking-wide"
+            >Jahrweiser</span
+          >
+          <span class="font-hand text-mustard text-sm tracking-widest ml-1.5">Bergstraße</span>
+        </div>
       </NuxtLink>
     </div>
 
@@ -43,3 +49,14 @@
     </footer>
   </div>
 </template>
+
+<script setup lang="ts">
+  import LogoSmall from '~/../assets/logo-small.svg'
+</script>
+
+<style scoped>
+  .logo-small {
+    width: 56px;
+    height: 56px;
+  }
+</style>

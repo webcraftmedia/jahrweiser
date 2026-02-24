@@ -43,11 +43,11 @@
         <span class="sr-only">{{ $t('pages.login.message.info') }}</span>
         <h3 class="text-lg font-display">{{ $t('pages.login.error.title') }}</h3>
       </div>
-      <div class="mb-4 text-sm font-body">
-        <p class="font-bold">{{ $t('pages.login.error.text') }}</p>
+      <div class="mb-4 text-base font-body">
+        <p class="font-medium">{{ $t('pages.login.error.text') }}</p>
       </div>
       <button
-        class="px-4 py-1.5 text-sm font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
+        class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
         type="button"
         @click="goHome"
       >

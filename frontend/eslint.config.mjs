@@ -13,6 +13,10 @@ import {
   css,
   prettier,
   typescript as it4cTypescript,
+  // TODO: vue3-Modul exportiert auch @typescript-eslint-Regeln (via @vue/eslint-config-typescript).
+  // Diese sind redundant zum typescript-Modul und haben teils schwächere Konfiguration
+  // (z.B. no-unused-vars ohne argsIgnorePattern). In eslint-config-it4c nur vue/*-Regeln exportieren.
+  vue3 as it4cVue3,
 } from 'eslint-config-it4c'
 import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 
@@ -21,6 +25,10 @@ const it4cEslintRules = Object.assign({}, ...it4cEslint.map((c) => c.rules))
 
 // it4c TypeScript-Regeln extrahieren (Plugin/Parser-Setup wird von Nuxt via tsconfigPath bereitgestellt)
 const it4cTsRules = Object.assign({}, ...it4cTypescript.map((c) => c.rules))
+
+// it4c Vue3-Regeln extrahieren (Plugin/Parser-Setup wird von Nuxt bereitgestellt)
+const it4cVue3Rules = Object.assign({}, ...it4cVue3.map((c) => c.rules))
+
 // TODO: no-catch-all gehört nicht ins TypeScript-Modul — ist ein allgemeines JS-Pattern.
 // In eslint-config-it4c ins `eslint`-Basismodul verschieben, dann hier entfernen.
 delete it4cTsRules['no-catch-all/no-catch-all']
@@ -42,10 +50,23 @@ export default withNuxt(
       'no-console': ['error', { allow: ['warn', 'error'] }],
     },
   },
+  // it4c Vue3-Regeln (recommended + custom, Plugin wird von Nuxt bereitgestellt)
+  // Muss VOR TypeScript-Regeln stehen, da vue3 schwächere @typescript-eslint-Regeln mitbringt
+  {
+    files: ['**/*.vue', '**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+    rules: it4cVue3Rules,
+  },
   // it4c TypeScript-Regeln (strictTypeChecked + custom Rules)
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
     rules: it4cTsRules,
+  },
+  {
+    files: ['**/*.vue'],
+    rules: {
+      // Nuxt benennt Pages/Layouts nach Dateipfad — Single-Word-Namen sind korrekt
+      'vue/multi-word-component-names': 'off',
+    },
   },
   // it4c-Module (self-contained, kein Nuxt-Overlap)
   ...security,

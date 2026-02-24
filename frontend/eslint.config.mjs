@@ -5,8 +5,6 @@ import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 
 export default withNuxt(
-  { ignores: ['.claude/'] },
-
   // it4c-Module (self-contained, kein Nuxt-Overlap)
   ...security,
   {

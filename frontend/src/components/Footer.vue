@@ -19,6 +19,7 @@
         class="flex items-center gap-1 md:gap-2 shrink-0"
         :style="chromeZoom !== 1 ? { zoom: 1 / chromeZoom } : undefined"
       >
+        <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
         <div class="flex items-center gap-0.5 bg-navy/10 dark:bg-ivory/10 rounded-lg px-1 py-0.5">
           <button
             class="zoom-btn"
@@ -44,6 +45,7 @@
             +
           </button>
         </div>
+        <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
         <button
           class="text-navy/60 dark:text-ivory/60 hover:text-navy dark:hover:text-ivory transition-colors p-1 md:p-1.5 bg-navy/10 dark:bg-ivory/10 rounded-lg"
           :title="$t('components.Footer.dark-mode')"

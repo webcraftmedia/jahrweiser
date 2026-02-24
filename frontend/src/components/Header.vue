@@ -4,6 +4,7 @@
   <div v-if="variant === 'hero'" class="pt-10 pb-4 flex justify-center px-4">
     <NuxtLink to="/" class="flex items-center gap-2 md:gap-3">
       <LogoSmall class="logo-hero logo-float" />
+      <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
       <div>
         <span class="font-display text-navy dark:text-ivory text-2xl md:text-3xl tracking-wide"
           >Jahrweiser</span
@@ -12,6 +13,7 @@
           >Bergstraße</span
         >
       </div>
+      <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
     </NuxtLink>
   </div>
 
@@ -24,6 +26,7 @@
     <div class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto p-2">
       <NuxtLink to="/" class="flex items-center gap-2">
         <LogoSmall class="logo-bar" />
+        <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
         <div>
           <span class="font-display text-navy dark:text-ivory text-2xl tracking-wide"
             >Jahrweiser</span
@@ -32,6 +35,7 @@
             >Bergstraße</span
           >
         </div>
+        <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </NuxtLink>
 
       <!-- Burger menu button (mobile only) -->

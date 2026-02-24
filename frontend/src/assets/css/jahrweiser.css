@@ -16,9 +16,12 @@
  *   font-body     — Source Sans 3 (body text, UI)
  */
 
+/* stylelint-disable at-rule-no-unknown */
+/* eslint-disable css/no-invalid-at-rules */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* eslint-enable css/no-invalid-at-rules */
 
 /* ===== Base Styles ===== */
 
@@ -227,6 +230,7 @@
 
 /* ===== Reduced Motion ===== */
 
+/* eslint-disable css/no-important */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -234,6 +238,7 @@
     transition-duration: 0.01ms !important;
   }
 }
+/* eslint-enable css/no-important */
 
 /* ===== Calendar Animations ===== */
 

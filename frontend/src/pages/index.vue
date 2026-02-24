@@ -15,21 +15,25 @@
               <div class="cv-header">
                 <span class="periodLabel">{{ headerProps.periodLabel }}</span>
                 <div class="cv-header-nav">
+                  <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
                   <button
                     :disabled="!headerProps.previousPeriod"
                     @click="setShowDate(headerProps.previousPeriod!)"
                   >
                     ‹
                   </button>
+                  <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
                   <button @click="setShowDate(headerProps.currentPeriod)">
                     {{ $t('pages.index.today') }}
                   </button>
+                  <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
                   <button
                     :disabled="!headerProps.nextPeriod"
                     @click="setShowDate(headerProps.nextPeriod!)"
                   >
                     ›
                   </button>
+                  <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
                 </div>
               </div>
             </template>

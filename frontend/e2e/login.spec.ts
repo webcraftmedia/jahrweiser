@@ -16,7 +16,7 @@ test.describe('Login Page', () => {
     await page.locator('#email-address-icon').fill('test@example.com')
     await page.getByRole('button', { name: 'Einloggen' }).click()
 
-    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible()
   })
 
   test('dismiss button returns to login form', async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('Login Page', () => {
     await page.locator('#email-address-icon').fill('test@example.com')
     await page.getByRole('button', { name: 'Einloggen' }).click()
 
-    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible()
 
     // Button has aria-label="Close" but visible text is "Zurück zum Login"
     await page.getByText('Zurück zum Login').click()

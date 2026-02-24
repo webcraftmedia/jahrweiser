@@ -318,17 +318,16 @@
     opacity: 0.5;
   }
 
-  /* --- Today highlight (prominent!) --- */
+  /* --- Today highlight --- */
 
   .theme-default .cv-day.today {
-    background-color: rgba(194, 65, 12, 0.08);
-    animation: todayPulse 3s ease-in-out infinite;
-    z-index: 1;
+    background-color: rgba(194, 65, 12, 0.06);
+    box-shadow: inset 0 0 0 1.5px rgba(194, 65, 12, 0.35);
   }
 
   .theme-default .cv-day.today .cv-day-number {
     color: #c2410c;
-    font-weight: 800;
+    font-weight: 700;
   }
 
   /* --- Selection --- */
@@ -487,13 +486,13 @@
   /* --- Today (dark) --- */
 
   .dark .theme-default .cv-day.today {
-    background-color: rgba(234, 88, 12, 0.1);
-    animation: todayPulseDark 3s ease-in-out infinite;
+    background-color: rgba(234, 88, 12, 0.08);
+    box-shadow: inset 0 0 0 1.5px rgba(234, 88, 12, 0.4);
   }
 
   .dark .theme-default .cv-day.today .cv-day-number {
     color: #ea580c;
-    font-weight: 800;
+    font-weight: 700;
   }
 
   /* --- Selection (dark) --- */

@@ -177,6 +177,46 @@ describe('Page: Index', () => {
     }
   })
 
+  it('closes modal via handleModalX', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    await calendarView.vm.$emit('click-item', {
+      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
+    })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
+    })
+    await nextTick()
+    // Modal should be open
+    expect(wrapper.find('#default-modal.open').exists()).toBe(true)
+    // Click the modal backdrop to trigger handleModalX
+    await wrapper.find('#default-modal').trigger('click')
+    await nextTick()
+    // Modal should be closed
+    expect(wrapper.find('#default-modal.hidden').exists()).toBe(true)
+  })
+
+  it('skips fetching calendars when already loaded', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+    })
+    // Calendars are now loaded. Trigger another getData call
+    mock$fetch.mockClear()
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    calendarView.props('periodChangedCallback')?.({
+      value: {
+        displayFirstDate: { value: new Date('2025-02-01') },
+        displayLastDate: { value: new Date('2025-02-28') },
+      },
+    })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendar', expect.objectContaining({ method: 'POST' }))
+    })
+    // Should NOT have fetched calendars again
+    expect(mock$fetch).not.toHaveBeenCalledWith('/api/calendars')
+  })
+
   it('handles getData error gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     mock$fetch.mockRejectedValue(new Error('network error'))

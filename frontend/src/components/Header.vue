@@ -102,6 +102,7 @@
           </nav>
         </div>
       </div>
+      <template v-else />
     </div>
   </nav>
 </template>

@@ -28,58 +28,64 @@ describe('Page: Admin', () => {
 
   it('toggles mobile menu', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin' })
-    // Mobile menu should not be visible initially
-    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(false)
+    const drawer = wrapper.find('.fixed.inset-y-0')
+    // Mobile menu should be off-screen initially
+    expect(drawer.classes()).toContain('-translate-x-full')
 
-    // Click the mobile menu button
-    const menuButton = wrapper.find('button')
-    await menuButton.trigger('click')
+    // Click the mobile menu button (inside main content area)
+    await wrapper.find('main button').trigger('click')
 
     // Mobile menu drawer should now be visible
-    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(true)
+    expect(drawer.classes()).toContain('translate-x-0')
+    expect(drawer.classes()).not.toContain('-translate-x-full')
   })
 
   it('closes mobile menu via close button', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin' })
+    const drawer = wrapper.find('.fixed.inset-y-0')
     // Open mobile menu
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(true)
+    await wrapper.find('main button').trigger('click')
+    expect(drawer.classes()).toContain('translate-x-0')
 
     // Click the close button (X) inside the drawer
-    const closeButton = wrapper.find('.fixed.inset-y-0 button')
+    const closeButton = drawer.find('button')
     await closeButton.trigger('click')
-    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(false)
+    expect(drawer.classes()).toContain('-translate-x-full')
   })
 
   it('closes mobile menu via backdrop click', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin' })
-    await wrapper.find('button').trigger('click')
+    const drawer = wrapper.find('.fixed.inset-y-0')
+    await wrapper.find('main button').trigger('click')
+    expect(drawer.classes()).toContain('translate-x-0')
     // Click the backdrop
     const backdrop = wrapper.find('.fixed.inset-0')
     await backdrop.trigger('click')
-    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(false)
+    expect(drawer.classes()).toContain('-translate-x-full')
   })
 
   it('closes mobile menu when clicking NuxtLink', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin' })
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(true)
+    const drawer = wrapper.find('.fixed.inset-y-0')
+    await wrapper.find('main button').trigger('click')
+    expect(drawer.classes()).toContain('translate-x-0')
     // Click the NuxtLink (first non-external item) inside the mobile drawer nav
-    const mobileNav = wrapper.find('.fixed.inset-y-0 nav')
+    const mobileNav = drawer.find('nav')
     const links = mobileNav.findAll('a')
     // First link is NuxtLink (/admin/members/add), second is external (/admin/cal/)
     await links[0]!.trigger('click')
-    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(false)
+    expect(drawer.classes()).toContain('-translate-x-full')
   })
 
   it('closes mobile menu when clicking external link', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin' })
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(true)
-    const mobileNav = wrapper.find('.fixed.inset-y-0 nav')
+    const drawer = wrapper.find('.fixed.inset-y-0')
+    await wrapper.find('main button').trigger('click')
+    expect(drawer.classes()).toContain('translate-x-0')
+    const mobileNav = drawer.find('nav')
     const links = mobileNav.findAll('a')
     // Second link is external (/admin/cal/)
     await links[1]!.trigger('click')
-    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(false)
+    expect(drawer.classes()).toContain('-translate-x-full')
   })
 })

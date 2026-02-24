@@ -50,7 +50,7 @@
           class="text-blue-800 bg-transparent border border-blue-800 hover:bg-blue-900 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-200 font-medium rounded-lg text-xs px-3 py-1.5 text-center dark:hover:bg-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:text-white dark:focus:ring-blue-800"
           type="button"
           aria-label="Close"
-          @click.prevent="navigateTo('/')"
+          @click="goHome"
         >
           {{ $t('pages.login.message.button') }}
         </button>
@@ -69,6 +69,8 @@ if (loggedIn.value) {
 const route = useRoute()
 
 const success = ref(true)
+
+const goHome = () => navigateTo('/')
 
 onMounted(async () => {
   try {

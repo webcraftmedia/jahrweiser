@@ -14,11 +14,8 @@ exports[`Page: Add > renders 1`] = `
         <!--v-if-->
       </div>
     </div><!-- Step 2: Tags Selection -->
-    <!--v-if-->
     <!-- Step 3: Welcome Email -->
-    <!--v-if-->
     <!-- Result Display -->
-    <!--v-if-->
   </div>
 </div>"
 `;

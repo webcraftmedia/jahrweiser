@@ -16,6 +16,7 @@ export default defineNuxtConfig({
         include: ['../types/**/*.d.ts'],
       },
     },
+    ignore: ['**/*.spec.ts'],
   },
   modules: [
     '@nuxt/eslint',

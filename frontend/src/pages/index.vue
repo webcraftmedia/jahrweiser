@@ -455,9 +455,6 @@
   .theme-default .cv-day.today {
     background-color: #faf5eb;
     background-image: linear-gradient(225deg, #c2410c 6px, transparent 6px);
-  }
-
-  .theme-default .cv-day.today {
     opacity: 1;
   }
 
@@ -650,9 +647,6 @@
   .dark .theme-default .cv-day.today {
     background-color: #1a1714;
     background-image: linear-gradient(225deg, #ea580c 6px, transparent 6px);
-  }
-
-  .dark .theme-default .cv-day.today {
     opacity: 1;
   }
 

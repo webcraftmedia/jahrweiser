@@ -1,31 +1,37 @@
 import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Component from './Footer.vue'
 
-vi.mock('../composables/useColorMode', () => {
+const mockState = vi.hoisted(() => {
+  const { ref, computed, readonly } = require('vue')
   const isDark = ref(false)
-  return {
-    useColorMode: () => ({
-      isDark: readonly(isDark),
-      toggle: () => {
-        isDark.value = !isDark.value
-      },
-    }),
-  }
+  const zoomLevel = ref(1.0)
+  return { isDark, zoomLevel, computed, readonly }
 })
 
-vi.mock('../composables/useZoom', () => {
-  const zoomLevel = ref(1.0)
-  return {
-    useZoom: () => ({
-      zoomLevel,
-      chromeZoom: computed(() => 1 + (zoomLevel.value - 1) * 0.3),
-    }),
-  }
-})
+vi.mock('../composables/useColorMode', () => ({
+  useColorMode: () => ({
+    isDark: mockState.readonly(mockState.isDark),
+    toggle: () => {
+      mockState.isDark.value = !mockState.isDark.value
+    },
+  }),
+}))
+
+vi.mock('../composables/useZoom', () => ({
+  useZoom: () => ({
+    zoomLevel: mockState.zoomLevel,
+    chromeZoom: mockState.computed(() => 1 + (mockState.zoomLevel.value - 1) * 0.3),
+  }),
+}))
 
 describe('Footer', () => {
+  beforeEach(() => {
+    mockState.isDark.value = false
+    mockState.zoomLevel.value = 1.0
+  })
+
   it('renders', async () => {
     const html = await (await renderSuspended(Component)).html()
     expect(html).toMatchSnapshot()

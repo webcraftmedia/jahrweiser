@@ -52,9 +52,15 @@ describe('useZoom', () => {
     expect(chromeZoom.value).toBe(1.0)
   })
 
-  it('computes loginZoom correctly', () => {
+  it('computes loginZoom correctly at zoom 1.0', () => {
     const { zoomLevel, loginZoom } = useZoom()
     zoomLevel.value = 1.0
     expect(loginZoom.value).toBe(1.0)
+  })
+
+  it('computes loginZoom correctly for zoom > 1', () => {
+    const { zoomLevel, loginZoom } = useZoom()
+    zoomLevel.value = 1.5
+    expect(loginZoom.value).toBe(1 + (1.5 - 1) * 0.625)
   })
 })

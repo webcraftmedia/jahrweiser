@@ -48,6 +48,11 @@ describe('Page: Index', () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
+    // Make rAF synchronous so triggerCalFlip inner callback executes
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      cb(0)
+      return 0
+    })
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/calendars') {
         return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
@@ -276,5 +281,31 @@ describe('Page: Index', () => {
     wrapper.unmount()
     expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function))
     removeSpy.mockRestore()
+  })
+
+  it('staggers cv-item animations after data load', async () => {
+    // Add cv-item elements to the DOM so staggerItems finds them
+    const container = document.createElement('div')
+    const item1 = document.createElement('div')
+    item1.classList.add('cv-item')
+    const item2 = document.createElement('div')
+    item2.classList.add('cv-item')
+    container.append(item1, item2)
+    document.body.appendChild(container)
+
+    await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/calendar',
+        expect.objectContaining({ method: 'POST' }),
+      )
+    })
+    // After getData completes and nextTick, staggerItems should have run
+    await nextTick()
+    await nextTick()
+    expect(item1.classList.contains('item-pop')).toBe(true)
+    expect(item2.style.animationDelay).toBe('30ms')
+
+    document.body.removeChild(container)
   })
 })

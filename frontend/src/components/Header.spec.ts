@@ -3,6 +3,21 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 import Component from './Header.vue'
 
+const mockZoomState = vi.hoisted(() => {
+  const { ref, computed } = require('vue')
+  const zoomLevel = ref(1.0)
+  return { zoomLevel, computed }
+})
+
+vi.mock('../composables/useZoom', () => ({
+  useZoom: () => ({
+    zoomLevel: mockZoomState.zoomLevel,
+    chromeZoom: mockZoomState.computed(
+      () => 1 + (mockZoomState.zoomLevel.value - 1) * 0.3,
+    ),
+  }),
+}))
+
 const { mockClear, mockNavigateTo } = vi.hoisted(() => ({
   mockClear: vi.fn(),
   mockNavigateTo: vi.fn(),
@@ -28,6 +43,7 @@ describe('Header', () => {
     vi.clearAllMocks()
     mockUser.value = { name: 'Test User', email: 'test@example.com', role: 'admin' }
     mockLoggedIn.value = true
+    mockZoomState.zoomLevel.value = 1.0
   })
 
   it('renders', async () => {
@@ -110,5 +126,12 @@ describe('Header', () => {
     expect(mobileLinks).toHaveLength(0)
     // Logout button should still be present
     expect(wrapper.find('#navbar-mobile nav button').exists()).toBe(true)
+  })
+
+  it('applies zoom style when chromeZoom is not 1', async () => {
+    mockZoomState.zoomLevel.value = 1.5
+    const wrapper = await mountSuspended(Component)
+    const nav = wrapper.find('nav')
+    expect(nav.attributes('style')).toContain('zoom')
   })
 })

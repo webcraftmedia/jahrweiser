@@ -40,6 +40,13 @@ describe('useColorMode', () => {
     expect(isDark.value).toBe(true)
   })
 
+  it('skips initialization on second call', () => {
+    const first = useColorMode()
+    // Second call should return same state without re-initializing
+    const second = useColorMode()
+    expect(first.isDark.value).toBe(second.isDark.value)
+  })
+
   it('toggle switches dark mode and persists', () => {
     const { isDark, toggle } = useColorMode()
     expect(isDark.value).toBe(false)

@@ -39,7 +39,7 @@
             </template>
           </CalendarView>
           <!-- Loading overlay -->
-          <div v-if="calLoading" class="cal-loading-overlay">
+          <div v-show="calLoading" class="cal-loading-overlay">
             <div class="flex items-center gap-2">
               <span class="loading-dot" />
               <span class="loading-dot" style="animation-delay: 0.15s" />
@@ -71,7 +71,7 @@
                     >
                       {{ $t('pages.index.details.start') }}
                     </th>
-                    <td class="py-1.5">{{ event?.startDate }}</td>
+                    <td class="py-1.5">{{ eventStartDate }}</td>
                   </tr>
                   <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
                     <th
@@ -79,30 +79,25 @@
                     >
                       {{ $t('pages.index.details.duration') }}
                     </th>
-                    <td class="py-1.5">{{ event?.duration.replace(/^PT?/, '') }}</td>
+                    <td class="py-1.5">{{ eventDuration }}</td>
                   </tr>
-                  <tr v-if="event?.location">
+                  <tr v-show="eventLocation">
                     <th
                       class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
                     >
                       {{ $t('pages.index.details.location') }}
                     </th>
-                    <td class="py-1.5">{{ event?.location }}</td>
+                    <td class="py-1.5">{{ eventLocation }}</td>
                   </tr>
                 </tbody>
               </table>
               <div
-                v-if="event?.description"
+                v-show="eventDescription"
                 class="mt-3 pt-3 border-t border-navy/10 dark:border-poster-darkBorder"
               >
                 <pre
                   class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed"
-                  >{{
-                    event?.description
-                      ?.split('\n')
-                      .map((line: string) => line.trimStart())
-                      .join('\n')
-                  }}</pre
+                  >{{ eventDescription }}</pre
                 >
               </div>
             </div>
@@ -134,6 +129,14 @@
   const event = ref()
   const eventLoading = ref(false)
   const eventTitle = ref('')
+  const eventStartDate = computed(() => event.value?.startDate ?? '')
+  const eventDuration = computed(() => event.value?.duration?.replace(/^PT?/, '') ?? '')
+  const eventLocation = computed(() => event.value?.location ?? '')
+  const eventDescription = computed(() => {
+    const desc = event.value?.description
+    if (!desc) return ''
+    return desc.split('\n').map((line: string) => line.trimStart()).join('\n')
+  })
   const calendars = ref<{ name: string; color: string }[]>([])
   const { isDark } = useColorMode()
 

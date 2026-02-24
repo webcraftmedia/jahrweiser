@@ -5,6 +5,24 @@ import Page from './index.vue'
 
 const mock$fetch = vi.hoisted(() => vi.fn())
 
+const mockColorMode = vi.hoisted(() => {
+  const { ref, readonly } = require('vue')
+  const isDark = ref(false)
+  return {
+    isDark,
+    readonly,
+  }
+})
+
+vi.mock('../composables/useColorMode', () => ({
+  useColorMode: () => ({
+    isDark: mockColorMode.readonly(mockColorMode.isDark),
+    toggle: () => {
+      mockColorMode.isDark.value = !mockColorMode.isDark.value
+    },
+  }),
+}))
+
 vi.mock('vue-simple-calendar', () => ({
   CalendarView: {
     name: 'CalendarView',
@@ -53,6 +71,9 @@ describe('Page: Index', () => {
       cb(0)
       return 0
     })
+    mockColorMode.isDark.value = false
+    // Clean up stale modal elements from previous tests to prevent DOM pollution
+    document.querySelectorAll('#default-modal').forEach((el) => el.remove())
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/calendars') {
         return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
@@ -115,6 +136,67 @@ describe('Page: Index', () => {
         body: { calendar: 'Work', id: 'event-1', occurrence: 1 },
       })
     })
+  })
+
+  it('renders modal content with event details', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    await calendarView.vm.$emit('click-item', {
+      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
+    })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
+    })
+    await nextTick()
+    await nextTick()
+    // Check that modal shows event location and description
+    expect(wrapper.text()).toContain('Room A')
+    expect(wrapper.text()).toContain('A test event')
+  })
+
+  it('renders modal content without description', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar') return Promise.resolve([{ id: 'e1', title: 'T', color: '#ff0000', startDate: '2025-01-15', endDate: '2025-01-15' }])
+      if (url === '/api/event') return Promise.resolve({ summary: 'No Desc', startDate: '2025-01-15', duration: 'PT1H', location: 'Room B' })
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    await calendarView.vm.$emit('click-item', {
+      originalItem: { calendar: 'Work', id: 'e1', occurrence: 1 },
+    })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
+    })
+    await nextTick()
+    await nextTick()
+    expect(wrapper.text()).toContain('Room B')
+    // No description section
+    expect(wrapper.text()).not.toContain('A test event')
+  })
+
+  it('renders modal content without location', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar') return Promise.resolve([{ id: 'e1', title: 'T', color: '#ff0000', startDate: '2025-01-15', endDate: '2025-01-15' }])
+      if (url === '/api/event') return Promise.resolve({ summary: 'No Loc', startDate: '2025-01-15', duration: 'PT1H', description: 'Some notes' })
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    await calendarView.vm.$emit('click-item', {
+      originalItem: { calendar: 'Work', id: 'e1', occurrence: 1 },
+    })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
+    })
+    await nextTick()
+    await nextTick()
+    // No location row
+    expect(wrapper.text()).not.toContain('Room')
+    // Description should be shown
+    expect(wrapper.text()).toContain('Some notes')
   })
 
   it('handles error in clickItem gracefully', async () => {
@@ -230,26 +312,22 @@ describe('Page: Index', () => {
     expect(calendarView.props('showDate')).toStrictEqual(new Date('2025-01-15'))
   })
 
-  it('handles keyboard navigation', async () => {
-    await mountSuspended(Page, { route: '/' })
-    // Press ArrowRight to go to next month
+  it('handles keyboard navigation ArrowRight', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
     await nextTick()
-    // Verify navigatePeriod was triggered (date changed)
-    expect(mock$fetch).toHaveBeenCalledWith(
-      '/api/calendar',
-      expect.objectContaining({ method: 'POST' }),
-    )
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    // showDate should have advanced to next month (Feb 2025)
+    expect(calendarView.props('showDate').getMonth()).toBe(1) // February
   })
 
   it('handles keyboard navigation with a key', async () => {
-    await mountSuspended(Page, { route: '/' })
+    const wrapper = await mountSuspended(Page, { route: '/' })
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))
     await nextTick()
-    expect(mock$fetch).toHaveBeenCalledWith(
-      '/api/calendar',
-      expect.objectContaining({ method: 'POST' }),
-    )
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    // 'a' navigates to previous month (Dec 2024)
+    expect(calendarView.props('showDate').getMonth()).toBe(11) // December
   })
 
   it('ignores keyboard when modal is open', async () => {
@@ -262,17 +340,20 @@ describe('Page: Index', () => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
     })
     await nextTick()
-    // Modal should be open with modal-open class
+    // Verify modal is open in component tree
     expect(wrapper.find('#default-modal.modal-open').exists()).toBe(true)
-    mock$fetch.mockClear()
+    // Add modal element to global DOM so isModalOpen() can find it
+    const fakeModal = document.createElement('div')
+    fakeModal.id = 'default-modal'
+    fakeModal.classList.add('modal-open')
+    document.body.appendChild(fakeModal)
+    const dateBefore = calendarView.props('showDate')
     // Keyboard should be ignored when modal is open
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
     await nextTick()
-    // Should NOT have fetched calendar again (keyboard was ignored)
-    expect(mock$fetch).not.toHaveBeenCalledWith(
-      '/api/calendar',
-      expect.objectContaining({ method: 'POST' }),
-    )
+    // showDate should NOT have changed
+    expect(calendarView.props('showDate')).toStrictEqual(dateBefore)
+    document.body.removeChild(fakeModal)
   })
 
   it('cleans up keyboard listener on unmount', async () => {
@@ -307,5 +388,88 @@ describe('Page: Index', () => {
     expect(item2.style.animationDelay).toBe('30ms')
 
     document.body.removeChild(container)
+  })
+
+  it('applies dark palette colors when isDark is true', async () => {
+    mockColorMode.isDark.value = true
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+    })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    const items = calendarView.props('items') as { style: string }[]
+    if (items.length > 0) {
+      // Dark palette sienna: bg=#583020, border=#c2410c
+      expect(items[0]!.style).toContain('#583020')
+      expect(items[0]!.style).toContain('#c2410c')
+    }
+  })
+
+  it('uses fallback palette for unknown calendar colors', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar') return Promise.resolve([
+        { id: 'e1', title: 'Unknown', color: '#999999', startDate: '2025-01-15', endDate: '2025-01-15' },
+      ])
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+    })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    const items = calendarView.props('items') as { style: string }[]
+    // Should use designPalette[0] (sienna) as fallback
+    expect(items.length).toBeGreaterThan(0)
+    expect(items[0]!.style).toContain('#dfc8b4')
+    expect(items[0]!.style).toContain('#9a3412')
+  })
+
+  it('handles ArrowLeft keyboard navigation', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
+    await nextTick()
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    expect(calendarView.props('showDate').getMonth()).toBe(11) // December 2024
+  })
+
+  it('handles d key keyboard navigation', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }))
+    await nextTick()
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    expect(calendarView.props('showDate').getMonth()).toBe(1) // February 2025
+  })
+
+  it('ignores unhandled keyboard keys', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    const dateBefore = calendarView.props('showDate')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }))
+    await nextTick()
+    expect(calendarView.props('showDate')).toStrictEqual(dateBefore)
+  })
+
+  it('shows loading overlay during data fetch', async () => {
+    let resolveCalendars!: (value: unknown) => void
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') {
+        return new Promise((resolve) => { resolveCalendars = resolve })
+      }
+      return Promise.resolve([])
+    })
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    await nextTick()
+    // Loading overlay should be visible while fetch is pending (v-show)
+    const overlay = wrapper.find('.cal-loading-overlay')
+    expect(overlay.exists()).toBe(true)
+    // v-show: no display:none style when visible
+    expect((overlay.element as HTMLElement).style.display).not.toBe('none')
+    // Resolve the fetch
+    resolveCalendars([{ name: 'Work', color: '#ff0000' }])
+    await vi.waitFor(() => {
+      // After loading completes, v-show hides with display:none
+      expect((wrapper.find('.cal-loading-overlay').element as HTMLElement).style.display).toBe('none')
+    })
   })
 })

@@ -1,4 +1,3 @@
-// @ts-check
 import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 import {
   eslint as it4cEslint,

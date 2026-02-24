@@ -34,6 +34,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.1.7
 
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642195f572a2b2b8a0a4b70 # v4.4.0
+        with:
+          node-version-file: frontend/.tool-versions
+
       - name: Env File
         run: cp .env.example .env
         working-directory: ${{env.WORKING_DIRECTORY}}

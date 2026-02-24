@@ -255,7 +255,7 @@ describe('Page: Add', () => {
   })
 
   it('handles getUserTags error gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/admin/getUserTags') return Promise.reject(new Error('fetch error'))
       return Promise.resolve({})

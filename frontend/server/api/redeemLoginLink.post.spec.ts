@@ -34,7 +34,7 @@ describe('redeemLoginLink.post', () => {
   })
 
   it('throws 401 when user not found', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     mockFindUserByToken.mockResolvedValue(false)
     await expect(handlerFn({})).rejects.toMatchObject({
       statusCode: 401,
@@ -44,7 +44,7 @@ describe('redeemLoginLink.post', () => {
   })
 
   it('throws 401 when account disabled', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const vcard = createMockVCard({
       email: 'test@example.com',
       fn: 'Test',

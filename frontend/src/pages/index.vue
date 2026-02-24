@@ -120,7 +120,7 @@
       event.value = eventDate
       modal.value.open()
     } catch (error) {
-      console.log(error)
+      console.error(error)
     }
   }
 
@@ -195,7 +195,7 @@
       // Store raw events (colors applied via computed property)
       rawItems.value = results.flat()
     } catch (error) {
-      console.log(error)
+      console.error(error)
     }
   }
 </script>

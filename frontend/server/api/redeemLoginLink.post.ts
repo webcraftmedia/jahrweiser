@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   const query = await findUserByToken(cardDavAccount, token)
 
   if (!query) {
-    console.log('user not found')
+    console.warn('user not found')
     throw createError({
       statusCode: 401,
       message: 'Bad credentials',
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
   const { user, vcard } = query
   const isDisabled = vcard.getFirstPropertyValue(X_LOGIN_DISABLED) as string
   if (isDisabled === 'true') {
-    console.log('account disabled')
+    console.warn('account disabled')
     throw createError({
       statusCode: 401,
       message: 'Bad credentials',

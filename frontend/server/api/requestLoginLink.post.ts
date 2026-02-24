@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
   const query = await findUserByEmail(cardDavAccount, email)
 
   if (!query) {
-    console.log('user not found')
+    console.warn('user not found')
     return {}
   }
 
@@ -37,13 +37,13 @@ export default defineEventHandler(async (event) => {
 
   const isDisabled = vcard.getFirstPropertyValue(X_LOGIN_DISABLED) as string
   if (isDisabled === 'true') {
-    console.log('account disabled')
+    console.warn('account disabled')
     return {}
   }
 
   const lastRequest = vcard.getFirstPropertyValue(X_LOGIN_REQUEST_TIME) as string
   if (new Date(parseInt(lastRequest) + REQUEST_TIMEOUT) >= new Date(now)) {
-    console.log('too many requests')
+    console.warn('too many requests')
     return {}
   }
 

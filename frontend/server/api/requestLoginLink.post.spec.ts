@@ -35,7 +35,7 @@ describe('requestLoginLink.post', () => {
   })
 
   it('returns {} when user not found', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     mockFindUserByEmail.mockResolvedValue(false)
     const result = await handlerFn({})
     expect(result).toStrictEqual({})
@@ -44,7 +44,7 @@ describe('requestLoginLink.post', () => {
   })
 
   it('returns {} when account disabled', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const vcard = createMockVCard({
       email: 'test@example.com',
       fn: 'Test',
@@ -61,7 +61,7 @@ describe('requestLoginLink.post', () => {
   })
 
   it('returns {} when rate-limited (< 60s)', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const vcard = createMockVCard({
       email: 'test@example.com',
       fn: 'Test',

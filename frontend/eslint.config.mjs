@@ -4,6 +4,7 @@ import withNuxt from './.nuxt/eslint.config.mjs'
 // sie registrieren ihr Plugin nicht selbst (eslint-plugin-n / eslint-plugin-promise).
 // Bug in eslint-config-it4c melden, dann hier einbinden.
 import {
+  eslint as it4cEslint,
   security,
   comments,
   json,
@@ -15,6 +16,9 @@ import {
 } from 'eslint-config-it4c'
 import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 
+// it4c ESLint-Basisregeln extrahieren (recommended + custom, kein Plugin/Parser-Overlap mit Nuxt)
+const it4cEslintRules = Object.assign({}, ...it4cEslint.map((c) => c.rules))
+
 // it4c TypeScript-Regeln extrahieren (Plugin/Parser-Setup wird von Nuxt via tsconfigPath bereitgestellt)
 const it4cTsRules = Object.assign({}, ...it4cTypescript.map((c) => c.rules))
 // TODO: no-catch-all gehört nicht ins TypeScript-Modul — ist ein allgemeines JS-Pattern.
@@ -23,6 +27,21 @@ delete it4cTsRules['no-catch-all/no-catch-all']
 
 export default withNuxt(
   { ignores: ['.nuxt.old/', '.claude/'] },
+  // it4c ESLint-Basisregeln (recommended + no-console, no-unused-vars, no-void)
+  {
+    files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue}'],
+    rules: it4cEslintRules,
+  },
+  {
+    rules: {
+      // TypeScript-Äquivalente (@typescript-eslint/*) übernehmen diese Aufgaben besser
+      'no-unused-vars': 'off',
+      // TypeScript prüft Undefiniertes statisch; Nuxt Auto-Imports erzeugen False Positives
+      'no-undef': 'off',
+      // console.warn/error für Error-Handling erlauben, nur console.log verbieten
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
   // it4c TypeScript-Regeln (strictTypeChecked + custom Rules)
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
@@ -35,6 +54,8 @@ export default withNuxt(
     rules: {
       // CLI-Tools nutzen legitimerweise dynamische Dateipfade
       'security/detect-non-literal-fs-filename': 'off',
+      // CLI-Tools brauchen Console-Output
+      'no-console': 'off',
     },
   },
   {

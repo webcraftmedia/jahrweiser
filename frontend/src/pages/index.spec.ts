@@ -112,7 +112,7 @@ describe('Page: Index', () => {
   })
 
   it('handles error in clickItem gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/calendars') return Promise.resolve([])
       if (url === '/api/event') return Promise.reject(new Error('fetch failed'))
@@ -234,7 +234,7 @@ describe('Page: Index', () => {
   })
 
   it('handles getData error gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mock$fetch.mockRejectedValue(new Error('network error'))
     await mountSuspended(Page, { route: '/' })
     await vi.waitFor(() => {

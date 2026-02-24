@@ -153,6 +153,7 @@
     showDate: new Date(),
     items,
     // message: "test",
+    locale: 'de-DE',
     startingDayOfWeek: 1,
     disablePast: false,
     disableFuture: false,

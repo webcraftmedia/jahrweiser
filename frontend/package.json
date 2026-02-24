@@ -35,7 +35,7 @@
     "email-templates": "^13.0.1",
     "eslint": "^9.38.0",
     "ical.js": "^2.2.1",
-    "nodemailer": "^7.0.10",
+    "nodemailer": "^8.0.1",
     "nuxt": "^4.2.0",
     "nuxt-auth-utils": "^0.5.29",
     "nuxt-svgo": "^4.2.6",

@@ -36,7 +36,7 @@
     "eslint": "^9.38.0",
     "ical.js": "^2.2.1",
     "nodemailer": "^8.0.1",
-    "nuxt": "^4.2.0",
+    "nuxt": "^4.3.1",
     "nuxt-auth-utils": "^0.5.29",
     "nuxt-svgo": "^4.2.6",
     "pug": "^3.0.3",

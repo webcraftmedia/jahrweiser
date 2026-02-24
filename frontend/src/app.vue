@@ -11,4 +11,11 @@
   .page-leave-active {
     animation: fadeSlideUp 0.2s ease-in reverse;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-enter-active,
+    .page-leave-active {
+      animation: none;
+    }
+  }
 </style>

@@ -215,13 +215,31 @@ tailwindcss.config = {
         </div>
       </div>
 
-      <!-- Right: User -->
-      <div class="flex items-center gap-3">
-        <span class="text-ivory/90 text-sm font-body hidden md:block">
-          <span class="text-ivory font-medium">Marlene K.</span>
-        </span>
-        <a href="#" class="text-mustard-light/80 hover:text-mustard-light text-sm font-medium hidden sm:block">Admin</a>
-        <a href="#" class="text-ivory/60 hover:text-sienna-light text-sm hidden sm:block">Abmelden</a>
+      <!-- Right: User dropdown -->
+      <div class="relative" id="userMenu">
+        <button onclick="document.getElementById('userDropdown').classList.toggle('hidden')"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-ivory/10 transition-colors cursor-pointer">
+          <div class="w-8 h-8 rounded-full bg-sienna/30 border-2 border-mustard/60 flex items-center justify-center">
+            <span class="font-display text-ivory text-sm">M</span>
+          </div>
+          <span class="text-ivory font-medium text-sm font-body hidden sm:block">Marlene K.</span>
+          <svg class="w-3.5 h-3.5 text-ivory/60 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <!-- Dropdown -->
+        <div id="userDropdown" class="hidden absolute right-0 top-full mt-1 w-48 bg-ivory dark:bg-poster-darkCard border border-navy/15 dark:border-poster-darkBorder rounded-lg shadow-lg overflow-hidden z-50">
+          <div class="px-4 py-2.5 border-b border-navy/10 dark:border-poster-darkBorder">
+            <div class="font-medium text-sm text-navy dark:text-ivory">Marlene Kühn</div>
+            <div class="text-xs text-navy/60 dark:text-poster-darkMuted">marlene@example.de</div>
+          </div>
+          <a href="#" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 transition-colors">
+            <svg class="w-4 h-4 text-mustard" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Admin
+          </a>
+          <a href="#" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 transition-colors border-t border-navy/10 dark:border-poster-darkBorder">
+            <svg class="w-4 h-4 text-sienna" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Abmelden
+          </a>
+        </div>
       </div>
     </div>
   </header>
@@ -419,6 +437,13 @@ tailwindcss.config = {
 
   <!-- ========== SCRIPTS ========== -->
   <script>
+    // Close user dropdown on outside click
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('userMenu');
+      const dropdown = document.getElementById('userDropdown');
+      if (!menu.contains(e.target)) dropdown.classList.add('hidden');
+    });
+
     // Dark mode
     if (localStorage.getItem('jahrweiser-dark') === 'true' ||
         (!localStorage.getItem('jahrweiser-dark') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {

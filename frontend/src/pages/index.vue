@@ -33,7 +33,7 @@
       </client-only>
       <Modal ref="modal" @x="handleModalX">
         <template #title>
-          {{ event?.summary }}
+          <span class="capitalize">{{ event?.summary }}</span>
         </template>
 
         <template #content>

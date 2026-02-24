@@ -218,10 +218,6 @@ describe('Page: Add', () => {
       .find((b) => b.text().includes('step2.button-next'))
     await step2Button!.trigger('click')
     expect(wrapper.find('#welcome-email').exists()).toBe(true)
-    // Click edit button for step 2
-    const editButton = wrapper
-      .findAll('button[type="button"]')
-      .find((b) => b.text().includes('step1.button-edit'))
     // There should be two edit buttons - step1 and step2. The second one goes to step 2.
     const editButtons = wrapper
       .findAll('button[type="button"]')

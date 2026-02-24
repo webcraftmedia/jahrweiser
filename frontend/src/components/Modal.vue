@@ -13,16 +13,19 @@
     <div class="relative p-4 w-full max-h-full">
       <!-- Modal content -->
       <div
-        class="relative bg-ivory dark:bg-poster-darkCard rounded-lg shadow-sm border border-navy/15 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]"
+        class="relative bg-ivory dark:bg-poster-darkCard rounded-lg shadow-xl border border-navy/15 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]"
         @click.prevent.stop
       >
         <!-- Modal header -->
         <div
-          class="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-navy/10 dark:border-poster-darkBorder shrink-0"
+          class="flex items-center justify-between p-4 md:p-5 border-b border-navy/10 dark:border-poster-darkBorder shrink-0"
         >
-          <h3 class="text-xl font-semibold text-navy dark:text-ivory font-display">
-            <slot name="title" />
-          </h3>
+          <div class="flex items-center gap-2">
+            <LogoSmall class="logo-modal" />
+            <h3 class="text-xl font-semibold text-navy dark:text-ivory font-display tracking-wide">
+              <slot name="title" />
+            </h3>
+          </div>
           <button
             type="button"
             class="text-navy/40 bg-transparent hover:bg-sienna/10 hover:text-navy rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:text-ivory/40 dark:hover:bg-sienna/20 dark:hover:text-ivory"
@@ -62,6 +65,8 @@
 </template>
 
 <script setup lang="ts">
+  import LogoSmall from '~/../assets/logo-small.svg'
+
   const emit = defineEmits(['x'])
 
   function handleX() {
@@ -85,3 +90,24 @@
     close,
   })
 </script>
+
+<style scoped>
+  .logo-modal {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+</style>
+
+<style>
+  .dark .logo-modal circle {
+    fill: transparent !important;
+    filter: none !important;
+  }
+  .dark .logo-modal [aria-label='G'] {
+    fill: #c2410c !important;
+  }
+  .dark .logo-modal [aria-label='&'] {
+    fill: #d97706 !important;
+  }
+</style>

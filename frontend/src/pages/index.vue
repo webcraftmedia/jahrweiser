@@ -37,29 +37,39 @@
         </template>
 
         <template #content>
-          <table class="text-left align-top text-navy dark:text-ivory font-body">
+          <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
             <tbody>
-              <tr>
-                <th class="pr-4 font-semibold">{{ $t('pages.index.details.start') }}</th>
-                <td>{{ event?.startDate }}</td>
+              <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
+                  {{ $t('pages.index.details.start') }}
+                </th>
+                <td class="py-1.5">{{ event?.startDate }}</td>
               </tr>
-              <tr>
-                <th class="pr-4 font-semibold">{{ $t('pages.index.details.duration') }}</th>
-                <td>{{ event?.duration.replace(/^PT?/, '') }}</td>
+              <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
+                  {{ $t('pages.index.details.duration') }}
+                </th>
+                <td class="py-1.5">{{ event?.duration.replace(/^PT?/, '') }}</td>
               </tr>
-              <tr>
-                <th class="pr-4 font-semibold">{{ $t('pages.index.details.location') }}</th>
-                <td>{{ event?.location }}</td>
+              <tr v-if="event?.location">
+                <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
+                  {{ $t('pages.index.details.location') }}
+                </th>
+                <td class="py-1.5">{{ event?.location }}</td>
               </tr>
-              <tr></tr>
             </tbody>
           </table>
-          <pre class="text-left whitespace-pre-wrap text-navy dark:text-ivory font-body">{{
-            event?.description
-              ?.split('\n')
-              .map((line: string) => line.trimStart())
-              .join('\n')
-          }}</pre>
+          <div
+            v-if="event?.description"
+            class="mt-3 pt-3 border-t border-navy/10 dark:border-poster-darkBorder"
+          >
+            <pre class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed">{{
+              event?.description
+                ?.split('\n')
+                .map((line: string) => line.trimStart())
+                .join('\n')
+            }}</pre>
+          </div>
         </template>
       </Modal>
     </div>

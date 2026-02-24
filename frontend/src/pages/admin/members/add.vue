@@ -201,8 +201,10 @@
         </button>
       </div>
 
-      <div v-if="isLoadingTags" class="flex items-center justify-center py-8">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-sienna"></div>
+      <div v-if="isLoadingTags" class="flex items-center justify-center gap-2 py-8">
+        <span class="loading-dot" />
+        <span class="loading-dot" style="animation-delay: 0.15s" />
+        <span class="loading-dot" style="animation-delay: 0.3s" />
       </div>
 
       <div v-else class="space-y-4">
@@ -287,28 +289,11 @@
           class="text-ivory bg-olive hover:brightness-110 dark:bg-olive-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-olive/30 font-semibold font-body rounded text-base px-5 py-2.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           @click="submitForm"
         >
-          <span v-if="isSubmitting" class="flex items-center">
-            <svg
-              class="animate-spin -ml-1 mr-3 h-5 w-5 text-ivory"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            {{ $t('pages.admin.members.add.step3.processing') }}
+          <span v-if="isSubmitting" class="flex items-center gap-1.5">
+            <span class="loading-dot !w-[6px] !h-[6px] !bg-ivory" />
+            <span class="loading-dot !w-[6px] !h-[6px] !bg-ivory" style="animation-delay: 0.15s" />
+            <span class="loading-dot !w-[6px] !h-[6px] !bg-ivory" style="animation-delay: 0.3s" />
+            <span class="ml-1">{{ $t('pages.admin.members.add.step3.processing') }}</span>
           </span>
           <span v-else>{{ $t('pages.admin.members.add.step3.button-submit') }}</span>
         </button>

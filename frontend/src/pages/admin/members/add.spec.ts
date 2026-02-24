@@ -285,7 +285,7 @@ describe('Page: Add', () => {
     await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
     await nextTick()
     // Loading spinner should be visible
-    expect(wrapper.find('.animate-spin').exists()).toBe(true)
+    expect(wrapper.find('.loading-dot').exists()).toBe(true)
     // Resolve the pending request
     resolveGetUserTags([{ name: 'Calendar A', state: false }])
     await vi.waitFor(() => {
@@ -321,7 +321,7 @@ describe('Page: Add', () => {
     await submitButton!.trigger('click')
     await nextTick()
     // Submit button should show loading spinner
-    expect(wrapper.find('.animate-spin').exists()).toBe(true)
+    expect(wrapper.find('.loading-dot').exists()).toBe(true)
     // Resolve
     resolveSubmit(true)
     await vi.waitFor(() => {

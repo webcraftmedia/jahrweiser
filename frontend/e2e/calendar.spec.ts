@@ -36,6 +36,6 @@ test.describe('Calendar', () => {
     await expect(navbar.getByText('Willkommen')).toBeVisible()
     // Header shows last name
     await expect(navbar.getByText('User')).toBeVisible()
-    await expect(navbar.getByText('Logout')).toBeVisible()
+    await expect(navbar.getByText('Ausloggen')).toBeVisible()
   })
 })

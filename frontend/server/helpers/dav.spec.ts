@@ -157,6 +157,23 @@ describe('dav helpers', () => {
     })
   })
 
+  describe('timeout signal', () => {
+    it('aborts after timeout period', async () => {
+      vi.useFakeTimers()
+      vi.mocked(calendarQuery).mockResolvedValue([])
+      const account = createCalDAVAccount(config)
+      const from = new Date('2025-03-01T00:00:00Z')
+      const to = new Date('2025-03-31T23:59:59Z')
+      await findEvents(account, 'https://dav.example.com/cal/1', from, to)
+      const callArgs = vi.mocked(calendarQuery).mock.calls[0]![0] as Record<string, unknown>
+      const fetchOptions = callArgs.fetchOptions as { signal: AbortSignal }
+      expect(fetchOptions.signal.aborted).toBe(false)
+      vi.advanceTimersByTime(300001)
+      expect(fetchOptions.signal.aborted).toBe(true)
+      vi.useRealTimers()
+    })
+  })
+
   describe('findEvent', () => {
     it('calls fetchCalendarObjects with URL and ID', async () => {
       vi.mocked(fetchCalendarObjects).mockResolvedValue([])

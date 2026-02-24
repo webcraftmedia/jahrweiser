@@ -242,8 +242,10 @@
 
   function triggerCalFlip(direction: 'left' | 'right') {
     calFlip.value = null
-    void nextTick(() => {
-      calFlip.value = direction
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        calFlip.value = direction
+      })
     })
   }
 

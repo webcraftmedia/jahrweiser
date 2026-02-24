@@ -3,42 +3,45 @@
     <div class="calendar row">
       <client-only>
         <div class="cal-wrapper">
-        <CalendarView
-          v-bind="calendar"
-          :class="['theme-default', calFlip === 'left' ? 'cal-flip-left' : calFlip === 'right' ? 'cal-flip-right' : '']"
-          @click-item="clickItem"
-        >
-          <template #header="{ headerProps }">
-            <div class="cv-header">
-              <span class="periodLabel">{{ headerProps.periodLabel }}</span>
-              <div class="cv-header-nav">
-                <button
-                  :disabled="!headerProps.previousPeriod"
-                  @click="setShowDate(headerProps.previousPeriod!)"
-                >
-                  ‹
-                </button>
-                <button @click="setShowDate(headerProps.currentPeriod)">
-                  {{ $t('pages.index.today') }}
-                </button>
-                <button
-                  :disabled="!headerProps.nextPeriod"
-                  @click="setShowDate(headerProps.nextPeriod!)"
-                >
-                  ›
-                </button>
+          <CalendarView
+            v-bind="calendar"
+            :class="[
+              'theme-default',
+              calFlip === 'left' ? 'cal-flip-left' : calFlip === 'right' ? 'cal-flip-right' : '',
+            ]"
+            @click-item="clickItem"
+          >
+            <template #header="{ headerProps }">
+              <div class="cv-header">
+                <span class="periodLabel">{{ headerProps.periodLabel }}</span>
+                <div class="cv-header-nav">
+                  <button
+                    :disabled="!headerProps.previousPeriod"
+                    @click="setShowDate(headerProps.previousPeriod!)"
+                  >
+                    ‹
+                  </button>
+                  <button @click="setShowDate(headerProps.currentPeriod)">
+                    {{ $t('pages.index.today') }}
+                  </button>
+                  <button
+                    :disabled="!headerProps.nextPeriod"
+                    @click="setShowDate(headerProps.nextPeriod!)"
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
+            </template>
+          </CalendarView>
+          <!-- Loading overlay -->
+          <div v-if="calLoading" class="cal-loading-overlay">
+            <div class="flex items-center gap-2">
+              <span class="loading-dot" />
+              <span class="loading-dot" style="animation-delay: 0.15s" />
+              <span class="loading-dot" style="animation-delay: 0.3s" />
             </div>
-          </template>
-        </CalendarView>
-        <!-- Loading overlay -->
-        <div v-if="calLoading" class="cal-loading-overlay">
-          <div class="flex items-center gap-2">
-            <span class="loading-dot" />
-            <span class="loading-dot" style="animation-delay: 0.15s" />
-            <span class="loading-dot" style="animation-delay: 0.3s" />
           </div>
-        </div>
         </div>
       </client-only>
       <Modal ref="modal" @x="handleModalX">
@@ -59,19 +62,25 @@
               <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
                 <tbody>
                   <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
-                    <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
+                    <th
+                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                    >
                       {{ $t('pages.index.details.start') }}
                     </th>
                     <td class="py-1.5">{{ event?.startDate }}</td>
                   </tr>
                   <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
-                    <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
+                    <th
+                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                    >
                       {{ $t('pages.index.details.duration') }}
                     </th>
                     <td class="py-1.5">{{ event?.duration.replace(/^PT?/, '') }}</td>
                   </tr>
                   <tr v-if="event?.location">
-                    <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">
+                    <th
+                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                    >
                       {{ $t('pages.index.details.location') }}
                     </th>
                     <td class="py-1.5">{{ event?.location }}</td>
@@ -82,12 +91,15 @@
                 v-if="event?.description"
                 class="mt-3 pt-3 border-t border-navy/10 dark:border-poster-darkBorder"
               >
-                <pre class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed">{{
-                  event?.description
-                    ?.split('\n')
-                    .map((line: string) => line.trimStart())
-                    .join('\n')
-                }}</pre>
+                <pre
+                  class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed"
+                  >{{
+                    event?.description
+                      ?.split('\n')
+                      .map((line: string) => line.trimStart())
+                      .join('\n')
+                  }}</pre
+                >
               </div>
             </div>
           </div>
@@ -273,8 +285,12 @@
     return document.getElementById('default-modal')?.classList.contains('open')
   }
 
-  onMounted(() => window.addEventListener('keydown', handleKeyboard))
-  onUnmounted(() => window.removeEventListener('keydown', handleKeyboard))
+  onMounted(() => {
+    window.addEventListener('keydown', handleKeyboard)
+  })
+  onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyboard)
+  })
 
   function staggerItems() {
     const items = document.querySelectorAll('.cv-item')
@@ -438,11 +454,7 @@
 
   .theme-default .cv-day.today {
     background-color: #faf5eb;
-    background-image: linear-gradient(
-      225deg,
-      #c2410c 6px,
-      transparent 6px
-    );
+    background-image: linear-gradient(225deg, #c2410c 6px, transparent 6px);
   }
 
   .theme-default .cv-day.today {
@@ -464,8 +476,13 @@
   }
 
   @keyframes todayCirclePulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(0.93); }
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(0.93);
+    }
   }
 
   /* --- Selection --- */
@@ -632,11 +649,7 @@
 
   .dark .theme-default .cv-day.today {
     background-color: #1a1714;
-    background-image: linear-gradient(
-      225deg,
-      #ea580c 6px,
-      transparent 6px
-    );
+    background-image: linear-gradient(225deg, #ea580c 6px, transparent 6px);
   }
 
   .dark .theme-default .cv-day.today {
@@ -658,8 +671,13 @@
   }
 
   @keyframes todayCirclePulseDark {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(0.93); }
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(0.93);
+    }
   }
 
   /* --- Selection (dark) --- */
@@ -721,9 +739,16 @@
   }
 
   @keyframes pageFlipLeft {
-    0% { transform: rotateY(90deg); opacity: 0; }
-    40% { opacity: 1; }
-    100% { transform: rotateY(0); }
+    0% {
+      transform: rotateY(90deg);
+      opacity: 0;
+    }
+    40% {
+      opacity: 1;
+    }
+    100% {
+      transform: rotateY(0);
+    }
   }
 
   /* Rückwärts blättern — Seite klappt nach rechts weg */
@@ -733,9 +758,16 @@
   }
 
   @keyframes pageFlipRight {
-    0% { transform: rotateY(-90deg); opacity: 0; }
-    40% { opacity: 1; }
-    100% { transform: rotateY(0); }
+    0% {
+      transform: rotateY(-90deg);
+      opacity: 0;
+    }
+    40% {
+      opacity: 1;
+    }
+    100% {
+      transform: rotateY(0);
+    }
   }
 
   /* Calendar items pop-in */
@@ -744,8 +776,14 @@
   }
 
   @keyframes itemPop {
-    from { opacity: 0; transform: scale(0.7); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   /* Loading overlay */
@@ -778,8 +816,15 @@
   }
 
   @keyframes dotPulse {
-    0%, 100% { opacity: 0.3; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1); }
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   /* ===== Modal content reveal ===== */

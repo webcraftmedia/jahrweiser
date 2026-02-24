@@ -8,7 +8,9 @@
         <span class="font-display text-navy dark:text-ivory text-2xl md:text-3xl tracking-wide"
           >Jahrweiser</span
         >
-        <span class="font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5">Bergstraße</span>
+        <span class="font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5"
+          >Bergstraße</span
+        >
       </div>
     </NuxtLink>
   </div>
@@ -23,7 +25,9 @@
       <NuxtLink to="/" class="flex items-center gap-2">
         <LogoSmall class="logo-bar" />
         <div>
-          <span class="font-display text-navy dark:text-ivory text-2xl tracking-wide">Jahrweiser</span>
+          <span class="font-display text-navy dark:text-ivory text-2xl tracking-wide"
+            >Jahrweiser</span
+          >
           <span class="hidden md:inline font-hand text-mustard text-sm tracking-widest ml-1"
             >Bergstraße</span
           >
@@ -151,8 +155,9 @@
 </template>
 
 <script setup lang="ts">
-  import LogoSmall from '~/../assets/logo-small.svg'
   import { useZoom } from '../composables/useZoom'
+
+  import LogoSmall from '~/../assets/logo-small.svg'
 
   withDefaults(defineProps<{ variant?: 'bar' | 'hero' }>(), { variant: 'bar' })
 
@@ -204,7 +209,9 @@
     max-height: 0;
     opacity: 0;
     overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    transition:
+      max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.3s ease;
   }
   .mobile-menu.menu-open {
     max-height: 500px;

@@ -40,68 +40,80 @@
   <!-- Login form -->
   <div v-else class="w-full max-w-sm mt-8">
     <div class="login-card-float">
-    <div
-      class="login-card p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded"
-    >
-      <form class="space-y-6" novalidate @submit.prevent="requestLoginLink">
-        <div class="login-stagger" style="--stagger: 0">
-          <h5 class="text-xl font-display text-navy dark:text-ivory">
-            {{ $t('pages.login.form.title') }}
-          </h5>
-          <p class="mt-1 text-sm font-body text-navy/70 dark:text-poster-darkMuted">
-            {{ $t('pages.login.form.description1') }}
-          </p>
-        </div>
-        <div class="login-stagger" style="--stagger: 1">
-          <label
-            for="email-address-icon"
-            class="block mb-2 text-base font-medium font-body"
-            :class="emailError ? 'text-sienna dark:text-sienna-light' : 'text-navy dark:text-ivory'"
-          >
-            {{ emailError ? $t('pages.login.form.email.invalid') : $t('pages.login.form.email.label') }}
-          </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
-              <svg
-                class="w-5 h-5 text-navy/40 dark:text-poster-darkMuted"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 20 16"
-              >
-                <path
-                  d="m10.036 8.278 9.258-7.79A1.979 1.979 0 0 0 18 0H2A1.987 1.987 0 0 0 .641.541l9.395 7.737Z"
-                />
-                <path
-                  d="M11.241 9.817c-.36.275-.801.425-1.255.427-.428 0-.845-.138-1.187-.395L0 2.6V14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2.5l-8.759 7.317Z"
-                />
-              </svg>
-            </div>
-            <input
-              id="email-address-icon"
-              v-model="credentials.email"
-              type="email"
-              class="login-input bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
-              :class="emailError ? 'border-sienna dark:border-sienna-light' : 'border-navy/20 dark:border-poster-darkBorder'"
-              :placeholder="$t('pages.login.form.email.placeholder')"
-              @input="emailError = false"
-            />
+      <div
+        class="login-card p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded"
+      >
+        <form class="space-y-6" novalidate @submit.prevent="requestLoginLink">
+          <div class="login-stagger" style="--stagger: 0">
+            <h5 class="text-xl font-display text-navy dark:text-ivory">
+              {{ $t('pages.login.form.title') }}
+            </h5>
+            <p class="mt-1 text-sm font-body text-navy/70 dark:text-poster-darkMuted">
+              {{ $t('pages.login.form.description1') }}
+            </p>
           </div>
-        </div>
-        <button
-          type="submit"
-          class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center"
-        >
-          {{ $t('pages.login.form.button') }}
-        </button>
-      </form>
+          <div class="login-stagger" style="--stagger: 1">
+            <label
+              for="email-address-icon"
+              class="block mb-2 text-base font-medium font-body"
+              :class="
+                emailError ? 'text-sienna dark:text-sienna-light' : 'text-navy dark:text-ivory'
+              "
+            >
+              {{
+                emailError
+                  ? $t('pages.login.form.email.invalid')
+                  : $t('pages.login.form.email.label')
+              }}
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                <svg
+                  class="w-5 h-5 text-navy/40 dark:text-poster-darkMuted"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 20 16"
+                >
+                  <path
+                    d="m10.036 8.278 9.258-7.79A1.979 1.979 0 0 0 18 0H2A1.987 1.987 0 0 0 .641.541l9.395 7.737Z"
+                  />
+                  <path
+                    d="M11.241 9.817c-.36.275-.801.425-1.255.427-.428 0-.845-.138-1.187-.395L0 2.6V14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2.5l-8.759 7.317Z"
+                  />
+                </svg>
+              </div>
+              <input
+                id="email-address-icon"
+                v-model="credentials.email"
+                type="email"
+                class="login-input bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
+                :class="
+                  emailError
+                    ? 'border-sienna dark:border-sienna-light'
+                    : 'border-navy/20 dark:border-poster-darkBorder'
+                "
+                :placeholder="$t('pages.login.form.email.placeholder')"
+                @input="emailError = false"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center"
+          >
+            {{ $t('pages.login.form.button') }}
+          </button>
+        </form>
+      </div>
     </div>
-    </div>
-    <p class="text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center mt-4 login-stagger" style="--stagger: 3">
+    <p
+      class="text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center mt-4 login-stagger"
+      style="--stagger: 3"
+    >
       {{ $t('pages.login.form.description2') }}
     </p>
   </div>
-
 </template>
 
 <script setup lang="ts">
@@ -155,12 +167,18 @@
   }
 
   @keyframes loginFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
   }
 
   @keyframes loginCardShadow {
-    0%, 100% {
+    0%,
+    100% {
       box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.1),
         0 2px 8px rgba(0, 0, 0, 0.06);
@@ -180,7 +198,9 @@
 
   /* Input-Glow bei Fokus */
   .login-input {
-    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    transition:
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
   }
 
   .login-input:focus {
@@ -197,7 +217,9 @@
 
   /* Button hover/active feedback */
   .login-submit {
-    transition: transform 0.15s ease, filter 0.15s ease;
+    transition:
+      transform 0.15s ease,
+      filter 0.15s ease;
   }
 
   .login-submit:hover {

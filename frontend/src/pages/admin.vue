@@ -182,7 +182,9 @@
   /* Sidebar links hover slide */
   :deep(nav a),
   :deep(nav .group) {
-    transition: transform 0.2s ease, background-color 0.15s ease;
+    transition:
+      transform 0.2s ease,
+      background-color 0.15s ease;
   }
   :deep(nav a:hover),
   :deep(nav .group:hover) {

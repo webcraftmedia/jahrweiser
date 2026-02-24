@@ -51,7 +51,13 @@
           @click="toggleDark"
         >
           <!-- Sun icon (shown in dark mode) -->
-          <svg v-if="isDark" class="dark-toggle-icon w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            v-if="isDark"
+            class="dark-toggle-icon w-4 h-4 md:w-5 md:h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -60,7 +66,13 @@
             />
           </svg>
           <!-- Moon icon (shown in light mode) -->
-          <svg v-else class="dark-toggle-icon w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            v-else
+            class="dark-toggle-icon w-4 h-4 md:w-5 md:h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -116,7 +128,13 @@
   }
 
   @keyframes toggleSpin {
-    from { transform: rotate(-180deg) scale(0.5); opacity: 0; }
-    to { transform: rotate(0) scale(1); opacity: 1; }
+    from {
+      transform: rotate(-180deg) scale(0.5);
+      opacity: 0;
+    }
+    to {
+      transform: rotate(0) scale(1);
+      opacity: 1;
+    }
   }
 </style>

@@ -15,7 +15,7 @@
         </template>
 
         <template #content>
-          <table class="text-left align-top text-gray-900 dark:text-gray-100">
+          <table class="text-left align-top text-navy dark:text-ivory font-body">
             <tbody>
               <tr>
                 <th class="pr-4 font-semibold">{{ $t('pages.index.details.start') }}</th>
@@ -32,7 +32,7 @@
               <tr></tr>
             </tbody>
           </table>
-          <pre class="text-left whitespace-pre-wrap text-gray-900 dark:text-gray-100">{{
+          <pre class="text-left whitespace-pre-wrap text-navy dark:text-ivory font-body">{{
             event?.description
               ?.split('\n')
               .map((line: string) => line.trimStart())
@@ -210,8 +210,8 @@
     width: 100%;
   }
   .calendar {
-    font-family: 'Avenir', Helvetica, Arial, sans-serif;
-    color: #2c3e50;
+    font-family: 'Source Sans 3', system-ui, sans-serif;
+    color: #1e293b;
     width: 100%;
     margin-left: auto;
     margin-right: auto;
@@ -221,7 +221,7 @@
   /* Dark mode support for content & calendar */
   @media (prefers-color-scheme: dark) {
     .calendar {
-      color: #e5e7eb;
+      color: #f5f0e8;
     }
 
     /* Dark mode support for calendar */

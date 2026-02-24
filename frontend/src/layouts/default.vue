@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-screen bg-white dark:bg-gray-800">
+  <div class="flex flex-col h-screen bg-ivory dark:bg-poster-dark relative">
     <Header />
     <div
       class="content flex-1 overflow-y-auto max-w-screen-xl flex flex-wrap justify-between mx-auto w-full"
@@ -13,6 +13,6 @@
 <style scoped>
   @reference "tailwindcss";
   .content {
-    @apply mt-16 mb-7;
+    @apply mt-14 mb-0;
   }
 </style>

@@ -12,17 +12,20 @@
   >
     <div class="relative p-4 w-full max-h-full">
       <!-- Modal content -->
-      <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700" @click.prevent.stop>
+      <div
+        class="relative bg-ivory dark:bg-poster-darkCard rounded-lg shadow-sm border border-navy/15 dark:border-poster-darkBorder"
+        @click.prevent.stop
+      >
         <!-- Modal header -->
         <div
-          class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200"
+          class="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-navy/10 dark:border-poster-darkBorder"
         >
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+          <h3 class="text-xl font-semibold text-navy dark:text-ivory font-display">
             <slot name="title" />
           </h3>
           <button
             type="button"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+            class="text-navy/40 bg-transparent hover:bg-sienna/10 hover:text-navy rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:text-ivory/40 dark:hover:bg-sienna/20 dark:hover:text-ivory"
             data-modal-hide="default-modal"
             @click.prevent="handleX"
           >
@@ -52,17 +55,13 @@
     </div>
   </div>
   <div
-    class="bg-gray-900/50 dark:bg-gray-900/80 fixed inset-0 z-40"
+    class="bg-navy/50 dark:bg-navy-dark/80 fixed inset-0 z-40"
     :class="isOpen ? 'open' : 'hidden'"
     @click="handleX"
   />
 </template>
 
 <script setup lang="ts">
-  /*const props = defineProps({
-  open: { type: Boolean, required: true },
-})*/
-
   const emit = defineEmits(['x'])
 
   function handleX() {

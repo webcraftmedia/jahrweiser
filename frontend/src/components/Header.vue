@@ -1,16 +1,39 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <nav class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0 z-50">
+  <!-- Hero variant (login page) -->
+  <div v-if="variant === 'hero'" class="pt-10 pb-4 flex justify-center">
+    <NuxtLink to="/" class="flex items-center gap-3">
+      <LogoSmall class="logo-hero" />
+      <div>
+        <span class="font-display text-navy dark:text-ivory text-3xl tracking-wide"
+          >Jahrweiser</span
+        >
+        <span class="font-hand text-mustard text-sm tracking-widest ml-1.5">Bergstraße</span>
+      </div>
+    </NuxtLink>
+  </div>
+
+  <!-- Bar variant (default nav bar) -->
+  <nav
+    v-else
+    class="bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full fixed top-0 z-50"
+  >
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
-      <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-        <HeaderLogo />
+      <NuxtLink to="/" class="flex items-center gap-2">
+        <LogoSmall class="logo-bar" />
+        <div class="hidden sm:block">
+          <span class="font-display text-navy dark:text-ivory text-xl tracking-wide">Jahrweiser</span>
+          <span class="hidden lg:inline font-hand text-mustard text-xs tracking-widest ml-1"
+            >Bergstraße</span
+          >
+        </div>
       </NuxtLink>
 
       <!-- Burger menu button (mobile only) -->
       <button
         v-if="loggedIn"
         type="button"
-        class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+        class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
         aria-controls="navbar-mobile"
         :aria-expanded="mobileMenuOpen"
         @click="toggleMobileMenu"
@@ -37,7 +60,7 @@
       <div
         v-if="loggedIn"
         id="navbar-desktop"
-        class="hidden md:block text-right text-gray-900 dark:text-gray-100"
+        class="hidden md:block text-right text-navy dark:text-ivory font-body"
       >
         <p>
           {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
@@ -46,14 +69,11 @@
           <NuxtLink
             v-if="user?.role === 'admin'"
             to="/admin/members/add"
-            class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            class="hover:text-sienna transition-colors"
           >
             {{ $t('components.Header.admin') }}
           </NuxtLink>
-          <button
-            class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            @click="logout"
-          >
+          <button class="hover:text-sienna transition-colors" @click="logout">
             {{ $t('components.Header.logout') }}
           </button>
         </div>
@@ -67,18 +87,18 @@
         class="w-full md:hidden mt-2"
       >
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+          class="bg-ivory dark:bg-poster-darkCard rounded-lg shadow-xl border border-navy/15 dark:border-poster-darkBorder overflow-hidden"
         >
           <!-- User Info Header -->
           <div
-            class="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border-b border-gray-200 dark:border-gray-600"
+            class="px-4 py-3 bg-navy/5 dark:bg-poster-dark border-b border-navy/10 dark:border-poster-darkBorder"
           >
             <p
-              class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider"
             >
               {{ $t('components.Header.welcome') }}
             </p>
-            <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white truncate">
+            <p class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate">
               {{ welcomeName }}
             </p>
           </div>
@@ -88,13 +108,13 @@
             <NuxtLink
               v-if="user?.role === 'admin'"
               to="/admin/members/add"
-              class="block w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"
+              class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
               @click="toggleMobileMenu"
             >
               {{ $t('components.Header.admin') }}
             </NuxtLink>
             <button
-              class="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"
+              class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
               @click="logout"
             >
               {{ $t('components.Header.logout') }}
@@ -108,6 +128,10 @@
 </template>
 
 <script setup lang="ts">
+  import LogoSmall from '~/../assets/logo-small.svg'
+
+  withDefaults(defineProps<{ variant?: 'bar' | 'hero' }>(), { variant: 'bar' })
+
   const welcomeName = ref()
   const { user, loggedIn, clear: clearSession } = useUserSession()
   const mobileMenuOpen = ref(false)
@@ -126,3 +150,14 @@
     await navigateTo('/login')
   }
 </script>
+
+<style scoped>
+  .logo-bar {
+    width: 36px;
+    height: 36px;
+  }
+  .logo-hero {
+    width: 56px;
+    height: 56px;
+  }
+</style>

@@ -207,6 +207,26 @@
     calendar.value.showDate = d
   }
 
+  function navigatePeriod(direction: 1 | -1) {
+    const current = calendar.value.showDate
+    const next = new Date(current)
+    next.setMonth(next.getMonth() + direction)
+    calendar.value.showDate = next
+  }
+
+  function handleKeyboard(e: KeyboardEvent) {
+    if (modal.value && isModalOpen()) return
+    if (e.key === 'ArrowLeft' || e.key === 'a') navigatePeriod(-1)
+    else if (e.key === 'ArrowRight' || e.key === 'd') navigatePeriod(1)
+  }
+
+  function isModalOpen() {
+    return document.getElementById('default-modal')?.classList.contains('open')
+  }
+
+  onMounted(() => window.addEventListener('keydown', handleKeyboard))
+  onUnmounted(() => window.removeEventListener('keydown', handleKeyboard))
+
   async function getData(startDate: Date, endDate: Date) {
     try {
       // Fetch all calendars if not already loaded

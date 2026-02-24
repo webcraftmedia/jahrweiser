@@ -148,24 +148,37 @@ tailwindcss.config = {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 
-  /* Month ribbon */
+  /* Month ribbon arrow buttons */
+  .month-ribbon,
+  .month-ribbon-right {
+    display: block;
+    width: 0; height: 0;
+    padding: 0; margin: 0;
+    border: none; background: none;
+    cursor: pointer;
+  }
   .month-ribbon {
-    position: relative;
-    display: inline-block;
-    padding: 0.25rem 2rem;
+    border-top: 19px solid transparent;
+    border-bottom: 19px solid transparent;
+    border-right: 14px solid #c2410c;
   }
-  .month-ribbon::before,
-  .month-ribbon::after {
-    content: ''; position: absolute; top: 50%; transform: translateY(-50%); border-style: solid;
+  .month-ribbon:hover { border-right-color: #ea580c; }
+  .dark .month-ribbon { border-right-color: #9a3412; }
+  .dark .month-ribbon:hover { border-right-color: #c2410c; }
+
+  .month-ribbon-right {
+    border-top: 19px solid transparent;
+    border-bottom: 19px solid transparent;
+    border-left: 14px solid #c2410c;
   }
-  .month-ribbon::before {
-    left: -11px; border-width: 19px 11px 19px 0; border-color: transparent #c2410c transparent transparent;
+  .month-ribbon-right:hover { border-left-color: #ea580c; }
+  .dark .month-ribbon-right { border-left-color: #9a3412; }
+  .dark .month-ribbon-right:hover { border-left-color: #c2410c; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
-  .month-ribbon::after {
-    right: -11px; border-width: 19px 0 19px 11px; border-color: transparent transparent transparent #c2410c;
-  }
-  .dark .month-ribbon::before { border-color: transparent #9a3412 transparent transparent; }
-  .dark .month-ribbon::after  { border-color: transparent transparent transparent #9a3412; }
 </style>
 </head>
 
@@ -173,7 +186,7 @@ tailwindcss.config = {
 
   <!-- ========== HEADER BAR (compact) ========== -->
   <header class="bg-navy dark:bg-poster-dark border-b-2 border-sienna dark:border-sienna-dark relative overflow-hidden shrink-0 z-10">
-    <div class="max-w-screen-xl mx-auto px-4 py-2 flex items-center justify-between relative z-10">
+    <div class="max-w-screen-xl mx-auto px-2 sm:px-0 py-2 flex items-center justify-between relative z-10">
       <!-- Left: Logo + Month -->
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-2.5">
@@ -190,14 +203,12 @@ tailwindcss.config = {
 
         <!-- Month Navigation -->
         <div class="flex items-center gap-3">
-          <button class="text-ivory/80 hover:text-ivory transition-colors p-1" aria-label="Vorheriger Monat">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          <button class="month-ribbon bg-sienna dark:bg-sienna-dark hover:bg-sienna-light dark:hover:bg-sienna transition-colors" aria-label="Vorheriger Monat" style="cursor:pointer;">
+            <span class="sr-only">Vorheriger Monat</span>
           </button>
-          <div class="month-ribbon bg-sienna dark:bg-sienna-dark">
-            <h2 class="font-display text-ivory text-xl md:text-2xl tracking-wider leading-none">Februar <span class="font-body text-ivory/80 text-sm font-light">2026</span></h2>
-          </div>
-          <button class="text-ivory/80 hover:text-ivory transition-colors p-1" aria-label="Nächster Monat">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          <h2 class="font-display text-ivory text-xl md:text-2xl tracking-wider leading-none bg-sienna dark:bg-sienna-dark px-6 py-1">Februar <span class="font-body text-ivory/80 text-sm font-light">2026</span></h2>
+          <button class="month-ribbon-right bg-sienna dark:bg-sienna-dark hover:bg-sienna-light dark:hover:bg-sienna transition-colors" aria-label="Nächster Monat" style="cursor:pointer;">
+            <span class="sr-only">Nächster Monat</span>
           </button>
           <button class="px-3 py-1 text-xs font-hand text-ivory/90 border border-ivory/30 rounded hover:bg-ivory/10 transition-colors hidden sm:block">Heute</button>
         </div>
@@ -387,7 +398,7 @@ tailwindcss.config = {
 
   <!-- ========== FOOTER BAR (compact) ========== -->
   <footer class="bg-navy dark:bg-poster-dark border-t-2 border-sienna dark:border-sienna-dark shrink-0 z-10">
-    <div class="max-w-screen-xl mx-auto px-4 py-1.5 flex items-center justify-between gap-2 text-xs">
+    <div class="max-w-screen-xl mx-auto px-2 sm:px-0 py-1.5 flex items-center justify-between gap-2 text-xs">
       <!-- Categories inline -->
       <div class="flex items-center gap-2 overflow-x-auto">
         <span class="vintage-badge border-sienna text-sienna dark:text-sienna-light dark:border-sienna/50 bg-sienna/5 dark:bg-sienna/30 shrink-0">🎵 Musik</span>

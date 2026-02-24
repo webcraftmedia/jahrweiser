@@ -445,6 +445,10 @@
     );
   }
 
+  .theme-default .cv-day.today {
+    opacity: 1;
+  }
+
   .theme-default .cv-day.today .cv-day-number {
     color: #faf5eb;
     font-weight: 700;
@@ -633,6 +637,10 @@
       #ea580c 6px,
       transparent 6px
     );
+  }
+
+  .dark .theme-default .cv-day.today {
+    opacity: 1;
   }
 
   .dark .theme-default .cv-day.today .cv-day-number {

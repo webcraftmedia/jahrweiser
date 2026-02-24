@@ -1,7 +1,6 @@
 <template>
-  <Transition name="login-switch" mode="out-in">
   <!-- Email sent confirmation -->
-  <div v-if="requestedLogin" key="confirmation" class="w-full max-w-md mt-8">
+  <div v-if="requestedLogin" class="w-full max-w-md mt-8 animate-fade-slide-up">
     <div
       class="p-5 border-2 border-mustard/50 dark:border-mustard/30 rounded bg-mustard/10 dark:bg-mustard/5 text-navy dark:text-ivory"
       role="alert"
@@ -39,7 +38,7 @@
   </div>
 
   <!-- Login form -->
-  <div v-else key="form" class="w-full max-w-sm mt-8">
+  <div v-else class="w-full max-w-sm mt-8">
     <div class="login-card-float">
     <div
       class="login-card p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded"
@@ -82,7 +81,7 @@
               id="email-address-icon"
               v-model="credentials.email"
               type="email"
-              class="login-input bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:ring-sienna focus:border-sienna dark:focus:ring-sienna-dark dark:focus:border-sienna-dark block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
+              class="login-input bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
               :class="emailError ? 'border-sienna dark:border-sienna-light' : 'border-navy/20 dark:border-poster-darkBorder'"
               :placeholder="$t('pages.login.form.email.placeholder')"
               @input="emailError = false"
@@ -91,8 +90,7 @@
         </div>
         <button
           type="submit"
-          class="login-submit login-stagger w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center transition-all"
-          style="--stagger: 2"
+          class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center"
         >
           {{ $t('pages.login.form.button') }}
         </button>
@@ -103,7 +101,7 @@
       {{ $t('pages.login.form.description2') }}
     </p>
   </div>
-  </Transition>
+
 </template>
 
 <script setup lang="ts">
@@ -144,10 +142,6 @@
 </script>
 
 <style scoped>
-  /* Transition between form ↔ confirmation */
-  .login-switch-enter-active { animation: fadeSlideUp 0.4s ease-out; }
-  .login-switch-leave-active { animation: fadeSlideUp 0.25s ease-in reverse; }
-
   /* Schwebende Login-Box */
   .login-card-float {
     animation: loginFloat 4s ease-in-out infinite;
@@ -201,13 +195,16 @@
       0 0 16px rgba(234, 88, 12, 0.12);
   }
 
-  /* Submit-Button Hover-Puls */
-  .login-submit:hover {
-    animation: subtlePulse 1.5s ease-in-out infinite;
+  /* Button hover/active feedback */
+  .login-submit {
+    transition: transform 0.15s ease, filter 0.15s ease;
   }
 
-  @keyframes subtlePulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
+  .login-submit:hover {
+    transform: scale(1.03);
+  }
+
+  .login-submit:active {
+    transform: scale(0.97);
   }
 </style>

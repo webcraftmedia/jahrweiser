@@ -446,8 +446,22 @@
   }
 
   .theme-default .cv-day.today .cv-day-number {
-    color: #c2410c;
+    color: #faf5eb;
     font-weight: 700;
+    background-color: #c2410c;
+    border-radius: 50%;
+    width: 1.5em;
+    height: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    animation: todayCirclePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes todayCirclePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.93); }
   }
 
   /* --- Selection --- */
@@ -622,8 +636,22 @@
   }
 
   .dark .theme-default .cv-day.today .cv-day-number {
-    color: #ea580c;
+    color: #faf5eb;
     font-weight: 700;
+    background-color: #ea580c;
+    border-radius: 50%;
+    width: 1.5em;
+    height: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    animation: todayCirclePulseDark 2s ease-in-out infinite;
+  }
+
+  @keyframes todayCirclePulseDark {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.93); }
   }
 
   /* --- Selection (dark) --- */

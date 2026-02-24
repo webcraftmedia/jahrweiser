@@ -14,12 +14,16 @@ exports[`Page: Admin > renders 1`] = `
           <nav data-v-20ac04fb="" class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto"><a data-v-20ac04fb="" href="/admin/members/add" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.members-add</a><a data-v-20ac04fb="" href="/admin/cal/" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.calendar</a></nav>
         </div>
       </aside><!-- Mobile Drawer Backdrop -->
-      <transition-stub data-v-20ac04fb="" enteractiveclass="transition-opacity ease-linear duration-300" enterfromclass="opacity-0" entertoclass="opacity-100" leaveactiveclass="transition-opacity ease-linear duration-300" leavefromclass="opacity-100" leavetoclass="opacity-0" appear="false" persisted="false" css="true">
-        <!--v-if-->
-      </transition-stub><!-- Mobile Drawer -->
-      <transition-stub data-v-20ac04fb="" enteractiveclass="transition ease-in-out duration-300 transform" enterfromclass="-translate-x-full" entertoclass="translate-x-0" leaveactiveclass="transition ease-in-out duration-300 transform" leavefromclass="translate-x-0" leavetoclass="-translate-x-full" appear="false" persisted="false" css="true">
-        <!--v-if-->
-      </transition-stub><!-- Main Content -->
+      <div data-v-20ac04fb="" class="md:hidden fixed inset-0 bg-gray-600 z-40 transition-opacity ease-linear duration-300 opacity-0 pointer-events-none"></div><!-- Mobile Drawer -->
+      <div data-v-20ac04fb="" class="md:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white dark:bg-gray-800 shadow-xl transition-transform ease-in-out duration-300 -translate-x-full">
+        <div data-v-20ac04fb="" class="flex items-center justify-between flex-shrink-0 px-4 pt-5 pb-4">
+          <h2 data-v-20ac04fb="" class="text-xl font-semibold text-gray-900 dark:text-white">pages.admin.title</h2><button data-v-20ac04fb="" class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"><svg data-v-20ac04fb="" class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path data-v-20ac04fb="" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg></button>
+        </div>
+        <hr data-v-20ac04fb="" class="border-gray-200 dark:border-gray-700">
+        <nav data-v-20ac04fb="" class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto"><a data-v-20ac04fb="" href="/admin/members/add" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.members-add</a><a data-v-20ac04fb="" href="/admin/cal/" class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg">pages.admin.menu.calendar</a></nav>
+      </div><!-- Main Content -->
       <div data-v-20ac04fb="" class="flex-1 overflow-auto w-full">
         <main data-v-20ac04fb="" class="w-full min-h-full">
           <!-- Mobile Menu Button -->

@@ -3,7 +3,12 @@ import middleware from './admin'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 const mockUser = ref<{ role?: string } | null>(null)
-mockNuxtImport('useUserSession', () => () => ({ user: mockUser }))
+const mockLoggedIn = ref(true)
+mockNuxtImport('useUserSession', () => () => ({
+  user: mockUser,
+  loggedIn: mockLoggedIn,
+  fetch: vi.fn(),
+}))
 
 const mockNavigateTo = vi.hoisted(() => vi.fn())
 mockNuxtImport('navigateTo', () => mockNavigateTo)

@@ -1,7 +1,11 @@
 import { vi } from 'vitest'
 import { createError, defineEventHandler } from 'h3'
 
-// Runtime config shared between vi.mock and globalThis
+// Server tests run in @vitest-environment node (set in each test file).
+// The auto-import transform from @nuxt/test-utils still resolves
+// useRuntimeConfig to #app/nuxt, so we mock it here.
+// In node environment (no Nuxt app), this is safe.
+
 const runtimeConfig = vi.hoisted(() => ({
   DAV_USERNAME: 'testuser',
   DAV_PASSWORD: 'testpass',
@@ -18,12 +22,14 @@ const runtimeConfig = vi.hoisted(() => ({
   CLIENT_URI: 'http://localhost:3000',
 }))
 
-// Mock nuxt's auto-import of useRuntimeConfig (source: #app/nuxt)
-// which resolves to nuxt/dist/app/nuxt.js and requires a Nuxt instance
-vi.mock('#app/nuxt', () => ({
-  useNuxtApp: () => ({}),
-  useRuntimeConfig: () => runtimeConfig,
-}))
+vi.mock('#app/nuxt', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>()
+  return {
+    ...actual,
+    // Delegate to globalThis so tests can override useRuntimeConfig dynamically
+    useRuntimeConfig: () => globalThis.useRuntimeConfig(),
+  }
+})
 
 // Provide Nitro auto-imports as globals for server-side tests
 globalThis.defineEventHandler = defineEventHandler

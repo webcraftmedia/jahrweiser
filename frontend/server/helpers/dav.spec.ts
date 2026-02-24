@@ -1,3 +1,4 @@
+// @vitest-environment node
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { DAVResponse } from 'tsdav'
@@ -153,6 +154,23 @@ describe('dav helpers', () => {
       const httpsResult = fetchOptions.agent(new URL('https://example.com'))
       expect(httpsResult).toBeDefined()
       expect(httpResult).not.toBe(httpsResult)
+    })
+  })
+
+  describe('timeout signal', () => {
+    it('aborts after timeout period', async () => {
+      vi.useFakeTimers()
+      vi.mocked(calendarQuery).mockResolvedValue([])
+      const account = createCalDAVAccount(config)
+      const from = new Date('2025-03-01T00:00:00Z')
+      const to = new Date('2025-03-31T23:59:59Z')
+      await findEvents(account, 'https://dav.example.com/cal/1', from, to)
+      const callArgs = vi.mocked(calendarQuery).mock.calls[0]![0] as Record<string, unknown>
+      const fetchOptions = callArgs.fetchOptions as { signal: AbortSignal }
+      expect(fetchOptions.signal.aborted).toBe(false)
+      vi.advanceTimersByTime(300001)
+      expect(fetchOptions.signal.aborted).toBe(true)
+      vi.useRealTimers()
     })
   })
 

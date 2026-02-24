@@ -1,3 +1,4 @@
+// @vitest-environment node
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
@@ -5,6 +6,7 @@ import {
   ALLDAY_EVENT,
   RECURRING_EVENT,
   PRIVATE_EVENT,
+  VCALENDAR_NO_VEVENT,
 } from '../../test/fixtures/ical-data'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
 import handler from './calendar.post'
@@ -185,6 +187,42 @@ describe('calendar.post', () => {
     const result = (await handlerFn({})) as { color: string }[]
     expect(result).toHaveLength(1)
     expect(result[0]!.color).toBe('#e7e7ff')
+  })
+
+  it('skips calendar data without VEVENT', async () => {
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/todo-1.ics',
+        props: { calendarData: VCALENDAR_NO_VEVENT },
+      },
+    ])
+    const result = (await handlerFn({})) as unknown[]
+    expect(result).toHaveLength(0)
+  })
+
+  it('skips recurring occurrences before startDate', async () => {
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+      return (validator as (data: unknown) => unknown)({
+        calendar: 'Work',
+        startDate: '2025-03-05T00:00:00Z',
+        endDate: '2025-04-01T00:00:00Z',
+      })
+    })
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/recurring-event-1.ics',
+        props: { calendarData: RECURRING_EVENT },
+      },
+    ])
+    const result = (await handlerFn({})) as { startDate: Date }[]
+    // March 1 occurrence is before startDate (March 5), so it's skipped
+    // Remaining occurrences: March 8, 15, 22, 29
+    expect(result.length).toBeGreaterThanOrEqual(1)
+    result.forEach((event) => {
+      expect(event.startDate.getTime()).toBeGreaterThanOrEqual(
+        new Date('2025-03-05T00:00:00Z').getTime(),
+      )
+    })
   })
 
   it('hrefToId extracts ID from path', async () => {

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
@@ -34,12 +35,16 @@ describe('requestLoginLink.post', () => {
   })
 
   it('returns {} when user not found', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     mockFindUserByEmail.mockResolvedValue(false)
     const result = await handlerFn({})
     expect(result).toEqual({})
+    expect(consoleSpy).toHaveBeenCalledWith('user not found')
+    consoleSpy.mockRestore()
   })
 
   it('returns {} when account disabled', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     const vcard = createMockVCard({
       email: 'test@example.com',
       fn: 'Test',
@@ -51,9 +56,12 @@ describe('requestLoginLink.post', () => {
     })
     const result = await handlerFn({})
     expect(result).toEqual({})
+    expect(consoleSpy).toHaveBeenCalledWith('account disabled')
+    consoleSpy.mockRestore()
   })
 
   it('returns {} when rate-limited (< 60s)', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     const vcard = createMockVCard({
       email: 'test@example.com',
       fn: 'Test',
@@ -65,6 +73,8 @@ describe('requestLoginLink.post', () => {
     })
     const result = await handlerFn({})
     expect(result).toEqual({})
+    expect(consoleSpy).toHaveBeenCalledWith('too many requests')
+    consoleSpy.mockRestore()
   })
 
   it('saves token and sends email on success', async () => {

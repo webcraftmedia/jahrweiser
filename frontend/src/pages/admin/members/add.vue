@@ -34,7 +34,7 @@ const isValidEmail = computed(() => {
 
 async function getUserTags(email: string): Promise<Tag[]> {
   try {
-    return $fetch<Tag[]>('/api/admin/getUserTags', {
+    return await $fetch<Tag[]>('/api/admin/getUserTags', {
       method: 'POST',
       body: {
         email,
@@ -47,13 +47,10 @@ async function getUserTags(email: string): Promise<Tag[]> {
 }
 
 const confirmEmail = async () => {
-  if (!isValidEmail.value) return
-
   isLoadingTags.value = true
+  step.value = 2
   tags.value = await getUserTags(email.value)
   isLoadingTags.value = false
-
-  step.value = 2
 }
 
 const handleEmailEnter = async () => {
@@ -72,15 +69,7 @@ const confirmTags = () => {
 }
 
 const goToStep = (targetStep: number) => {
-  if (targetStep === 1) {
-    step.value = 1
-  } else if (targetStep === 2 && isValidEmail.value) {
-    step.value = 2
-  } else if (targetStep === 3 && isValidEmail.value) {
-    step.value = 3
-  }
-
-  // Reset result when going back to edit
+  step.value = targetStep
   submitResult.value = null
   submitError.value = null
 }
@@ -100,11 +89,7 @@ const submitForm = async () => {
       },
     })
 
-    if (result === true) {
-      submitResult.value = 'success-with-email'
-    } else if (result === false) {
-      submitResult.value = 'success-without-email'
-    }
+    submitResult.value = result ? 'success-with-email' : 'success-without-email'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     submitResult.value = 'error'
@@ -257,6 +242,7 @@ const resetForm = () => {
         </div>
       </div>
     </div>
+    <template v-else />
 
     <!-- Step 3: Welcome Email -->
     <div
@@ -317,6 +303,7 @@ const resetForm = () => {
         </button>
       </div>
     </div>
+    <template v-else />
 
     <!-- Result Display -->
     <div
@@ -355,7 +342,7 @@ const resetForm = () => {
       </div>
 
       <!-- Success without Email -->
-      <div v-if="submitResult === 'success-without-email'" class="space-y-4">
+      <div v-else-if="submitResult === 'success-without-email'" class="space-y-4">
         <div
           class="flex items-start p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
         >
@@ -382,7 +369,7 @@ const resetForm = () => {
       </div>
 
       <!-- Error -->
-      <div v-if="submitResult === 'error'" class="space-y-4">
+      <div v-else class="space-y-4">
         <div
           class="flex items-start p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
         >
@@ -430,7 +417,7 @@ const resetForm = () => {
 
         <!-- Retry as link for success cases -->
         <button
-          v-if="submitResult === 'success-with-email' || submitResult === 'success-without-email'"
+          v-else
           type="button"
           class="text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium underline"
           @click="submitForm"
@@ -439,6 +426,7 @@ const resetForm = () => {
         </button>
       </div>
     </div>
+    <template v-else />
   </div>
 </template>
 

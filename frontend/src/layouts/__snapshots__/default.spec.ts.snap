@@ -62,7 +62,6 @@ exports[`Layout: Default > renders 1`] = `
         <!-- Desktop menu -->
         <!--v-if-->
         <!-- Mobile menu dropdown -->
-        <!--v-if-->
       </div>
     </nav>
     <div data-v-19b56bd5="" class="content flex-1 overflow-y-auto max-w-screen-xl flex flex-wrap justify-between mx-auto w-full"></div>

@@ -1,14 +1,25 @@
 import { mountSuspended, renderSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import Page from './index.vue'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+const mockNavigateTo = vi.hoisted(() => vi.fn())
+const mockLoggedIn = ref(false)
 
 mockNuxtImport('useUserSession', () => () => ({
-  loggedIn: ref(false),
+  loggedIn: mockLoggedIn,
+  fetch: vi.fn(),
 }))
+
+mockNuxtImport('navigateTo', () => mockNavigateTo)
 
 vi.stubGlobal('$fetch', vi.fn().mockResolvedValue({}))
 
 describe('Page: Login', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockLoggedIn.value = false
+  })
+
   it('renders login form', async () => {
     const html = await (
       await renderSuspended(Page, {
@@ -44,5 +55,11 @@ describe('Page: Login', () => {
     await wrapper.find('button[aria-label="Close"]').trigger('click')
 
     expect(wrapper.find('form').exists()).toBe(true)
+  })
+
+  it('redirects to home when already logged in', async () => {
+    mockLoggedIn.value = true
+    await mountSuspended(Page, { route: '/login' })
+    expect(mockNavigateTo).toHaveBeenCalledWith('/')
   })
 })

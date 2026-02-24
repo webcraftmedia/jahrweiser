@@ -815,32 +815,6 @@
     background: rgba(26, 23, 20, 0.6);
   }
 
-  /* ===== Modal loading dots ===== */
-
-  .loading-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #c2410c;
-    animation: dotPulse 0.8s ease-in-out infinite;
-  }
-
-  .dark .loading-dot {
-    background-color: #ea580c;
-  }
-
-  @keyframes dotPulse {
-    0%,
-    100% {
-      opacity: 0.3;
-      transform: scale(0.8);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
   /* ===== Modal content reveal ===== */
 
   .modal-content-reveal {

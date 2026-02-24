@@ -91,11 +91,11 @@
   /* ── Design palette — one unique color per calendar ── */
 
   const designPalette = [
-    { light: { bg: '#f0c4a0', border: '#c2410c' }, dark: { bg: '#6b2c10', border: '#ea580c' } }, // sienna
-    { light: { bg: '#c6e08e', border: '#65a30d' }, dark: { bg: '#38520c', border: '#84cc16' } }, // olive
-    { light: { bg: '#d1b5ed', border: '#7e22ce' }, dark: { bg: '#461a75', border: '#9333ea' } }, // plum
-    { light: { bg: '#f0d898', border: '#d97706' }, dark: { bg: '#6b4509', border: '#f59e0b' } }, // mustard
-    { light: { bg: '#a5d8d2', border: '#0d9488' }, dark: { bg: '#0c524c', border: '#14b8a6' } }, // craft
+    { light: { bg: '#dfc8b4', border: '#9a3412' }, dark: { bg: '#583020', border: '#c2410c' } }, // sienna
+    { light: { bg: '#c5d0a6', border: '#4d7c0f' }, dark: { bg: '#344818', border: '#65a30d' } }, // olive
+    { light: { bg: '#c8bdd6', border: '#6b21a8' }, dark: { bg: '#3e2260', border: '#7e22ce' } }, // plum
+    { light: { bg: '#ddd0a6', border: '#b45309' }, dark: { bg: '#5c4418', border: '#d97706' } }, // mustard
+    { light: { bg: '#adc8c4', border: '#0f766e' }, dark: { bg: '#184844', border: '#0d9488' } }, // craft
   ]
 
   const calendarColorMap = computed(() => {

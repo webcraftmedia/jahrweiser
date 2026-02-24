@@ -88,27 +88,27 @@
 </template>
 
 <script setup lang="ts">
-const { loggedIn } = useUserSession()
+  const { loggedIn } = useUserSession()
 
-if (loggedIn.value) {
-  navigateTo('/')
-}
+  if (loggedIn.value) {
+    navigateTo('/')
+  }
 
-const requestedLogin = ref(false)
+  const requestedLogin = ref(false)
 
-const credentials = reactive({
-  email: '',
-})
-
-async function requestLoginLink() {
-  await $fetch('/api/requestLoginLink', {
-    method: 'POST',
-    body: credentials,
+  const credentials = reactive({
+    email: '',
   })
-  requestedLogin.value = true
-}
 
-async function showLogin() {
-  requestedLogin.value = false
-}
+  async function requestLoginLink() {
+    await $fetch('/api/requestLoginLink', {
+      method: 'POST',
+      body: credentials,
+    })
+    requestedLogin.value = true
+  }
+
+  async function showLogin() {
+    requestedLogin.value = false
+  }
 </script>

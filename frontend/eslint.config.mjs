@@ -3,9 +3,8 @@ import withNuxt from './.nuxt/eslint.config.mjs'
 // TODO: `node` und `promise` Module aus eslint-config-it4c sind nicht self-contained —
 // sie registrieren ihr Plugin nicht selbst (eslint-plugin-n / eslint-plugin-promise).
 // Bug in eslint-config-it4c melden, dann hier einbinden.
-import { security, comments, json, yaml, vitest, css } from 'eslint-config-it4c'
+import { security, comments, json, yaml, vitest, css, prettier } from 'eslint-config-it4c'
 import vueI18n from '@intlify/eslint-plugin-vue-i18n'
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 
 export default withNuxt(
   // it4c-Module (self-contained, kein Nuxt-Overlap)
@@ -97,7 +96,7 @@ export default withNuxt(
   },
 
   // Prettier (MUSS letztes sein)
-  eslintPluginPrettierRecommended,
+  ...prettier,
 )
   // CSS files use a different language plugin — exclude them from JS/Vue-focused configs
   .override('nuxt/javascript', { ignores: ['**/*.css'] })

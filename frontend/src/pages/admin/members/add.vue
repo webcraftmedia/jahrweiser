@@ -1,112 +1,112 @@
 <script setup lang="ts">
-import { z } from 'zod'
+  import { z } from 'zod'
 
-definePageMeta({
-  middleware: ['authenticated', 'admin'],
-})
+  definePageMeta({
+    middleware: ['authenticated', 'admin'],
+  })
 
-interface Tag {
-  name: string
-  state: boolean
-}
-
-const email = ref('')
-const tags = ref<Tag[]>([])
-const sendMail = ref(true)
-
-const step = ref(1)
-const isLoadingTags = ref(false)
-const isSubmitting = ref(false)
-const submitResult = ref<'success-with-email' | 'success-without-email' | 'error' | null>(null)
-const submitError = ref<string | null>(null)
-const isEmailShaking = ref(false)
-
-const emailSchema = z.string().email()
-
-const isValidEmail = computed(() => {
-  try {
-    emailSchema.parse(email.value)
-    return true
-  } catch {
-    return false
+  interface Tag {
+    name: string
+    state: boolean
   }
-})
 
-async function getUserTags(email: string): Promise<Tag[]> {
-  try {
-    return await $fetch<Tag[]>('/api/admin/getUserTags', {
-      method: 'POST',
-      body: {
-        email,
-      },
-    })
-  } catch (error) {
-    console.log(error)
-    return []
+  const email = ref('')
+  const tags = ref<Tag[]>([])
+  const sendMail = ref(true)
+
+  const step = ref(1)
+  const isLoadingTags = ref(false)
+  const isSubmitting = ref(false)
+  const submitResult = ref<'success-with-email' | 'success-without-email' | 'error' | null>(null)
+  const submitError = ref<string | null>(null)
+  const isEmailShaking = ref(false)
+
+  const emailSchema = z.string().email()
+
+  const isValidEmail = computed(() => {
+    try {
+      emailSchema.parse(email.value)
+      return true
+    } catch {
+      return false
+    }
+  })
+
+  async function getUserTags(email: string): Promise<Tag[]> {
+    try {
+      return await $fetch<Tag[]>('/api/admin/getUserTags', {
+        method: 'POST',
+        body: {
+          email,
+        },
+      })
+    } catch (error) {
+      console.log(error)
+      return []
+    }
   }
-}
 
-const confirmEmail = async () => {
-  isLoadingTags.value = true
-  step.value = 2
-  tags.value = await getUserTags(email.value)
-  isLoadingTags.value = false
-}
-
-const handleEmailEnter = async () => {
-  if (isValidEmail.value) {
-    await confirmEmail()
-  } else {
-    isEmailShaking.value = true
-    setTimeout(() => {
-      isEmailShaking.value = false
-    }, 500)
+  const confirmEmail = async () => {
+    isLoadingTags.value = true
+    step.value = 2
+    tags.value = await getUserTags(email.value)
+    isLoadingTags.value = false
   }
-}
 
-const confirmTags = () => {
-  step.value = 3
-}
-
-const goToStep = (targetStep: number) => {
-  step.value = targetStep
-  submitResult.value = null
-  submitError.value = null
-}
-
-const submitForm = async () => {
-  isSubmitting.value = true
-  submitResult.value = null
-  submitError.value = null
-
-  try {
-    const result = await $fetch<boolean>('/api/admin/updateUserTags', {
-      method: 'POST',
-      body: {
-        email: email.value,
-        tags: tags.value,
-        sendMail: sendMail.value,
-      },
-    })
-
-    submitResult.value = result ? 'success-with-email' : 'success-without-email'
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    submitResult.value = 'error'
-    submitError.value = error?.message || $t('pages.admin.members.add.result.error-unknown')
-  } finally {
-    isSubmitting.value = false
+  const handleEmailEnter = async () => {
+    if (isValidEmail.value) {
+      await confirmEmail()
+    } else {
+      isEmailShaking.value = true
+      setTimeout(() => {
+        isEmailShaking.value = false
+      }, 500)
+    }
   }
-}
 
-const resetForm = () => {
-  email.value = ''
-  tags.value = []
-  sendMail.value = true
-  step.value = 1
-  submitResult.value = null
-  submitError.value = null
-}
+  const confirmTags = () => {
+    step.value = 3
+  }
+
+  const goToStep = (targetStep: number) => {
+    step.value = targetStep
+    submitResult.value = null
+    submitError.value = null
+  }
+
+  const submitForm = async () => {
+    isSubmitting.value = true
+    submitResult.value = null
+    submitError.value = null
+
+    try {
+      const result = await $fetch<boolean>('/api/admin/updateUserTags', {
+        method: 'POST',
+        body: {
+          email: email.value,
+          tags: tags.value,
+          sendMail: sendMail.value,
+        },
+      })
+
+      submitResult.value = result ? 'success-with-email' : 'success-without-email'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      submitResult.value = 'error'
+      submitError.value = error?.message || $t('pages.admin.members.add.result.error-unknown')
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  const resetForm = () => {
+    email.value = ''
+    tags.value = []
+    sendMail.value = true
+    step.value = 1
+    submitResult.value = null
+    submitError.value = null
+  }
 </script>
 
 <template>
@@ -431,20 +431,20 @@ const resetForm = () => {
 </template>
 
 <style scoped>
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-10px);
+    }
+    75% {
+      transform: translateX(10px);
+    }
   }
-  25% {
-    transform: translateX(-10px);
-  }
-  75% {
-    transform: translateX(10px);
-  }
-}
 
-.shake {
-  animation: shake 0.5s ease-in-out;
-}
+  .shake {
+    animation: shake 0.5s ease-in-out;
+  }
 </style>

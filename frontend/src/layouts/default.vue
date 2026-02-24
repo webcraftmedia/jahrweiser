@@ -11,8 +11,8 @@
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-.content {
-  @apply mt-16 mb-7;
-}
+  @reference "tailwindcss";
+  .content {
+    @apply mt-16 mb-7;
+  }
 </style>

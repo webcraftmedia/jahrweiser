@@ -3,9 +3,9 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  middleware: ['authenticated', 'admin'],
-})
+  definePageMeta({
+    middleware: ['authenticated', 'admin'],
+  })
 
-await navigateTo('/admin/members/add')
+  await navigateTo('/admin/members/add')
 </script>

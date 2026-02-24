@@ -24,7 +24,7 @@
         <LogoSmall class="logo-bar" />
         <div>
           <span class="font-display text-navy dark:text-ivory text-2xl tracking-wide">Jahrweiser</span>
-          <span class="font-hand text-mustard text-sm tracking-widest ml-1"
+          <span class="hidden md:inline font-hand text-mustard text-sm tracking-widest ml-1"
             >Bergstraße</span
           >
         </div>

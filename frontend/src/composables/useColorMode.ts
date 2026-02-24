@@ -45,8 +45,12 @@ function toggle() {
     overlay.style.clipPath = `circle(0% at ${anchor})`
   })
 
-  overlay.addEventListener('transitionend', () => { overlay.remove() })
-  setTimeout(() => { overlay.remove() }, 1100)
+  overlay.addEventListener('transitionend', () => {
+    overlay.remove()
+  })
+  setTimeout(() => {
+    overlay.remove()
+  }, 1100)
 }
 
 export function useColorMode() {

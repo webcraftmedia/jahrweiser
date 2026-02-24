@@ -8,7 +8,9 @@ describe('useColorMode', () => {
     vi.resetModules()
     localStorage.clear()
     document.documentElement.classList.remove('dark')
-    document.querySelectorAll('.color-switch-overlay').forEach((el) => { el.remove() })
+    document.querySelectorAll('.color-switch-overlay').forEach((el) => {
+      el.remove()
+    })
     vi.spyOn(window, 'matchMedia').mockReturnValue({
       matches: false,
       addEventListener: vi.fn(),

@@ -1,10 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-import {
-  mockRequestLoginLink,
-  mockCalendarEndpoints,
-  waitForHydration,
-} from './helpers/api-mocks'
+import { mockRequestLoginLink, mockCalendarEndpoints, waitForHydration } from './helpers/api-mocks'
 
 test.describe('Login Page', () => {
   test('shows login form with email input and submit button', async ({ page }) => {

@@ -294,6 +294,32 @@ describe('Page: Index', () => {
     expect(wrapper.find('#default-modal.modal-hidden').exists()).toBe(true)
   })
 
+  it('prevents closing modal while event is loading', async () => {
+    let resolveEvent!: (v: unknown) => void
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/event') return new Promise((r) => (resolveEvent = r))
+      return Promise.resolve([{ name: 'Work', color: '#ea580c' }])
+    })
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    await calendarView.vm.$emit('click-item', {
+      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
+    })
+    await nextTick()
+    // Modal open, still loading
+    expect(wrapper.find('#default-modal.modal-open').exists()).toBe(true)
+    // Try to close — should be blocked
+    await wrapper.find('#default-modal').trigger('click')
+    await nextTick()
+    expect(wrapper.find('#default-modal.modal-open').exists()).toBe(true)
+    // Resolve loading, then close works
+    resolveEvent({ summary: 'Test', dtstart: '2025-01-15' })
+    await nextTick()
+    await wrapper.find('#default-modal').trigger('click')
+    await nextTick()
+    expect(wrapper.find('#default-modal.modal-hidden').exists()).toBe(true)
+  })
+
   it('skips fetching calendars when already loaded', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
     await vi.waitFor(() => {

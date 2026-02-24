@@ -96,6 +96,13 @@
     { light: { bg: '#c8bdd6', border: '#6b21a8' }, dark: { bg: '#3e2260', border: '#7e22ce' } }, // plum
     { light: { bg: '#ddd0a6', border: '#b45309' }, dark: { bg: '#5c4418', border: '#d97706' } }, // mustard
     { light: { bg: '#adc8c4', border: '#0f766e' }, dark: { bg: '#184844', border: '#0d9488' } }, // craft
+    { light: { bg: '#d4b4b4', border: '#9f1239' }, dark: { bg: '#5c1a2a', border: '#e11d48' } }, // rose
+    { light: { bg: '#b4c8d8', border: '#1e5a8a' }, dark: { bg: '#1c3a54', border: '#3b82f6' } }, // steel
+    { light: { bg: '#d8c4a4', border: '#78591a' }, dark: { bg: '#4a3818', border: '#a57c2a' } }, // bronze
+    { light: { bg: '#b8d0b4', border: '#2d6a30' }, dark: { bg: '#1e3e20', border: '#4ade80' } }, // forest
+    { light: { bg: '#d0bcc8', border: '#8a2060' }, dark: { bg: '#502040', border: '#c026a0' } }, // magenta
+    { light: { bg: '#b4c4c8', border: '#3a5a64' }, dark: { bg: '#283e44', border: '#5ea0b0' } }, // slate
+    { light: { bg: '#d8c0c0', border: '#7a3030' }, dark: { bg: '#4a2020', border: '#b44040' } }, // brick
   ]
 
   const calendarColorMap = computed(() => {

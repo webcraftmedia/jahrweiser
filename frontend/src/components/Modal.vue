@@ -13,12 +13,12 @@
     <div class="relative p-4 w-full max-h-full">
       <!-- Modal content -->
       <div
-        class="relative bg-ivory dark:bg-poster-darkCard rounded-lg shadow-sm border border-navy/15 dark:border-poster-darkBorder"
+        class="relative bg-ivory dark:bg-poster-darkCard rounded-lg shadow-sm border border-navy/15 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]"
         @click.prevent.stop
       >
         <!-- Modal header -->
         <div
-          class="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-navy/10 dark:border-poster-darkBorder"
+          class="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-navy/10 dark:border-poster-darkBorder shrink-0"
         >
           <h3 class="text-xl font-semibold text-navy dark:text-ivory font-display">
             <slot name="title" />
@@ -48,7 +48,7 @@
           </button>
         </div>
         <!-- Modal body -->
-        <div class="p-4 md:p-5 space-y-4">
+        <div class="p-4 md:p-5 space-y-4 overflow-y-auto">
           <slot name="content" />
         </div>
       </div>

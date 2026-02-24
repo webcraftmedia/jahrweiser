@@ -6,6 +6,7 @@ import Page from './index.vue'
 const mock$fetch = vi.hoisted(() => vi.fn())
 
 const mockColorMode = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ref, readonly } = require('vue')
   const isDark = ref(false)
   return {

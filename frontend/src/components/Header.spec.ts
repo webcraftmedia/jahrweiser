@@ -4,6 +4,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import Component from './Header.vue'
 
 const mockZoomState = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ref, computed } = require('vue')
   const zoomLevel = ref(1.0)
   return { zoomLevel, computed }

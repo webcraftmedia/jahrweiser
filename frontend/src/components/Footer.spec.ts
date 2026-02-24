@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Component from './Footer.vue'
 
 const mockState = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ref, computed, readonly } = require('vue')
   const isDark = ref(false)
   const zoomLevel = ref(1.0)

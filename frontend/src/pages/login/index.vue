@@ -42,7 +42,7 @@
     <div
       class="p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded shadow-lg"
     >
-      <form class="space-y-6" @submit.prevent="requestLoginLink">
+      <form class="space-y-6" novalidate @submit.prevent="requestLoginLink">
         <div>
           <h5 class="text-xl font-display text-navy dark:text-ivory">
             {{ $t('pages.login.form.title') }}
@@ -54,9 +54,10 @@
         <div>
           <label
             for="email-address-icon"
-            class="block mb-2 text-base font-medium font-body text-navy dark:text-ivory"
+            class="block mb-2 text-base font-medium font-body"
+            :class="emailError ? 'text-sienna dark:text-sienna-light' : 'text-navy dark:text-ivory'"
           >
-            {{ $t('pages.login.form.email.label') }}
+            {{ emailError ? $t('pages.login.form.email.invalid') : $t('pages.login.form.email.label') }}
           </label>
           <div class="relative">
             <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
@@ -78,9 +79,11 @@
             <input
               id="email-address-icon"
               v-model="credentials.email"
-              type="text"
-              class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded font-body focus:ring-sienna focus:border-sienna dark:focus:ring-sienna-dark dark:focus:border-sienna-dark block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
+              type="email"
+              class="bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:ring-sienna focus:border-sienna dark:focus:ring-sienna-dark dark:focus:border-sienna-dark block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
+              :class="emailError ? 'border-sienna dark:border-sienna-light' : 'border-navy/20 dark:border-poster-darkBorder'"
               :placeholder="$t('pages.login.form.email.placeholder')"
+              @input="emailError = false"
             />
           </div>
         </div>
@@ -108,12 +111,21 @@
   }
 
   const requestedLogin = ref(false)
+  const emailError = ref(false)
 
   const credentials = reactive({
     email: '',
   })
 
+  function isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
   async function requestLoginLink() {
+    if (!isValidEmail(credentials.email)) {
+      emailError.value = true
+      return
+    }
     await $fetch('/api/requestLoginLink', {
       method: 'POST',
       body: credentials,

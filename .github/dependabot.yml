@@ -4,13 +4,21 @@ updates:
     directory: "/frontend"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 99
+    groups:
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 99
 
   - package-ecosystem: "docker"
     directory: "/frontend"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 99

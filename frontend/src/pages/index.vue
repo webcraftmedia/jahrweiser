@@ -276,6 +276,17 @@
   onMounted(() => window.addEventListener('keydown', handleKeyboard))
   onUnmounted(() => window.removeEventListener('keydown', handleKeyboard))
 
+  function staggerItems() {
+    const items = document.querySelectorAll('.cv-item')
+    items.forEach((el, i) => {
+      const htmlEl = el as HTMLElement
+      htmlEl.classList.remove('item-pop')
+      htmlEl.style.animationDelay = `${i * 30}ms`
+      void htmlEl.offsetWidth
+      htmlEl.classList.add('item-pop')
+    })
+  }
+
   async function getData(startDate: Date, endDate: Date) {
     calLoading.value = true
     try {
@@ -300,6 +311,8 @@
 
       // Store raw events (colors applied via computed property)
       rawItems.value = results.flat()
+      await nextTick()
+      staggerItems()
     } catch (error) {
       console.error(error)
     } finally {
@@ -687,6 +700,16 @@
     0% { transform: rotateY(-90deg); opacity: 0; }
     40% { opacity: 1; }
     100% { transform: rotateY(0); }
+  }
+
+  /* Calendar items pop-in */
+  .cv-item.item-pop {
+    animation: itemPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  @keyframes itemPop {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
   }
 
   /* Loading overlay */

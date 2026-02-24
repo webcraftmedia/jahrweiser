@@ -8,6 +8,7 @@ describe('useColorMode', () => {
     vi.resetModules()
     localStorage.clear()
     document.documentElement.classList.remove('dark')
+    document.querySelectorAll('.color-switch-overlay').forEach((el) => el.remove())
     vi.spyOn(window, 'matchMedia').mockReturnValue({
       matches: false,
       addEventListener: vi.fn(),
@@ -57,5 +58,40 @@ describe('useColorMode', () => {
     toggle()
     expect(isDark.value).toBe(false)
     expect(localStorage.getItem('jahrweiser-dark')).toBe('false')
+  })
+
+  it('creates color-switch overlay during toggle', () => {
+    const { toggle } = useColorMode()
+    toggle()
+    const overlay = document.querySelector('.color-switch-overlay')
+    expect(overlay).toBeTruthy()
+    expect((overlay as HTMLElement).style.backgroundColor).toBe('#faf5eb')
+    // Clean up
+    overlay?.remove()
+  })
+
+  it('removes existing overlay on rapid toggle', () => {
+    const { toggle } = useColorMode()
+    toggle()
+    expect(document.querySelectorAll('.color-switch-overlay')).toHaveLength(1)
+    toggle()
+    // Old overlay removed, new one created
+    expect(document.querySelectorAll('.color-switch-overlay')).toHaveLength(1)
+    expect((document.querySelector('.color-switch-overlay') as HTMLElement).style.backgroundColor).toBe('#1a1714')
+    document.querySelector('.color-switch-overlay')?.remove()
+  })
+
+  it('skips animation when prefers-reduced-motion', () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation(
+      (query: string) =>
+        ({
+          matches: query === '(prefers-reduced-motion: reduce)',
+          addEventListener: vi.fn(),
+        }) as unknown as MediaQueryList,
+    )
+    const { isDark, toggle } = useColorMode()
+    toggle()
+    expect(isDark.value).toBe(true)
+    expect(document.querySelector('.color-switch-overlay')).toBeNull()
   })
 })

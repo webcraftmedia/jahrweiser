@@ -1,6 +1,7 @@
 import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
-import Page from './index.vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import Page from './index.vue'
 
 const mock$fetch = vi.hoisted(() => vi.fn())
 

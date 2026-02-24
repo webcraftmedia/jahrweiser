@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+
 import { loginAs, ADMIN_USER, mockAdminEndpoints } from './helpers/api-mocks'
 
 test.describe('Admin', () => {

@@ -1,5 +1,6 @@
-import { z } from 'zod'
 import ICAL from 'ical.js'
+import { z } from 'zod'
+
 import { createCalDAVAccount, findCalendars, findEvent } from '../helpers/dav'
 
 const bodySchema = z.object({

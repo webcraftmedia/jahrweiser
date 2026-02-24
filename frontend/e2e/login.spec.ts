@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+
 import { mockRequestLoginLink, mockCalendarEndpoints } from './helpers/api-mocks'
 
 test.describe('Login Page', () => {

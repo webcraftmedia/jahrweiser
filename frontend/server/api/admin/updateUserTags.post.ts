@@ -1,4 +1,8 @@
+import path from 'path'
+
+import ICAL from 'ical.js'
 import { z } from 'zod'
+
 import {
   createCardDAVAccount,
   createUser,
@@ -6,9 +10,7 @@ import {
   saveUser,
   X_ADMIN_TAGS,
 } from '~~/server/helpers/dav'
-import ICAL from 'ical.js'
 import { defaultParams, emailRenderer } from '~~/server/helpers/email'
-import path from 'path'
 
 const bodySchema = z.object({
   email: z.email(),

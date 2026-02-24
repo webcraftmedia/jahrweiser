@@ -1,6 +1,7 @@
 import { renderSuspended, mountSuspended } from '@nuxt/test-utils/runtime'
-import Page from './admin.vue'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+import Page from './admin.vue'
 
 describe('Page: Admin', () => {
   beforeEach(() => {

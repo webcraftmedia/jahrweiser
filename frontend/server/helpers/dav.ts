@@ -1,4 +1,8 @@
-import type { DAVAccount, DAVResponse } from 'tsdav'
+import { createHash } from 'node:crypto'
+import { Agent as HttpAgent } from 'node:http'
+import { Agent as HttpsAgent } from 'node:https'
+
+import ICAL from 'ical.js'
 import {
   addressBookQuery,
   calendarQuery,
@@ -9,10 +13,7 @@ import {
   updateVCard,
 } from 'tsdav'
 
-import ICAL from 'ical.js'
-import { createHash } from 'node:crypto'
-import { Agent as HttpAgent } from 'node:http'
-import { Agent as HttpsAgent } from 'node:https'
+import type { DAVAccount, DAVResponse } from 'tsdav'
 
 export const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
 export const X_LOGIN_TOKEN = 'x-login-token'

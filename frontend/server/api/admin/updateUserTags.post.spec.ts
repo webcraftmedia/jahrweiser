@@ -1,7 +1,9 @@
 // @vitest-environment node
 import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import { createMockVCard } from '../../../test/fixtures/vcard-data'
+
 import handler from './updateUserTags.post'
 
 const mockFindUserByEmail = vi.fn()

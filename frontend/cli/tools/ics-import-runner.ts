@@ -1,8 +1,10 @@
-import type { DAVAccount } from 'tsdav'
-import { createCalendarObject, fetchCalendarObjects, fetchCalendars } from 'tsdav'
-import ICAL from 'ical.js'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+
+import ICAL from 'ical.js'
+import { createCalendarObject, fetchCalendarObjects, fetchCalendars } from 'tsdav'
+
+import type { DAVAccount } from 'tsdav'
 
 interface AccountConfig {
   serverUrl: string

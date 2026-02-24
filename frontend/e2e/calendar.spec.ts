@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+
 import { loginAs, DEFAULT_USER, MOCK_EVENT_DETAIL } from './helpers/api-mocks'
 
 test.describe('Calendar', () => {

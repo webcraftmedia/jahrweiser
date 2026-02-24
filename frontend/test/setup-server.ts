@@ -1,5 +1,5 @@
-import { vi } from 'vitest'
 import { createError, defineEventHandler } from 'h3'
+import { vi } from 'vitest'
 
 // Server tests run in @vitest-environment node (set in each test file).
 // The auto-import transform from @nuxt/test-utils still resolves

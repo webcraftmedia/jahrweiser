@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+
 import { loginAs, navigateClientSide, DEFAULT_USER } from './helpers/api-mocks'
 
 test.describe('Auth Guard', () => {

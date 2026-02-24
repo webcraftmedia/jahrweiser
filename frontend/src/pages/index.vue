@@ -45,13 +45,11 @@
 </template>
 
 <script setup lang="ts">
-  import {
-    CalendarView,
-    CalendarViewHeader,
-    type ICalendarItem,
-    type INormalizedCalendarItem,
-  } from 'vue-simple-calendar'
+  import { CalendarView, CalendarViewHeader } from 'vue-simple-calendar'
+
   import Modal from '../components/Modal.vue'
+
+  import type { ICalendarItem, INormalizedCalendarItem } from 'vue-simple-calendar'
 
   // const headerProps = {}
 

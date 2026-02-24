@@ -1,6 +1,7 @@
 import { renderSuspended, mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
-import Component from './Header.vue'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+import Component from './Header.vue'
 
 const { mockClear, mockNavigateTo } = vi.hoisted(() => ({
   mockClear: vi.fn(),

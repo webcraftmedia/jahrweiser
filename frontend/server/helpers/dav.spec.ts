@@ -1,9 +1,18 @@
 // @vitest-environment node
 import '../../test/setup-server'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { DAVResponse } from 'tsdav'
 import ICAL from 'ical.js'
+import {
+  addressBookQuery,
+  calendarQuery,
+  fetchCalendarObjects,
+  fetchCalendars as tsdavFetchCalendars,
+  updateVCard,
+  createVCard as tsdavCreateVCard,
+} from 'tsdav'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import { createMockVCard } from '../../test/fixtures/vcard-data'
+
 import {
   createCalDAVAccount,
   createCardDAVAccount,
@@ -22,14 +31,8 @@ import {
   X_ROLE,
   X_ADMIN_TAGS,
 } from './dav'
-import {
-  addressBookQuery,
-  calendarQuery,
-  fetchCalendarObjects,
-  fetchCalendars as tsdavFetchCalendars,
-  updateVCard,
-  createVCard as tsdavCreateVCard,
-} from 'tsdav'
+
+import type { DAVResponse } from 'tsdav'
 
 vi.mock('tsdav', () => ({
   addressBookQuery: vi.fn(),

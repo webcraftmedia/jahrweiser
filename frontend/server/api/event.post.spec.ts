@@ -1,12 +1,14 @@
 // @vitest-environment node
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import {
   SIMPLE_EVENT,
   EVENT_WITH_DETAILS,
   RECURRING_EVENT,
   RECURRING_EVENT_WITH_DETAILS,
 } from '../../test/fixtures/ical-data'
+
 import handler from './event.post'
 
 const mockFindCalendars = vi.fn()

@@ -1,7 +1,11 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, basename } from 'node:path'
+
 import { glob } from 'tinyglobby'
-import { runIcsImport, type ImportConfig } from './tools/ics-import-runner'
+
+import { runIcsImport } from './tools/ics-import-runner'
+
+import type { ImportConfig } from './tools/ics-import-runner'
 
 const args = process.argv.slice(2)
 

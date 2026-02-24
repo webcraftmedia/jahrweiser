@@ -1,8 +1,5 @@
 // @ts-check
-import withNuxt from './.nuxt/eslint.config.mjs'
-// TODO: `node` und `promise` Module aus eslint-config-it4c sind nicht self-contained —
-// sie registrieren ihr Plugin nicht selbst (eslint-plugin-n / eslint-plugin-promise).
-// Bug in eslint-config-it4c melden, dann hier einbinden.
+import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 import {
   eslint as it4cEslint,
   security,
@@ -17,8 +14,15 @@ import {
   // Diese sind redundant zum typescript-Modul und haben teils schwächere Konfiguration
   // (z.B. no-unused-vars ohne argsIgnorePattern). In eslint-config-it4c nur vue/*-Regeln exportieren.
   vue3 as it4cVue3,
+  // TODO: importX-Modul exportiert über neostandard() auch n/*, promise/*, react/*
+  // und ESLint-Core-Regeln. In eslint-config-it4c nur import-x/*-Regeln exportieren.
+  importX as it4cImportX,
 } from 'eslint-config-it4c'
-import vueI18n from '@intlify/eslint-plugin-vue-i18n'
+
+import withNuxt from './.nuxt/eslint.config.mjs'
+// TODO: `node` und `promise` Module aus eslint-config-it4c sind nicht self-contained —
+// sie registrieren ihr Plugin nicht selbst (eslint-plugin-n / eslint-plugin-promise).
+// Bug in eslint-config-it4c melden, dann hier einbinden.
 
 // it4c ESLint-Basisregeln extrahieren (recommended + custom, kein Plugin/Parser-Overlap mit Nuxt)
 const it4cEslintRules = Object.assign({}, ...it4cEslint.map((c) => c.rules))
@@ -28,6 +32,18 @@ const it4cTsRules = Object.assign({}, ...it4cTypescript.map((c) => c.rules))
 
 // it4c Vue3-Regeln extrahieren (Plugin/Parser-Setup wird von Nuxt bereitgestellt)
 const it4cVue3Rules = Object.assign({}, ...it4cVue3.map((c) => c.rules))
+
+// it4c Import-X-Regeln extrahieren und auf Nuxt-Pluginname `import` umbenennen
+// (Nuxt registriert eslint-plugin-import-x als `import`, it4c als `import-x`)
+// TODO: importX-Modul nutzt neostandard() als Quelle für import-x-Regeln, exportiert dadurch
+// aber auch 129 Fremdregeln (n/*, promise/*, react/*, ESLint-Core). In eslint-config-it4c
+// die import-x-Regeln direkt aus eslint-plugin-import-x zusammenstellen statt über neostandard.
+// Dann kann der .filter() hier entfernt werden.
+const it4cImportRules = Object.fromEntries(
+  Object.entries(Object.assign({}, ...it4cImportX.map((c) => c.rules)))
+    .filter(([key]) => key.startsWith('import-x/'))
+    .map(([key, value]) => [key.replace('import-x/', 'import/'), value]),
+)
 
 // TODO: no-catch-all gehört nicht ins TypeScript-Modul — ist ein allgemeines JS-Pattern.
 // In eslint-config-it4c ins `eslint`-Basismodul verschieben, dann hier entfernen.
@@ -61,6 +77,34 @@ export default withNuxt(
     files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
     rules: it4cTsRules,
   },
+  // it4c Import-Regeln (Plugin wird von Nuxt als `import` bereitgestellt)
+  {
+    files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue}'],
+    rules: it4cImportRules,
+  },
+  {
+    rules: {
+      // TypeScript + Nuxt-Aliase (~, #imports, #app) werden nicht aufgelöst
+      'import/no-unresolved': 'off',
+      // Nuxt-generierter Export (withNuxt) ist default + named zugleich
+      'import/no-named-as-default': 'off',
+      // Nuxt-Konvention: relative Parent-Imports (../components/) sind üblich
+      'import/no-relative-parent-imports': 'off',
+      // .vue/.svg Extensions sind in Nuxt nötig
+      'import/extensions': 'off',
+      // Namespace-Imports für Typen (import type * as X) sind gängig
+      'import/no-namespace': 'off',
+    },
+  },
+  {
+    files: ['**/*.spec.ts', '**/*.spec.js', '**/*.test.ts', '**/*.test.js', 'test/**'],
+    rules: {
+      // Test-Setup Side-Effect-Imports (import './setup') sind üblich
+      'import/no-unassigned-import': 'off',
+      // devDependencies in Tests sind korrekt
+      'import/no-extraneous-dependencies': 'off',
+    },
+  },
   {
     files: ['**/*.vue'],
     rules: {
@@ -77,6 +121,8 @@ export default withNuxt(
       'security/detect-non-literal-fs-filename': 'off',
       // CLI-Tools brauchen Console-Output
       'no-console': 'off',
+      // CLI devDependencies sind korrekt
+      'import/no-extraneous-dependencies': 'off',
     },
   },
   {

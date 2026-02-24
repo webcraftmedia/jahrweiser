@@ -436,7 +436,7 @@
   /* --- Header --- */
 
   .dark .theme-default .cv-header {
-    background-color: #2a2520;
+    background-color: #1a1714;
     border-color: #3d3630;
   }
 
@@ -537,7 +537,7 @@
   /* --- Week numbers (dark) --- */
 
   .dark .theme-default .cv-weeknumber {
-    background-color: #2a2520;
+    background-color: #1a1714;
     border-color: #3d3630;
     color: #a8937e;
   }

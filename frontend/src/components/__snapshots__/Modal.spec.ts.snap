@@ -3,10 +3,10 @@
 exports[`Modal > renders 1`] = `
 "<div id="test-wrapper">
   <!-- Main modal -->
-  <div data-v-94fcd891="" id="default-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-    <div data-v-94fcd891="" class="relative p-4 w-full max-h-full">
+  <div data-v-94fcd891="" id="default-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div data-v-94fcd891="" class="relative p-4 w-full max-w-3xl mx-auto max-h-full">
       <!-- Modal content -->
-      <div data-v-94fcd891="" class="modal-card relative bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]">
+      <div data-v-94fcd891="" class="modal-card relative w-full bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]">
         <!-- Modal header -->
         <div data-v-94fcd891="" class="flex items-center justify-between px-5 py-3 md:px-6 md:py-4 border-b-2 border-navy/15 dark:border-poster-darkBorder bg-navy/3 dark:bg-poster-dark shrink-0">
           <div data-v-94fcd891="" class="flex items-center gap-3"><svg data-v-94fcd891="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 72.8 72.8" class="nuxt-icon nuxt-icon--fill logo-modal hidden md:block">

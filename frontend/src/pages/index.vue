@@ -88,29 +88,34 @@
   const calendars = ref<{ name: string; color: string }[]>([])
   const { isDark } = useColorMode()
 
+  /* ── Design palette — one unique color per calendar ── */
+
+  const designPalette = [
+    { light: { bg: '#f0c4a0', border: '#c2410c' }, dark: { bg: '#6b2c10', border: '#ea580c' } }, // sienna
+    { light: { bg: '#c6e08e', border: '#65a30d' }, dark: { bg: '#38520c', border: '#84cc16' } }, // olive
+    { light: { bg: '#d1b5ed', border: '#7e22ce' }, dark: { bg: '#461a75', border: '#9333ea' } }, // plum
+    { light: { bg: '#f0d898', border: '#d97706' }, dark: { bg: '#6b4509', border: '#f59e0b' } }, // mustard
+    { light: { bg: '#a5d8d2', border: '#0d9488' }, dark: { bg: '#0c524c', border: '#14b8a6' } }, // craft
+  ]
+
+  const calendarColorMap = computed(() => {
+    const map = new Map<string, (typeof designPalette)[0]>()
+    calendars.value.forEach((cal, i) => {
+      map.set(cal.color, designPalette[i % designPalette.length])
+    })
+    return map
+  })
+
   const items = computed<ICalendarItem[]>(() =>
     rawItems.value.map((item) => {
-      const color = isDark.value ? invertColor(item.color) : item.color
+      const palette = calendarColorMap.value.get(item.color) ?? designPalette[0]
+      const { bg, border } = isDark.value ? palette.dark : palette.light
       return {
         ...item,
-        style: `background-color: ${color}`,
+        style: `background-color: ${bg}; border-left-color: ${border}`,
       }
     }),
   )
-
-  function invertColor(hex: string): string {
-    // Remove # if present
-    const color = hex.replace('#', '')
-    // Parse RGB values
-    const r = parseInt(color.substring(0, 2), 16)
-    const g = parseInt(color.substring(2, 4), 16)
-    const b = parseInt(color.substring(4, 6), 16)
-    // Invert and convert back to hex
-    const inverted = (((255 - r) << 16) | ((255 - g) << 8) | (255 - b))
-      .toString(16)
-      .padStart(6, '0')
-    return `#${inverted}`
-  }
 
   function handleModalX() {
     modal.value.close()

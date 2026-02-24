@@ -185,6 +185,7 @@
   )
 
   function handleModalX() {
+    if (eventLoading.value) return
     modal.value.close()
   }
 

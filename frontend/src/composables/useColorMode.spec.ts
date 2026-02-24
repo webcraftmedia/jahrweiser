@@ -61,13 +61,18 @@ describe('useColorMode', () => {
   })
 
   it('creates color-switch overlay during toggle', () => {
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0)
+      return 0
+    })
     const { toggle } = useColorMode()
     toggle()
-    const overlay = document.querySelector('.color-switch-overlay')
+    const overlay = document.querySelector('.color-switch-overlay') as HTMLElement
     expect(overlay).toBeTruthy()
-    expect((overlay as HTMLElement).style.backgroundColor).toBe('#faf5eb')
+    expect(overlay.style.backgroundColor).toBe('#faf5eb')
+    expect(overlay.style.clipPath).toContain('circle(0%')
     // Clean up
-    overlay?.remove()
+    overlay.remove()
   })
 
   it('removes existing overlay on rapid toggle', () => {
@@ -79,6 +84,25 @@ describe('useColorMode', () => {
     expect(document.querySelectorAll('.color-switch-overlay')).toHaveLength(1)
     expect((document.querySelector('.color-switch-overlay') as HTMLElement).style.backgroundColor).toBe('#1a1714')
     document.querySelector('.color-switch-overlay')?.remove()
+  })
+
+  it('removes overlay on transitionend', () => {
+    const { toggle } = useColorMode()
+    toggle()
+    const overlay = document.querySelector('.color-switch-overlay') as HTMLElement
+    expect(overlay).toBeTruthy()
+    overlay.dispatchEvent(new Event('transitionend'))
+    expect(document.querySelector('.color-switch-overlay')).toBeNull()
+  })
+
+  it('removes overlay via timeout fallback', () => {
+    vi.useFakeTimers()
+    const { toggle } = useColorMode()
+    toggle()
+    expect(document.querySelector('.color-switch-overlay')).toBeTruthy()
+    vi.advanceTimersByTime(1100)
+    expect(document.querySelector('.color-switch-overlay')).toBeNull()
+    vi.useRealTimers()
   })
 
   it('skips animation when prefers-reduced-motion', () => {

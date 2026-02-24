@@ -23,7 +23,13 @@
                     ‹
                   </button>
                   <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
-                  <button @click="setShowDate(headerProps.currentPeriod)">
+                  <button
+                    :disabled="
+                      calendar.showDate.getMonth() === headerProps.currentPeriod.getMonth()
+                        && calendar.showDate.getFullYear() === headerProps.currentPeriod.getFullYear()
+                    "
+                    @click="setShowDate(headerProps.currentPeriod)"
+                  >
                     {{ $t('pages.index.today') }}
                   </button>
                   <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->

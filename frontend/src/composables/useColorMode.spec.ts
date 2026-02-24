@@ -8,7 +8,7 @@ describe('useColorMode', () => {
     vi.resetModules()
     localStorage.clear()
     document.documentElement.classList.remove('dark')
-    document.querySelectorAll('.color-switch-overlay').forEach((el) => el.remove())
+    document.querySelectorAll('.color-switch-overlay').forEach((el) => { el.remove() })
     vi.spyOn(window, 'matchMedia').mockReturnValue({
       matches: false,
       addEventListener: vi.fn(),
@@ -82,7 +82,9 @@ describe('useColorMode', () => {
     toggle()
     // Old overlay removed, new one created
     expect(document.querySelectorAll('.color-switch-overlay')).toHaveLength(1)
-    expect((document.querySelector('.color-switch-overlay') as HTMLElement).style.backgroundColor).toBe('#1a1714')
+    expect(
+      (document.querySelector('.color-switch-overlay') as HTMLElement).style.backgroundColor,
+    ).toBe('#1a1714')
     document.querySelector('.color-switch-overlay')?.remove()
   })
 

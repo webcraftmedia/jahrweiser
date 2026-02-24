@@ -34,7 +34,7 @@ const isValidEmail = computed(() => {
 
 async function getUserTags(email: string): Promise<Tag[]> {
   try {
-    return $fetch<Tag[]>('/api/admin/getUserTags', {
+    return await $fetch<Tag[]>('/api/admin/getUserTags', {
       method: 'POST',
       body: {
         email,

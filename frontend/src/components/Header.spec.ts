@@ -97,4 +97,17 @@ describe('Header', () => {
     await wrapper.find('#navbar-mobile nav a').trigger('click')
     expect(wrapper.find('#navbar-mobile').classes()).toContain('hidden')
   })
+
+  it('renders mobile menu content for non-admin user', async () => {
+    mockUser.value = { name: 'Regular', email: 'user@example.com', role: 'user' }
+    const wrapper = await mountSuspended(Component)
+    // Open mobile menu
+    await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('hidden')
+    // Admin link should not be in mobile menu
+    const mobileLinks = wrapper.findAll('#navbar-mobile nav a')
+    expect(mobileLinks.length).toBe(0)
+    // Logout button should still be present
+    expect(wrapper.find('#navbar-mobile nav button').exists()).toBe(true)
+  })
 })

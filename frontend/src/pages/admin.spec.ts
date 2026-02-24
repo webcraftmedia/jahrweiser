@@ -60,14 +60,26 @@ describe('Page: Admin', () => {
     expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(false)
   })
 
-  it('closes mobile menu when clicking navigation link', async () => {
+  it('closes mobile menu when clicking NuxtLink', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin' })
     await wrapper.find('button').trigger('click')
     expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(true)
-    // Click the NuxtLink inside the mobile drawer nav
+    // Click the NuxtLink (first non-external item) inside the mobile drawer nav
     const mobileNav = wrapper.find('.fixed.inset-y-0 nav')
-    const link = mobileNav.find('a')
-    await link.trigger('click')
+    const links = mobileNav.findAll('a')
+    // First link is NuxtLink (/admin/members/add), second is external (/admin/cal/)
+    await links[0]!.trigger('click')
+    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(false)
+  })
+
+  it('closes mobile menu when clicking external link', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/admin' })
+    await wrapper.find('button').trigger('click')
+    expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(true)
+    const mobileNav = wrapper.find('.fixed.inset-y-0 nav')
+    const links = mobileNav.findAll('a')
+    // Second link is external (/admin/cal/)
+    await links[1]!.trigger('click')
     expect(wrapper.find('.fixed.inset-y-0').exists()).toBe(false)
   })
 })

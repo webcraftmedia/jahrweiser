@@ -220,6 +220,32 @@ describe('Page: Add', () => {
     })
   })
 
+  it('handles getUserTags error gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/admin/getUserTags') return Promise.reject(new Error('fetch error'))
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
+    await wrapper.find('#email').setValue('test@example.com')
+    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalled()
+    })
+    consoleSpy.mockRestore()
+  })
+
+  it('toggles tag checkboxes', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
+    await wrapper.find('#email').setValue('test@example.com')
+    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await vi.waitFor(() => expect(wrapper.find('#tag-0').exists()).toBe(true))
+    const checkbox = wrapper.find('#tag-0')
+    const initialState = (checkbox.element as HTMLInputElement).checked
+    await checkbox.setValue(!initialState)
+    expect((checkbox.element as HTMLInputElement).checked).toBe(!initialState)
+  })
+
   it('toggles sendMail checkbox', async () => {
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/admin/getUserTags') return Promise.resolve([])

@@ -148,4 +148,42 @@ describe('Page: Index', () => {
       expect(items[0]!.style).toContain('#00ffff')
     }
   })
+
+  it('reacts to dark mode change event', async () => {
+    let changeListener: ((e: { matches: boolean }) => void) | undefined
+    window.matchMedia = vi.fn().mockReturnValue({
+      matches: false,
+      addEventListener: (_event: string, fn: (e: { matches: boolean }) => void) => {
+        changeListener = fn
+      },
+    })
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+    })
+    // Initially light mode - colors unchanged
+    let calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    let items = calendarView.props('items') as { style: string }[]
+    if (items.length > 0) {
+      expect(items[0]!.style).toContain('#ff0000')
+    }
+    // Trigger dark mode change
+    changeListener!({ matches: true })
+    await nextTick()
+    calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    items = calendarView.props('items') as { style: string }[]
+    if (items.length > 0) {
+      expect(items[0]!.style).toContain('#00ffff')
+    }
+  })
+
+  it('handles getData error gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    mock$fetch.mockRejectedValue(new Error('network error'))
+    await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalled()
+    })
+    consoleSpy.mockRestore()
+  })
 })

@@ -2,7 +2,7 @@
 <template>
   <footer class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-3">
     <div
-      class="max-w-screen-xl mx-auto px-4 flex items-center justify-between text-xs text-navy/60 dark:text-poster-darkMuted"
+      class="max-w-screen-xl mx-auto px-4 flex items-center justify-between text-xs text-navy/60 dark:text-ivory/60"
     >
       <span>
         {{ $t('components.Footer.copyright') }}
@@ -39,7 +39,7 @@
           </button>
         </div>
         <button
-          class="text-navy/60 dark:text-poster-darkMuted hover:text-navy dark:hover:text-ivory transition-colors p-1.5 bg-navy/10 dark:bg-ivory/10 rounded-lg"
+          class="text-navy/60 dark:text-ivory/60 hover:text-navy dark:hover:text-ivory transition-colors p-1.5 bg-navy/10 dark:bg-ivory/10 rounded-lg"
           :title="$t('components.Footer.dark-mode')"
           :aria-label="$t('components.Footer.dark-mode')"
           @click="toggleDark"
@@ -96,6 +96,6 @@
   @reference "tailwindcss";
 
   .zoom-btn {
-    @apply px-2 py-0.5 rounded text-navy/60 dark:text-poster-darkMuted hover:bg-navy/10 dark:hover:bg-ivory/10 hover:text-navy dark:hover:text-ivory transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed;
+    @apply px-2 py-0.5 rounded text-navy/60 dark:text-ivory/60 hover:bg-navy/10 dark:hover:bg-ivory/10 hover:text-navy dark:hover:text-ivory transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed;
   }
 </style>

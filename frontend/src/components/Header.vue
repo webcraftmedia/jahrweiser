@@ -161,3 +161,19 @@
     height: 56px;
   }
 </style>
+
+<style>
+  .dark .logo-bar circle,
+  .dark .logo-hero circle {
+    fill: transparent !important;
+    filter: none !important;
+  }
+  .dark .logo-bar [aria-label='G'],
+  .dark .logo-hero [aria-label='G'] {
+    fill: #c2410c !important;
+  }
+  .dark .logo-bar [aria-label='&'],
+  .dark .logo-hero [aria-label='&'] {
+    fill: #d97706 !important;
+  }
+</style>

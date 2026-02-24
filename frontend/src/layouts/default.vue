@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col h-screen bg-ivory dark:bg-poster-dark relative">
     <Header />
-    <div class="content flex-1 overflow-y-auto">
+    <div class="content flex-1 overflow-y-auto flex flex-col">
       <div
-        class="max-w-screen-xl flex flex-wrap justify-between mx-auto w-full min-h-full"
+        class="max-w-screen-xl flex flex-wrap justify-between mx-auto w-full flex-1"
         :style="zoomLevel !== 1 ? { zoom: zoomLevel } : undefined"
       >
         <slot />
@@ -38,6 +38,6 @@
 <style scoped>
   @reference "tailwindcss";
   .content {
-    @apply mt-14 mb-0;
+    @apply mt-16 mb-0;
   }
 </style>

@@ -1,7 +1,9 @@
 // @vitest-environment node
 import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import { createMockVCard } from '../../../test/fixtures/vcard-data'
+
 import handler from './getUserTags.post'
 
 const mockFindUserByEmail = vi.fn()
@@ -27,7 +29,7 @@ describe('getUserTags.post', () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
     } as never)
-    await expect(handlerFn({})).rejects.toThrow('Not Authorized')
+    await expect(handlerFn({})).rejects.toThrowError('Not Authorized')
   })
 
   it('throws when admin not found in DAV', async () => {
@@ -35,7 +37,7 @@ describe('getUserTags.post', () => {
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
     } as never)
     mockFindUserByEmail.mockResolvedValue(false)
-    await expect(handlerFn({})).rejects.toThrow('Huston, we have a problem')
+    await expect(handlerFn({})).rejects.toThrowError('Huston, we have a problem')
   })
 
   it('returns empty array when admin has no adminTags', async () => {
@@ -52,7 +54,7 @@ describe('getUserTags.post', () => {
       .mockResolvedValueOnce(false)
 
     const result = (await handlerFn({})) as { name: string; state: boolean }[]
-    expect(result).toEqual([])
+    expect(result).toStrictEqual([])
   })
 
   it('returns all tags with state:false when user not found', async () => {
@@ -70,7 +72,7 @@ describe('getUserTags.post', () => {
       .mockResolvedValueOnce(false)
 
     const result = (await handlerFn({})) as { name: string; state: boolean }[]
-    expect(result).toEqual([
+    expect(result).toStrictEqual([
       { name: 'Tag1', state: false },
       { name: 'Tag2', state: false },
     ])
@@ -97,7 +99,7 @@ describe('getUserTags.post', () => {
       })
 
     const result = (await handlerFn({})) as { name: string; state: boolean }[]
-    expect(result).toEqual([
+    expect(result).toStrictEqual([
       { name: 'Tag1', state: true },
       { name: 'Tag2', state: false },
       { name: 'Tag3', state: true },

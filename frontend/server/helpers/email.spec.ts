@@ -1,6 +1,7 @@
 // @vitest-environment node
 import '../../test/setup-server'
 import { describe, it, expect, vi } from 'vitest'
+
 import { emailRenderer, defaultParams } from './email'
 
 const { mockSend, mockCreateTransport } = vi.hoisted(() => ({

@@ -1,22 +1,24 @@
-import type { DAVAccount } from 'tsdav'
-import { createCalendarObject, fetchCalendarObjects, fetchCalendars } from 'tsdav'
-import ICAL from 'ical.js'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-type AccountConfig = {
+import ICAL from 'ical.js'
+import { createCalendarObject, fetchCalendarObjects, fetchCalendars } from 'tsdav'
+
+import type { DAVAccount } from 'tsdav'
+
+interface AccountConfig {
   serverUrl: string
   username: string
   password: string
 }
 
-export type ImportConfig = {
+export interface ImportConfig {
   url: string
   account: string
   calendar: string
 }
 
-export type ImportResult = {
+export interface ImportResult {
   success: boolean
   imported: number
   skipped: number
@@ -35,7 +37,7 @@ const createHeaders = (account: DAVAccount) => {
   const username = account.credentials?.username ?? ''
   const password = account.credentials?.password ?? ''
   return {
-    authorization: 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))),
+    authorization: 'Basic ' + Buffer.from(username + ':' + password).toString('base64'),
   }
 }
 
@@ -116,6 +118,7 @@ export async function runIcsImport(config: ImportConfig): Promise<ImportResult> 
 
   const targetCalendar = calendars.find((cal) => cal.displayName === calendarName)
   if (!targetCalendar) {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string -- displayName is always a string at runtime
     const available = calendars.map((cal) => cal.displayName).join(', ')
     return {
       success: false,

@@ -1,12 +1,14 @@
 // @vitest-environment node
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import {
   SIMPLE_EVENT,
   EVENT_WITH_DETAILS,
   RECURRING_EVENT,
   RECURRING_EVENT_WITH_DETAILS,
 } from '../../test/fixtures/ical-data'
+
 import handler from './event.post'
 
 const mockFindCalendars = vi.fn()
@@ -95,12 +97,12 @@ describe('event.post', () => {
 
   it('throws when calendar not found', async () => {
     mockFindCalendars.mockResolvedValue([])
-    await expect(handlerFn({})).rejects.toThrow('Calendar not found')
+    await expect(handlerFn({})).rejects.toThrowError('Calendar not found')
   })
 
   it('throws when event not found', async () => {
     mockFindEvent.mockResolvedValue([])
-    await expect(handlerFn({})).rejects.toThrow('event not found')
+    await expect(handlerFn({})).rejects.toThrowError('event not found')
   })
 
   it('throws when no vevent in calendar data', async () => {
@@ -109,6 +111,6 @@ VERSION:2.0
 PRODID:-//Test//Test//EN
 END:VCALENDAR`
     mockFindEvent.mockResolvedValue([{ data: noVevent }])
-    await expect(handlerFn({})).rejects.toThrow('event not found')
+    await expect(handlerFn({})).rejects.toThrowError('event not found')
   })
 })

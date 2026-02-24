@@ -1,6 +1,7 @@
 import { renderSuspended } from '@nuxt/test-utils/runtime'
-import App from './app.vue'
 import { describe, expect, it } from 'vitest'
+
+import App from './app.vue'
 
 describe('App', () => {
   it('renders default page', async () => {

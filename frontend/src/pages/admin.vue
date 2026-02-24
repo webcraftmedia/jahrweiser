@@ -1,31 +1,31 @@
 <script setup lang="ts">
-definePageMeta({
-  middleware: ['authenticated', 'admin'],
-})
+  definePageMeta({
+    middleware: ['authenticated', 'admin'],
+  })
 
-const route = useRoute()
+  const route = useRoute()
 
-const { t } = useI18n()
+  const { t } = useI18n()
 
-const menuItems = ref([
-  { label: t('pages.admin.menu.members-add'), path: '/admin/members/add' },
-  { label: t('pages.admin.menu.calendar'), path: '/admin/cal/', external: true },
-])
+  const menuItems = ref([
+    { label: t('pages.admin.menu.members-add'), path: '/admin/members/add' },
+    { label: t('pages.admin.menu.calendar'), path: '/admin/cal/', external: true },
+  ])
 
-const mobileMenuOpen = ref(false)
+  const mobileMenuOpen = ref(false)
 
-const toggleMobileMenu = () => {
-  mobileMenuOpen.value = !mobileMenuOpen.value
-}
+  const toggleMobileMenu = () => {
+    mobileMenuOpen.value = !mobileMenuOpen.value
+  }
 
-const isActive = (path: string) => {
-  return route.path === path
-}
+  const isActive = (path: string) => {
+    return route.path === path
+  }
 
-const currentPageTitle = computed(() => {
-  const current = menuItems.value.find((item) => item.path === route.path)
-  return current ? current.label : ''
-})
+  const currentPageTitle = computed(() => {
+    const current = menuItems.value.find((item) => item.path === route.path)
+    return current ? current.label : ''
+  })
 </script>
 
 <template>
@@ -168,9 +168,9 @@ const currentPageTitle = computed(() => {
 </template>
 
 <style scoped>
-.full-height {
-  height: 100%;
-  height: -moz-available;
-  height: -webkit-fill-available;
-}
+  .full-height {
+    height: 100%;
+    height: -moz-available;
+    height: -webkit-fill-available;
+  }
 </style>

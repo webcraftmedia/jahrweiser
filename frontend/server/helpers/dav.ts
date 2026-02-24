@@ -1,4 +1,8 @@
-import type { DAVAccount, DAVResponse } from 'tsdav'
+import { createHash } from 'node:crypto'
+import { Agent as HttpAgent } from 'node:http'
+import { Agent as HttpsAgent } from 'node:https'
+
+import ICAL from 'ical.js'
 import {
   addressBookQuery,
   calendarQuery,
@@ -9,10 +13,7 @@ import {
   updateVCard,
 } from 'tsdav'
 
-import ICAL from 'ical.js'
-import { createHash } from 'node:crypto'
-import { Agent as HttpAgent } from 'node:http'
-import { Agent as HttpsAgent } from 'node:https'
+import type { DAVAccount, DAVResponse } from 'tsdav'
 
 export const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
 export const X_LOGIN_TOKEN = 'x-login-token'
@@ -21,7 +22,7 @@ export const X_LOGIN_DISABLED = 'x-login-disabled'
 export const X_ROLE = 'x-role'
 export const X_ADMIN_TAGS = 'x-admin-tags'
 
-export type DAV_CONFIG = {
+export interface DAV_CONFIG {
   DAV_USERNAME: string
   DAV_PASSWORD: string
   DAV_URL: string
@@ -59,7 +60,9 @@ const httpsAgent = new HttpsAgent({
 
 const createTimeoutSignal = (timeoutMs: number) => {
   const controller = new AbortController()
-  setTimeout(() => controller.abort(), timeoutMs)
+  setTimeout(() => {
+    controller.abort()
+  }, timeoutMs)
   return controller.signal
 }
 
@@ -72,7 +75,7 @@ export const headers = (account: DAVAccount) => {
   const username = account.credentials?.username ?? ''
   const password = account.credentials?.password ?? ''
   return {
-    authorization: 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))),
+    authorization: 'Basic ' + Buffer.from(username + ':' + password).toString('base64'),
   }
 }
 
@@ -87,13 +90,13 @@ function formatDate(date: Date): string {
   return `${year}${month}${day}T${hours}${minutes}${seconds}`
 }
 
-export const findCalendars = (account: DAVAccount) =>
+export const findCalendars = async (account: DAVAccount) =>
   fetchCalendars({
     account,
     headers: headers(account),
   })
 
-export const findEvents = (account: DAVAccount, url: string, from: Date, to: Date) =>
+export const findEvents = async (account: DAVAccount, url: string, from: Date, to: Date) =>
   calendarQuery({
     url,
     props: {
@@ -123,7 +126,7 @@ export const findEvents = (account: DAVAccount, url: string, from: Date, to: Dat
     fetchOptions: getFetchOptions(),
   })
 
-export const findEvent = (account: DAVAccount, url: string, id: string) =>
+export const findEvent = async (account: DAVAccount, url: string, id: string) =>
   fetchCalendarObjects({
     calendar: {
       url,
@@ -195,10 +198,10 @@ export const findUserByEmail = async (account: DAVAccount, email: string) => {
   }
 }
 
-export const saveUser = (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>
+export const saveUser = async (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>
   updateVCard({
     vCard: {
-      url: account.serverUrl + user.href,
+      url: account.serverUrl + user.href!,
       data: vcard,
       etag: user.props?.getetag,
     },
@@ -213,7 +216,7 @@ export const createUser = async (account: DAVAccount, vcard: ICAL.Component) =>
     },
     filename:
       createHash('sha256')
-        .update(vcard.toString() + new Date().getTime())
+        .update(vcard.toString() + String(new Date().getTime()))
         .digest('hex') + '.vcf',
     vCardString: vcard.toString(),
     headers: headers(account),

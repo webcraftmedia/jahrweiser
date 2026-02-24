@@ -1,6 +1,7 @@
 import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
-import Component from './Modal.vue'
 import { describe, expect, it } from 'vitest'
+
+import Component from './Modal.vue'
 
 describe('Modal', () => {
   it('renders', async () => {

@@ -1,7 +1,9 @@
 // @vitest-environment node
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import { createMockVCard } from '../../test/fixtures/vcard-data'
+
 import handler, { MAX_AGE } from './redeemLoginLink.post'
 
 const mockFindUserByToken = vi.fn()
@@ -34,7 +36,7 @@ describe('redeemLoginLink.post', () => {
   })
 
   it('throws 401 when user not found', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     mockFindUserByToken.mockResolvedValue(false)
     await expect(handlerFn({})).rejects.toMatchObject({
       statusCode: 401,
@@ -44,7 +46,7 @@ describe('redeemLoginLink.post', () => {
   })
 
   it('throws 401 when account disabled', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const vcard = createMockVCard({
       email: 'test@example.com',
       fn: 'Test',
@@ -77,7 +79,7 @@ describe('redeemLoginLink.post', () => {
 
     const event = {}
     const result = await handlerFn(event)
-    expect(result).toEqual({})
+    expect(result).toStrictEqual({})
     expect(mockSaveUser).toHaveBeenCalled()
     expect(globalThis.setUserSession).toHaveBeenCalledWith(
       event,
@@ -106,7 +108,7 @@ describe('redeemLoginLink.post', () => {
 
     await handlerFn({})
     const sessionCall = vi.mocked(globalThis.setUserSession).mock.calls[0]!
-    expect(sessionCall[1]).toEqual({
+    expect(sessionCall[1]).toStrictEqual({
       user: { name: 'Regular User', email: 'user@example.com', role: 'user' },
     })
   })
@@ -126,7 +128,7 @@ describe('redeemLoginLink.post', () => {
 
     await handlerFn({})
     const sessionCall = vi.mocked(globalThis.setUserSession).mock.calls[0]!
-    expect(sessionCall[1]).toEqual({
+    expect(sessionCall[1]).toStrictEqual({
       user: { name: 'Admin User', email: 'admin@example.com', role: 'admin' },
     })
   })

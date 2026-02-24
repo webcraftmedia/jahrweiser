@@ -58,29 +58,29 @@
   />
 </template>
 
-<script setup>
-/*const props = defineProps({
+<script setup lang="ts">
+  /*const props = defineProps({
   open: { type: Boolean, required: true },
 })*/
 
-const emit = defineEmits(['x'])
+  const emit = defineEmits(['x'])
 
-function handleX() {
-  emit('x')
-}
+  function handleX() {
+    emit('x')
+  }
 
-const isOpen = ref(false)
+  const isOpen = ref(false)
 
-function open() {
-  isOpen.value = true
-}
+  function open() {
+    isOpen.value = true
+  }
 
-function close() {
-  isOpen.value = false
-}
+  function close() {
+    isOpen.value = false
+  }
 
-defineExpose({
-  open,
-  close,
-})
+  defineExpose({
+    open,
+    close,
+  })
 </script>

@@ -1,5 +1,6 @@
-import { z } from 'zod'
 import ICAL from 'ical.js'
+import { z } from 'zod'
+
 import {
   createCalDAVAccount,
   createCardDAVAccount,
@@ -15,6 +16,11 @@ const bodySchema = z.object({
 })
 
 const config = useRuntimeConfig()
+
+function hrefToId(href: string) {
+  const lastSlashIndex = href.lastIndexOf('/')
+  return href.slice(lastSlashIndex + 1, -4)
+}
 
 export default defineEventHandler(async (event) => {
   // make sure the user is logged in
@@ -55,9 +61,9 @@ export default defineEventHandler(async (event) => {
       if (!showPrivate && vevent.getFirstProperty('class')?.getFirstValue() === 'PRIVATE') {
         return
       }
-      const event = new ICAL.Event(vevent)
+      const calEvent = new ICAL.Event(vevent)
 
-      if (event.isRecurring()) {
+      if (calEvent.isRecurring()) {
         // Expandiere wiederkehrende Events
         const expand = new ICAL.RecurExpansion({
           component: vevent,
@@ -66,13 +72,14 @@ export default defineEventHandler(async (event) => {
 
         let count = 0
         let next
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
         while ((next = expand.next())) {
           const occurrence = new Date(next.toString() + 'Z') // Fix German Time
           count += 1
           // Nur Events im gewünschten Zeitraum
           if (occurrence > endDate) break
           if (occurrence >= startDate) {
-            const endDate = new Date(occurrence.getTime() + event.duration.toSeconds() * 1000)
+            const recEndDate = new Date(occurrence.getTime() + calEvent.duration.toSeconds() * 1000)
             results.push({
               calendar: selectedCalendar.displayName,
               color:
@@ -82,16 +89,16 @@ export default defineEventHandler(async (event) => {
               id: hrefToId(data.href as string),
               occurrence: count,
               startDate: occurrence,
-              endDate,
-              title: event.summary,
+              endDate: recEndDate,
+              title: calEvent.summary,
               isRecurring: true,
             })
           }
         }
       } else {
-        const sd = event.startDate.toJSDate()
-        const ed = event.endDate.toJSDate()
-        if (event.duration.days > 0 || event.duration.weeks > 0) {
+        const sd = calEvent.startDate.toJSDate()
+        const ed = calEvent.endDate.toJSDate()
+        if (calEvent.duration.days > 0 || calEvent.duration.weeks > 0) {
           ed.setMilliseconds(ed.getMilliseconds() - 1) // Correct Full day thingy
         }
         results.push({
@@ -103,7 +110,7 @@ export default defineEventHandler(async (event) => {
           id: hrefToId(data.href as string),
           startDate: sd,
           endDate: ed,
-          title: event.summary,
+          title: calEvent.summary,
         })
       }
     }
@@ -111,8 +118,3 @@ export default defineEventHandler(async (event) => {
 
   return results
 })
-
-function hrefToId(href: string) {
-  const lastSlashIndex = href.lastIndexOf('/')
-  return href.slice(lastSlashIndex + 1, -4)
-}

@@ -1,6 +1,7 @@
 import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
-import Page from './add.vue'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+import Page from './add.vue'
 
 const mock$fetch = vi.fn()
 vi.stubGlobal('$fetch', mock$fetch)
@@ -85,7 +86,9 @@ describe('Page: Add', () => {
     // Step 1
     await wrapper.find('#email').setValue('test@example.com')
     await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
-    await vi.waitFor(() => expect(wrapper.find('#tag-0').exists()).toBe(true))
+    await vi.waitFor(() => {
+      expect(wrapper.find('#tag-0').exists()).toBe(true)
+    })
     // Step 2
     const step2Button = wrapper
       .findAll('button[type="button"]')
@@ -198,7 +201,9 @@ describe('Page: Add', () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
     await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
-    await vi.waitFor(() => expect(wrapper.find('#tag-0').exists()).toBe(true))
+    await vi.waitFor(() => {
+      expect(wrapper.find('#tag-0').exists()).toBe(true)
+    })
     // Click edit button to go back to step 1
     const editButton = wrapper
       .findAll('button[type="button"]')
@@ -212,7 +217,9 @@ describe('Page: Add', () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
     await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
-    await vi.waitFor(() => expect(wrapper.find('#tag-0').exists()).toBe(true))
+    await vi.waitFor(() => {
+      expect(wrapper.find('#tag-0').exists()).toBe(true)
+    })
     const step2Button = wrapper
       .findAll('button[type="button"]')
       .find((b) => b.text().includes('step2.button-next'))
@@ -249,7 +256,7 @@ describe('Page: Add', () => {
   })
 
   it('handles getUserTags error gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/admin/getUserTags') return Promise.reject(new Error('fetch error'))
       return Promise.resolve({})
@@ -281,7 +288,9 @@ describe('Page: Add', () => {
     expect(wrapper.find('.animate-spin').exists()).toBe(true)
     // Resolve the pending request
     resolveGetUserTags([{ name: 'Calendar A', state: false }])
-    await vi.waitFor(() => expect(wrapper.find('#tag-0').exists()).toBe(true))
+    await vi.waitFor(() => {
+      expect(wrapper.find('#tag-0').exists()).toBe(true)
+    })
   })
 
   it('shows submitting state', async () => {
@@ -315,13 +324,15 @@ describe('Page: Add', () => {
     expect(wrapper.find('.animate-spin').exists()).toBe(true)
     // Resolve
     resolveSubmit(true)
-    await vi.waitFor(() => expect(wrapper.text()).toContain('result.success-with-email'))
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('result.success-with-email')
+    })
   })
 
   it('shows error without message', async () => {
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/admin/getUserTags') return Promise.resolve([])
-      if (url === '/api/admin/updateUserTags') return Promise.reject({ noMessage: true })
+      if (url === '/api/admin/updateUserTags') return Promise.reject(new Error())
       return Promise.resolve({})
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
@@ -370,13 +381,17 @@ describe('Page: Add', () => {
       .findAll('button[type="button"]')
       .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
-    await vi.waitFor(() => expect(wrapper.text()).toContain('result.error-title'))
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('result.error-title')
+    })
     // Click retry button
     const retryButton = wrapper
       .findAll('button[type="button"]')
       .find((b) => b.text().includes('result.button-retry'))
     await retryButton!.trigger('click')
-    await vi.waitFor(() => expect(wrapper.text()).toContain('result.success-with-email'))
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('result.success-with-email')
+    })
   })
 
   it('retries from success state', async () => {
@@ -400,20 +415,26 @@ describe('Page: Add', () => {
       .findAll('button[type="button"]')
       .find((b) => b.text().includes('step3.button-submit'))
     await submitButton!.trigger('click')
-    await vi.waitFor(() => expect(wrapper.text()).toContain('result.success-with-email'))
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('result.success-with-email')
+    })
     // Click retry link (for success state)
     const retryLink = wrapper
       .findAll('button[type="button"]')
       .find((b) => b.text().includes('result.button-retry'))
     await retryLink!.trigger('click')
-    await vi.waitFor(() => expect(wrapper.text()).toContain('result.success-with-email'))
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('result.success-with-email')
+    })
   })
 
   it('toggles tag checkboxes', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
     await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
-    await vi.waitFor(() => expect(wrapper.find('#tag-0').exists()).toBe(true))
+    await vi.waitFor(() => {
+      expect(wrapper.find('#tag-0').exists()).toBe(true)
+    })
     const checkbox = wrapper.find('#tag-0')
     const initialState = (checkbox.element as HTMLInputElement).checked
     await checkbox.setValue(!initialState)

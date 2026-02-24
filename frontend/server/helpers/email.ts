@@ -1,8 +1,11 @@
+import path from 'path'
+
 import Email from 'email-templates'
 import { createTransport } from 'nodemailer'
-import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
-import path from 'path'
+
 import { MAX_AGE } from '../api/redeemLoginLink.post'
+
+import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
 
 const from = {
   name: 'Jahrweiser' /* CONFIG.EMAIL_FROM_NAME */,

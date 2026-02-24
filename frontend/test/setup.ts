@@ -1,10 +1,9 @@
 // localStorage is patched in test/preload.ts (runs before module evaluation)
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { expect, vi } from 'vitest'
 import { config } from '@vue/test-utils'
+import { expect, vi } from 'vitest'
 
 // Fail tests on Vue warnings and errors via Vue's built-in handlers
-config.global.config ??= {}
 config.global.config.warnHandler = (msg, _instance, trace) => {
   throw new Error(`[Vue warn]: ${msg}\n${trace}`)
 }
@@ -18,7 +17,7 @@ config.global.config.errorHandler = (err) => {
 const _consoleError = console.error
 console.error = (...args: unknown[]) => {
   _consoleError(...args)
-  if (args.some((arg) => typeof arg === 'string' && /\[nuxt\]/.test(arg))) {
+  if (args.some((arg) => typeof arg === 'string' && arg.includes('[nuxt]'))) {
     throw new Error(`Nuxt error: ${args.map(String).join(' ')}`)
   }
 }

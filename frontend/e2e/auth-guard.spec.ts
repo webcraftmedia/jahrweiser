@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+
 import { loginAs, navigateClientSide, DEFAULT_USER } from './helpers/api-mocks'
 
 test.describe('Auth Guard', () => {
@@ -30,7 +31,7 @@ test.describe('Auth Guard', () => {
     await loginAs(page, DEFAULT_USER)
 
     // Override session mock: DELETE clears, subsequent GETs return empty
-    await page.route('**/api/_auth/session', (route) => {
+    await page.route('**/api/_auth/session', async (route) => {
       if (route.request().method() === 'DELETE') {
         return route.fulfill({
           status: 200,

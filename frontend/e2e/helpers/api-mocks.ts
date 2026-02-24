@@ -49,9 +49,35 @@ export const MOCK_TAGS = [
   { name: 'Vorstand', state: true },
 ]
 
+export async function mockCalendarEndpoints(page: Page) {
+  await page.route('**/api/calendars', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_CALENDARS),
+    }),
+  )
+
+  await page.route('**/api/calendar', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_EVENTS),
+    }),
+  )
+
+  await page.route('**/api/event', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_EVENT_DETAIL),
+    }),
+  )
+}
+
 export async function loginAs(page: Page, user: typeof DEFAULT_USER) {
   // Mock session endpoint — returns authenticated user
-  await page.route('**/api/_auth/session', (route) =>
+  await page.route('**/api/_auth/session', async (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -60,7 +86,7 @@ export async function loginAs(page: Page, user: typeof DEFAULT_USER) {
   )
 
   // Mock token redemption
-  await page.route('**/api/redeemLoginLink', (route) =>
+  await page.route('**/api/redeemLoginLink', async (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -78,34 +104,8 @@ export async function loginAs(page: Page, user: typeof DEFAULT_USER) {
   await page.waitForURL('/', { timeout: 15_000 })
 }
 
-export async function mockCalendarEndpoints(page: Page) {
-  await page.route('**/api/calendars', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_CALENDARS),
-    }),
-  )
-
-  await page.route('**/api/calendar', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_EVENTS),
-    }),
-  )
-
-  await page.route('**/api/event', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_EVENT_DETAIL),
-    }),
-  )
-}
-
 export async function mockAdminEndpoints(page: Page) {
-  await page.route('**/api/admin/getUserTags', (route) =>
+  await page.route('**/api/admin/getUserTags', async (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -113,7 +113,7 @@ export async function mockAdminEndpoints(page: Page) {
     }),
   )
 
-  await page.route('**/api/admin/updateUserTags', (route) =>
+  await page.route('**/api/admin/updateUserTags', async (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -132,7 +132,7 @@ export async function navigateClientSide(page: Page, path: string) {
 }
 
 export async function mockRequestLoginLink(page: Page) {
-  await page.route('**/api/requestLoginLink', (route) =>
+  await page.route('**/api/requestLoginLink', async (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',

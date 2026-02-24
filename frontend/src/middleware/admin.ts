@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware(() => {
+export default defineNuxtRouteMiddleware(async () => {
   const { user } = useUserSession()
 
   if (user.value?.role !== 'admin') {

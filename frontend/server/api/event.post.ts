@@ -1,5 +1,6 @@
-import { z } from 'zod'
 import ICAL from 'ical.js'
+import { z } from 'zod'
+
 import { createCalDAVAccount, findCalendars, findEvent } from '../helpers/dav'
 
 const bodySchema = z.object({
@@ -59,23 +60,23 @@ export default defineEventHandler(async (event) => {
     const rStartDate = new Date(next.toString() + 'Z') // Fix German Time
     const rEndDate = new Date(rStartDate.getTime() + e.duration.toSeconds() * 1000)
     return {
-      description: e.description?.toString(),
+      description: e.description,
       duration: e.duration.toString(),
       endDate: rEndDate.toISOString().slice(0, 19),
-      location: e.location?.toString(),
+      location: e.location,
       startDate: rStartDate.toISOString().slice(0, 19),
-      summary: e.summary?.toString(),
-      uid: e.uid?.toString(),
+      summary: e.summary,
+      uid: e.uid,
     }
   } else {
     return {
-      description: e.description?.toString(),
+      description: e.description,
       duration: e.duration.toString(),
-      endDate: e.endDate?.toString(),
-      location: e.location?.toString(),
-      startDate: e.startDate?.toString(),
-      summary: e.summary?.toString(),
-      uid: e.uid?.toString(),
+      endDate: e.endDate.toString(),
+      location: e.location,
+      startDate: e.startDate.toString(),
+      summary: e.summary,
+      uid: e.uid,
     }
   }
 })

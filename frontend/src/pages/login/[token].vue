@@ -60,29 +60,29 @@
 </template>
 
 <script setup lang="ts">
-const { loggedIn, fetch: refreshSession } = useUserSession()
+  const { loggedIn, fetch: refreshSession } = useUserSession()
 
-if (loggedIn.value) {
-  navigateTo('/')
-}
-
-const route = useRoute()
-
-const success = ref(true)
-
-const goHome = () => navigateTo('/')
-
-onMounted(async () => {
-  try {
-    await $fetch('/api/redeemLoginLink', {
-      method: 'POST',
-      body: route.params,
-    })
-    await refreshSession()
-    await navigateTo('/')
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
-    success.value = false
+  if (loggedIn.value) {
+    void navigateTo('/')
   }
-})
+
+  const route = useRoute()
+
+  const success = ref(true)
+
+  const goHome = () => navigateTo('/')
+
+  onMounted(async () => {
+    try {
+      await $fetch('/api/redeemLoginLink', {
+        method: 'POST',
+        body: route.params,
+      })
+      await refreshSession()
+      await navigateTo('/')
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      success.value = false
+    }
+  })
 </script>

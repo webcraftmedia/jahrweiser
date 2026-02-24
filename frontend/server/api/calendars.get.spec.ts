@@ -1,6 +1,7 @@
 // @vitest-environment node
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import handler from './calendars.get'
 
 const mockFindCalendars = vi.fn()
@@ -27,7 +28,7 @@ describe('calendars.get', () => {
       { displayName: 'Personal', calendarColor: '#00ff00' },
     ])
     const result = await handlerFn({})
-    expect(result).toEqual([
+    expect(result).toStrictEqual([
       { name: 'Work', color: '#ff0000' },
       { name: 'Personal', color: '#00ff00' },
     ])
@@ -36,12 +37,12 @@ describe('calendars.get', () => {
   it('returns default color when calendar has no color', async () => {
     mockFindCalendars.mockResolvedValue([{ displayName: 'NoColor', calendarColor: undefined }])
     const result = await handlerFn({})
-    expect(result).toEqual([{ name: 'NoColor', color: '#e7e7ff' }])
+    expect(result).toStrictEqual([{ name: 'NoColor', color: '#e7e7ff' }])
   })
 
   it('returns empty array for empty list', async () => {
     mockFindCalendars.mockResolvedValue([])
     const result = await handlerFn({})
-    expect(result).toEqual([])
+    expect(result).toStrictEqual([])
   })
 })

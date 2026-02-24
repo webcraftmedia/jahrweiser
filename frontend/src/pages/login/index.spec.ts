@@ -1,6 +1,7 @@
 import { mountSuspended, renderSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
-import Page from './index.vue'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+import Page from './index.vue'
 
 const mockNavigateTo = vi.hoisted(() => vi.fn())
 const mockLoggedIn = ref(false)

@@ -1,4 +1,8 @@
+import path from 'path'
+
+import ICAL from 'ical.js'
 import { z } from 'zod'
+
 import {
   createCardDAVAccount,
   createUser,
@@ -6,9 +10,7 @@ import {
   saveUser,
   X_ADMIN_TAGS,
 } from '~~/server/helpers/dav'
-import ICAL from 'ical.js'
 import { defaultParams, emailRenderer } from '~~/server/helpers/email'
-import path from 'path'
 
 const bodySchema = z.object({
   email: z.email(),
@@ -73,7 +75,7 @@ export default defineEventHandler(async (event) => {
 
   // sendMail if selected and at least one new tag is set
   if (sendMail && newTags.length > 0) {
-    const to = { address: email.toString(), name: '' }
+    const to = { address: email, name: '' }
     const adminName = session.user.name
       ? session.user.name.split(' ').slice(-1).pop()
       : session.user.email

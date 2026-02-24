@@ -1,6 +1,7 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import middleware from './admin'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+import middleware from './admin'
 
 const mockUser = ref<{ role?: string } | null>(null)
 const mockLoggedIn = ref(true)

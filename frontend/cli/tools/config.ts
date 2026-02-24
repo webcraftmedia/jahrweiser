@@ -1,5 +1,6 @@
-import dotenv from 'dotenv'
 import { resolve } from 'path'
+
+import dotenv from 'dotenv'
 import { loadNuxt } from 'nuxt/kit'
 
 dotenv.config({ path: resolve(process.cwd(), '.env') })

@@ -1,6 +1,7 @@
 // @vitest-environment node
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import {
   SIMPLE_EVENT,
   ALLDAY_EVENT,
@@ -9,6 +10,7 @@ import {
   VCALENDAR_NO_VEVENT,
 } from '../../test/fixtures/ical-data'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
+
 import handler from './calendar.post'
 
 const mockFindCalendars = vi.fn()
@@ -52,7 +54,7 @@ describe('calendar.post', () => {
 
   it('throws when calendar not found', async () => {
     mockFindCalendars.mockResolvedValue([])
-    await expect(handlerFn({})).rejects.toThrow('Calendar not found')
+    await expect(handlerFn({})).rejects.toThrowError('Calendar not found')
   })
 
   it('returns event array for simple event', async () => {

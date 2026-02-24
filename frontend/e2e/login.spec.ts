@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+
 import { mockRequestLoginLink, mockCalendarEndpoints } from './helpers/api-mocks'
 
 test.describe('Login Page', () => {
@@ -35,7 +36,7 @@ test.describe('Login Page', () => {
   })
 
   test('valid token redirects to home page', async ({ page }) => {
-    await page.route('**/api/_auth/session', (route) =>
+    await page.route('**/api/_auth/session', async (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -45,7 +46,7 @@ test.describe('Login Page', () => {
         }),
       }),
     )
-    await page.route('**/api/redeemLoginLink', (route) =>
+    await page.route('**/api/redeemLoginLink', async (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -60,7 +61,7 @@ test.describe('Login Page', () => {
   })
 
   test('invalid token shows error message', async ({ page }) => {
-    await page.route('**/api/redeemLoginLink', (route) =>
+    await page.route('**/api/redeemLoginLink', async (route) =>
       route.fulfill({
         status: 401,
         contentType: 'application/json',

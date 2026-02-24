@@ -1,6 +1,7 @@
 import { renderSuspended, mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
-import Component from './Header.vue'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+import Component from './Header.vue'
 
 const { mockClear, mockNavigateTo } = vi.hoisted(() => ({
   mockClear: vi.fn(),
@@ -106,7 +107,7 @@ describe('Header', () => {
     expect(wrapper.find('#navbar-mobile').classes()).not.toContain('hidden')
     // Admin link should not be in mobile menu
     const mobileLinks = wrapper.findAll('#navbar-mobile nav a')
-    expect(mobileLinks.length).toBe(0)
+    expect(mobileLinks).toHaveLength(0)
     // Logout button should still be present
     expect(wrapper.find('#navbar-mobile nav button').exists()).toBe(true)
   })

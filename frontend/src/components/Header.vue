@@ -108,21 +108,21 @@
 </template>
 
 <script setup lang="ts">
-const welcomeName = ref()
-const { user, loggedIn, clear: clearSession } = useUserSession()
-const mobileMenuOpen = ref(false)
+  const welcomeName = ref()
+  const { user, loggedIn, clear: clearSession } = useUserSession()
+  const mobileMenuOpen = ref(false)
 
-welcomeName.value = computed(() =>
-  user.value?.name ? user.value.name.split(' ').slice(-1).pop() : user.value?.email,
-)
+  welcomeName.value = computed(() =>
+    user.value?.name ? user.value.name.split(' ').slice(-1).pop() : user.value?.email,
+  )
 
-function toggleMobileMenu() {
-  mobileMenuOpen.value = !mobileMenuOpen.value
-}
+  function toggleMobileMenu() {
+    mobileMenuOpen.value = !mobileMenuOpen.value
+  }
 
-async function logout() {
-  mobileMenuOpen.value = false
-  await clearSession()
-  await navigateTo('/login')
-}
+  async function logout() {
+    mobileMenuOpen.value = false
+    await clearSession()
+    await navigateTo('/login')
+  }
 </script>

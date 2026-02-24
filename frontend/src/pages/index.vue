@@ -4,13 +4,30 @@
       <client-only>
         <CalendarView
           v-bind="calendar"
-          :current-period-label="$t('pages.index.today')"
           class="theme-default"
           @click-item="clickItem"
         >
-          <!--holiday-us-traditional holiday-us-official-->
           <template #header="{ headerProps }">
-            <CalendarViewHeader :header-props="headerProps" @input="setShowDate" />
+            <div class="cv-header">
+              <span class="periodLabel">{{ headerProps.periodLabel }}</span>
+              <div class="cv-header-nav">
+                <button
+                  :disabled="!headerProps.previousPeriod"
+                  @click="setShowDate(headerProps.previousPeriod!)"
+                >
+                  ‹
+                </button>
+                <button @click="setShowDate(headerProps.currentPeriod)">
+                  {{ $t('pages.index.today') }}
+                </button>
+                <button
+                  :disabled="!headerProps.nextPeriod"
+                  @click="setShowDate(headerProps.nextPeriod!)"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
           </template>
         </CalendarView>
       </client-only>
@@ -50,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-  import { CalendarView, CalendarViewHeader } from 'vue-simple-calendar'
+  import { CalendarView } from 'vue-simple-calendar'
 
   import Modal from '../components/Modal.vue'
   import { useColorMode } from '../composables/useColorMode'
@@ -222,6 +239,7 @@
   .theme-default .cv-header {
     background-color: #faf5eb;
     border-color: rgba(194, 65, 12, 0.2);
+    justify-content: space-between;
   }
 
   .theme-default .cv-header .periodLabel {
@@ -229,6 +247,15 @@
     font-size: 1.8em;
     color: #1e293b;
     letter-spacing: 0.02em;
+    flex: 0 1 auto;
+    margin-left: 0;
+    padding-left: 0.2em;
+  }
+
+  .theme-default .cv-header .cv-header-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
   }
 
   .theme-default .cv-header button {
@@ -511,11 +538,6 @@
   }
 
   /* ===== Utility ===== */
-
-  .previousYear,
-  .nextYear {
-    display: none;
-  }
 
   @media (width <= 480px) {
     .periodLabel {

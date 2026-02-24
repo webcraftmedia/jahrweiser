@@ -26,7 +26,8 @@ vi.mock('../composables/useColorMode', () => ({
 vi.mock('vue-simple-calendar', () => ({
   CalendarView: {
     name: 'CalendarView',
-    template: '<div class="calendar-view"><slot name="header" :headerProps="{ previousPeriod: new Date(\'2024-12-01\'), currentPeriod: new Date(\'2025-01-15\'), nextPeriod: new Date(\'2025-02-01\'), periodLabel: \'January 2025\' }" /></div>',
+    template:
+      "<div class=\"calendar-view\"><slot name=\"header\" :headerProps=\"{ previousPeriod: new Date('2024-12-01'), currentPeriod: new Date('2025-01-15'), nextPeriod: new Date('2025-02-01'), periodLabel: 'January 2025' }\" /></div>",
     props: {
       showDate: { type: Date, default: () => new Date() },
       items: { type: Array, default: () => [] },
@@ -73,7 +74,9 @@ describe('Page: Index', () => {
     })
     mockColorMode.isDark.value = false
     // Clean up stale modal elements from previous tests to prevent DOM pollution
-    document.querySelectorAll('#default-modal').forEach((el) => el.remove())
+    document.querySelectorAll('#default-modal').forEach((el) => {
+      el.remove()
+    })
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/calendars') {
         return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
@@ -157,8 +160,23 @@ describe('Page: Index', () => {
   it('renders modal content without description', async () => {
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
-      if (url === '/api/calendar') return Promise.resolve([{ id: 'e1', title: 'T', color: '#ff0000', startDate: '2025-01-15', endDate: '2025-01-15' }])
-      if (url === '/api/event') return Promise.resolve({ summary: 'No Desc', startDate: '2025-01-15', duration: 'PT1H', location: 'Room B' })
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'e1',
+            title: 'T',
+            color: '#ff0000',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+          },
+        ])
+      if (url === '/api/event')
+        return Promise.resolve({
+          summary: 'No Desc',
+          startDate: '2025-01-15',
+          duration: 'PT1H',
+          location: 'Room B',
+        })
       return Promise.resolve({})
     })
     const wrapper = await mountSuspended(Page, { route: '/' })
@@ -179,8 +197,23 @@ describe('Page: Index', () => {
   it('renders modal content without location', async () => {
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
-      if (url === '/api/calendar') return Promise.resolve([{ id: 'e1', title: 'T', color: '#ff0000', startDate: '2025-01-15', endDate: '2025-01-15' }])
-      if (url === '/api/event') return Promise.resolve({ summary: 'No Loc', startDate: '2025-01-15', duration: 'PT1H', description: 'Some notes' })
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'e1',
+            title: 'T',
+            color: '#ff0000',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+          },
+        ])
+      if (url === '/api/event')
+        return Promise.resolve({
+          summary: 'No Loc',
+          startDate: '2025-01-15',
+          duration: 'PT1H',
+          description: 'Some notes',
+        })
       return Promise.resolve({})
     })
     const wrapper = await mountSuspended(Page, { route: '/' })
@@ -408,9 +441,16 @@ describe('Page: Index', () => {
   it('uses fallback palette for unknown calendar colors', async () => {
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
-      if (url === '/api/calendar') return Promise.resolve([
-        { id: 'e1', title: 'Unknown', color: '#999999', startDate: '2025-01-15', endDate: '2025-01-15' },
-      ])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'e1',
+            title: 'Unknown',
+            color: '#999999',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+          },
+        ])
       return Promise.resolve({})
     })
     const wrapper = await mountSuspended(Page, { route: '/' })
@@ -454,7 +494,9 @@ describe('Page: Index', () => {
     let resolveCalendars!: (value: unknown) => void
     mock$fetch.mockImplementation((url: string) => {
       if (url === '/api/calendars') {
-        return new Promise((resolve) => { resolveCalendars = resolve })
+        return new Promise((resolve) => {
+          resolveCalendars = resolve
+        })
       }
       return Promise.resolve([])
     })
@@ -469,7 +511,9 @@ describe('Page: Index', () => {
     resolveCalendars([{ name: 'Work', color: '#ff0000' }])
     await vi.waitFor(() => {
       // After loading completes, v-show hides with display:none
-      expect((wrapper.find('.cal-loading-overlay').element as HTMLElement).style.display).toBe('none')
+      expect((wrapper.find('.cal-loading-overlay').element as HTMLElement).style.display).toBe(
+        'none',
+      )
     })
   })
 })

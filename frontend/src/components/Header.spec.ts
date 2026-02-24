@@ -12,9 +12,7 @@ const mockZoomState = vi.hoisted(() => {
 vi.mock('../composables/useZoom', () => ({
   useZoom: () => ({
     zoomLevel: mockZoomState.zoomLevel,
-    chromeZoom: mockZoomState.computed(
-      () => 1 + (mockZoomState.zoomLevel.value - 1) * 0.3,
-    ),
+    chromeZoom: mockZoomState.computed(() => 1 + (mockZoomState.zoomLevel.value - 1) * 0.3),
   }),
 }))
 

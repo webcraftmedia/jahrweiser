@@ -135,7 +135,10 @@
   const eventDescription = computed(() => {
     const desc = event.value?.description
     if (!desc) return ''
-    return desc.split('\n').map((line: string) => line.trimStart()).join('\n')
+    return desc
+      .split('\n')
+      .map((line: string) => line.trimStart())
+      .join('\n')
   })
   const calendars = ref<{ name: string; color: string }[]>([])
   const { isDark } = useColorMode()

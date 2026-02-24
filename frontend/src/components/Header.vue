@@ -21,9 +21,9 @@
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
       <NuxtLink to="/" class="flex items-center gap-2">
         <LogoSmall class="logo-bar" />
-        <div class="hidden sm:block">
+        <div>
           <span class="font-display text-navy dark:text-ivory text-xl tracking-wide">Jahrweiser</span>
-          <span class="hidden lg:inline font-hand text-mustard text-xs tracking-widest ml-1"
+          <span class="font-hand text-mustard text-xs tracking-widest ml-1"
             >Bergstraße</span
           >
         </div>
@@ -120,6 +120,28 @@
               {{ $t('components.Header.logout') }}
             </button>
           </nav>
+
+          <!-- Legal Links -->
+          <div
+            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex gap-4 text-xs text-navy/60 dark:text-ivory/60"
+          >
+            <NuxtLink
+              :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
+              external
+              class="hover:text-sienna transition-colors"
+              @click="toggleMobileMenu"
+            >
+              {{ $t('components.Footer.imprint') }}
+            </NuxtLink>
+            <NuxtLink
+              :to="{ path: 'https://www.webcraft-media.de/#!datenschutz' }"
+              external
+              class="hover:text-sienna transition-colors"
+              @click="toggleMobileMenu"
+            >
+              {{ $t('components.Footer.privacy-policy') }}
+            </NuxtLink>
+          </div>
         </div>
       </div>
       <template v-else />

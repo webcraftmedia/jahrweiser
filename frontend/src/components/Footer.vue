@@ -65,7 +65,7 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-4">
+      <div class="hidden md:flex items-center gap-4">
         <NuxtLink
           :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
           external

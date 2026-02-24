@@ -99,7 +99,7 @@
     })
   })
 
-  async function handleModalX() {
+  function handleModalX() {
     modal.value.close()
   }
 
@@ -148,7 +148,7 @@
     periodChangedCallback: (data: any) => {
       const startDate = data.value.displayFirstDate.value
       const endDate = data.value.displayLastDate.value
-      getData(startDate, endDate)
+      void getData(startDate, endDate)
     },
     /*
 				:

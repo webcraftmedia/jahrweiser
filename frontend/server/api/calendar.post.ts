@@ -66,6 +66,7 @@ export default defineEventHandler(async (event) => {
 
         let count = 0
         let next
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
         while ((next = expand.next())) {
           const occurrence = new Date(next.toString() + 'Z') // Fix German Time
           count += 1

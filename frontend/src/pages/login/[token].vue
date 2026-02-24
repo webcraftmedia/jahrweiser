@@ -63,7 +63,7 @@
   const { loggedIn, fetch: refreshSession } = useUserSession()
 
   if (loggedIn.value) {
-    navigateTo('/')
+    void navigateTo('/')
   }
 
   const route = useRoute()

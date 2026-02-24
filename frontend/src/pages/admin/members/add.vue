@@ -21,7 +21,7 @@
   const submitError = ref<string | null>(null)
   const isEmailShaking = ref(false)
 
-  const emailSchema = z.string().email()
+  const emailSchema = z.email()
 
   const isValidEmail = computed(() => {
     try {

@@ -35,7 +35,7 @@ const createHeaders = (account: DAVAccount) => {
   const username = account.credentials?.username ?? ''
   const password = account.credentials?.password ?? ''
   return {
-    authorization: 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))),
+    authorization: 'Basic ' + Buffer.from(username + ':' + password).toString('base64'),
   }
 }
 
@@ -116,6 +116,7 @@ export async function runIcsImport(config: ImportConfig): Promise<ImportResult> 
 
   const targetCalendar = calendars.find((cal) => cal.displayName === calendarName)
   if (!targetCalendar) {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string -- displayName is always a string at runtime
     const available = calendars.map((cal) => cal.displayName).join(', ')
     return {
       success: false,

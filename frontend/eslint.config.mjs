@@ -7,6 +7,7 @@ import { security, comments, json, yaml, vitest, css, prettier } from 'eslint-co
 import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 
 export default withNuxt(
+  { ignores: ['.nuxt.old/', '.claude/'] },
   // it4c-Module (self-contained, kein Nuxt-Overlap)
   ...security,
   {
@@ -28,7 +29,6 @@ export default withNuxt(
   ...vitest,
   {
     files: ['**/*.spec.ts', '**/*.spec.js', '**/*.test.ts', '**/*.test.js'],
-    settings: { vitest: { typecheck: false } },
     rules: {
       // Projekt nutzt vitest globals via Config
       'vitest/prefer-importing-vitest-globals': 'off',
@@ -46,6 +46,10 @@ export default withNuxt(
       'vitest/prefer-describe-function-title': 'off',
       'vitest/prefer-import-in-mock': 'off',
       'vitest/max-expects': 'off',
+      // Mock-Callbacks sind async ohne await (Return-Type muss Promise sein)
+      '@typescript-eslint/require-await': 'off',
+      // @nuxt/test-utils Typen deklarieren renderSuspended/mountSuspended nicht als Promise
+      '@typescript-eslint/await-thenable': 'off',
       // Auto-Fix ändert Semantik
       'vitest/prefer-called-with': 'off',
       'vitest/prefer-expect-type-of': 'off',
@@ -92,6 +96,22 @@ export default withNuxt(
         // If not specified, the message will be parsed twice.
         messageSyntaxVersion: '^11.0.0',
       },
+    },
+  },
+
+  // Type-aware TypeScript-Regeln (durch tsconfigPath aktiviert)
+  {
+    rules: {
+      // Zu viele False Positives durch `any` aus Mocks und externen APIs
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      // Numbers/Arrays in Template-Literals sind in JS sicher
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      // Methoden-Referenzen sind ein gängiges Pattern
+      '@typescript-eslint/unbound-method': 'off',
     },
   },
 

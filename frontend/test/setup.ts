@@ -4,7 +4,6 @@ import { expect, vi } from 'vitest'
 import { config } from '@vue/test-utils'
 
 // Fail tests on Vue warnings and errors via Vue's built-in handlers
-config.global.config ??= {}
 config.global.config.warnHandler = (msg, _instance, trace) => {
   throw new Error(`[Vue warn]: ${msg}\n${trace}`)
 }

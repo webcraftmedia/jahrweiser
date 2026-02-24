@@ -91,7 +91,7 @@
   const { loggedIn } = useUserSession()
 
   if (loggedIn.value) {
-    navigateTo('/')
+    void navigateTo('/')
   }
 
   const requestedLogin = ref(false)
@@ -108,7 +108,7 @@
     requestedLogin.value = true
   }
 
-  async function showLogin() {
+  function showLogin() {
     requestedLogin.value = false
   }
 </script>

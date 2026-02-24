@@ -59,7 +59,9 @@ const httpsAgent = new HttpsAgent({
 
 const createTimeoutSignal = (timeoutMs: number) => {
   const controller = new AbortController()
-  setTimeout(() => controller.abort(), timeoutMs)
+  setTimeout(() => {
+    controller.abort()
+  }, timeoutMs)
   return controller.signal
 }
 
@@ -72,7 +74,7 @@ export const headers = (account: DAVAccount) => {
   const username = account.credentials?.username ?? ''
   const password = account.credentials?.password ?? ''
   return {
-    authorization: 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))),
+    authorization: 'Basic ' + Buffer.from(username + ':' + password).toString('base64'),
   }
 }
 
@@ -198,7 +200,7 @@ export const findUserByEmail = async (account: DAVAccount, email: string) => {
 export const saveUser = (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>
   updateVCard({
     vCard: {
-      url: account.serverUrl + user.href,
+      url: account.serverUrl + user.href!,
       data: vcard,
       etag: user.props?.getetag,
     },
@@ -213,7 +215,7 @@ export const createUser = async (account: DAVAccount, vcard: ICAL.Component) =>
     },
     filename:
       createHash('sha256')
-        .update(vcard.toString() + new Date().getTime())
+        .update(vcard.toString() + String(new Date().getTime()))
         .digest('hex') + '.vcf',
     vCardString: vcard.toString(),
     headers: headers(account),

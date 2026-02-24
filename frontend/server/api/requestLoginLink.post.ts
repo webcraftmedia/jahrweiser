@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
   // send email with link
   const name = vcard.getFirstPropertyValue('fn')
 
-  const to = { address: email.toString(), name: name?.toString() ?? '' }
+  const to = { address: email, name: name?.toString() ?? '' }
   try {
     await emailRenderer.send({
       template: path.join(process.cwd(), 'server/emails/requestLoginLink'),

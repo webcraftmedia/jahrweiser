@@ -219,7 +219,9 @@ describe('calendar.post', () => {
     // Remaining occurrences: March 8, 15, 22, 29
     expect(result.length).toBeGreaterThanOrEqual(1)
     result.forEach((event) => {
-      expect(event.startDate.getTime()).toBeGreaterThanOrEqual(new Date('2025-03-05T00:00:00Z').getTime())
+      expect(event.startDate.getTime()).toBeGreaterThanOrEqual(
+        new Date('2025-03-05T00:00:00Z').getTime(),
+      )
     })
   })
 

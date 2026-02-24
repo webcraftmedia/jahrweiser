@@ -229,4 +229,17 @@
   .login-submit:active {
     transform: scale(0.97);
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .login-card-float,
+    .login-card,
+    .login-stagger {
+      animation: none;
+    }
+
+    .login-submit:hover,
+    .login-submit:active {
+      transform: none;
+    }
+  }
 </style>

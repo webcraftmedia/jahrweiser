@@ -13,14 +13,14 @@
     <div class="relative p-4 w-full max-h-full">
       <!-- Modal content -->
       <div
-        class="relative bg-ivory dark:bg-poster-darkCard rounded-lg shadow-xl border border-navy/15 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]"
+        class="modal-card relative bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]"
         @click.prevent.stop
       >
         <!-- Modal header -->
         <div
-          class="flex items-center justify-between p-4 md:p-5 border-b border-navy/10 dark:border-poster-darkBorder shrink-0"
+          class="flex items-center justify-between px-5 py-3 md:px-6 md:py-4 border-b-2 border-navy/15 dark:border-poster-darkBorder bg-navy/3 dark:bg-poster-dark shrink-0"
         >
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <LogoSmall class="logo-modal" />
             <h3 class="text-xl font-semibold text-navy dark:text-ivory font-display tracking-wide">
               <slot name="title" />
@@ -28,12 +28,12 @@
           </div>
           <button
             type="button"
-            class="text-navy/40 bg-transparent hover:bg-sienna/10 hover:text-navy rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:text-ivory/40 dark:hover:bg-sienna/20 dark:hover:text-ivory"
+            class="text-navy/50 hover:text-sienna w-8 h-8 inline-flex justify-center items-center transition-colors dark:text-ivory/50 dark:hover:text-sienna-light"
             data-modal-hide="default-modal"
             @click.prevent="handleX"
           >
             <svg
-              class="w-3 h-3"
+              class="w-3.5 h-3.5"
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -43,7 +43,7 @@
                 stroke="currentColor"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                stroke-width="2"
+                stroke-width="2.5"
                 d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
               />
             </svg>
@@ -51,7 +51,7 @@
           </button>
         </div>
         <!-- Modal body -->
-        <div ref="modalBody" class="p-4 md:p-5 space-y-4 overflow-y-auto">
+        <div ref="modalBody" class="px-5 py-4 md:px-6 md:py-5 space-y-4 overflow-y-auto">
           <slot name="content" />
         </div>
       </div>
@@ -92,10 +92,25 @@
 </script>
 
 <style scoped>
+  @reference "tailwindcss";
+
   .logo-modal {
     width: 40px;
     height: 40px;
     flex-shrink: 0;
+  }
+
+  .modal-card {
+    border-radius: 2px;
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(30, 41, 59, 0.05);
+  }
+
+  .dark .modal-card {
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(61, 54, 48, 0.3);
   }
 </style>
 

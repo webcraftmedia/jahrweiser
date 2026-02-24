@@ -16,7 +16,7 @@
   <!-- Bar variant (default nav bar) -->
   <nav
     v-else
-    class="bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full fixed top-0 z-50"
+    class="bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
     <div class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto p-2">

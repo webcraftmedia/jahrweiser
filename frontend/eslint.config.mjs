@@ -15,15 +15,19 @@ import {
 } from 'eslint-config-it4c'
 import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 
-// it4c TypeScript-Regeln ohne Plugin/Parser-Setup (wird von Nuxt via tsconfigPath bereitgestellt)
-const it4cTsRules = it4cTypescript.filter(
-  (config) => !config.languageOptions && !config.plugins?.['@typescript-eslint'],
-)
+// it4c TypeScript-Regeln extrahieren (Plugin/Parser-Setup wird von Nuxt via tsconfigPath bereitgestellt)
+const it4cTsRules = Object.assign({}, ...it4cTypescript.map((c) => c.rules))
+// TODO: no-catch-all gehört nicht ins TypeScript-Modul — ist ein allgemeines JS-Pattern.
+// In eslint-config-it4c ins `eslint`-Basismodul verschieben, dann hier entfernen.
+delete it4cTsRules['no-catch-all/no-catch-all']
 
 export default withNuxt(
   { ignores: ['.nuxt.old/', '.claude/'] },
-  // it4c TypeScript-Regeln (no-catch-all Plugin + strictTypeChecked + custom Rules)
-  ...it4cTsRules,
+  // it4c TypeScript-Regeln (strictTypeChecked + custom Rules)
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+    rules: it4cTsRules,
+  },
   // it4c-Module (self-contained, kein Nuxt-Overlap)
   ...security,
   {
@@ -132,8 +136,6 @@ export default withNuxt(
       '@typescript-eslint/unbound-method': 'off',
       // Non-null assertion (!) ist ein gängiges Pattern (z.B. find()!, Array-Zugriff nach Validierung)
       '@typescript-eslint/no-non-null-assertion': 'off',
-      // JavaScript hat keine typisierten Catches — generisches catch ist unvermeidbar
-      'no-catch-all/no-catch-all': 'off',
       // Return-Types auf Exports: nützlich für Libraries, zu strikt für Projekt-Code
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       // Projekt nutzt || für Env-Vars und optionale Strings (leerer String = fehlend)

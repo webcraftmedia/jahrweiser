@@ -1,13 +1,13 @@
 <template>
-  <div v-if="requestedLogin" class="flex w-full">
+  <!-- Email sent confirmation -->
+  <div v-if="requestedLogin" class="w-full max-w-md mt-8">
     <div
-      id="alert-additional-content-1"
-      class="max-w-md m-auto mt-8 p-4 text-blue-800 border border-blue-300 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:border-blue-800"
+      class="p-5 border-2 border-mustard/50 dark:border-mustard/30 rounded bg-mustard/10 dark:bg-mustard/5 text-navy dark:text-ivory"
       role="alert"
     >
-      <div class="flex items-center">
+      <div class="flex items-center gap-2 mb-3">
         <svg
-          class="shrink-0 w-4 h-4 me-2"
+          class="shrink-0 w-5 h-5 text-mustard"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
           fill="currentColor"
@@ -18,42 +18,45 @@
           />
         </svg>
         <span class="sr-only">{{ $t('pages.login.message.info') }}</span>
-        <h3 class="text-lg font-medium">{{ $t('pages.login.message.title') }}</h3>
+        <h3 class="text-lg font-display">{{ $t('pages.login.message.title') }}</h3>
       </div>
-      <div class="mt-2 mb-4 text-sm">
+      <div class="mb-4 text-sm font-body">
         <p class="font-bold">{{ $t('pages.login.message.text1') }}</p>
         <p>{{ $t('pages.login.message.text2') }}</p>
-        <p class="pt-2">{{ $t('pages.login.message.hint') }}</p>
+        <p class="pt-2 text-navy/70 dark:text-poster-darkMuted">
+          {{ $t('pages.login.message.hint') }}
+        </p>
       </div>
-      <div class="flex">
-        <button
-          data-dismiss-target="#alert-additional-content-1"
-          class="text-blue-800 bg-transparent border border-blue-800 hover:bg-blue-900 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-200 font-medium rounded-lg text-xs px-3 py-1.5 text-center dark:hover:bg-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:text-white dark:focus:ring-blue-800"
-          type="button"
-          aria-label="Close"
-          @click.prevent="showLogin"
-        >
-          {{ $t('pages.login.message.button') }}
-        </button>
-      </div>
+      <button
+        class="px-4 py-1.5 text-sm font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
+        type="button"
+        @click.prevent="showLogin"
+      >
+        {{ $t('pages.login.message.button') }}
+      </button>
     </div>
   </div>
-  <div v-else class="flex w-full">
+
+  <!-- Login form -->
+  <div v-else class="w-full max-w-sm mt-8">
     <div
-      class="m-auto mt-8 w-full max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700"
+      class="p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded shadow-lg"
     >
       <form class="space-y-6" @submit.prevent="requestLoginLink">
-        <h5 class="text-xl font-medium text-gray-900 dark:text-white">
+        <h5 class="text-2xl font-display text-navy dark:text-ivory">
           {{ $t('pages.login.form.title') }}
         </h5>
         <div>
-          <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          <label
+            for="email-address-icon"
+            class="block mb-2 text-sm font-semibold font-body text-navy dark:text-ivory"
+          >
             {{ $t('pages.login.form.email.label') }}
           </label>
           <div class="relative">
             <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
               <svg
-                class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                class="w-4 h-4 text-navy/40 dark:text-poster-darkMuted"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -71,14 +74,14 @@
               id="email-address-icon"
               v-model="credentials.email"
               type="text"
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-sm rounded font-body focus:ring-sienna focus:border-sienna dark:focus:ring-sienna-dark dark:focus:border-sienna-dark block w-full ps-10 p-2.5 placeholder-navy/40 dark:placeholder-poster-darkMuted"
               :placeholder="$t('pages.login.form.email.placeholder')"
             />
           </div>
         </div>
         <button
           type="submit"
-          class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          class="w-full text-ivory bg-sienna hover:bg-sienna-light dark:bg-sienna-dark dark:hover:bg-sienna focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-5 py-2.5 text-center transition-colors"
         >
           {{ $t('pages.login.form.button') }}
         </button>
@@ -88,6 +91,8 @@
 </template>
 
 <script setup lang="ts">
+  definePageMeta({ layout: 'login' })
+
   const { loggedIn } = useUserSession()
 
   if (loggedIn.value) {

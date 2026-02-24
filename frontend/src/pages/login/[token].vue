@@ -1,9 +1,10 @@
 <template>
-  <div v-if="success" class="flex w-full">
-    <div role="status" class="m-auto mt-8">
+  <!-- Loading spinner -->
+  <div v-if="success" class="mt-8">
+    <div role="status">
       <svg
         aria-hidden="true"
-        class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+        class="w-8 h-8 text-navy/20 dark:text-poster-darkBorder animate-spin fill-sienna dark:fill-sienna-light"
         viewBox="0 0 100 101"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -20,15 +21,16 @@
       <span class="sr-only">{{ $t('pages.login.token.loading') }}</span>
     </div>
   </div>
-  <div v-else class="flex w-full">
+
+  <!-- Error alert -->
+  <div v-else class="w-full max-w-md mt-8">
     <div
-      id="alert-additional-content-1"
-      class="max-w-md m-auto mt-8 p-4 text-blue-800 border border-blue-300 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:border-blue-800"
+      class="p-5 border-2 border-sienna/50 dark:border-sienna-dark/50 rounded bg-sienna/10 dark:bg-sienna/5 text-navy dark:text-ivory"
       role="alert"
     >
-      <div class="flex items-center">
+      <div class="flex items-center gap-2 mb-3">
         <svg
-          class="shrink-0 w-4 h-4 me-2"
+          class="shrink-0 w-5 h-5 text-sienna"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
           fill="currentColor"
@@ -39,27 +41,25 @@
           />
         </svg>
         <span class="sr-only">{{ $t('pages.login.message.info') }}</span>
-        <h3 class="text-lg font-medium">{{ $t('pages.login.error.title') }}</h3>
+        <h3 class="text-lg font-display">{{ $t('pages.login.error.title') }}</h3>
       </div>
-      <div class="mt-2 mb-4 text-sm">
+      <div class="mb-4 text-sm font-body">
         <p class="font-bold">{{ $t('pages.login.error.text') }}</p>
       </div>
-      <div class="flex">
-        <button
-          data-dismiss-target="#alert-additional-content-1"
-          class="text-blue-800 bg-transparent border border-blue-800 hover:bg-blue-900 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-200 font-medium rounded-lg text-xs px-3 py-1.5 text-center dark:hover:bg-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:text-white dark:focus:ring-blue-800"
-          type="button"
-          aria-label="Close"
-          @click="goHome"
-        >
-          {{ $t('pages.login.message.button') }}
-        </button>
-      </div>
+      <button
+        class="px-4 py-1.5 text-sm font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
+        type="button"
+        @click="goHome"
+      >
+        {{ $t('pages.login.message.button') }}
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  definePageMeta({ layout: 'login' })
+
   const { loggedIn, fetch: refreshSession } = useUserSession()
 
   if (loggedIn.value) {

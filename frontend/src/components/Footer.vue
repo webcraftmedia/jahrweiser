@@ -15,7 +15,10 @@
       </span>
 
       <!-- Zoom + Dark mode -->
-      <div class="flex items-center gap-1 md:gap-2 shrink-0">
+      <div
+        class="flex items-center gap-1 md:gap-2 shrink-0"
+        :style="chromeZoom !== 1 ? { zoom: 1 / chromeZoom } : undefined"
+      >
         <div class="flex items-center gap-0.5 bg-navy/10 dark:bg-ivory/10 rounded-lg px-1 py-0.5">
           <button
             class="zoom-btn"

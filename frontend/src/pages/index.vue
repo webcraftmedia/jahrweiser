@@ -659,14 +659,14 @@
 
   .dark .theme-default .cv-day.today {
     background-color: #1a1714;
-    background-image: linear-gradient(225deg, #ea580c 6px, transparent 6px);
+    background-image: linear-gradient(225deg, #9a3412 6px, transparent 6px);
     opacity: 1;
   }
 
   .dark .theme-default .cv-day.today .cv-day-number {
     color: #faf5eb;
     font-weight: 700;
-    background-color: #ea580c;
+    background-color: #9a3412;
     border-radius: 50%;
     width: 1.5em;
     height: 1.5em;

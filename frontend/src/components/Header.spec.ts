@@ -14,6 +14,7 @@ mockNuxtImport('useUserSession', () => () => ({
   loggedIn: mockLoggedIn,
   user: mockUser,
   clear: mockClear,
+  fetch: vi.fn(),
 }))
 
 describe('Header', () => {

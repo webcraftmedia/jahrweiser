@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 mockNuxtImport('useUserSession', () => () => ({
   loggedIn: ref(false),
+  fetch: vi.fn(),
 }))
 
 vi.stubGlobal('$fetch', vi.fn().mockResolvedValue({}))

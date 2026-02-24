@@ -1,6 +1,6 @@
 // Mock localStorage before any Nuxt plugins initialize (nuxt-auth-utils requires it)
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { expect } from 'vitest'
+import { expect, vi } from 'vitest'
 import { config } from '@vue/test-utils'
 
 if (
@@ -45,6 +45,16 @@ console.error = (...args: unknown[]) => {
     throw new Error(`Nuxt error: ${args.map(String).join(' ')}`)
   }
 }
+
+mockNuxtImport('useUserSession', () => () => ({
+  ready: computed(() => true),
+  loggedIn: computed(() => false),
+  user: computed(() => null),
+  session: ref(null),
+  fetch: vi.fn(),
+  openInPopup: vi.fn(),
+  clear: vi.fn(),
+}))
 
 mockNuxtImport('useI18n', () => () => {
   return {

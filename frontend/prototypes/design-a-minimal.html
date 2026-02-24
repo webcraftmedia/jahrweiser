@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jahrweiser – Design A: Modern Minimal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwindcss.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+      colors: {
+        brand: { 50: '#f0f7ff', 100: '#e0efff', 200: '#b9dfff', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e3a5f' },
+        surface: { 50: '#fafafa', 100: '#f5f5f5', 200: '#e5e5e5', 800: '#1c1c1e', 900: '#141416' }
+      }
+    }
+  }
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .event-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .today { position: relative; }
+  .today::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #3b82f6; }
+</style>
+</head>
+<body class="bg-surface-50 dark:bg-surface-900 font-sans text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
+
+<!-- Dark Mode Toggle (für Demo) -->
+<button onclick="document.documentElement.classList.toggle('dark')" class="fixed bottom-4 right-4 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow">
+  <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+  <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+</button>
+
+<!-- Header -->
+<header class="bg-white/80 dark:bg-surface-800/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800 fixed top-0 w-full z-40">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </div>
+      <span class="text-lg font-semibold tracking-tight">Jahrweiser</span>
+    </div>
+    <!-- Nav -->
+    <nav class="flex items-center gap-6">
+      <span class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Willkommen, <span class="text-gray-900 dark:text-gray-100 font-medium">Müller</span></span>
+      <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Admin</a>
+      <button class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors">Abmelden</button>
+    </nav>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="flex-1 mt-16 mb-12">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- Month Navigation -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Februar 2026</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">12 Termine diesen Monat</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button class="px-4 py-2 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors">Heute</button>
+        <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="bg-white dark:bg-surface-800 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
+      <!-- Weekday Headers -->
+      <div class="calendar-grid border-b border-gray-100 dark:border-gray-800">
+        <div class="py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Mo</div>
+        <div class="py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Di</div>
+        <div class="py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Mi</div>
+        <div class="py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Do</div>
+        <div class="py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Fr</div>
+        <div class="py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Sa</div>
+        <div class="py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">So</div>
+      </div>
+
+      <!-- Week 1 -->
+      <div class="calendar-grid">
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50 text-gray-300 dark:text-gray-600"><span class="text-sm">26</span></div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50 text-gray-300 dark:text-gray-600"><span class="text-sm">27</span></div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50 text-gray-300 dark:text-gray-600"><span class="text-sm">28</span></div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50 text-gray-300 dark:text-gray-600"><span class="text-sm">29</span></div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50 text-gray-300 dark:text-gray-600"><span class="text-sm">30</span></div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50 text-gray-300 dark:text-gray-600"><span class="text-sm">31</span></div>
+        <div class="p-3 min-h-[100px] border-b border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">1</span>
+        </div>
+      </div>
+
+      <!-- Week 2 -->
+      <div class="calendar-grid">
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">2</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md truncate">Teammeeting</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">3</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">4</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-md truncate">Yoga Kurs</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">5</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">6</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-md truncate">Workshop</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">7</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">8</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 rounded-md truncate">Brunch</div>
+        </div>
+      </div>
+
+      <!-- Week 3 -->
+      <div class="calendar-grid">
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">9</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">10</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded-md truncate">Arzttermin</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">11</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">12</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md truncate">Teammeeting</div>
+          <div class="mt-1 px-2 py-1 text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-md truncate">Sport</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">13</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">14</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 rounded-md truncate">Valentinstag ❤</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">15</span>
+        </div>
+      </div>
+
+      <!-- Week 4 -->
+      <div class="calendar-grid">
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">16</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">17</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">18</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-md truncate">Yoga Kurs</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">19</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-md truncate">Elternabend</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">20</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">21</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-b border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">22</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 rounded-md truncate">Geburtstag</div>
+        </div>
+      </div>
+
+      <!-- Week 5 (partial) -->
+      <div class="calendar-grid">
+        <div class="p-3 min-h-[100px] border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">23</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-r border-gray-50 dark:border-gray-800/50 bg-brand-50/50 dark:bg-brand-800/10 today">
+          <span class="inline-flex items-center justify-center w-7 h-7 bg-brand-600 text-white text-sm font-semibold rounded-full">24</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md truncate">Standup</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">25</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">26</span>
+        </div>
+        <div class="p-3 min-h-[100px] border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">27</span>
+          <div class="mt-1 px-2 py-1 text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-md truncate">Konzert</div>
+        </div>
+        <div class="p-3 min-h-[100px] border-r border-gray-50 dark:border-gray-800/50">
+          <span class="text-sm font-medium">28</span>
+        </div>
+        <div class="p-3 min-h-[100px] text-gray-300 dark:text-gray-600">
+          <span class="text-sm">1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-6 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+      <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"></div> Arbeit</div>
+      <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800"></div> Sport & Gesundheit</div>
+      <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800"></div> Veranstaltungen</div>
+      <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-violet-100 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800"></div> Privat</div>
+      <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-rose-100 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800"></div> Gesundheit</div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-surface-800/80 backdrop-blur-lg">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between text-xs text-gray-400">
+    <span>&copy; 2026 webcraft media</span>
+    <div class="flex gap-4">
+      <a href="#" class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Impressum</a>
+      <a href="#" class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Datenschutz</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Event Detail Modal (Demo) -->
+<div id="modal" class="hidden fixed inset-0 z-50">
+  <div class="absolute inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm" onclick="document.getElementById('modal').classList.add('hidden')"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-surface-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 p-6">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <div class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Arbeit</div>
+        <h3 class="text-lg font-semibold">Teammeeting</h3>
+      </div>
+      <button onclick="document.getElementById('modal').classList.add('hidden')" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+      <div class="flex items-center gap-3">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Mo, 2. Feb 2026 · 10:00 – 11:30 Uhr</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span>Konferenzraum B</span>
+      </div>
+      <div class="flex items-start gap-3">
+        <svg class="w-4 h-4 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+        <span>Wöchentliches Teammeeting zur Projektplanung und Statusupdates.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Click on event to open modal
+document.querySelectorAll('[class*="bg-blue-50"]').forEach(el => {
+  if (el.textContent.includes('Teammeeting') || el.textContent.includes('Standup')) {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', () => document.getElementById('modal').classList.remove('hidden'));
+  }
+});
+</script>
+
+</body>
+</html>

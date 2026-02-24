@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jahrweiser – Design K: Bühne / Stage</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwindcss.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        body: ['"Raleway"', 'system-ui', 'sans-serif'],
+        hand: ['"Dancing Script"', 'cursive'],
+      },
+      colors: {
+        curtain: {
+          50: '#fef2f2',
+          100: '#fee2e2',
+          200: '#fca5a5',
+          500: '#991b1b',
+          600: '#7f1d1d',
+          700: '#6b1515',
+          800: '#450a0a',
+          900: '#2a0606',
+        },
+        gold: {
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#d4a017',
+          600: '#b8860b',
+          700: '#92400e',
+        },
+        stage: {
+          floor: '#1c1917',
+          warm: '#fffbeb',
+          cream: '#fefcf3',
+          light: '#fdf6e3',
+        },
+        ink: {
+          700: '#292524',
+          800: '#1c1917',
+          900: '#0c0a09',
+        },
+      },
+    },
+  },
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Raleway:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== Calendar Grid ===== */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  /* ===== Curtain Effects ===== */
+  .curtain-left,
+  .curtain-right {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: clamp(30px, 5vw, 80px);
+    z-index: 40;
+    pointer-events: none;
+  }
+
+  .curtain-left {
+    left: 0;
+    background: linear-gradient(
+      to right,
+      #7f1d1d 0%,
+      #991b1b 20%,
+      rgba(127, 29, 29, 0.85) 40%,
+      rgba(127, 29, 29, 0.5) 65%,
+      rgba(127, 29, 29, 0.15) 85%,
+      transparent 100%
+    );
+  }
+
+  .curtain-right {
+    right: 0;
+    background: linear-gradient(
+      to left,
+      #7f1d1d 0%,
+      #991b1b 20%,
+      rgba(127, 29, 29, 0.85) 40%,
+      rgba(127, 29, 29, 0.5) 65%,
+      rgba(127, 29, 29, 0.15) 85%,
+      transparent 100%
+    );
+  }
+
+  /* Curtain fabric folds — subtle vertical lines */
+  .curtain-left::before,
+  .curtain-right::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to right,
+      transparent 0px,
+      rgba(0, 0, 0, 0.08) 3px,
+      transparent 6px,
+      rgba(255, 255, 255, 0.04) 9px,
+      transparent 12px
+    );
+  }
+
+  /* Curtain drape scallop at top */
+  .curtain-left::after,
+  .curtain-right::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(
+      to bottom,
+      rgba(69, 10, 10, 0.6) 0%,
+      transparent 100%
+    );
+  }
+
+  /* Dark mode curtains — deeper, more dramatic */
+  .dark .curtain-left {
+    background: linear-gradient(
+      to right,
+      #450a0a 0%,
+      #6b1515 20%,
+      rgba(69, 10, 10, 0.9) 40%,
+      rgba(69, 10, 10, 0.6) 65%,
+      rgba(69, 10, 10, 0.2) 85%,
+      transparent 100%
+    );
+  }
+
+  .dark .curtain-right {
+    background: linear-gradient(
+      to left,
+      #450a0a 0%,
+      #6b1515 20%,
+      rgba(69, 10, 10, 0.9) 40%,
+      rgba(69, 10, 10, 0.6) 65%,
+      rgba(69, 10, 10, 0.2) 85%,
+      transparent 100%
+    );
+  }
+
+  /* ===== Spotlight on Calendar ===== */
+  .spotlight {
+    position: relative;
+  }
+
+  .spotlight::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120%;
+    height: 110%;
+    background: radial-gradient(
+      ellipse at 50% 0%,
+      rgba(253, 246, 227, 0.25) 0%,
+      rgba(253, 246, 227, 0.12) 30%,
+      rgba(253, 246, 227, 0.04) 55%,
+      transparent 75%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .dark .spotlight::before {
+    background: radial-gradient(
+      ellipse at 50% 0%,
+      rgba(212, 160, 23, 0.12) 0%,
+      rgba(212, 160, 23, 0.06) 30%,
+      rgba(212, 160, 23, 0.02) 55%,
+      transparent 75%
+    );
+  }
+
+  /* ===== Today Spotlight Glow ===== */
+  .today-spotlight {
+    position: relative;
+  }
+
+  .today-spotlight::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 8px;
+    background: radial-gradient(
+      circle at 50% 40%,
+      rgba(251, 191, 36, 0.35) 0%,
+      rgba(212, 160, 23, 0.15) 40%,
+      transparent 70%
+    );
+    z-index: 0;
+  }
+
+  .dark .today-spotlight::before {
+    background: radial-gradient(
+      circle at 50% 40%,
+      rgba(251, 191, 36, 0.25) 0%,
+      rgba(212, 160, 23, 0.12) 40%,
+      transparent 70%
+    );
+  }
+
+  /* ===== Event Playbill / Ticket Style ===== */
+  .event-ticket {
+    position: relative;
+    border: 1px solid rgba(212, 160, 23, 0.3);
+    border-radius: 4px;
+    padding: 3px 5px;
+    margin-top: 2px;
+    font-size: 0.65rem;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    overflow: hidden;
+  }
+
+  .event-ticket::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    opacity: 0;
+    background: radial-gradient(
+      ellipse at 50% 50%,
+      rgba(251, 191, 36, 0.2) 0%,
+      transparent 70%
+    );
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+
+  .event-ticket:hover::before {
+    opacity: 1;
+  }
+
+  .event-ticket:hover {
+    border-color: rgba(212, 160, 23, 0.6);
+    box-shadow: 0 0 12px rgba(212, 160, 23, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .dark .event-ticket {
+    border-color: rgba(212, 160, 23, 0.25);
+  }
+
+  .dark .event-ticket:hover {
+    border-color: rgba(251, 191, 36, 0.5);
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.15);
+  }
+
+  /* ===== Event Category Colors ===== */
+  .evt-musik { border-left: 3px solid #991b1b; background: linear-gradient(90deg, rgba(153, 27, 27, 0.06), transparent); }
+  .evt-theater { border-left: 3px solid #7c3aed; background: linear-gradient(90deg, rgba(124, 58, 237, 0.06), transparent); }
+  .evt-lesung { border-left: 3px solid #2563eb; background: linear-gradient(90deg, rgba(37, 99, 235, 0.06), transparent); }
+  .evt-wein { border-left: 3px solid #92400e; background: linear-gradient(90deg, rgba(146, 64, 14, 0.06), transparent); }
+  .evt-workshop { border-left: 3px solid #16a34a; background: linear-gradient(90deg, rgba(22, 163, 74, 0.06), transparent); }
+  .evt-fest { border-left: 3px solid #d4a017; background: linear-gradient(90deg, rgba(212, 160, 23, 0.08), transparent); }
+
+  .dark .evt-musik { background: linear-gradient(90deg, rgba(153, 27, 27, 0.2), transparent); }
+  .dark .evt-theater { background: linear-gradient(90deg, rgba(124, 58, 237, 0.18), transparent); }
+  .dark .evt-lesung { background: linear-gradient(90deg, rgba(37, 99, 235, 0.18), transparent); }
+  .dark .evt-wein { background: linear-gradient(90deg, rgba(146, 64, 14, 0.18), transparent); }
+  .dark .evt-workshop { background: linear-gradient(90deg, rgba(22, 163, 74, 0.15), transparent); }
+  .dark .evt-fest { background: linear-gradient(90deg, rgba(212, 160, 23, 0.2), transparent); }
+
+  /* ===== Gold Ornamental Divider ===== */
+  .gold-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #d4a017;
+    opacity: 0.6;
+  }
+
+  .gold-divider::before,
+  .gold-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      #d4a017,
+      transparent
+    );
+  }
+
+  .dark .gold-divider {
+    color: #fbbf24;
+    opacity: 0.5;
+  }
+
+  .dark .gold-divider::before,
+  .dark .gold-divider::after {
+    background: linear-gradient(
+      to right,
+      transparent,
+      #fbbf24,
+      transparent
+    );
+  }
+
+  /* ===== Marquee Month Title ===== */
+  .marquee-title {
+    text-shadow: 0 0 20px rgba(212, 160, 23, 0.3);
+  }
+
+  .dark .marquee-title {
+    text-shadow: 0 0 30px rgba(251, 191, 36, 0.25),
+                 0 0 60px rgba(251, 191, 36, 0.1);
+  }
+
+  /* ===== Top Gold Ornamental Border ===== */
+  .top-ornament {
+    height: 3px;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      #d4a017 15%,
+      #fbbf24 30%,
+      #d4a017 50%,
+      #fbbf24 70%,
+      #d4a017 85%,
+      transparent 100%
+    );
+  }
+
+  .dark .top-ornament {
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      #92400e 15%,
+      #d4a017 30%,
+      #fbbf24 50%,
+      #d4a017 70%,
+      #92400e 85%,
+      transparent 100%
+    );
+  }
+
+  /* ===== Proscenium Arch Effect on Header ===== */
+  .proscenium {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .proscenium::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: radial-gradient(
+      ellipse at 50% 100%,
+      transparent 60%,
+      #7f1d1d 62%,
+      #7f1d1d 100%
+    );
+    opacity: 0.15;
+  }
+
+  .dark .proscenium::after {
+    background: radial-gradient(
+      ellipse at 50% 100%,
+      transparent 60%,
+      #450a0a 62%,
+      #450a0a 100%
+    );
+    opacity: 0.3;
+  }
+
+  /* ===== Smooth Transitions ===== */
+  * {
+    transition-property: background-color, border-color, color, opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: ease;
+  }
+
+  /* ===== Calendar Day Hover ===== */
+  .day-cell {
+    transition: all 0.2s ease;
+  }
+
+  .day-cell:hover {
+    background-color: rgba(212, 160, 23, 0.06);
+  }
+
+  .dark .day-cell:hover {
+    background-color: rgba(212, 160, 23, 0.08);
+  }
+
+  /* ===== Dark Mode Toggle Button ===== */
+  .mode-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 50;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    cursor: pointer;
+    border: 2px solid rgba(212, 160, 23, 0.4);
+    background: rgba(127, 29, 29, 0.9);
+    color: #fbbf24;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+  }
+
+  .mode-toggle:hover {
+    border-color: #fbbf24;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+    transform: scale(1.08);
+  }
+
+  .dark .mode-toggle {
+    background: rgba(42, 6, 6, 0.95);
+    border-color: rgba(251, 191, 36, 0.3);
+  }
+
+  .dark .mode-toggle:hover {
+    border-color: #fbbf24;
+    box-shadow: 0 0 24px rgba(251, 191, 36, 0.25);
+  }
+
+  /* ===== Handwritten Accent ===== */
+  .handwritten {
+    font-family: 'Dancing Script', cursive;
+    color: #d4a017;
+  }
+
+  .dark .handwritten {
+    color: #fbbf24;
+  }
+
+  /* ===== Scrollbar Styling ===== */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1c1917;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #7f1d1d;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #991b1b;
+  }
+
+  /* ===== Weekend Column Tint ===== */
+  .weekend-tint {
+    background-color: rgba(212, 160, 23, 0.04);
+  }
+
+  .dark .weekend-tint {
+    background-color: rgba(212, 160, 23, 0.06);
+  }
+
+  /* ===== Navigation Arrows ===== */
+  .nav-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(212, 160, 23, 0.3);
+    color: #d4a017;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .nav-arrow:hover {
+    background: rgba(212, 160, 23, 0.12);
+    border-color: #d4a017;
+    box-shadow: 0 0 12px rgba(212, 160, 23, 0.1);
+  }
+
+  .dark .nav-arrow {
+    border-color: rgba(251, 191, 36, 0.25);
+    color: #fbbf24;
+  }
+
+  .dark .nav-arrow:hover {
+    background: rgba(251, 191, 36, 0.1);
+    border-color: #fbbf24;
+  }
+
+  /* ===== Stars Decoration ===== */
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .star-twinkle {
+    animation: twinkle 3s ease-in-out infinite;
+  }
+
+  .star-twinkle:nth-child(2) { animation-delay: 0.8s; }
+  .star-twinkle:nth-child(3) { animation-delay: 1.6s; }
+  .star-twinkle:nth-child(4) { animation-delay: 2.4s; }
+</style>
+</head>
+
+<body class="font-body antialiased bg-stage-cream text-ink-800 dark:bg-ink-900 dark:text-gold-100 min-h-screen">
+
+  <!-- ===== Top Gold Ornamental Border ===== -->
+  <div class="top-ornament w-full fixed top-0 left-0 right-0 z-50"></div>
+
+  <!-- ===== Curtain Side Effects ===== -->
+  <div class="curtain-left"></div>
+  <div class="curtain-right"></div>
+
+  <!-- ===== Dark Mode Toggle ===== -->
+  <button class="mode-toggle" onclick="toggleDarkMode()" aria-label="Darkmodus umschalten" title="Licht an / Licht aus">
+    <span class="dark:hidden">🎭</span>
+    <span class="hidden dark:inline">🌙</span>
+  </button>
+
+  <!-- ===== HEADER — Theater Marquee / Proscenium ===== -->
+  <header class="proscenium relative bg-curtain-600 dark:bg-curtain-900 text-gold-50 pt-6 pb-8 text-center">
+    <!-- Subtle inner glow from above -->
+    <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent pointer-events-none"></div>
+
+    <!-- Decorative stars -->
+    <div class="flex justify-center items-center gap-3 mb-2 relative z-10">
+      <span class="star-twinkle text-gold-400 text-xs">✦</span>
+      <span class="star-twinkle text-gold-500 text-[10px]">✦</span>
+      <span class="star-twinkle text-gold-400 text-sm">✦</span>
+      <span class="star-twinkle text-gold-300 text-xs">✦</span>
+    </div>
+
+    <!-- Logo / Title -->
+    <h1 class="font-display text-5xl md:text-6xl font-bold tracking-wide text-gold-400 dark:text-gold-400 relative z-10 drop-shadow-lg">
+      Jahrweiser
+    </h1>
+    <p class="font-display text-lg md:text-xl font-light text-gold-200 dark:text-gold-200 mt-1 tracking-widest uppercase relative z-10" style="letter-spacing: 0.2em;">
+      Kulturkalender an der Bergstraße
+    </p>
+
+    <!-- Decorative stars below title -->
+    <div class="flex justify-center items-center gap-4 mt-3 relative z-10">
+      <span class="star-twinkle text-gold-500 text-[10px]">✦</span>
+      <span class="text-gold-400 text-xs opacity-40">—</span>
+      <span class="star-twinkle text-gold-400 text-xs">✦</span>
+      <span class="text-gold-400 text-xs opacity-40">—</span>
+      <span class="star-twinkle text-gold-500 text-[10px]">✦</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="mt-5 relative z-10">
+      <ul class="flex justify-center gap-6 md:gap-10 font-body text-sm tracking-wider uppercase">
+        <li><a href="#" class="text-gold-200 hover:text-gold-400 transition-colors">Programm</a></li>
+        <li><a href="#" class="text-gold-400 border-b border-gold-400 pb-0.5">Kalender</a></li>
+        <li><a href="#" class="text-gold-200 hover:text-gold-400 transition-colors">Spielstätten</a></li>
+        <li><a href="#" class="text-gold-200 hover:text-gold-400 transition-colors">Über uns</a></li>
+      </ul>
+    </nav>
+
+    <!-- Bottom edge gold line -->
+    <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold-500 to-transparent opacity-50"></div>
+  </header>
+
+  <!-- ===== MAIN CONTENT — "On Stage" ===== -->
+  <main class="relative max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-12">
+
+    <!-- Vorhang auf! playful accent -->
+    <div class="text-center mb-6">
+      <span class="handwritten text-2xl md:text-3xl italic">Vorhang auf!</span>
+    </div>
+
+    <!-- ===== Gold Ornamental Divider ===== -->
+    <div class="gold-divider text-sm mb-8">
+      <span>✦ ✦ ✦</span>
+    </div>
+
+    <!-- ===== Month Navigation — Theater Marquee Style ===== -->
+    <div class="flex items-center justify-center gap-6 mb-8">
+      <button class="nav-arrow" aria-label="Vorheriger Monat">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+
+      <div class="text-center">
+        <h2 class="font-display text-4xl md:text-5xl font-semibold text-curtain-500 dark:text-gold-400 marquee-title tracking-wide">
+          Februar 2026
+        </h2>
+        <p class="font-body text-sm text-ink-700/60 dark:text-gold-200/50 mt-1 tracking-wider uppercase">
+          Spielzeit
+        </p>
+      </div>
+
+      <button class="nav-arrow" aria-label="Nächster Monat">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ===== Category Legend ===== -->
+    <div class="flex flex-wrap justify-center gap-3 md:gap-5 mb-6 text-xs font-body tracking-wide">
+      <span class="flex items-center gap-1 text-ink-700/70 dark:text-gold-200/60">
+        <span>🎵</span> Musik
+      </span>
+      <span class="flex items-center gap-1 text-ink-700/70 dark:text-gold-200/60">
+        <span>🎭</span> Theater
+      </span>
+      <span class="flex items-center gap-1 text-ink-700/70 dark:text-gold-200/60">
+        <span>📜</span> Lesung
+      </span>
+      <span class="flex items-center gap-1 text-ink-700/70 dark:text-gold-200/60">
+        <span>🍷</span> Wein
+      </span>
+      <span class="flex items-center gap-1 text-ink-700/70 dark:text-gold-200/60">
+        <span>🎨</span> Workshop
+      </span>
+      <span class="flex items-center gap-1 text-ink-700/70 dark:text-gold-200/60">
+        <span>✦</span> Fest
+      </span>
+    </div>
+
+    <!-- ===== Gold Divider ===== -->
+    <div class="gold-divider text-xs mb-6"><span>✦</span></div>
+
+    <!-- ===== CALENDAR — Spotlight Area ===== -->
+    <div class="spotlight">
+      <div class="relative z-10 bg-white/80 dark:bg-ink-800/80 rounded-xl shadow-xl dark:shadow-2xl dark:shadow-black/40 border border-gold-200/40 dark:border-gold-600/20 overflow-hidden backdrop-blur-sm">
+
+        <!-- ===== Day-of-Week Headers ===== -->
+        <div class="calendar-grid bg-curtain-600/10 dark:bg-curtain-800/30 border-b border-gold-200/30 dark:border-gold-600/15">
+          <div class="py-3 text-center text-xs font-body font-semibold tracking-widest uppercase text-curtain-500 dark:text-gold-400">Mo</div>
+          <div class="py-3 text-center text-xs font-body font-semibold tracking-widest uppercase text-curtain-500 dark:text-gold-400">Di</div>
+          <div class="py-3 text-center text-xs font-body font-semibold tracking-widest uppercase text-curtain-500 dark:text-gold-400">Mi</div>
+          <div class="py-3 text-center text-xs font-body font-semibold tracking-widest uppercase text-curtain-500 dark:text-gold-400">Do</div>
+          <div class="py-3 text-center text-xs font-body font-semibold tracking-widest uppercase text-curtain-500 dark:text-gold-400">Fr</div>
+          <div class="py-3 text-center text-xs font-body font-semibold tracking-widest uppercase text-gold-600 dark:text-gold-500 weekend-tint">Sa</div>
+          <div class="py-3 text-center text-xs font-body font-semibold tracking-widest uppercase text-gold-600 dark:text-gold-500 weekend-tint">So</div>
+        </div>
+
+        <!-- ===== Calendar Days ===== -->
+        <div class="calendar-grid">
+
+          <!-- Week 1: Jan 26–Feb 1 -->
+          <!-- Mon Jan 26 (prev month) -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 opacity-40">
+            <span class="text-xs font-body text-ink-700/50 dark:text-gold-200/40">26</span>
+          </div>
+          <!-- Tue Jan 27 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 opacity-40">
+            <span class="text-xs font-body text-ink-700/50 dark:text-gold-200/40">27</span>
+          </div>
+          <!-- Wed Jan 28 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 opacity-40">
+            <span class="text-xs font-body text-ink-700/50 dark:text-gold-200/40">28</span>
+          </div>
+          <!-- Thu Jan 29 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 opacity-40">
+            <span class="text-xs font-body text-ink-700/50 dark:text-gold-200/40">29</span>
+          </div>
+          <!-- Fri Jan 30 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 opacity-40">
+            <span class="text-xs font-body text-ink-700/50 dark:text-gold-200/40">30</span>
+          </div>
+          <!-- Sat Jan 31 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 weekend-tint opacity-40">
+            <span class="text-xs font-body text-ink-700/50 dark:text-gold-200/40">31</span>
+          </div>
+          <!-- Sun Feb 1 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-gold-100/30 dark:border-gold-700/10 weekend-tint">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">1</span>
+          </div>
+
+          <!-- Week 2: Feb 2–8 -->
+          <!-- Mon Feb 2 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">2</span>
+            <div class="event-ticket evt-musik mt-1">
+              <span class="text-[10px]">🎵</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Chansons bei Kerzenschein</span>
+            </div>
+          </div>
+          <!-- Tue Feb 3 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">3</span>
+          </div>
+          <!-- Wed Feb 4 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">4</span>
+            <div class="event-ticket evt-workshop mt-1">
+              <span class="text-[10px]">🎨</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Masken-Workshop</span>
+            </div>
+          </div>
+          <!-- Thu Feb 5 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">5</span>
+          </div>
+          <!-- Fri Feb 6 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">6</span>
+            <div class="event-ticket evt-theater mt-1">
+              <span class="text-[10px]">🎭</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Einakter-Abend</span>
+            </div>
+          </div>
+          <!-- Sat Feb 7 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 weekend-tint">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">7</span>
+            <div class="event-ticket evt-wein mt-1">
+              <span class="text-[10px]">🍷</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Weinstube Live</span>
+            </div>
+          </div>
+          <!-- Sun Feb 8 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-gold-100/30 dark:border-gold-700/10 weekend-tint">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">8</span>
+            <div class="event-ticket evt-musik mt-1">
+              <span class="text-[10px]">🎵</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Cello Solo</span>
+            </div>
+          </div>
+
+          <!-- Week 3: Feb 9–15 -->
+          <!-- Mon Feb 9 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">9</span>
+          </div>
+          <!-- Tue Feb 10 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">10</span>
+            <div class="event-ticket evt-lesung mt-1">
+              <span class="text-[10px]">📜</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Theaterstück-Lesung</span>
+            </div>
+          </div>
+          <!-- Wed Feb 11 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">11</span>
+          </div>
+          <!-- Thu Feb 12 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">12</span>
+            <div class="event-ticket evt-theater mt-1">
+              <span class="text-[10px]">🎭</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Commedia dell'Arte</span>
+            </div>
+            <div class="event-ticket evt-musik mt-1">
+              <span class="text-[10px]">🎵</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Tango-Milonga</span>
+            </div>
+          </div>
+          <!-- Fri Feb 13 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">13</span>
+          </div>
+          <!-- Sat Feb 14 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 weekend-tint">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">14</span>
+            <div class="event-ticket evt-fest mt-1">
+              <span class="text-[10px]">✦</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Gala der Herzen</span>
+            </div>
+          </div>
+          <!-- Sun Feb 15 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-gold-100/30 dark:border-gold-700/10 weekend-tint">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">15</span>
+          </div>
+
+          <!-- Week 4: Feb 16–22 -->
+          <!-- Mon Feb 16 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">16</span>
+          </div>
+          <!-- Tue Feb 17 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">17</span>
+          </div>
+          <!-- Wed Feb 18 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">18</span>
+            <div class="event-ticket evt-lesung mt-1">
+              <span class="text-[10px]">📜</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Lyrik im Scheinwerferlicht</span>
+            </div>
+          </div>
+          <!-- Thu Feb 19 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">19</span>
+            <div class="event-ticket evt-theater mt-1">
+              <span class="text-[10px]">🎭</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Marionetten-Theater</span>
+            </div>
+          </div>
+          <!-- Fri Feb 20 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">20</span>
+          </div>
+          <!-- Sat Feb 21 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 weekend-tint">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">21</span>
+            <div class="event-ticket evt-wein mt-1">
+              <span class="text-[10px]">🍷</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Weinfest Heppenheim</span>
+            </div>
+          </div>
+          <!-- Sun Feb 22 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-gold-100/30 dark:border-gold-700/10 weekend-tint">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">22</span>
+            <div class="event-ticket evt-musik mt-1">
+              <span class="text-[10px]">🎵</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Barockensemble</span>
+            </div>
+          </div>
+
+          <!-- Week 5: Feb 23–Mar 1 -->
+          <!-- Mon Feb 23 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">23</span>
+          </div>
+          <!-- Tue Feb 24 — TODAY -->
+          <div class="day-cell today-spotlight p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-400/40 dark:border-gold-500/30 bg-gold-50/50 dark:bg-gold-700/10 rounded-lg">
+            <div class="relative z-10">
+              <div class="flex items-center gap-1">
+                <span class="text-xs font-body font-bold text-gold-600 dark:text-gold-400">24</span>
+                <span class="text-[9px] font-body font-semibold tracking-wider uppercase text-gold-500 dark:text-gold-500 bg-gold-100 dark:bg-gold-700/30 px-1.5 py-0.5 rounded-full">Heute</span>
+              </div>
+              <div class="event-ticket evt-musik mt-1 ring-1 ring-gold-400/30 dark:ring-gold-500/20">
+                <span class="text-[10px]">🎵</span>
+                <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Bühne frei! Open Stage</span>
+              </div>
+            </div>
+          </div>
+          <!-- Wed Feb 25 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">25</span>
+          </div>
+          <!-- Thu Feb 26 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">26</span>
+          </div>
+          <!-- Fri Feb 27 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">27</span>
+            <div class="event-ticket evt-fest mt-1">
+              <span class="text-[10px]">✦</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Karneval der Kulturen</span>
+            </div>
+          </div>
+          <!-- Sat Feb 28 -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-r border-gold-100/30 dark:border-gold-700/10 weekend-tint">
+            <span class="text-xs font-body font-semibold text-ink-800 dark:text-gold-200">28</span>
+            <div class="event-ticket evt-fest mt-1">
+              <span class="text-[10px]">✦</span>
+              <span class="font-display text-[11px] font-semibold text-ink-800 dark:text-gold-100">Nacht der Masken</span>
+            </div>
+          </div>
+          <!-- Sun Mar 1 (next month) -->
+          <div class="day-cell p-1.5 md:p-2 min-h-[90px] md:min-h-[110px] border-b border-gold-100/30 dark:border-gold-700/10 weekend-tint opacity-40">
+            <span class="text-xs font-body text-ink-700/50 dark:text-gold-200/40">1</span>
+          </div>
+
+        </div>
+        <!-- End Calendar Grid -->
+      </div>
+    </div>
+    <!-- End Spotlight -->
+
+    <!-- ===== Gold Divider ===== -->
+    <div class="gold-divider text-sm mt-10 mb-8">
+      <span>✦ ✦ ✦</span>
+    </div>
+
+    <!-- ===== Upcoming Events — Playbill Section ===== -->
+    <section class="mb-10">
+      <h3 class="font-display text-2xl md:text-3xl font-semibold text-curtain-500 dark:text-gold-400 text-center mb-2 tracking-wide">
+        Nächste Vorstellungen
+      </h3>
+      <p class="text-center text-sm font-body text-ink-700/50 dark:text-gold-200/40 mb-6 tracking-wider uppercase">Was auf der Bühne kommt</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <!-- Today's event highlight -->
+        <div class="relative bg-white dark:bg-ink-800/90 rounded-lg p-5 border-2 border-gold-400/50 dark:border-gold-500/30 shadow-lg shadow-gold-200/20 dark:shadow-gold-900/30 group hover:border-gold-400 dark:hover:border-gold-400/50 transition-all duration-300">
+          <!-- Spotlight glow on hover -->
+          <div class="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-radial-gradient pointer-events-none" style="background: radial-gradient(circle at 50% 30%, rgba(251,191,36,0.08), transparent 70%);"></div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-body font-semibold tracking-widest uppercase text-gold-500 bg-gold-100 dark:bg-gold-700/30 px-2 py-0.5 rounded-full">Heute</span>
+              <span class="text-xs text-ink-700/40 dark:text-gold-200/40 font-body">Di, 24. Feb</span>
+            </div>
+            <h4 class="font-display text-lg font-semibold text-ink-800 dark:text-gold-100 mb-1">Bühne frei! Open Stage</h4>
+            <div class="flex items-center gap-2 text-xs text-ink-700/60 dark:text-gold-200/50 font-body">
+              <span>🎵</span>
+              <span>Musik</span>
+              <span class="text-gold-400">|</span>
+              <span>20:00 Uhr</span>
+              <span class="text-gold-400">|</span>
+              <span>Parktheater Bensheim</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upcoming event 2 -->
+        <div class="relative bg-white dark:bg-ink-800/90 rounded-lg p-5 border border-gold-200/40 dark:border-gold-600/20 shadow-md group hover:border-gold-400/50 dark:hover:border-gold-500/30 transition-all duration-300">
+          <div class="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style="background: radial-gradient(circle at 50% 30%, rgba(251,191,36,0.06), transparent 70%);"></div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-body font-semibold tracking-widest uppercase text-curtain-500/60 dark:text-gold-400/60">In 3 Tagen</span>
+              <span class="text-xs text-ink-700/40 dark:text-gold-200/40 font-body">Fr, 27. Feb</span>
+            </div>
+            <h4 class="font-display text-lg font-semibold text-ink-800 dark:text-gold-100 mb-1">Karneval der Kulturen</h4>
+            <div class="flex items-center gap-2 text-xs text-ink-700/60 dark:text-gold-200/50 font-body">
+              <span>✦</span>
+              <span>Fest</span>
+              <span class="text-gold-400">|</span>
+              <span>18:00 Uhr</span>
+              <span class="text-gold-400">|</span>
+              <span>Marktplatz Heppenheim</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upcoming event 3 -->
+        <div class="relative bg-white dark:bg-ink-800/90 rounded-lg p-5 border border-gold-200/40 dark:border-gold-600/20 shadow-md group hover:border-gold-400/50 dark:hover:border-gold-500/30 transition-all duration-300">
+          <div class="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style="background: radial-gradient(circle at 50% 30%, rgba(251,191,36,0.06), transparent 70%);"></div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-body font-semibold tracking-widest uppercase text-curtain-500/60 dark:text-gold-400/60">In 4 Tagen</span>
+              <span class="text-xs text-ink-700/40 dark:text-gold-200/40 font-body">Sa, 28. Feb</span>
+            </div>
+            <h4 class="font-display text-lg font-semibold text-ink-800 dark:text-gold-100 mb-1">Nacht der Masken</h4>
+            <div class="flex items-center gap-2 text-xs text-ink-700/60 dark:text-gold-200/50 font-body">
+              <span>✦</span>
+              <span>Fest</span>
+              <span class="text-gold-400">|</span>
+              <span>21:00 Uhr</span>
+              <span class="text-gold-400">|</span>
+              <span>Starkenburg Heppenheim</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== "Bühne frei!" Playful Element ===== -->
+    <div class="text-center mb-8">
+      <span class="handwritten text-xl italic opacity-70">
+        ... und der Applaus gehört Ihnen!
+      </span>
+    </div>
+
+  </main>
+
+  <!-- ===== FOOTER — Stage Floor ===== -->
+  <footer class="relative bg-stage-floor text-gold-200/60 py-8 mt-4">
+    <!-- Top gold line -->
+    <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold-500/40 to-transparent"></div>
+
+    <div class="max-w-5xl mx-auto px-4 md:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Left: Logo / Copyright -->
+        <div class="text-center md:text-left">
+          <span class="font-display text-lg text-gold-400/80 tracking-wide">Jahrweiser</span>
+          <p class="text-xs mt-1 text-gold-200/40 font-body">&copy; 2026 webcraft media</p>
+        </div>
+
+        <!-- Center: Decorative -->
+        <div class="flex items-center gap-3 text-gold-500/40 text-xs">
+          <span>✦</span>
+          <span class="text-[10px]">✦</span>
+          <span>✦</span>
+        </div>
+
+        <!-- Right: Legal links -->
+        <div class="flex gap-6 text-xs font-body tracking-wider">
+          <a href="#" class="text-gold-200/50 hover:text-gold-400 transition-colors">Impressum</a>
+          <a href="#" class="text-gold-200/50 hover:text-gold-400 transition-colors">Datenschutz</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== DARK MODE SCRIPT ===== -->
+  <script>
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('jahrweiser-theme', isDark ? 'dark' : 'light');
+    }
+
+    // Restore saved preference
+    (function () {
+      const saved = localStorage.getItem('jahrweiser-theme');
+      if (saved === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else if (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
+</body>
+</html>

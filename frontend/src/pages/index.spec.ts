@@ -8,7 +8,7 @@ const mock$fetch = vi.hoisted(() => vi.fn())
 vi.mock('vue-simple-calendar', () => ({
   CalendarView: {
     name: 'CalendarView',
-    template: '<div class="calendar-view"><slot name="header" :headerProps="{}" /></div>',
+    template: '<div class="calendar-view"><slot name="header" :headerProps="{ previousPeriod: new Date(\'2024-12-01\'), currentPeriod: new Date(\'2025-01-15\'), nextPeriod: new Date(\'2025-02-01\'), periodLabel: \'January 2025\' }" /></div>',
     props: {
       showDate: { type: Date, default: () => new Date() },
       items: { type: Array, default: () => [] },
@@ -130,25 +130,17 @@ describe('Page: Index', () => {
     consoleSpy.mockRestore()
   })
 
-  it('setShowDate updates calendar date', async () => {
+  it('setShowDate updates calendar date via nav button', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const header = wrapper.findComponent({ name: 'CalendarViewHeader' })
-    const newDate = new Date('2025-06-01')
-    await header.vm.$emit('input', newDate)
+    // Click the "next" button in the custom header
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    const nextButton = navButtons[2]! // ‹, today, ›
+    await nextButton.trigger('click')
     const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate')).toStrictEqual(newDate)
+    expect(calendarView.props('showDate')).toStrictEqual(new Date('2025-02-01'))
   })
 
-  it('inverts colors in dark mode', async () => {
-    const listeners: ((e: { matches: boolean }) => void)[] = []
-    vi.spyOn(window, 'matchMedia')
-      .mockImplementation()
-      .mockReturnValue({
-        matches: true,
-        addEventListener: (_event: string, fn: (e: { matches: boolean }) => void) => {
-          listeners.push(fn)
-        },
-      })
+  it('applies design palette colors to calendar items', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
@@ -156,38 +148,9 @@ describe('Page: Index', () => {
     const calendarView = wrapper.findComponent({ name: 'CalendarView' })
     const items = calendarView.props('items') as { style: string }[]
     if (items.length > 0) {
-      // #ff0000 inverted is #00ffff
-      expect(items[0]!.style).toContain('#00ffff')
-    }
-  })
-
-  it('reacts to dark mode change event', async () => {
-    let changeListener: ((e: { matches: boolean }) => void) | undefined
-    vi.spyOn(window, 'matchMedia')
-      .mockImplementation()
-      .mockReturnValue({
-        matches: false,
-        addEventListener: (_event: string, fn: (e: { matches: boolean }) => void) => {
-          changeListener = fn
-        },
-      })
-    const wrapper = await mountSuspended(Page, { route: '/' })
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
-    })
-    // Initially light mode - colors unchanged
-    let calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    let items = calendarView.props('items') as { style: string }[]
-    if (items.length > 0) {
-      expect(items[0]!.style).toContain('#ff0000')
-    }
-    // Trigger dark mode change
-    changeListener!({ matches: true })
-    await nextTick()
-    calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    items = calendarView.props('items') as { style: string }[]
-    if (items.length > 0) {
-      expect(items[0]!.style).toContain('#00ffff')
+      // Light palette sienna: bg=#dfc8b4, border=#9a3412
+      expect(items[0]!.style).toContain('#dfc8b4')
+      expect(items[0]!.style).toContain('#9a3412')
     }
   })
 
@@ -202,12 +165,12 @@ describe('Page: Index', () => {
     })
     await nextTick()
     // Modal should be open
-    expect(wrapper.find('#default-modal.open').exists()).toBe(true)
+    expect(wrapper.find('#default-modal.modal-open').exists()).toBe(true)
     // Click the modal backdrop to trigger handleModalX
     await wrapper.find('#default-modal').trigger('click')
     await nextTick()
     // Modal should be closed
-    expect(wrapper.find('#default-modal.hidden').exists()).toBe(true)
+    expect(wrapper.find('#default-modal.modal-hidden').exists()).toBe(true)
   })
 
   it('skips fetching calendars when already loaded', async () => {

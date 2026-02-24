@@ -39,13 +39,13 @@ describe('Header', () => {
     const wrapper = await mountSuspended(Component)
     const burger = wrapper.find('[aria-controls="navbar-mobile"]')
 
-    expect(wrapper.find('#navbar-mobile').classes()).toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
 
     await burger.trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
 
     await burger.trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
   })
 
   it('logs out', async () => {
@@ -93,10 +93,10 @@ describe('Header', () => {
   it('closes mobile menu when clicking admin link', async () => {
     const wrapper = await mountSuspended(Component)
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
     // Click the admin NuxtLink in mobile menu
     await wrapper.find('#navbar-mobile nav a').trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
   })
 
   it('renders mobile menu content for non-admin user', async () => {
@@ -104,7 +104,7 @@ describe('Header', () => {
     const wrapper = await mountSuspended(Component)
     // Open mobile menu
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
     // Admin link should not be in mobile menu
     const mobileLinks = wrapper.findAll('#navbar-mobile nav a')
     expect(mobileLinks).toHaveLength(0)

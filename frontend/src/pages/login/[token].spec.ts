@@ -77,7 +77,7 @@ describe('Page: Login Token', () => {
       expect(wrapper.find('[role="alert"]').exists()).toBe(true)
     })
     mockNavigateTo.mockClear()
-    await wrapper.find('button[aria-label="Close"]').trigger('click')
+    await wrapper.find('[role="alert"] button').trigger('click')
     expect(mockNavigateTo).toHaveBeenCalledWith('/')
   })
 })

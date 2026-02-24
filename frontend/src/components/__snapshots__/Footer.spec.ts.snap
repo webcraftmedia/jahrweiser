@@ -2,12 +2,18 @@
 
 exports[`Footer > renders 1`] = `
 "<div id="test-wrapper">
-  <footer class="bg-white dark:bg-gray-800 absolute bottom-0 w-full border-t p-1">
-    <div class="w-full mx-auto max-w-screen-xl flex items-center justify-between"><span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">components.Footer.copyright <a href="https://www.webcraft-media.de/" class="hover:underline">components.Footer.copyright-holder</a><p class="inline hidden md:inline">components.Footer.copyright-text</p></span>
-      <ul class="flex flex-wrap items-center text-sm font-medium text-gray-500 dark:text-gray-400">
-        <li><a href="https://www.webcraft-media.de#!impressum" class="hover:underline me-4 md:me-6">components.Footer.imprint</a></li>
-        <li><a href="https://www.webcraft-media.de#!datenschutz" class="hover:underline me-4 md:me-6">components.Footer.privacy-policy</a></li>
-      </ul>
+  <footer data-v-4896eafd="" class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-1 shrink-0">
+    <div data-v-4896eafd="" class="max-w-screen-2xl mx-auto px-2 md:px-4 flex items-center justify-center md:justify-between text-sm text-navy/60 dark:text-ivory/60"><span data-v-4896eafd="" class="hidden md:inline">components.Footer.copyright <a data-v-4896eafd="" href="https://www.webcraft-media.de/" class="hover:text-sienna transition-colors">components.Footer.copyright-holder</a></span><!-- Zoom + Dark mode -->
+      <div data-v-4896eafd="" class="flex items-center gap-1 md:gap-2 shrink-0">
+        <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+        <div data-v-4896eafd="" class="flex items-center gap-0.5 bg-navy/10 dark:bg-ivory/10 rounded-lg px-1 py-0.5"><button data-v-4896eafd="" class="zoom-btn" title="components.Footer.zoom-out"> − </button><button data-v-4896eafd="" class="zoom-btn text-sm font-body" title="components.Footer.zoom-reset">100% </button><button data-v-4896eafd="" class="zoom-btn" title="components.Footer.zoom-in"> + </button></div><!-- eslint-enable @intlify/vue-i18n/no-raw-text --><button data-v-4896eafd="" class="text-navy/60 dark:text-ivory/60 hover:text-navy dark:hover:text-ivory transition-colors p-1 md:p-1.5 bg-navy/10 dark:bg-ivory/10 rounded-lg" title="components.Footer.dark-mode" aria-label="components.Footer.dark-mode">
+          <!-- Sun icon (shown in dark mode) -->
+          <!-- Moon icon (shown in light mode) --><svg data-v-4896eafd="" class="dark-toggle-icon w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path data-v-4896eafd="" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+        </button>
+      </div>
+      <div data-v-4896eafd="" class="hidden md:flex items-center gap-4"><a data-v-4896eafd="" href="https://www.webcraft-media.de#!impressum" class="hover:text-sienna transition-colors">components.Footer.imprint</a><a data-v-4896eafd="" href="https://www.webcraft-media.de#!datenschutz" class="hover:text-sienna transition-colors">components.Footer.privacy-policy</a></div>
     </div>
   </footer>
 </div>"

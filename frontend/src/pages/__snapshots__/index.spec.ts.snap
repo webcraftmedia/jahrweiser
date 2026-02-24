@@ -4,42 +4,101 @@ exports[`Page: Index > renders 1`] = `
 "<div id="test-wrapper">
   <div class="box">
     <div class="calendar row">
-      <div class="calendar-view theme-default">
-        <div class="calendar-header"></div>
+      <div class="cal-wrapper">
+        <div class="calendar-view theme-default" locale="de">
+          <div class="cv-header"><span class="periodLabel">January 2025</span>
+            <div class="cv-header-nav">
+              <!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button> ‹ </button><!-- eslint-enable @intlify/vue-i18n/no-raw-text --><button>pages.index.today</button><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button> › </button><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+            </div>
+          </div>
+        </div><!-- Loading overlay -->
+        <div class="cal-loading-overlay">
+          <div class="flex items-center gap-2"><span class="loading-dot"></span><span class="loading-dot" style="animation-delay: 0.15s;"></span><span class="loading-dot" style="animation-delay: 0.3s;"></span></div>
+        </div>
       </div><!-- Main modal -->
-      <div id="default-modal" tabindex="-1" aria-hidden="false" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-        <div class="relative p-4 w-full max-h-full">
+      <div data-v-94fcd891="" id="default-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div data-v-94fcd891="" class="relative p-4 w-full max-h-full">
           <!-- Modal content -->
-          <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+          <div data-v-94fcd891="" class="modal-card relative bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]">
             <!-- Modal header -->
-            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white"></h3><button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="default-modal"><svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"></path>
-                </svg><span class="sr-only">components.Modal.close</span></button>
+            <div data-v-94fcd891="" class="flex items-center justify-between px-5 py-3 md:px-6 md:py-4 border-b-2 border-navy/15 dark:border-poster-darkBorder bg-navy/3 dark:bg-poster-dark shrink-0">
+              <div data-v-94fcd891="" class="flex items-center gap-3"><svg data-v-94fcd891="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 72.8 72.8" class="nuxt-icon nuxt-icon--fill logo-modal hidden md:block">
+                  <defs>
+                    <filter id="filter-id-a" width="1.071" height="1.071" x="-.035" y="-.035" style="color-interpolation-filters:sRGB;">
+                      <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
+                      <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="1"></feGaussianBlur>
+                      <feOffset in="blur" result="offset"></feOffset>
+                      <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
+                      <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
+                    </filter>
+                    <filter id="filter-id-b" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
+                      <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
+                      <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation=".5"></feGaussianBlur>
+                      <feOffset dx=".5" dy=".5" in="blur" result="offset"></feOffset>
+                      <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
+                      <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
+                    </filter>
+                    <filter id="filter-id-e" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
+                      <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
+                      <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation=".5"></feGaussianBlur>
+                      <feOffset dx=".5" dy=".5" in="blur" result="offset"></feOffset>
+                      <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
+                      <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
+                    </filter>
+                    <filter id="filter-id-c" width="1.241" height="1.242" x="-.1" y="-.1" style="color-interpolation-filters:sRGB;">
+                      <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
+                      <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation=".5"></feGaussianBlur>
+                      <feOffset dx=".5" dy=".5" in="blur" result="offset"></feOffset>
+                      <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
+                      <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
+                    </filter>
+                    <filter id="filter-id-d" width="1.155" height="1.104" x="-.064" y="-.043" style="color-interpolation-filters:sRGB;">
+                      <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>
+                      <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation=".5"></feGaussianBlur>
+                      <feOffset dx=".5" dy=".5" in="blur" result="offset"></feOffset>
+                      <feComposite in="flood" in2="offset" operator="in" result="comp1"></feComposite>
+                      <feComposite in="SourceGraphic" in2="comp1" result="comp2"></feComposite>
+                    </filter>
+                  </defs>
+                  <g style="display:inline;" transform="translate(5.64 -112.407)">
+                    <circle cx="30.76" cy="148.807" r="34" style="display:inline;fill:#ffe0c6;fill-opacity:1;stroke-width:0;filter:url(#filter-id-a);"></circle>
+                    <path d="M48.364 160.543h.711l1.558-.948c-1.32-.102-4.166-.17-7.62-.17l-2.066 1.05v.271c1.727-.102 3.387-.17 4.945-.203l-1.22 4.877c-1.456 1.354-3.454 2.269-5.012 2.269-2.506 0-4.064-1.965-4.064-5.046 0-6.604 4.437-12.768 9.212-12.768 1.388 0 2.574.576 3.217 1.592.44.677.61 1.253.813 2.675l2.506-2.811c-.643-1.93-1.862-2.675-4.47-2.675-3.726 0-7.044 1.524-9.754 4.436-2.743 2.947-4.47 7.078-4.47 10.668 0 3.285 1.795 5.317 4.707 5.317 2.1 0 3.861-.508 6.91-2.066-.509 2.032-1.119 4.234-1.423 4.979-.678 1.829-1.66 2.574-3.455 2.574-.982 0-2.607-.136-3.657-.305l-1.423 2.235c1.22.135 1.727.17 2.439.17 2.709 0 5.012-1.22 7.247-3.794 1.456-1.693 2.066-3.115 3.048-7.044z" aria-label="G" style="font-style:italic;font-weight:500;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;letter-spacing:-.396875px;word-spacing:-.0211667px;fill:#7e22ce;stroke-width:0;filter:url(#filter-id-b);"></path>
+                    <path d="M23.474 163.838c.982.085 1.287.119 1.473.17.254.067.457.66.457 1.354 0 .61-.203 1.1-.813 1.914-1.507-1.541-2.506-2.794-3.454-4.335.711-.525 1.016-.78 1.355-1.118.745-.796 1.083-1.524 1.083-2.303 0-.965-.61-1.524-1.66-1.524-.456 0-.812.119-1.117.39l-1.151 1.016c-.254.237-.407.745-.407 1.456s.153 1.338.508 2.252c-1.862 1.084-2.624 2.15-2.624 3.658 0 1.88 1.456 3.234 3.488 3.234 1.236 0 2.201-.373 3.42-1.304.983.762 2.253 1.304 3.066 1.304.304 0 .474-.034.575-.102l1.473-1.066-.101-.424c-.508.254-.745.322-1.033.322-.83 0-1.473-.237-2.913-1.067 1-1.117 1.372-1.93 1.372-2.997 0-.271-.017-.423-.085-.66 1.203.05 1.71.101 2.371.203 0-.424.05-.711.203-1.22l-3.285.119h-.288c-.237 0-.762-.017-1.354-.034zm-3.472-.135c.762 1.354 1.575 2.438 3.506 4.572-.796.542-1.423.779-2.1.779-1.524 0-2.811-1.338-2.811-2.93 0-.982.373-1.608 1.405-2.421zm.864-1.338c-.322-.931-.44-1.54-.44-2.134 0-.88.355-1.337 1.033-1.337.559 0 .982.474.982 1.134 0 .745-.559 1.575-1.575 2.337z" aria-label="&amp;" style="font-size:16.9333px;line-height:1;font-family:P052;-inkscape-font-specification:P052;letter-spacing:-.396875px;word-spacing:-.0211667px;fill:#1e293b;stroke-width:0;filter:url(#filter-id-c);"></path>
+                    <path d="M44.532 133.51h.711l1.558-.949c-1.32-.101-4.165-.169-7.62-.169l-2.066 1.05v.27c1.728-.1 3.387-.168 4.945-.202l-1.22 4.876c-1.456 1.355-3.454 2.27-5.012 2.27-2.506 0-4.064-1.965-4.064-5.047 0-6.604 4.437-12.767 9.212-12.767 1.389 0 2.574.575 3.217 1.591.44.678.61 1.253.813 2.676l2.506-2.811c-.643-1.93-1.862-2.676-4.47-2.676-3.725 0-7.044 1.524-9.754 4.437-2.743 2.946-4.47 7.078-4.47 10.668 0 3.285 1.795 5.317 4.707 5.317 2.1 0 3.861-.508 6.91-2.066-.509 2.032-1.118 4.234-1.423 4.979-.677 1.828-1.66 2.573-3.455 2.573-.982 0-2.607-.135-3.657-.304l-1.423 2.235c1.22.135 1.728.17 2.439.17 2.71 0 5.012-1.22 7.247-3.794 1.457-1.693 2.066-3.116 3.048-7.044z" aria-label="G" style="font-style:italic;font-weight:500;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;letter-spacing:-.396875px;word-spacing:-.0211667px;fill:#7e22ce;stroke-width:0;filter:url(#filter-id-d);"></path>
+                    <path d="M20.19 143.317h.711l1.558-.948c-1.32-.102-4.166-.17-7.62-.17l-2.066 1.05v.272c1.727-.102 3.387-.17 4.945-.204l-1.22 4.877c-1.456 1.355-3.454 2.27-5.012 2.27-2.506 0-4.064-1.965-4.064-5.047 0-6.604 4.437-12.768 9.212-12.768 1.388 0 2.574.576 3.217 1.592.44.677.61 1.253.813 2.676l2.506-2.811c-.643-1.93-1.863-2.676-4.47-2.676-3.726 0-7.045 1.524-9.754 4.437-2.743 2.946-4.47 7.078-4.47 10.668 0 3.285 1.795 5.317 4.707 5.317 2.1 0 3.861-.508 6.909-2.066-.508 2.032-1.118 4.233-1.422 4.978-.678 1.83-1.66 2.574-3.455 2.574-.982 0-2.608-.135-3.657-.305l-1.423 2.236c1.22.135 1.727.169 2.439.169 2.709 0 5.012-1.22 7.247-3.793 1.456-1.694 2.066-3.116 3.048-7.044z" aria-label="G" style="font-style:italic;font-weight:500;font-size:33.8667px;line-height:1;font-family:Z003;-inkscape-font-specification:&quot;Z003 Medium Italic&quot;;letter-spacing:-.396875px;word-spacing:-.0211667px;fill:#7e22ce;stroke-width:0;filter:url(#filter-id-e);"></path>
+                  </g>
+                </svg>
+                <h3 data-v-94fcd891="" class="text-xl font-semibold text-navy dark:text-ivory font-display tracking-wide"></h3>
+              </div><button data-v-94fcd891="" type="button" class="text-navy/50 hover:text-sienna w-8 h-8 inline-flex justify-center items-center transition-colors dark:text-ivory/50 dark:hover:text-sienna-light" data-modal-hide="default-modal"><svg data-v-94fcd891="" class="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                  <path data-v-94fcd891="" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"></path>
+                </svg><span data-v-94fcd891="" class="sr-only">components.Modal.close</span></button>
             </div><!-- Modal body -->
-            <div class="p-4 md:p-5 space-y-4">
-              <table class="text-left align-top text-gray-900 dark:text-gray-100">
-                <tbody>
-                  <tr>
-                    <th class="pr-4 font-semibold">pages.index.details.start</th>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <th class="pr-4 font-semibold">pages.index.details.duration</th>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <th class="pr-4 font-semibold">pages.index.details.location</th>
-                    <td></td>
-                  </tr>
-                  <tr></tr>
-                </tbody>
-              </table><pre class="text-left whitespace-pre-wrap text-gray-900 dark:text-gray-100"></pre>
+            <div data-v-94fcd891="" class="px-5 py-4 md:px-6 md:py-5 space-y-4 overflow-y-auto">
+              <!-- Loading dots -->
+              <!-- Event content — rolls down when loaded -->
+              <div class="modal-content-reveal">
+                <div class="modal-content-inner">
+                  <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
+                    <tbody>
+                      <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                        <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">pages.index.details.start</th>
+                        <td class="py-1.5"></td>
+                      </tr>
+                      <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                        <th class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap">pages.index.details.duration</th>
+                        <td class="py-1.5"></td>
+                      </tr>
+                      <!--v-if-->
+                    </tbody>
+                  </table>
+                  <!--v-if-->
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="bg-gray-900/50 dark:bg-gray-900/80 fixed inset-0 z-40 hidden"></div>
+      <div data-v-94fcd891="" class="modal-backdrop bg-navy/50 dark:bg-navy-dark/80 fixed inset-0 z-40 modal-hidden"></div>
     </div>
   </div>
 </div>"

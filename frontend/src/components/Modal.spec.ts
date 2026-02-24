@@ -13,15 +13,15 @@ describe('Modal', () => {
     const wrapper = await mountSuspended(Component)
     const vm = wrapper.vm as unknown as { open: () => void; close: () => void }
 
-    expect(wrapper.find('#default-modal').classes()).toContain('hidden')
+    expect(wrapper.find('#default-modal').classes()).toContain('modal-hidden')
 
     vm.open()
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('#default-modal').classes()).toContain('open')
+    expect(wrapper.find('#default-modal').classes()).toContain('modal-open')
 
     vm.close()
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('#default-modal').classes()).toContain('hidden')
+    expect(wrapper.find('#default-modal').classes()).toContain('modal-hidden')
   })
 
   it('emits x on close button click', async () => {

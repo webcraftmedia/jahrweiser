@@ -52,8 +52,8 @@ describe('Page: Login', () => {
     await input.setValue('test@example.com')
     await wrapper.find('form').trigger('submit')
 
-    // Click dismiss button to return to form
-    await wrapper.find('button[aria-label="Close"]').trigger('click')
+    // Click "back to login" button to return to form
+    await wrapper.find('[role="alert"] button').trigger('click')
 
     expect(wrapper.find('form').exists()).toBe(true)
   })

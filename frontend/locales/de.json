@@ -79,7 +79,7 @@
       "form": {
         "button": "Einloggen",
         "description1": "Hier gehts zum Kalender.",
-        "description2": "Kein Zugriff? Kein Problem! Sprich mit deinem Obmann.",
+        "description2": "Kein Zugriff? Sprich mit deinem Obmann.",
         "email": {
           "invalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
           "label": "Deine E-Mail:",

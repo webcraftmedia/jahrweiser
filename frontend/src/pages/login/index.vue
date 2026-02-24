@@ -39,12 +39,13 @@
   </div>
 
   <!-- Login form -->
-  <div v-else key="form" class="w-full max-w-sm mt-8 animate-fade-slide-up">
+  <div v-else key="form" class="w-full max-w-sm mt-8">
+    <div class="login-card-float">
     <div
-      class="p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded shadow-lg"
+      class="login-card p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded"
     >
       <form class="space-y-6" novalidate @submit.prevent="requestLoginLink">
-        <div>
+        <div class="login-stagger" style="--stagger: 0">
           <h5 class="text-xl font-display text-navy dark:text-ivory">
             {{ $t('pages.login.form.title') }}
           </h5>
@@ -52,7 +53,7 @@
             {{ $t('pages.login.form.description1') }}
           </p>
         </div>
-        <div>
+        <div class="login-stagger" style="--stagger: 1">
           <label
             for="email-address-icon"
             class="block mb-2 text-base font-medium font-body"
@@ -81,7 +82,7 @@
               id="email-address-icon"
               v-model="credentials.email"
               type="email"
-              class="bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:ring-sienna focus:border-sienna dark:focus:ring-sienna-dark dark:focus:border-sienna-dark block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
+              class="login-input bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:ring-sienna focus:border-sienna dark:focus:ring-sienna-dark dark:focus:border-sienna-dark block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
               :class="emailError ? 'border-sienna dark:border-sienna-light' : 'border-navy/20 dark:border-poster-darkBorder'"
               :placeholder="$t('pages.login.form.email.placeholder')"
               @input="emailError = false"
@@ -90,13 +91,15 @@
         </div>
         <button
           type="submit"
-          class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center transition-all"
+          class="login-submit login-stagger w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center transition-all"
+          style="--stagger: 2"
         >
           {{ $t('pages.login.form.button') }}
         </button>
       </form>
     </div>
-    <p class="my-4 text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center">
+    </div>
+    <p class="text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center mt-4 login-stagger" style="--stagger: 3">
       {{ $t('pages.login.form.description2') }}
     </p>
   </div>
@@ -141,9 +144,64 @@
 </script>
 
 <style scoped>
+  /* Transition between form ↔ confirmation */
   .login-switch-enter-active { animation: fadeSlideUp 0.4s ease-out; }
   .login-switch-leave-active { animation: fadeSlideUp 0.25s ease-in reverse; }
 
+  /* Schwebende Login-Box */
+  .login-card-float {
+    animation: loginFloat 4s ease-in-out infinite;
+  }
+
+  .login-card {
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      0 2px 8px rgba(0, 0, 0, 0.06);
+    animation: loginCardShadow 4s ease-in-out infinite;
+  }
+
+  @keyframes loginFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  @keyframes loginCardShadow {
+    0%, 100% {
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+    50% {
+      box-shadow:
+        0 16px 48px rgba(0, 0, 0, 0.14),
+        0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  /* Gestaffeltes Einblenden */
+  .login-stagger {
+    animation: fadeSlideUp 0.5s ease-out both;
+    animation-delay: calc(var(--stagger) * 0.12s + 0.1s);
+  }
+
+  /* Input-Glow bei Fokus */
+  .login-input {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .login-input:focus {
+    box-shadow:
+      0 0 0 3px rgba(194, 65, 12, 0.15),
+      0 0 16px rgba(194, 65, 12, 0.1);
+  }
+
+  :deep(.dark) .login-input:focus {
+    box-shadow:
+      0 0 0 3px rgba(234, 88, 12, 0.2),
+      0 0 16px rgba(234, 88, 12, 0.12);
+  }
+
+  /* Submit-Button Hover-Puls */
   .login-submit:hover {
     animation: subtlePulse 1.5s ease-in-out infinite;
   }

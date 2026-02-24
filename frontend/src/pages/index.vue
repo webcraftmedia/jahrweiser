@@ -2,9 +2,10 @@
   <div class="box">
     <div class="calendar row">
       <client-only>
+        <div class="cal-wrapper">
         <CalendarView
           v-bind="calendar"
-          class="theme-default"
+          :class="['theme-default', calFlip === 'left' ? 'cal-flip-left' : calFlip === 'right' ? 'cal-flip-right' : '']"
           @click-item="clickItem"
         >
           <template #header="{ headerProps }">
@@ -30,6 +31,15 @@
             </div>
           </template>
         </CalendarView>
+        <!-- Loading overlay -->
+        <div v-if="calLoading" class="cal-loading-overlay">
+          <div class="flex items-center gap-2">
+            <span class="loading-dot" />
+            <span class="loading-dot" style="animation-delay: 0.15s" />
+            <span class="loading-dot" style="animation-delay: 0.3s" />
+          </div>
+        </div>
+        </div>
       </client-only>
       <Modal ref="modal" @x="handleModalX">
         <template #title>
@@ -227,7 +237,19 @@
         */
   })
 
+  const calFlip = ref<'left' | 'right' | null>(null)
+  const calLoading = ref(false)
+
+  function triggerCalFlip(direction: 'left' | 'right') {
+    calFlip.value = null
+    void nextTick(() => {
+      calFlip.value = direction
+    })
+  }
+
   function setShowDate(d: Date) {
+    const direction = d < calendar.value.showDate ? 'right' : 'left'
+    triggerCalFlip(direction)
     calendar.value.showDate = d
   }
 
@@ -235,6 +257,7 @@
     const current = calendar.value.showDate
     const next = new Date(current)
     next.setMonth(next.getMonth() + direction)
+    triggerCalFlip(direction === 1 ? 'left' : 'right')
     calendar.value.showDate = next
   }
 
@@ -252,6 +275,7 @@
   onUnmounted(() => window.removeEventListener('keydown', handleKeyboard))
 
   async function getData(startDate: Date, endDate: Date) {
+    calLoading.value = true
     try {
       // Fetch all calendars if not already loaded
       if (calendars.value.length === 0) {
@@ -276,6 +300,8 @@
       rawItems.value = results.flat()
     } catch (error) {
       console.error(error)
+    } finally {
+      calLoading.value = false
     }
   }
 </script>
@@ -624,6 +650,56 @@
 
   .dark .theme-default .cv-day.draghover {
     box-shadow: inset 0 0 0.2em 0.2em #d97706;
+  }
+
+  /* ===== Calendar book-flip on period change ===== */
+
+  .cal-wrapper {
+    position: relative;
+    perspective: 1400px;
+    display: flex;
+    flex-flow: column;
+    flex: 1 1 auto;
+    height: 100%;
+  }
+
+  /* Vorwärts blättern — Seite klappt nach links weg */
+  .cal-flip-left .cv-weeks {
+    animation: pageFlipLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: left center;
+  }
+
+  @keyframes pageFlipLeft {
+    0% { transform: rotateY(90deg); opacity: 0; }
+    40% { opacity: 1; }
+    100% { transform: rotateY(0); }
+  }
+
+  /* Rückwärts blättern — Seite klappt nach rechts weg */
+  .cal-flip-right .cv-weeks {
+    animation: pageFlipRight 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: right center;
+  }
+
+  @keyframes pageFlipRight {
+    0% { transform: rotateY(-90deg); opacity: 0; }
+    40% { opacity: 1; }
+    100% { transform: rotateY(0); }
+  }
+
+  /* Loading overlay */
+  .cal-loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(250, 245, 235, 0.6);
+    z-index: 5;
+  }
+
+  .dark .cal-loading-overlay {
+    background: rgba(26, 23, 20, 0.6);
   }
 
   /* ===== Modal loading dots ===== */

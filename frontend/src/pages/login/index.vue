@@ -81,7 +81,7 @@
         </div>
         <button
           type="submit"
-          class="w-full text-ivory bg-sienna hover:bg-sienna-light dark:bg-sienna-dark dark:hover:bg-sienna focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-5 py-2.5 text-center transition-colors"
+          class="w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-5 py-2.5 text-center transition-all"
         >
           {{ $t('pages.login.form.button') }}
         </button>

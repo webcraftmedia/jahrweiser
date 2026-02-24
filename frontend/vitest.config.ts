@@ -8,6 +8,7 @@ export default defineVitestConfig({
     environment: 'nuxt',
     include: ['src/**/*.spec.ts', 'server/**/*.spec.ts'],
     exclude: ['e2e/**'],
+    execArgv: ['--import', path.resolve(__dirname, 'test/preload.mjs')],
     coverage: {
       reporter: ['text', 'json', 'html'],
       all: true,

@@ -370,9 +370,11 @@
   }
 
   .theme-default .cv-item:hover {
-    transform: scale(1.02);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    white-space: normal;
+    word-break: break-all;
+    overflow: visible;
     z-index: 10 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
   .theme-default .cv-item.continued::before,
@@ -533,7 +535,7 @@
   }
 
   .dark .theme-default .cv-item:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
   .dark .theme-default .cv-item .startTime,

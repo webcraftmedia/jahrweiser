@@ -48,7 +48,7 @@
           </button>
         </div>
         <!-- Modal body -->
-        <div class="p-4 md:p-5 space-y-4 overflow-y-auto">
+        <div ref="modalBody" class="p-4 md:p-5 space-y-4 overflow-y-auto">
           <slot name="content" />
         </div>
       </div>
@@ -69,9 +69,11 @@
   }
 
   const isOpen = ref(false)
+  const modalBody = ref<HTMLElement>()
 
   function open() {
     isOpen.value = true
+    nextTick(() => modalBody.value?.scrollTo(0, 0))
   }
 
   function close() {

@@ -1,16 +1,48 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <nav class="bg-white border-gray-200 dark:bg-gray-900 shadow-sm w-full fixed top-0 z-50">
-    <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
-      <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-        <HeaderLogo />
+  <!-- Hero variant (login page) -->
+  <div v-if="variant === 'hero'" class="pt-10 pb-4 flex justify-center px-4">
+    <NuxtLink to="/" class="flex items-center gap-2 md:gap-3">
+      <LogoSmall class="logo-hero logo-float" />
+      <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+      <div>
+        <span class="font-display text-navy dark:text-ivory text-2xl md:text-3xl tracking-wide"
+          >Jahrweiser</span
+        >
+        <span class="font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5"
+          >Bergstraße</span
+        >
+      </div>
+      <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+    </NuxtLink>
+  </div>
+
+  <!-- Bar variant (default nav bar) -->
+  <nav
+    v-else
+    class="bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
+    :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
+  >
+    <div class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto p-2">
+      <NuxtLink to="/" class="flex items-center gap-2">
+        <LogoSmall class="logo-bar" />
+        <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+        <div>
+          <span class="font-display text-navy dark:text-ivory text-2xl tracking-wide"
+            >Jahrweiser</span
+          >
+          <span class="hidden md:inline font-hand text-mustard text-sm tracking-widest ml-1"
+            >Bergstraße</span
+          >
+        </div>
+        <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </NuxtLink>
 
       <!-- Burger menu button (mobile only) -->
       <button
         v-if="loggedIn"
         type="button"
-        class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+        class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
         aria-controls="navbar-mobile"
         :aria-expanded="mobileMenuOpen"
         @click="toggleMobileMenu"
@@ -37,7 +69,7 @@
       <div
         v-if="loggedIn"
         id="navbar-desktop"
-        class="hidden md:block text-right text-gray-900 dark:text-gray-100"
+        class="hidden md:block text-right text-navy dark:text-ivory font-body"
       >
         <p>
           {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
@@ -46,14 +78,11 @@
           <NuxtLink
             v-if="user?.role === 'admin'"
             to="/admin/members/add"
-            class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            class="nav-link hover:text-sienna transition-colors"
           >
             {{ $t('components.Header.admin') }}
           </NuxtLink>
-          <button
-            class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            @click="logout"
-          >
+          <button class="nav-link hover:text-sienna transition-colors" @click="logout">
             {{ $t('components.Header.logout') }}
           </button>
         </div>
@@ -63,22 +92,22 @@
       <div
         v-if="loggedIn"
         id="navbar-mobile"
-        :class="mobileMenuOpen ? 'block' : 'hidden'"
-        class="w-full md:hidden mt-2"
+        :class="mobileMenuOpen ? 'menu-open' : ''"
+        class="mobile-menu w-full md:hidden"
       >
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+          class="bg-ivory dark:bg-poster-darkCard rounded-lg shadow-xl border border-navy/15 dark:border-poster-darkBorder overflow-hidden"
         >
           <!-- User Info Header -->
           <div
-            class="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border-b border-gray-200 dark:border-gray-600"
+            class="px-4 py-3 bg-navy/5 dark:bg-poster-dark border-b border-navy/10 dark:border-poster-darkBorder"
           >
             <p
-              class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider"
             >
               {{ $t('components.Header.welcome') }}
             </p>
-            <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white truncate">
+            <p class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate">
               {{ welcomeName }}
             </p>
           </div>
@@ -88,18 +117,40 @@
             <NuxtLink
               v-if="user?.role === 'admin'"
               to="/admin/members/add"
-              class="block w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"
+              class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
               @click="toggleMobileMenu"
             >
               {{ $t('components.Header.admin') }}
             </NuxtLink>
             <button
-              class="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 active:bg-gray-200 dark:active:bg-gray-700 transition-all duration-150"
+              class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
               @click="logout"
             >
               {{ $t('components.Header.logout') }}
             </button>
           </nav>
+
+          <!-- Legal Links -->
+          <div
+            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex gap-4 text-xs text-navy/60 dark:text-ivory/60"
+          >
+            <NuxtLink
+              :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
+              external
+              class="hover:text-sienna transition-colors"
+              @click="toggleMobileMenu"
+            >
+              {{ $t('components.Footer.imprint') }}
+            </NuxtLink>
+            <NuxtLink
+              :to="{ path: 'https://www.webcraft-media.de/#!datenschutz' }"
+              external
+              class="hover:text-sienna transition-colors"
+              @click="toggleMobileMenu"
+            >
+              {{ $t('components.Footer.privacy-policy') }}
+            </NuxtLink>
+          </div>
         </div>
       </div>
       <template v-else />
@@ -108,6 +159,14 @@
 </template>
 
 <script setup lang="ts">
+  import { useZoom } from '../composables/useZoom'
+
+  import LogoSmall from '~/../assets/logo-small.svg'
+
+  withDefaults(defineProps<{ variant?: 'bar' | 'hero' }>(), { variant: 'bar' })
+
+  const { chromeZoom } = useZoom()
+
   const welcomeName = ref()
   const { user, loggedIn, clear: clearSession } = useUserSession()
   const mobileMenuOpen = ref(false)
@@ -126,3 +185,75 @@
     await navigateTo('/login')
   }
 </script>
+
+<style scoped>
+  .logo-bar {
+    width: 44px;
+    height: 44px;
+  }
+  .logo-hero {
+    width: 40px;
+    height: 40px;
+  }
+
+  @media (min-width: 768px) {
+    .logo-hero {
+      width: 56px;
+      height: 56px;
+    }
+  }
+
+  /* Hero logo gentle float */
+  .logo-float {
+    animation: gentleFloat 4s ease-in-out infinite;
+  }
+
+  /* Mobile menu smooth expand */
+  .mobile-menu {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.3s ease;
+  }
+  .mobile-menu.menu-open {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 0.5rem;
+  }
+
+  /* Nav link hover underline */
+  .nav-link {
+    position: relative;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    height: 2px;
+    width: 0;
+    background-color: currentColor;
+    transition: width 0.3s ease;
+  }
+  .nav-link:hover::after {
+    width: 100%;
+  }
+</style>
+
+<style>
+  .dark .logo-bar circle,
+  .dark .logo-hero circle {
+    fill: transparent !important;
+    filter: none !important;
+  }
+  .dark .logo-bar [aria-label='G'],
+  .dark .logo-hero [aria-label='G'] {
+    fill: #c2410c !important;
+  }
+  .dark .logo-bar [aria-label='&'],
+  .dark .logo-hero [aria-label='&'] {
+    fill: #d97706 !important;
+  }
+</style>

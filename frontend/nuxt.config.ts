@@ -5,6 +5,21 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   srcDir: './src',
+  app: {
+    head: {
+      link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Permanent+Marker&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&display=swap',
+        },
+      ],
+    },
+  },
+  tailwindcss: {
+    cssPath: '~/assets/css/jahrweiser.css',
+  },
   typescript: {
     tsConfig: {
       include: ['../types/**/*.d.ts'],
@@ -20,8 +35,6 @@ export default defineNuxtConfig({
   },
   modules: [
     ['@nuxt/eslint', { config: { typescript: { tsconfigPath: 'tsconfig.json' } } }],
-    '@nuxt/icon',
-    '@nuxt/image',
     '@nuxt/test-utils',
     '@nuxtjs/tailwindcss',
     '@nuxtjs/i18n',

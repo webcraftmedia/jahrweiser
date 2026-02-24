@@ -3,6 +3,20 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 import Component from './Header.vue'
 
+const mockZoomState = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref, computed } = require('vue')
+  const zoomLevel = ref(1.0)
+  return { zoomLevel, computed }
+})
+
+vi.mock('../composables/useZoom', () => ({
+  useZoom: () => ({
+    zoomLevel: mockZoomState.zoomLevel,
+    chromeZoom: mockZoomState.computed(() => 1 + (mockZoomState.zoomLevel.value - 1) * 0.3),
+  }),
+}))
+
 const { mockClear, mockNavigateTo } = vi.hoisted(() => ({
   mockClear: vi.fn(),
   mockNavigateTo: vi.fn(),
@@ -28,6 +42,7 @@ describe('Header', () => {
     vi.clearAllMocks()
     mockUser.value = { name: 'Test User', email: 'test@example.com', role: 'admin' }
     mockLoggedIn.value = true
+    mockZoomState.zoomLevel.value = 1.0
   })
 
   it('renders', async () => {
@@ -39,13 +54,13 @@ describe('Header', () => {
     const wrapper = await mountSuspended(Component)
     const burger = wrapper.find('[aria-controls="navbar-mobile"]')
 
-    expect(wrapper.find('#navbar-mobile').classes()).toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
 
     await burger.trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
 
     await burger.trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
   })
 
   it('logs out', async () => {
@@ -93,10 +108,10 @@ describe('Header', () => {
   it('closes mobile menu when clicking admin link', async () => {
     const wrapper = await mountSuspended(Component)
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
     // Click the admin NuxtLink in mobile menu
     await wrapper.find('#navbar-mobile nav a').trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
   })
 
   it('renders mobile menu content for non-admin user', async () => {
@@ -104,11 +119,18 @@ describe('Header', () => {
     const wrapper = await mountSuspended(Component)
     // Open mobile menu
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
-    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('hidden')
+    expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
     // Admin link should not be in mobile menu
     const mobileLinks = wrapper.findAll('#navbar-mobile nav a')
     expect(mobileLinks).toHaveLength(0)
     // Logout button should still be present
     expect(wrapper.find('#navbar-mobile nav button').exists()).toBe(true)
+  })
+
+  it('applies zoom style when chromeZoom is not 1', async () => {
+    mockZoomState.zoomLevel.value = 1.5
+    const wrapper = await mountSuspended(Component)
+    const nav = wrapper.find('nav')
+    expect(nav.attributes('style')).toContain('zoom')
   })
 })

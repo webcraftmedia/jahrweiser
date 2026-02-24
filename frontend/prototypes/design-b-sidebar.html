@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jahrweiser – Design B: Sidebar Layout</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwindcss.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+      colors: {
+        brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81' },
+        sidebar: { light: '#f8fafc', dark: '#0f172a' }
+      }
+    }
+  }
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+</style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 font-sans text-gray-900 dark:text-gray-100 h-screen flex overflow-hidden">
+
+<!-- Dark Mode Toggle -->
+<button onclick="document.documentElement.classList.toggle('dark')" class="fixed bottom-4 right-4 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-3 shadow-lg">
+  <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+  <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+</button>
+
+<!-- Sidebar -->
+<aside class="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0">
+  <!-- Logo -->
+  <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100 dark:border-gray-800">
+    <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md shadow-indigo-200 dark:shadow-none">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    </div>
+    <span class="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Jahrweiser</span>
+  </div>
+
+  <!-- Mini Calendar -->
+  <div class="px-4 py-5">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-sm font-semibold">Februar 2026</span>
+      <div class="flex gap-1">
+        <button class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+        <button class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+    <div class="grid grid-cols-7 gap-0 text-center text-xs">
+      <div class="py-1 text-gray-400 font-medium">Mo</div>
+      <div class="py-1 text-gray-400 font-medium">Di</div>
+      <div class="py-1 text-gray-400 font-medium">Mi</div>
+      <div class="py-1 text-gray-400 font-medium">Do</div>
+      <div class="py-1 text-gray-400 font-medium">Fr</div>
+      <div class="py-1 text-gray-400 font-medium">Sa</div>
+      <div class="py-1 text-gray-400 font-medium">So</div>
+      <!-- prev month -->
+      <div class="py-1 text-gray-300 dark:text-gray-600">26</div>
+      <div class="py-1 text-gray-300 dark:text-gray-600">27</div>
+      <div class="py-1 text-gray-300 dark:text-gray-600">28</div>
+      <div class="py-1 text-gray-300 dark:text-gray-600">29</div>
+      <div class="py-1 text-gray-300 dark:text-gray-600">30</div>
+      <div class="py-1 text-gray-300 dark:text-gray-600">31</div>
+      <div class="py-1">1</div>
+      <!-- week 2 -->
+      <div class="py-1 relative">2<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></span></div>
+      <div class="py-1">3</div>
+      <div class="py-1 relative">4<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-500 rounded-full"></span></div>
+      <div class="py-1">5</div>
+      <div class="py-1 relative">6<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-500 rounded-full"></span></div>
+      <div class="py-1">7</div>
+      <div class="py-1 relative">8<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-violet-500 rounded-full"></span></div>
+      <!-- week 3 -->
+      <div class="py-1">9</div>
+      <div class="py-1 relative">10<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-rose-500 rounded-full"></span></div>
+      <div class="py-1">11</div>
+      <div class="py-1 relative">12<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></span></div>
+      <div class="py-1">13</div>
+      <div class="py-1 relative">14<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-pink-500 rounded-full"></span></div>
+      <div class="py-1">15</div>
+      <!-- week 4 -->
+      <div class="py-1">16</div>
+      <div class="py-1">17</div>
+      <div class="py-1 relative">18<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-500 rounded-full"></span></div>
+      <div class="py-1 relative">19<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-500 rounded-full"></span></div>
+      <div class="py-1">20</div>
+      <div class="py-1">21</div>
+      <div class="py-1 relative">22<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-violet-500 rounded-full"></span></div>
+      <!-- week 5 -->
+      <div class="py-1">23</div>
+      <div class="py-1"><span class="inline-flex items-center justify-center w-6 h-6 bg-indigo-600 text-white text-xs font-bold rounded-full">24</span></div>
+      <div class="py-1">25</div>
+      <div class="py-1">26</div>
+      <div class="py-1 relative">27<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-500 rounded-full"></span></div>
+      <div class="py-1">28</div>
+      <div class="py-1 text-gray-300 dark:text-gray-600">1</div>
+    </div>
+  </div>
+
+  <!-- Kalender-Liste -->
+  <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-800">
+    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Kalender</h3>
+    <div class="space-y-2">
+      <label class="flex items-center gap-3 text-sm cursor-pointer group">
+        <input type="checkbox" checked class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+        <span class="group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Arbeit</span>
+      </label>
+      <label class="flex items-center gap-3 text-sm cursor-pointer group">
+        <input type="checkbox" checked class="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span class="group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Sport</span>
+      </label>
+      <label class="flex items-center gap-3 text-sm cursor-pointer group">
+        <input type="checkbox" checked class="w-4 h-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500">
+        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+        <span class="group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Veranstaltungen</span>
+      </label>
+      <label class="flex items-center gap-3 text-sm cursor-pointer group">
+        <input type="checkbox" checked class="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500">
+        <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+        <span class="group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Privat</span>
+      </label>
+      <label class="flex items-center gap-3 text-sm cursor-pointer group">
+        <input type="checkbox" checked class="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500">
+        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+        <span class="group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Gesundheit</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Upcoming Events -->
+  <div class="px-4 py-4 border-t border-gray-100 dark:border-gray-800 flex-1 overflow-y-auto">
+    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Nächste Termine</h3>
+    <div class="space-y-3">
+      <div class="group p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+          <span class="text-xs text-gray-400">Heute · 10:00</span>
+        </div>
+        <p class="text-sm font-medium">Standup</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Konferenzraum A</p>
+      </div>
+      <div class="group p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span class="text-xs text-gray-400">Fr, 27. Feb · 19:00</span>
+        </div>
+        <p class="text-sm font-medium">Konzert</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Stadthalle</p>
+      </div>
+      <div class="group p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+          <span class="text-xs text-gray-400">Mo, 2. Mär · 10:00</span>
+        </div>
+        <p class="text-sm font-medium">Teammeeting</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Konferenzraum B</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- User / Footer -->
+  <div class="border-t border-gray-100 dark:border-gray-800 p-4">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">M</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium truncate">Müller</p>
+        <p class="text-xs text-gray-400 truncate">mueller@example.de</p>
+      </div>
+      <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Abmelden">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- Main Area -->
+<div class="flex-1 flex flex-col overflow-hidden">
+
+  <!-- Top Bar -->
+  <header class="h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 shrink-0">
+    <div class="flex items-center gap-4">
+      <h1 class="text-xl font-bold">Februar 2026</h1>
+      <span class="text-sm text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 rounded-full">12 Termine</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+        <button class="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-700 rounded-md shadow-sm">Monat</button>
+        <button class="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Woche</button>
+        <button class="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Liste</button>
+      </div>
+      <div class="flex gap-1 ml-2">
+        <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+        <button class="px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Heute</button>
+        <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+      <a href="#" class="ml-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600" title="Admin">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Calendar Grid -->
+  <main class="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+    <div class="h-full flex flex-col">
+      <!-- Weekday Headers -->
+      <div class="calendar-grid border-b border-gray-200 dark:border-gray-800 shrink-0">
+        <div class="py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Mo</div>
+        <div class="py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Di</div>
+        <div class="py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Mi</div>
+        <div class="py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Do</div>
+        <div class="py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Fr</div>
+        <div class="py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider border-l border-gray-100 dark:border-gray-800">Sa</div>
+        <div class="py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider border-l border-gray-100 dark:border-gray-800">So</div>
+      </div>
+
+      <!-- Rows -->
+      <div class="flex-1 grid grid-rows-5">
+        <!-- Week 1 -->
+        <div class="calendar-grid border-b border-gray-100 dark:border-gray-800">
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800 text-gray-300 dark:text-gray-600"><span class="text-xs">26</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800 text-gray-300 dark:text-gray-600"><span class="text-xs">27</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800 text-gray-300 dark:text-gray-600"><span class="text-xs">28</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800 text-gray-300 dark:text-gray-600"><span class="text-xs">29</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800 text-gray-300 dark:text-gray-600"><span class="text-xs">30</span></div>
+          <div class="p-2 border-l border-r border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 text-gray-300 dark:text-gray-600"><span class="text-xs">31</span></div>
+          <div class="p-2 bg-gray-50/50 dark:bg-gray-800/30"><span class="text-xs font-medium">1</span></div>
+        </div>
+        <!-- Week 2 -->
+        <div class="calendar-grid border-b border-gray-100 dark:border-gray-800">
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800">
+            <span class="text-xs font-medium">2</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-blue-500 text-white rounded truncate">Teammeeting</div>
+          </div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">3</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800">
+            <span class="text-xs font-medium">4</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-emerald-500 text-white rounded truncate">Yoga Kurs</div>
+          </div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">5</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800">
+            <span class="text-xs font-medium">6</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-amber-500 text-white rounded truncate">Workshop</div>
+          </div>
+          <div class="p-2 border-l border-r border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30"><span class="text-xs font-medium">7</span></div>
+          <div class="p-2 bg-gray-50/50 dark:bg-gray-800/30">
+            <span class="text-xs font-medium">8</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-violet-500 text-white rounded truncate">Brunch</div>
+          </div>
+        </div>
+        <!-- Week 3 -->
+        <div class="calendar-grid border-b border-gray-100 dark:border-gray-800">
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">9</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800">
+            <span class="text-xs font-medium">10</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-rose-500 text-white rounded truncate">Arzttermin</div>
+          </div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">11</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800">
+            <span class="text-xs font-medium">12</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-blue-500 text-white rounded truncate">Teammeeting</div>
+            <div class="mt-0.5 px-1.5 py-0.5 text-[11px] bg-emerald-500 text-white rounded truncate">Sport</div>
+          </div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">13</span></div>
+          <div class="p-2 border-l border-r border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+            <span class="text-xs font-medium">14</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-pink-500 text-white rounded truncate">Valentinstag</div>
+          </div>
+          <div class="p-2 bg-gray-50/50 dark:bg-gray-800/30"><span class="text-xs font-medium">15</span></div>
+        </div>
+        <!-- Week 4 -->
+        <div class="calendar-grid border-b border-gray-100 dark:border-gray-800">
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">16</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">17</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800">
+            <span class="text-xs font-medium">18</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-emerald-500 text-white rounded truncate">Yoga Kurs</div>
+          </div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800">
+            <span class="text-xs font-medium">19</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-amber-500 text-white rounded truncate">Elternabend</div>
+          </div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">20</span></div>
+          <div class="p-2 border-l border-r border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30"><span class="text-xs font-medium">21</span></div>
+          <div class="p-2 bg-gray-50/50 dark:bg-gray-800/30">
+            <span class="text-xs font-medium">22</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-violet-500 text-white rounded truncate">Geburtstag</div>
+          </div>
+        </div>
+        <!-- Week 5 -->
+        <div class="calendar-grid">
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">23</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800 bg-indigo-50 dark:bg-indigo-900/20">
+            <span class="inline-flex items-center justify-center w-6 h-6 bg-indigo-600 text-white text-xs font-bold rounded-full">24</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-blue-500 text-white rounded truncate">Standup</div>
+          </div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">25</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800"><span class="text-xs font-medium">26</span></div>
+          <div class="p-2 border-r border-gray-100 dark:border-gray-800">
+            <span class="text-xs font-medium">27</span>
+            <div class="mt-1 px-1.5 py-0.5 text-[11px] bg-amber-500 text-white rounded truncate">Konzert</div>
+          </div>
+          <div class="p-2 border-l border-r border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30"><span class="text-xs font-medium">28</span></div>
+          <div class="p-2 bg-gray-50/50 dark:bg-gray-800/30 text-gray-300 dark:text-gray-600"><span class="text-xs">1</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-3 flex items-center justify-between text-xs text-gray-400 shrink-0">
+    <span>&copy; 2026 webcraft media</span>
+    <div class="flex gap-4">
+      <a href="#" class="hover:text-gray-600 dark:hover:text-gray-300">Impressum</a>
+      <a href="#" class="hover:text-gray-600 dark:hover:text-gray-300">Datenschutz</a>
+    </div>
+  </footer>
+</div>
+
+</body>
+</html>

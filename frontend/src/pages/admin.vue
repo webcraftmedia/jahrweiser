@@ -29,25 +29,25 @@
 </script>
 
 <template>
-  <div class="bg-gray-50 dark:bg-gray-900 w-full flex-1 border-l border-r">
+  <div class="bg-ivory dark:bg-poster-dark w-full flex-1 border-l border-r">
     <div class="flex overflow-hidden full-height">
       <!-- Desktop Sidebar - Full Height -->
       <aside class="hidden md:flex md:flex-shrink-0">
         <div
-          class="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full"
+          class="flex flex-col w-64 bg-ivory dark:bg-poster-darkCard border-r border-navy/10 dark:border-poster-darkBorder h-full"
         >
           <div class="flex items-center flex-shrink-0 px-4 pt-5 pb-4">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 class="text-xl font-semibold text-navy dark:text-ivory">
               {{ $t('pages.admin.title') }}
             </h2>
           </div>
-          <hr class="border-gray-200 dark:border-gray-700" />
+          <hr class="border-navy/10 dark:border-poster-darkBorder" />
           <nav class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto">
             <template v-for="item in menuItems" :key="item.path">
               <a
                 v-if="item.external"
                 :href="item.path"
-                class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg"
+                class="text-navy/80 dark:text-ivory/80 hover:bg-sienna/5 dark:hover:bg-sienna/10 group flex items-center px-2 py-2 text-sm font-medium rounded-lg"
               >
                 {{ item.label }}
               </a>
@@ -56,8 +56,8 @@
                 :to="item.path"
                 :class="[
                   isActive(item.path)
-                    ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+                    ? 'bg-sienna/10 text-sienna dark:bg-sienna/20 dark:text-sienna-light'
+                    : 'text-navy/80 dark:text-ivory/80 hover:bg-sienna/5 dark:hover:bg-sienna/10',
                   'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
                 ]"
               >
@@ -70,26 +70,26 @@
 
       <!-- Mobile Drawer Backdrop -->
       <div
-        class="md:hidden fixed inset-0 bg-gray-600 z-40 transition-opacity ease-linear duration-300"
+        class="md:hidden fixed inset-0 bg-navy/60 z-40 transition-opacity ease-linear duration-300"
         :class="mobileMenuOpen ? 'bg-opacity-75' : 'opacity-0 pointer-events-none'"
         @click="mobileMenuOpen = false"
       ></div>
 
       <!-- Mobile Drawer -->
       <div
-        class="md:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white dark:bg-gray-800 shadow-xl transition-transform ease-in-out duration-300"
+        class="md:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-ivory dark:bg-poster-darkCard shadow-xl drawer-slide"
         :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
       >
         <div class="flex items-center justify-between flex-shrink-0 px-4 pt-5 pb-4">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 class="text-xl font-semibold text-navy dark:text-ivory">
             {{ $t('pages.admin.title') }}
           </h2>
           <button
-            class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+            class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-sienna/5 dark:hover:bg-sienna/10 focus:outline-none"
             @click="mobileMenuOpen = false"
           >
             <svg
-              class="h-6 w-6 text-gray-600 dark:text-gray-300"
+              class="h-6 w-6 text-navy/60 dark:text-ivory/60"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -103,13 +103,13 @@
             </svg>
           </button>
         </div>
-        <hr class="border-gray-200 dark:border-gray-700" />
+        <hr class="border-navy/10 dark:border-poster-darkBorder" />
         <nav class="flex-1 px-2 pt-4 space-y-2 overflow-y-auto">
           <template v-for="item in menuItems" :key="item.path">
             <a
               v-if="item.external"
               :href="item.path"
-              class="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 group flex items-center px-2 py-2 text-sm font-medium rounded-lg"
+              class="text-navy/80 dark:text-ivory/80 hover:bg-sienna/5 dark:hover:bg-sienna/10 group flex items-center px-2 py-2 text-sm font-medium rounded-lg"
               @click="mobileMenuOpen = false"
             >
               {{ item.label }}
@@ -119,8 +119,8 @@
               :to="item.path"
               :class="[
                 isActive(item.path)
-                  ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+                  ? 'bg-sienna/10 text-sienna dark:bg-sienna/20 dark:text-sienna-light'
+                  : 'text-navy/80 dark:text-ivory/80 hover:bg-sienna/5 dark:hover:bg-sienna/10',
                 'group flex items-center px-2 py-2 text-sm font-medium rounded-lg',
               ]"
               @click="mobileMenuOpen = false"
@@ -137,7 +137,7 @@
           <!-- Mobile Menu Button -->
           <div class="md:hidden flex items-center gap-3 px-4 pt-4 pb-3">
             <button
-              class="p-2 text-gray-600 dark:text-gray-400 bg-transparent rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors"
+              class="p-2 text-navy/60 dark:text-ivory/60 bg-transparent rounded-lg hover:bg-sienna/5 dark:hover:bg-sienna/10 focus:outline-none focus:ring-4 focus:ring-navy/10 dark:focus:ring-ivory/10 transition-colors"
               @click="toggleMobileMenu"
             >
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,14 +149,14 @@
                 />
               </svg>
             </button>
-            <div class="flex items-center gap-2 text-gray-900 dark:text-white">
+            <div class="flex items-center gap-2 text-navy dark:text-ivory">
               <span class="font-semibold">{{ $t('pages.admin.title') }}</span>
               <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -->
-              <span class="text-gray-400 dark:text-gray-500">&mdash;</span>
-              <span class="text-gray-700 dark:text-gray-300">{{ currentPageTitle }}</span>
+              <span class="text-navy/40 dark:text-ivory/40">&mdash;</span>
+              <span class="text-navy/80 dark:text-ivory/80">{{ currentPageTitle }}</span>
             </div>
           </div>
-          <hr class="md:hidden border-gray-200 dark:border-gray-700" />
+          <hr class="md:hidden border-navy/10 dark:border-poster-darkBorder" />
 
           <div class="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
             <NuxtPage />
@@ -172,5 +172,22 @@
     height: 100%;
     height: -moz-available;
     height: -webkit-fill-available;
+  }
+
+  /* Drawer bounce transition */
+  .drawer-slide {
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Sidebar links hover slide */
+  :deep(nav a),
+  :deep(nav .group) {
+    transition:
+      transform 0.2s ease,
+      background-color 0.15s ease;
+  }
+  :deep(nav a:hover),
+  :deep(nav .group:hover) {
+    transform: translateX(3px);
   }
 </style>

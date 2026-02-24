@@ -111,22 +111,22 @@
 
 <template>
   <div class="space-y-6">
-    <h1 class="hidden md:block text-2xl font-semibold text-gray-900 dark:text-white">
+    <h1 class="hidden md:block text-2xl font-display text-navy dark:text-ivory">
       {{ $t('pages.admin.members.add.title') }}
     </h1>
 
     <!-- Step 1: Email Input -->
     <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700"
+      class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <h2 class="text-lg font-display text-navy dark:text-ivory">
           {{ $t('pages.admin.members.add.step1.title') }}
         </h2>
         <button
           v-if="step > 1"
           type="button"
-          class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+          class="text-sienna hover:text-sienna-light dark:text-sienna-light dark:hover:text-sienna text-sm font-medium font-body transition-colors"
           @click="goToStep(1)"
         >
           {{ $t('pages.admin.members.add.step1.button-edit') }}
@@ -135,15 +135,21 @@
 
       <div class="space-y-4">
         <div>
-          <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          <label
+            for="email"
+            class="block mb-2 text-base font-medium font-body text-navy dark:text-ivory"
+          >
             {{ $t('pages.admin.members.add.step1.email-label') }}
           </label>
           <input
             id="email"
             v-model="email"
             type="email"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            :class="{ 'shake border-red-500 dark:border-red-500': isEmailShaking }"
+            class="bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:ring-sienna focus:border-sienna dark:focus:ring-sienna-dark dark:focus:border-sienna-dark block w-full p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            :class="{
+              'shake border-sienna dark:border-sienna-light': isEmailShaking,
+              'border-navy/20 dark:border-poster-darkBorder': !isEmailShaking,
+            }"
             :placeholder="$t('pages.admin.members.add.step1.email-placeholder')"
             :disabled="step !== 1"
             required
@@ -155,13 +161,13 @@
           v-if="step === 1"
           type="button"
           :disabled="!isValidEmail"
-          class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          class="text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-2.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           @click="confirmEmail"
         >
           {{ $t('pages.admin.members.add.step1.button-next') }}
         </button>
 
-        <div v-if="step > 1" class="flex items-center text-green-600 dark:text-green-400">
+        <div v-if="step > 1" class="flex items-center text-olive dark:text-olive-light">
           <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path
               fill-rule="evenodd"
@@ -169,7 +175,7 @@
               clip-rule="evenodd"
             />
           </svg>
-          <span class="text-sm font-medium">{{
+          <span class="text-sm font-medium font-body">{{
             $t('pages.admin.members.add.step1.valid-email')
           }}</span>
         </div>
@@ -179,16 +185,16 @@
     <!-- Step 2: Tags Selection -->
     <div
       v-if="step >= 2"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700"
+      class="animate-fade-slide-up stagger-1 bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <h2 class="text-lg font-display text-navy dark:text-ivory">
           {{ $t('pages.admin.members.add.step2.title') }}
         </h2>
         <button
           v-if="step > 2"
           type="button"
-          class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+          class="text-sienna hover:text-sienna-light dark:text-sienna-light dark:hover:text-sienna text-sm font-medium font-body transition-colors"
           @click="goToStep(2)"
         >
           {{ $t('pages.admin.members.add.step1.button-edit') }}
@@ -196,22 +202,27 @@
       </div>
 
       <div v-if="isLoadingTags" class="flex items-center justify-center py-8">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-sienna"></div>
       </div>
 
       <div v-else class="space-y-4">
         <div class="space-y-3">
-          <div v-for="(tag, index) in tags" :key="index" class="flex items-center">
+          <div
+            v-for="(tag, index) in tags"
+            :key="index"
+            class="flex items-center animate-fade-slide-up"
+            :style="{ animationDelay: `${index * 50}ms` }"
+          >
             <input
               :id="`tag-${index}`"
               v-model="tag.state"
               type="checkbox"
-              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-4 h-4 text-sienna bg-ivory dark:bg-poster-dark border-navy/20 dark:border-poster-darkBorder rounded focus:ring-sienna dark:focus:ring-sienna-dark focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed accent-sienna"
               :disabled="step !== 2"
             />
             <label
               :for="`tag-${index}`"
-              class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+              class="ms-2 text-sm font-medium font-body text-navy dark:text-ivory"
               :class="{ 'opacity-50': step !== 2 }"
             >
               {{ tag.name }}
@@ -222,13 +233,13 @@
         <button
           v-if="step === 2"
           type="button"
-          class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          class="text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-2.5 transition-all"
           @click="confirmTags"
         >
           {{ $t('pages.admin.members.add.step2.button-next') }}
         </button>
 
-        <div v-if="step > 2" class="flex items-center text-green-600 dark:text-green-400">
+        <div v-if="step > 2" class="flex items-center text-olive dark:text-olive-light">
           <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path
               fill-rule="evenodd"
@@ -236,7 +247,7 @@
               clip-rule="evenodd"
             />
           </svg>
-          <span class="text-sm font-medium">{{
+          <span class="text-sm font-medium font-body">{{
             $t('pages.admin.members.add.step2.permissions-selected')
           }}</span>
         </div>
@@ -247,9 +258,9 @@
     <!-- Step 3: Welcome Email -->
     <div
       v-if="step >= 3"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700"
+      class="animate-fade-slide-up stagger-2 bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h2 class="text-lg font-display text-navy dark:text-ivory mb-4">
         {{ $t('pages.admin.members.add.step3.title') }}
       </h2>
 
@@ -259,11 +270,11 @@
             id="welcome-email"
             v-model="sendMail"
             type="checkbox"
-            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            class="w-4 h-4 text-sienna bg-ivory dark:bg-poster-dark border-navy/20 dark:border-poster-darkBorder rounded focus:ring-sienna dark:focus:ring-sienna-dark focus:ring-2 accent-sienna"
           />
           <label
             for="welcome-email"
-            class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+            class="ms-2 text-sm font-medium font-body text-navy dark:text-ivory"
           >
             {{ $t('pages.admin.members.add.step3.send-welcome-email') }}
           </label>
@@ -273,12 +284,12 @@
           v-if="!submitResult"
           type="button"
           :disabled="isSubmitting"
-          class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+          class="text-ivory bg-olive hover:brightness-110 dark:bg-olive-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-olive/30 font-semibold font-body rounded text-base px-5 py-2.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           @click="submitForm"
         >
           <span v-if="isSubmitting" class="flex items-center">
             <svg
-              class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              class="animate-spin -ml-1 mr-3 h-5 w-5 text-ivory"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -308,19 +319,19 @@
     <!-- Result Display -->
     <div
       v-if="submitResult"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700"
+      class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h2 class="text-lg font-display text-navy dark:text-ivory mb-4">
         {{ $t('pages.admin.members.add.result.title') }}
       </h2>
 
       <!-- Success with Email -->
       <div v-if="submitResult === 'success-with-email'" class="space-y-4">
         <div
-          class="flex items-start p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
+          class="flex items-start p-4 bg-olive/10 dark:bg-olive/5 border-2 border-olive/50 dark:border-olive/30 rounded"
         >
           <svg
-            class="w-6 h-6 text-green-600 dark:text-green-400 mr-3 flex-shrink-0"
+            class="animate-stamp w-6 h-6 text-olive dark:text-olive-light mr-3 flex-shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -330,11 +341,11 @@
               clip-rule="evenodd"
             />
           </svg>
-          <div>
-            <h3 class="text-sm font-medium text-green-800 dark:text-green-300">
+          <div class="font-body">
+            <h3 class="text-sm font-medium text-olive-dark dark:text-olive-light">
               {{ $t('pages.admin.members.add.result.success-title') }}
             </h3>
-            <p class="mt-1 text-sm text-green-700 dark:text-green-400">
+            <p class="mt-1 text-sm text-olive-dark/80 dark:text-olive-light/80">
               {{ $t('pages.admin.members.add.result.success-with-email') }}
             </p>
           </div>
@@ -344,10 +355,10 @@
       <!-- Success without Email -->
       <div v-else-if="submitResult === 'success-without-email'" class="space-y-4">
         <div
-          class="flex items-start p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+          class="flex items-start p-4 bg-mustard/10 dark:bg-mustard/5 border-2 border-mustard/50 dark:border-mustard/30 rounded"
         >
           <svg
-            class="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0"
+            class="animate-stamp w-6 h-6 text-mustard dark:text-mustard-light mr-3 flex-shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -357,11 +368,11 @@
               clip-rule="evenodd"
             />
           </svg>
-          <div>
-            <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300">
+          <div class="font-body">
+            <h3 class="text-sm font-medium text-navy dark:text-ivory">
               {{ $t('pages.admin.members.add.result.success-title') }}
             </h3>
-            <p class="mt-1 text-sm text-blue-700 dark:text-blue-400">
+            <p class="mt-1 text-sm text-navy/80 dark:text-ivory/80">
               {{ $t('pages.admin.members.add.result.success-without-email') }}
             </p>
           </div>
@@ -371,10 +382,10 @@
       <!-- Error -->
       <div v-else class="space-y-4">
         <div
-          class="flex items-start p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+          class="flex items-start p-4 bg-sienna/10 dark:bg-sienna/5 border-2 border-sienna/50 dark:border-sienna/30 rounded"
         >
           <svg
-            class="w-6 h-6 text-red-600 dark:text-red-400 mr-3 flex-shrink-0"
+            class="w-6 h-6 text-sienna dark:text-sienna-light mr-3 flex-shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -384,11 +395,11 @@
               clip-rule="evenodd"
             />
           </svg>
-          <div>
-            <h3 class="text-sm font-medium text-red-800 dark:text-red-300">
+          <div class="font-body">
+            <h3 class="text-sm font-medium text-sienna-dark dark:text-sienna-light">
               {{ $t('pages.admin.members.add.result.error-title') }}
             </h3>
-            <p class="mt-1 text-sm text-red-700 dark:text-red-400">
+            <p class="mt-1 text-sm text-sienna-dark/80 dark:text-sienna-light/80">
               {{ submitError }}
             </p>
           </div>
@@ -399,7 +410,7 @@
       <div class="mt-4 flex items-center gap-4">
         <button
           type="button"
-          class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          class="text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-2.5 transition-all"
           @click="resetForm"
         >
           {{ $t('pages.admin.members.add.result.button-new') }}
@@ -409,7 +420,7 @@
         <button
           v-if="submitResult === 'error'"
           type="button"
-          class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-red-700 dark:hover:bg-red-800 dark:focus:ring-red-900"
+          class="px-5 py-2.5 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
           @click="submitForm"
         >
           {{ $t('pages.admin.members.add.result.button-retry') }}
@@ -419,7 +430,7 @@
         <button
           v-else
           type="button"
-          class="text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium underline"
+          class="text-sienna dark:text-sienna-light hover:text-sienna-dark dark:hover:text-sienna text-sm font-medium font-body underline transition-colors"
           @click="submitForm"
         >
           {{ $t('pages.admin.members.add.result.button-retry') }}
@@ -446,5 +457,12 @@
 
   .shake {
     animation: shake 0.5s ease-in-out;
+  }
+
+  .stagger-1 {
+    animation-delay: 0.1s;
+  }
+  .stagger-2 {
+    animation-delay: 0.2s;
   }
 </style>

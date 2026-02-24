@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="de" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jahrweiser — Februar 2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cream: '#faf9f6',
+            'deep-black': '#1a1916',
+            terracotta: '#c45d3e',
+            'terracotta-dark': '#d4725a',
+          },
+          fontFamily: {
+            serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+            sans: ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: #faf9f6;
+      color: #1a1916;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    html.dark body {
+      background-color: #1a1916;
+      color: #faf9f6;
+    }
+
+    .font-serif-display {
+      font-family: 'Instrument Serif', Georgia, serif;
+    }
+
+    /* Calendar grid */
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    /* Thin grid lines - light mode */
+    .cal-cell {
+      border-right: 1px solid rgba(26, 25, 22, 0.08);
+      border-bottom: 1px solid rgba(26, 25, 22, 0.08);
+      min-height: 100px;
+      padding: 8px 10px;
+      position: relative;
+      transition: background-color 0.2s ease;
+    }
+
+    .cal-cell:nth-child(7n) {
+      border-right: none;
+    }
+
+    .cal-header-cell {
+      border-bottom: 1px solid rgba(26, 25, 22, 0.12);
+      padding: 12px 10px 8px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(26, 25, 22, 0.4);
+    }
+
+    /* Dark mode grid lines */
+    html.dark .cal-cell {
+      border-right-color: rgba(250, 249, 246, 0.06);
+      border-bottom-color: rgba(250, 249, 246, 0.06);
+    }
+
+    html.dark .cal-cell:nth-child(7n) {
+      border-right-color: transparent;
+    }
+
+    html.dark .cal-header-cell {
+      border-bottom-color: rgba(250, 249, 246, 0.1);
+      color: rgba(250, 249, 246, 0.35);
+    }
+
+    /* Day number */
+    .day-number {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+      font-weight: 400;
+      line-height: 1;
+      color: rgba(26, 25, 22, 0.8);
+    }
+
+    html.dark .day-number {
+      color: rgba(250, 249, 246, 0.7);
+    }
+
+    .day-other .day-number {
+      color: rgba(26, 25, 22, 0.18);
+    }
+
+    html.dark .day-other .day-number {
+      color: rgba(250, 249, 246, 0.15);
+    }
+
+    /* Today */
+    .day-today .day-number {
+      background-color: #c45d3e;
+      color: #faf9f6;
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-weight: 500;
+    }
+
+    html.dark .day-today .day-number {
+      background-color: #d4725a;
+      color: #1a1916;
+    }
+
+    /* Event labels */
+    .event-label {
+      font-size: 0.65rem;
+      line-height: 1.3;
+      padding: 2px 0 2px 7px;
+      margin-top: 5px;
+      border-left: 2px solid;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: rgba(26, 25, 22, 0.7);
+    }
+
+    html.dark .event-label {
+      color: rgba(250, 249, 246, 0.65);
+    }
+
+    /* Event colors */
+    .ev-slate       { border-left-color: #64748b; }
+    .ev-sage        { border-left-color: #7c9a72; }
+    .ev-gold        { border-left-color: #b8963e; }
+    .ev-purple      { border-left-color: #8b7bb5; }
+    .ev-rose        { border-left-color: #c07a8e; }
+    .ev-pink        { border-left-color: #d4879b; }
+    .ev-terracotta  { border-left-color: #c45d3e; }
+
+    /* Hover state */
+    .cal-cell:not(.day-other):hover {
+      background-color: rgba(26, 25, 22, 0.015);
+    }
+    html.dark .cal-cell:not(.day-other):hover {
+      background-color: rgba(250, 249, 246, 0.02);
+    }
+
+    /* Navigation arrows */
+    .nav-arrow {
+      font-size: 1.1rem;
+      padding: 4px 10px;
+      color: rgba(26, 25, 22, 0.35);
+      transition: color 0.2s ease;
+      cursor: pointer;
+      user-select: none;
+      line-height: 1;
+    }
+    .nav-arrow:hover {
+      color: #c45d3e;
+    }
+    html.dark .nav-arrow {
+      color: rgba(250, 249, 246, 0.3);
+    }
+    html.dark .nav-arrow:hover {
+      color: #d4725a;
+    }
+
+    /* Dark mode toggle */
+    .dm-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(26, 25, 22, 0.1);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      color: rgba(26, 25, 22, 0.45);
+      transition: all 0.3s ease;
+      z-index: 50;
+    }
+    .dm-toggle:hover {
+      border-color: #c45d3e;
+      color: #c45d3e;
+    }
+    html.dark .dm-toggle {
+      border-color: rgba(250, 249, 246, 0.1);
+      color: rgba(250, 249, 246, 0.4);
+    }
+    html.dark .dm-toggle:hover {
+      border-color: #d4725a;
+      color: #d4725a;
+    }
+
+    /* Header border */
+    .header-border {
+      border-bottom: 1px solid rgba(26, 25, 22, 0.08);
+    }
+    html.dark .header-border {
+      border-bottom-color: rgba(250, 249, 246, 0.06);
+    }
+
+    /* Footer */
+    .footer-text {
+      color: rgba(26, 25, 22, 0.25);
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+    }
+    html.dark .footer-text {
+      color: rgba(250, 249, 246, 0.2);
+    }
+    .footer-text a {
+      color: rgba(26, 25, 22, 0.3);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    .footer-text a:hover {
+      color: #c45d3e;
+    }
+    html.dark .footer-text a {
+      color: rgba(250, 249, 246, 0.25);
+    }
+    html.dark .footer-text a:hover {
+      color: #d4725a;
+    }
+
+    /* Legend */
+    .legend-dot {
+      display: inline-block;
+      width: 8px;
+      height: 2px;
+      border-radius: 1px;
+      margin-right: 4px;
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
+    }
+    .legend-item {
+      font-size: 0.65rem;
+      color: rgba(26, 25, 22, 0.35);
+      letter-spacing: 0.02em;
+    }
+    html.dark .legend-item {
+      color: rgba(250, 249, 246, 0.28);
+    }
+
+    /* Smooth transitions for theme switch */
+    * {
+      transition-property: background-color, border-color, color;
+      transition-duration: 0.15s;
+      transition-timing-function: ease;
+    }
+
+    /* Override transition for main containers - slightly slower */
+    body, .cal-cell, .dm-toggle {
+      transition-duration: 0.35s;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="header-border">
+    <div class="max-w-5xl mx-auto px-6 py-5 flex items-baseline justify-between">
+      <span class="font-serif-display text-xl tracking-tight" style="font-style: italic;">Jahrweiser</span>
+      <div class="flex items-center gap-4">
+        <span class="text-xs font-sans font-light tracking-wide" style="color: rgba(26,25,22,0.4);">
+          Maria Lehmann
+        </span>
+        <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium"
+              style="background: rgba(26,25,22,0.06); color: rgba(26,25,22,0.5);">
+          ML
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1 max-w-5xl mx-auto w-full px-6 pt-12 pb-16">
+
+    <!-- Month heading -->
+    <div class="flex items-end justify-between mb-12">
+      <div class="flex items-baseline gap-3">
+        <h1 class="font-serif-display text-6xl md:text-7xl lg:text-8xl tracking-tight leading-none" style="font-weight: 400;">
+          Februar
+        </h1>
+        <span class="font-sans text-sm font-light tracking-widest" style="color: rgba(26,25,22,0.3); position: relative; top: -0.15em;">
+          2026
+        </span>
+      </div>
+      <div class="flex items-center gap-1 pb-2">
+        <span class="nav-arrow">&larr;</span>
+        <span class="nav-arrow">&rarr;</span>
+      </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="cal-grid" style="border-top: 1px solid rgba(26,25,22,0.08); border-left: 1px solid rgba(26,25,22,0.08);" id="calGrid">
+      <!-- Day headers -->
+      <div class="cal-header-cell">Mo</div>
+      <div class="cal-header-cell">Di</div>
+      <div class="cal-header-cell">Mi</div>
+      <div class="cal-header-cell">Do</div>
+      <div class="cal-header-cell">Fr</div>
+      <div class="cal-header-cell">Sa</div>
+      <div class="cal-header-cell">So</div>
+
+      <!-- Week 1: Jan 26-28, Feb 1 -->
+      <div class="cal-cell day-other"><span class="day-number">26</span></div>
+      <div class="cal-cell day-other"><span class="day-number">27</span></div>
+      <div class="cal-cell day-other"><span class="day-number">28</span></div>
+      <div class="cal-cell day-other"><span class="day-number">29</span></div>
+      <div class="cal-cell day-other"><span class="day-number">30</span></div>
+      <div class="cal-cell day-other"><span class="day-number">31</span></div>
+      <div class="cal-cell"><span class="day-number">1</span></div>
+
+      <!-- Week 2: Feb 2-8 -->
+      <div class="cal-cell">
+        <span class="day-number">2</span>
+        <div class="event-label ev-slate">Teammeeting</div>
+      </div>
+      <div class="cal-cell"><span class="day-number">3</span></div>
+      <div class="cal-cell">
+        <span class="day-number">4</span>
+        <div class="event-label ev-sage">Yoga</div>
+      </div>
+      <div class="cal-cell"><span class="day-number">5</span></div>
+      <div class="cal-cell">
+        <span class="day-number">6</span>
+        <div class="event-label ev-gold">Workshop</div>
+      </div>
+      <div class="cal-cell"><span class="day-number">7</span></div>
+      <div class="cal-cell">
+        <span class="day-number">8</span>
+        <div class="event-label ev-purple">Brunch</div>
+      </div>
+
+      <!-- Week 3: Feb 9-15 -->
+      <div class="cal-cell"><span class="day-number">9</span></div>
+      <div class="cal-cell">
+        <span class="day-number">10</span>
+        <div class="event-label ev-rose">Arzttermin</div>
+      </div>
+      <div class="cal-cell"><span class="day-number">11</span></div>
+      <div class="cal-cell">
+        <span class="day-number">12</span>
+        <div class="event-label ev-slate">Teammeeting</div>
+        <div class="event-label ev-sage">Sport</div>
+      </div>
+      <div class="cal-cell"><span class="day-number">13</span></div>
+      <div class="cal-cell">
+        <span class="day-number">14</span>
+        <div class="event-label ev-pink">Valentinstag</div>
+      </div>
+      <div class="cal-cell"><span class="day-number">15</span></div>
+
+      <!-- Week 4: Feb 16-22 -->
+      <div class="cal-cell"><span class="day-number">16</span></div>
+      <div class="cal-cell"><span class="day-number">17</span></div>
+      <div class="cal-cell">
+        <span class="day-number">18</span>
+        <div class="event-label ev-sage">Yoga</div>
+      </div>
+      <div class="cal-cell">
+        <span class="day-number">19</span>
+        <div class="event-label ev-gold">Elternabend</div>
+      </div>
+      <div class="cal-cell"><span class="day-number">20</span></div>
+      <div class="cal-cell"><span class="day-number">21</span></div>
+      <div class="cal-cell">
+        <span class="day-number">22</span>
+        <div class="event-label ev-pink">Geburtstag</div>
+      </div>
+
+      <!-- Week 5: Feb 23-28 + Mar 1 -->
+      <div class="cal-cell"><span class="day-number">23</span></div>
+      <div class="cal-cell day-today">
+        <span class="day-number">24</span>
+        <div class="event-label ev-terracotta">Standup</div>
+      </div>
+      <div class="cal-cell"><span class="day-number">25</span></div>
+      <div class="cal-cell"><span class="day-number">26</span></div>
+      <div class="cal-cell">
+        <span class="day-number">27</span>
+        <div class="event-label ev-purple">Konzert</div>
+      </div>
+      <div class="cal-cell"><span class="day-number">28</span></div>
+      <div class="cal-cell day-other"><span class="day-number">1</span></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2">
+      <span class="legend-item"><span class="legend-dot" style="background:#64748b;"></span>Arbeit</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#7c9a72;"></span>Gesundheit</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#b8963e;"></span>Bildung</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#8b7bb5;"></span>Freizeit</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#c07a8e;"></span>Gesundheit</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#d4879b;"></span>Persoenlich</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#c45d3e;"></span>Heute</span>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="max-w-5xl mx-auto w-full px-6 pb-8 pt-4">
+    <div class="flex items-center justify-between footer-text">
+      <span>&copy; 2026 webcraft media</span>
+      <div class="flex items-center gap-6">
+        <a href="#">Impressum</a>
+        <a href="#">Datenschutz</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Dark Mode Toggle -->
+  <button class="dm-toggle" onclick="toggleDark()" aria-label="Erscheinungsbild wechseln" id="dmBtn">
+    <svg id="iconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  </button>
+
+  <script>
+    // Dark mode
+    function toggleDark() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      localStorage.setItem('jahrweiser-theme', isDark ? 'dark' : 'light');
+      updateIcons(isDark);
+      updateGridBorders(isDark);
+      updateHeaderUser(isDark);
+    }
+
+    function updateIcons(isDark) {
+      document.getElementById('iconSun').style.display = isDark ? 'none' : 'block';
+      document.getElementById('iconMoon').style.display = isDark ? 'block' : 'none';
+    }
+
+    function updateGridBorders(isDark) {
+      const grid = document.getElementById('calGrid');
+      if (isDark) {
+        grid.style.borderTopColor = 'rgba(250,249,246,0.06)';
+        grid.style.borderLeftColor = 'rgba(250,249,246,0.06)';
+      } else {
+        grid.style.borderTopColor = 'rgba(26,25,22,0.08)';
+        grid.style.borderLeftColor = 'rgba(26,25,22,0.08)';
+      }
+    }
+
+    function updateHeaderUser(isDark) {
+      const userSpan = document.querySelector('header .text-xs');
+      const avatarSpan = document.querySelector('header .w-7');
+      if (isDark) {
+        userSpan.style.color = 'rgba(250,249,246,0.35)';
+        avatarSpan.style.background = 'rgba(250,249,246,0.08)';
+        avatarSpan.style.color = 'rgba(250,249,246,0.45)';
+      } else {
+        userSpan.style.color = 'rgba(26,25,22,0.4)';
+        avatarSpan.style.background = 'rgba(26,25,22,0.06)';
+        avatarSpan.style.color = 'rgba(26,25,22,0.5)';
+      }
+    }
+
+    // Year text opacity in dark mode
+    function updateYearText(isDark) {
+      const yearSpan = document.querySelector('h1 + span') || document.querySelector('.tracking-widest');
+      if (yearSpan) {
+        yearSpan.style.color = isDark ? 'rgba(250,249,246,0.25)' : 'rgba(26,25,22,0.3)';
+      }
+    }
+
+    // Init
+    (function() {
+      const saved = localStorage.getItem('jahrweiser-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = saved === 'dark' || (!saved && prefersDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      }
+      updateIcons(isDark);
+      updateGridBorders(isDark);
+      updateHeaderUser(isDark);
+      updateYearText(isDark);
+    })();
+  </script>
+
+</body>
+</html>

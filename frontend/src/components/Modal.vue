@@ -6,28 +6,34 @@
     id="default-modal"
     tabindex="-1"
     aria-hidden="false"
-    :class="isOpen ? 'open' : 'hidden'"
-    class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+    :class="isOpen ? 'modal-open' : 'modal-hidden'"
+    class="modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
     @click="handleX"
   >
-    <div class="relative p-4 w-full max-h-full">
+    <div class="relative p-4 w-full max-w-3xl mx-auto max-h-full">
       <!-- Modal content -->
-      <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700" @click.prevent.stop>
+      <div
+        class="modal-card relative w-full bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]"
+        @click.prevent.stop
+      >
         <!-- Modal header -->
         <div
-          class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200"
+          class="flex items-center justify-between px-5 py-3 md:px-6 md:py-4 border-b-2 border-navy/15 dark:border-poster-darkBorder bg-navy/3 dark:bg-poster-dark shrink-0"
         >
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-            <slot name="title" />
-          </h3>
+          <div class="flex items-center gap-3">
+            <LogoSmall class="logo-modal hidden md:block" />
+            <h3 class="text-xl font-semibold text-navy dark:text-ivory font-display tracking-wide">
+              <slot name="title" />
+            </h3>
+          </div>
           <button
             type="button"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+            class="text-navy/50 hover:text-sienna w-8 h-8 inline-flex justify-center items-center transition-colors dark:text-ivory/50 dark:hover:text-sienna-light"
             data-modal-hide="default-modal"
             @click.prevent="handleX"
           >
             <svg
-              class="w-3 h-3"
+              class="w-3.5 h-3.5"
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -37,7 +43,7 @@
                 stroke="currentColor"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                stroke-width="2"
+                stroke-width="2.5"
                 d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
               />
             </svg>
@@ -45,23 +51,21 @@
           </button>
         </div>
         <!-- Modal body -->
-        <div class="p-4 md:p-5 space-y-4">
+        <div ref="modalBody" class="px-5 py-4 md:px-6 md:py-5 space-y-4 overflow-y-auto">
           <slot name="content" />
         </div>
       </div>
     </div>
   </div>
   <div
-    class="bg-gray-900/50 dark:bg-gray-900/80 fixed inset-0 z-40"
-    :class="isOpen ? 'open' : 'hidden'"
+    class="modal-backdrop bg-navy/50 dark:bg-navy-dark/80 fixed inset-0 z-40"
+    :class="isOpen ? 'modal-open' : 'modal-hidden'"
     @click="handleX"
   />
 </template>
 
 <script setup lang="ts">
-  /*const props = defineProps({
-  open: { type: Boolean, required: true },
-})*/
+  import LogoSmall from '~/../assets/logo-small.svg'
 
   const emit = defineEmits(['x'])
 
@@ -70,9 +74,11 @@
   }
 
   const isOpen = ref(false)
+  const modalBody = ref<HTMLElement>()
 
   function open() {
     isOpen.value = true
+    void nextTick(() => modalBody.value?.scrollTo(0, 0))
   }
 
   function close() {
@@ -84,3 +90,59 @@
     close,
   })
 </script>
+
+<style scoped>
+  @reference "tailwindcss";
+
+  .logo-modal {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .modal-card {
+    border-radius: 2px;
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(30, 41, 59, 0.05);
+  }
+
+  .dark .modal-card {
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(61, 54, 48, 0.3);
+  }
+
+  /* Backdrop */
+  .modal-backdrop.modal-hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  .modal-backdrop.modal-open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Modal overlay */
+  .modal-overlay.modal-hidden {
+    pointer-events: none;
+    visibility: hidden;
+  }
+  .modal-overlay.modal-open {
+    visibility: visible;
+  }
+</style>
+
+<style>
+  .dark .logo-modal circle {
+    fill: transparent !important;
+    filter: none !important;
+  }
+  .dark .logo-modal [aria-label='G'] {
+    fill: #c2410c !important;
+  }
+  .dark .logo-modal [aria-label='&'] {
+    fill: #d97706 !important;
+  }
+</style>

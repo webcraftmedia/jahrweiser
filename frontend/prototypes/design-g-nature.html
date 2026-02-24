@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jahrweiser - Nature / Organic Green</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            nunito: ['Nunito', 'sans-serif'],
+          },
+          colors: {
+            nature: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+              950: '#0c1f15',
+            },
+            forest: {
+              bg: '#f7fdf9',
+              dark: '#0c1f15',
+              card: '#0f2a1a',
+              border: '#1a3d27',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Nunito', sans-serif; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #bbf7d0; border-radius: 999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #14532d; }
+
+    /* Smooth transitions for dark mode */
+    html, body, header, main, footer, div, span, p, a, button, td, th {
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Subtle leaf pattern overlay for header */
+    .header-pattern {
+      background-image: radial-gradient(circle at 20% 50%, rgba(22, 163, 74, 0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 50%, rgba(22, 163, 74, 0.04) 0%, transparent 50%);
+    }
+    .dark .header-pattern {
+      background-image: radial-gradient(circle at 20% 50%, rgba(22, 163, 74, 0.06) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 50%, rgba(22, 163, 74, 0.06) 0%, transparent 50%);
+    }
+
+    /* Calendar grid */
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+    }
+
+    /* Today pulse */
+    @keyframes gentle-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.3); }
+      50% { box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+    }
+    .today-pulse {
+      animation: gentle-pulse 3s ease-in-out infinite;
+    }
+
+    /* Floating leaf animation for dark mode toggle */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
+    }
+    .float-anim:hover {
+      animation: float 1.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-forest-bg dark:bg-forest-dark text-gray-800 dark:text-gray-200 font-nunito min-h-screen flex flex-col">
+
+  <!-- Sticky Header -->
+  <header class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-forest-dark/80 border-b border-nature-200/60 dark:border-forest-border header-pattern">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-nature-500 to-nature-700 rounded-2xl flex items-center justify-center shadow-lg shadow-nature-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 8c.7-1 1.3-2.2 1.7-3.5C19.1 3.2 18 2 16.6 2c-.5 0-1 .2-1.4.5C14.4 1 13.3 0 12 0S9.6 1 8.8 2.5C8.4 2.2 7.9 2 7.4 2 6 2 4.9 3.2 5.3 4.5 5.7 5.8 6.3 7 7 8c-2.5 1.5-4 4-4 7 0 5 4 9 9 9s9-4 9-9c0-3-1.5-5.5-4-7z"/>
+              <path d="M12 24V12"/>
+              <path d="M8 14c1.5-1 2.5-2.5 3-4"/>
+              <path d="M16 14c-1.5-1-2.5-2.5-3-4"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-800 text-nature-800 dark:text-nature-300 tracking-tight">Jahrweiser</h1>
+            <p class="text-[10px] text-nature-600/60 dark:text-nature-500/60 font-600 uppercase tracking-widest -mt-0.5">Kalender</p>
+          </div>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex items-center gap-2 sm:gap-4">
+          <span class="hidden sm:inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 font-600">
+            <span class="w-8 h-8 rounded-full bg-nature-100 dark:bg-nature-900/50 flex items-center justify-center text-nature-700 dark:text-nature-400 font-700 text-xs">M</span>
+            Willkommen, M&uuml;ller
+          </span>
+          <a href="#" class="text-sm font-600 text-nature-700 dark:text-nature-400 hover:text-nature-800 dark:hover:text-nature-300 px-3 py-1.5 rounded-xl hover:bg-nature-50 dark:hover:bg-nature-900/30 transition-all">Admin</a>
+          <a href="#" class="text-sm font-600 text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 px-3 py-1.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all">Abmelden</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- Month Navigation -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+      <div class="flex items-center gap-3">
+        <button class="w-10 h-10 rounded-2xl border border-nature-200 dark:border-forest-border bg-white dark:bg-forest-card text-nature-700 dark:text-nature-400 hover:bg-nature-50 dark:hover:bg-nature-900/50 hover:border-nature-300 dark:hover:border-nature-800 transition-all flex items-center justify-center shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+        </button>
+        <h2 class="text-2xl sm:text-3xl font-800 text-gray-800 dark:text-gray-100 min-w-[220px] text-center">
+          <span class="text-nature-700 dark:text-nature-400">Februar</span> 2026
+        </h2>
+        <button class="w-10 h-10 rounded-2xl border border-nature-200 dark:border-forest-border bg-white dark:bg-forest-card text-nature-700 dark:text-nature-400 hover:bg-nature-50 dark:hover:bg-nature-900/50 hover:border-nature-300 dark:hover:border-nature-800 transition-all flex items-center justify-center shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+        </button>
+      </div>
+      <button class="px-5 py-2.5 bg-gradient-to-r from-nature-600 to-nature-500 hover:from-nature-700 hover:to-nature-600 text-white font-700 rounded-2xl shadow-lg shadow-nature-500/25 hover:shadow-nature-600/30 transition-all text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83"/></svg>
+        Heute
+      </button>
+    </div>
+
+    <!-- Calendar Card -->
+    <div class="bg-white dark:bg-forest-card rounded-2xl sm:rounded-3xl border border-nature-200/70 dark:border-forest-border shadow-xl shadow-nature-900/[0.03] dark:shadow-black/20 overflow-hidden">
+
+      <!-- Day Headers -->
+      <div class="cal-grid bg-nature-50/80 dark:bg-nature-950/40 border-b border-nature-200/50 dark:border-forest-border">
+        <div class="py-3 sm:py-4 text-center text-xs sm:text-sm font-700 text-nature-700 dark:text-nature-500 uppercase tracking-wider">Mo</div>
+        <div class="py-3 sm:py-4 text-center text-xs sm:text-sm font-700 text-nature-700 dark:text-nature-500 uppercase tracking-wider">Di</div>
+        <div class="py-3 sm:py-4 text-center text-xs sm:text-sm font-700 text-nature-700 dark:text-nature-500 uppercase tracking-wider">Mi</div>
+        <div class="py-3 sm:py-4 text-center text-xs sm:text-sm font-700 text-nature-700 dark:text-nature-500 uppercase tracking-wider">Do</div>
+        <div class="py-3 sm:py-4 text-center text-xs sm:text-sm font-700 text-nature-700 dark:text-nature-500 uppercase tracking-wider">Fr</div>
+        <div class="py-3 sm:py-4 text-center text-xs sm:text-sm font-700 text-nature-600/60 dark:text-nature-600/50 uppercase tracking-wider bg-nature-100/40 dark:bg-nature-900/20">Sa</div>
+        <div class="py-3 sm:py-4 text-center text-xs sm:text-sm font-700 text-nature-600/60 dark:text-nature-600/50 uppercase tracking-wider bg-nature-100/40 dark:bg-nature-900/20">So</div>
+      </div>
+
+      <!-- Calendar Days -->
+      <div class="cal-grid">
+
+        <!-- Week 1: Jan 26-28, Feb 1 -->
+        <!-- Mon 26 Jan (prev month) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-300 dark:text-gray-600">26</span>
+        </div>
+        <!-- Tue 27 Jan -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-300 dark:text-gray-600">27</span>
+        </div>
+        <!-- Wed 28 Jan -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-300 dark:text-gray-600">28</span>
+        </div>
+        <!-- Thu 29 Jan -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-300 dark:text-gray-600">29</span>
+        </div>
+        <!-- Fri 30 Jan -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-300 dark:text-gray-600">30</span>
+        </div>
+        <!-- Sat 31 Jan (weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-300 dark:text-gray-600">31</span>
+        </div>
+        <!-- Sun 1 Feb (weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">1</span>
+        </div>
+
+        <!-- Week 2: Feb 2-8 -->
+        <!-- Mon 2 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">2</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 truncate">Teammeeting</span>
+          </div>
+        </div>
+        <!-- Tue 3 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">3</span>
+        </div>
+        <!-- Wed 4 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">4</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 truncate">Yoga</span>
+          </div>
+        </div>
+        <!-- Thu 5 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">5</span>
+        </div>
+        <!-- Fri 6 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">6</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 truncate">Workshop</span>
+          </div>
+        </div>
+        <!-- Sat 7 (weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-500 dark:text-gray-400">7</span>
+        </div>
+        <!-- Sun 8 (weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-500 dark:text-gray-400">8</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 truncate">Brunch</span>
+          </div>
+        </div>
+
+        <!-- Week 3: Feb 9-15 -->
+        <!-- Mon 9 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">9</span>
+        </div>
+        <!-- Tue 10 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">10</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 truncate">Arzttermin</span>
+          </div>
+        </div>
+        <!-- Wed 11 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">11</span>
+        </div>
+        <!-- Thu 12 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">12</span>
+          <div class="mt-1 space-y-0.5">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 truncate">Teammeeting</span>
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 truncate">Sport</span>
+          </div>
+        </div>
+        <!-- Fri 13 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">13</span>
+        </div>
+        <!-- Sat 14 (weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-500 dark:text-gray-400">14</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 truncate">Valentinstag</span>
+          </div>
+        </div>
+        <!-- Sun 15 (weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-500 dark:text-gray-400">15</span>
+        </div>
+
+        <!-- Week 4: Feb 16-22 -->
+        <!-- Mon 16 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">16</span>
+        </div>
+        <!-- Tue 17 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">17</span>
+        </div>
+        <!-- Wed 18 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">18</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 truncate">Yoga</span>
+          </div>
+        </div>
+        <!-- Thu 19 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">19</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 truncate">Elternabend</span>
+          </div>
+        </div>
+        <!-- Fri 20 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">20</span>
+        </div>
+        <!-- Sat 21 (weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-500 dark:text-gray-400">21</span>
+        </div>
+        <!-- Sun 22 (weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-500 dark:text-gray-400">22</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 truncate">Geburtstag</span>
+          </div>
+        </div>
+
+        <!-- Week 5: Feb 23 - Mar 1 -->
+        <!-- Mon 23 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">23</span>
+        </div>
+        <!-- Tue 24 (TODAY) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60 bg-nature-50/50 dark:bg-nature-900/15">
+          <div class="flex items-start gap-1">
+            <span class="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-nature-500 to-nature-700 text-white text-xs sm:text-sm font-800 shadow-lg shadow-nature-500/30 today-pulse">24</span>
+          </div>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 truncate">Standup</span>
+          </div>
+        </div>
+        <!-- Wed 25 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">25</span>
+        </div>
+        <!-- Thu 26 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">26</span>
+        </div>
+        <!-- Fri 27 -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60">
+          <span class="text-xs sm:text-sm font-600 text-gray-700 dark:text-gray-300">27</span>
+          <div class="mt-1">
+            <span class="block text-[10px] sm:text-xs font-600 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 truncate">Konzert</span>
+          </div>
+        </div>
+        <!-- Sat 28 (weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-r border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-500 dark:text-gray-400">28</span>
+        </div>
+        <!-- Sun 1 Mar (next month, weekend) -->
+        <div class="min-h-[90px] sm:min-h-[110px] p-1.5 sm:p-2 border-b border-nature-100/60 dark:border-forest-border/60 bg-nature-50/30 dark:bg-nature-950/15">
+          <span class="text-xs sm:text-sm font-600 text-gray-300 dark:text-gray-600">1</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-8 bg-white dark:bg-forest-card rounded-2xl border border-nature-200/70 dark:border-forest-border p-4 sm:p-6 shadow-lg shadow-nature-900/[0.02] dark:shadow-black/10">
+      <h3 class="text-sm font-700 text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4 text-nature-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+        Kategorien
+      </h3>
+      <div class="flex flex-wrap gap-2 sm:gap-3">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-50 dark:bg-teal-900/30 border border-teal-200/60 dark:border-teal-800/40">
+          <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+          <span class="text-xs font-600 text-teal-700 dark:text-teal-300">Meetings</span>
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 dark:bg-green-900/30 border border-green-200/60 dark:border-green-800/40">
+          <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+          <span class="text-xs font-600 text-green-700 dark:text-green-300">Sport &amp; Wellness</span>
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-900/30 border border-amber-200/60 dark:border-amber-800/40">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+          <span class="text-xs font-600 text-amber-700 dark:text-amber-300">Veranstaltungen</span>
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/30 border border-purple-200/60 dark:border-purple-800/40">
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+          <span class="text-xs font-600 text-purple-700 dark:text-purple-300">Privat</span>
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-900/30 border border-rose-200/60 dark:border-rose-800/40">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+          <span class="text-xs font-600 text-rose-700 dark:text-rose-300">Gesundheit</span>
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-50 dark:bg-pink-900/30 border border-pink-200/60 dark:border-pink-800/40">
+          <span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+          <span class="text-xs font-600 text-pink-700 dark:text-pink-300">Feiertage</span>
+        </span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-nature-200/60 dark:border-forest-border bg-white/50 dark:bg-forest-dark/50 backdrop-blur-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500 dark:text-gray-500">
+        <p class="font-600">&copy; 2026 webcraft media</p>
+        <div class="flex items-center gap-4">
+          <a href="#" class="hover:text-nature-600 dark:hover:text-nature-400 transition-colors font-600">Impressum</a>
+          <span class="text-nature-300 dark:text-nature-800">|</span>
+          <a href="#" class="hover:text-nature-600 dark:hover:text-nature-400 transition-colors font-600">Datenschutz</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Dark Mode Toggle -->
+  <button
+    onclick="document.documentElement.classList.toggle('dark'); this.querySelector('.toggle-icon').classList.toggle('rotate-180');"
+    class="fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-gradient-to-br from-nature-600 to-nature-800 dark:from-nature-700 dark:to-nature-950 text-white shadow-xl shadow-nature-800/30 dark:shadow-black/40 hover:shadow-2xl hover:shadow-nature-700/40 dark:hover:shadow-black/50 transition-all flex items-center justify-center float-anim z-50 group"
+    title="Dunkel-/Hellmodus umschalten"
+  >
+    <!-- Sun icon (shown in dark mode) -->
+    <svg class="w-6 h-6 hidden dark:block toggle-icon transition-transform duration-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="5"/>
+      <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+    </svg>
+    <!-- Moon icon (shown in light mode) -->
+    <svg class="w-6 h-6 block dark:hidden toggle-icon transition-transform duration-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+    </svg>
+  </button>
+
+</body>
+</html>

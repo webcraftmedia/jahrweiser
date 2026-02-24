@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-import { mockRequestLoginLink, mockCalendarEndpoints } from './helpers/api-mocks'
+import { mockRequestLoginLink, mockCalendarEndpoints, waitForHydration } from './helpers/api-mocks'
 
 test.describe('Login Page', () => {
   test('shows login form with email input and submit button', async ({ page }) => {
@@ -10,23 +10,27 @@ test.describe('Login Page', () => {
   })
 
   test('shows success message after email submission', async ({ page }) => {
-    await page.goto('/login')
     await mockRequestLoginLink(page)
+    await page.goto('/login')
+    await page.addStyleTag({ content: '*, *::before, *::after { animation: none !important; }' })
+    await waitForHydration(page)
 
     await page.locator('#email-address-icon').fill('test@example.com')
     await page.getByRole('button', { name: 'Einloggen' }).click()
 
-    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible()
+    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
   })
 
   test('dismiss button returns to login form', async ({ page }) => {
-    await page.goto('/login')
     await mockRequestLoginLink(page)
+    await page.goto('/login')
+    await page.addStyleTag({ content: '*, *::before, *::after { animation: none !important; }' })
+    await waitForHydration(page)
 
     await page.locator('#email-address-icon').fill('test@example.com')
     await page.getByRole('button', { name: 'Einloggen' }).click()
 
-    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible()
+    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
 
     // Button has aria-label="Close" but visible text is "Zurück zum Login"
     await page.getByText('Zurück zum Login').click()

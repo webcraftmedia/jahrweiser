@@ -140,3 +140,16 @@ export async function mockRequestLoginLink(page: Page) {
     }),
   )
 }
+
+/** Wait for Nuxt/Vue to fully hydrate the page and attach event handlers */
+export async function waitForHydration(page: Page) {
+  await page.waitForFunction(() => {
+    const nuxt = document.getElementById('__nuxt')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(nuxt as any)?.__vue_app__) return false
+    // Check that Vue has processed DOM elements (hydration markers removed)
+    return !document.querySelector('[data-server-rendered]')
+  })
+  // Allow time for component event handlers to fully attach
+  await page.waitForTimeout(200)
+}

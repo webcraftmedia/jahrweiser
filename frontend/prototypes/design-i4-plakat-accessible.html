@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jahrweiser – Design I4: Vintage Plakat (Barrierefrei)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwindcss.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['"Abril Fatface"', 'Georgia', 'serif'],
+        hand: ['"Permanent Marker"', 'cursive'],
+        body: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
+      },
+      colors: {
+        navy: { DEFAULT: '#1e293b', light: '#334155', dark: '#0f172a' },
+        ivory: { DEFAULT: '#faf5eb', dark: '#f5edd9' },
+        sienna: { DEFAULT: '#c2410c', light: '#ea580c', dark: '#9a3412' },
+        mustard: { DEFAULT: '#d97706', light: '#f59e0b', dark: '#b45309' },
+        olive: { DEFAULT: '#65a30d', light: '#84cc16', dark: '#4d7c0f' },
+        plum: { DEFAULT: '#7e22ce', light: '#9333ea', dark: '#6b21a8' },
+        poster: {
+          bg: '#faf5eb',
+          dark: '#1a1714',
+          darkCard: '#2a2520',
+          darkBorder: '#3d3630',
+          darkMuted: '#a8937e',
+        }
+      }
+    }
+  }
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Base ---------- */
+  body {
+    font-family: 'Source Sans 3', system-ui, sans-serif;
+    background-color: #faf5eb;
+    color: #1e293b;
+    min-height: 100vh;
+    position: relative;
+  }
+  .dark body {
+    background-color: #1a1714;
+    color: #e8ddd0;
+  }
+
+  /* ---------- Zoom system ---------- */
+  :root { --zoom: 1; }
+  .zoom-container { transform: scale(var(--zoom)); transform-origin: top center; }
+
+  /* ---------- Paper texture ---------- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg width='300' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+  }
+  .dark body::before { opacity: 0.05; }
+
+  /* ---------- Calendar grid ---------- */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  /* ---------- Event tickets ---------- */
+  .event-ticket {
+    border-left-width: 4px;
+    border-left-style: solid;
+    padding: 4px 8px;
+    margin-top: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.35;
+    border-radius: 0 4px 4px 0;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .event-ticket:hover {
+    transform: scale(1.03) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    z-index: 10;
+  }
+  .event-ticket:nth-child(odd)  { transform: rotate(-0.3deg); }
+  .event-ticket:nth-child(even) { transform: rotate(0.2deg); }
+
+  /* Perforated ticket edge */
+  .event-ticket::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 3px,
+      rgba(255,255,255,0.5) 3px, rgba(255,255,255,0.5) 5px
+    );
+  }
+  .dark .event-ticket::before {
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 5px
+    );
+  }
+
+  /* ---------- Month ribbon ---------- */
+  .month-ribbon {
+    position: relative;
+    display: inline-block;
+    padding: 0.6rem 3rem;
+  }
+  .month-ribbon::before,
+  .month-ribbon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border-style: solid;
+  }
+  .month-ribbon::before {
+    left: -14px;
+    border-width: 26px 14px 26px 0;
+    border-color: transparent #c2410c transparent transparent;
+  }
+  .month-ribbon::after {
+    right: -14px;
+    border-width: 26px 0 26px 14px;
+    border-color: transparent transparent transparent #c2410c;
+  }
+  .dark .month-ribbon::before { border-color: transparent #9a3412 transparent transparent; }
+  .dark .month-ribbon::after  { border-color: transparent transparent transparent #9a3412; }
+
+  /* ---------- Vintage badge ---------- */
+  .vintage-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border: 2px solid;
+    border-radius: 3px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transform: rotate(-0.4deg);
+    transition: transform 0.15s ease;
+  }
+  .vintage-badge:nth-child(even) { transform: rotate(0.3deg); }
+  .vintage-badge:hover { transform: rotate(0deg) scale(1.05); }
+
+  /* ---------- Decorative stars ---------- */
+  .deco-star {
+    font-family: 'Permanent Marker', cursive;
+    color: #d97706;
+    opacity: 0.25;
+    user-select: none;
+    pointer-events: none;
+  }
+  .dark .deco-star { color: #f59e0b; opacity: 0.15; }
+
+  /* ---------- Weekend tint ---------- */
+  .weekend-tint { background-color: rgba(217, 119, 6, 0.04); }
+  .dark .weekend-tint { background-color: rgba(217, 119, 6, 0.06); }
+
+  /* ---------- Today pulse ---------- */
+  @keyframes todayPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(194, 65, 12, 0.3); }
+    50% { box-shadow: 0 0 0 5px rgba(194, 65, 12, 0.1); }
+  }
+  .today-cell { animation: todayPulse 3s ease-in-out infinite; }
+
+  /* ---------- Scrollbar ---------- */
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #faf5eb; }
+  ::-webkit-scrollbar-thumb { background: #c2410c; border-radius: 5px; }
+  .dark ::-webkit-scrollbar-track { background: #1a1714; }
+  .dark ::-webkit-scrollbar-thumb { background: #9a3412; }
+
+  /* ---------- Smooth transitions ---------- */
+  *, *::before, *::after {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+
+  /* ---------- Zoom control bar ---------- */
+  .zoom-bar {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .zoom-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s, transform 0.1s;
+  }
+  .zoom-btn:hover { transform: scale(1.1); }
+  .zoom-btn:active { transform: scale(0.95); }
+</style>
+</head>
+
+<body class="min-h-screen flex flex-col relative">
+
+  <!-- ========== ZOOM CONTROL BAR (sticky bottom) ========== -->
+  <div class="zoom-bar fixed bottom-0 left-0 right-0 z-50 bg-ivory/90 dark:bg-poster-dark/90 border-t-2 border-sienna/30 dark:border-sienna/20 shadow-lg">
+    <div class="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+      <span class="text-sm font-semibold text-navy/60 dark:text-poster-darkMuted font-body hidden sm:block">Anzeigegröße</span>
+      <div class="flex items-center gap-2 mx-auto sm:mx-0">
+        <button onclick="changeZoom(-0.1)" class="zoom-btn bg-navy/10 dark:bg-ivory/10 text-navy dark:text-ivory hover:bg-sienna/20 dark:hover:bg-sienna/30" title="Kleiner" aria-label="Ansicht verkleinern">
+          <span>−</span>
+        </button>
+        <button onclick="resetZoom()" class="zoom-btn bg-navy/10 dark:bg-ivory/10 text-navy dark:text-ivory hover:bg-sienna/20 dark:hover:bg-sienna/30 text-sm font-body" id="zoomLabel" title="Zurücksetzen" aria-label="Auf Standardgröße zurücksetzen">
+          100%
+        </button>
+        <button onclick="changeZoom(0.1)" class="zoom-btn bg-navy/10 dark:bg-ivory/10 text-navy dark:text-ivory hover:bg-sienna/20 dark:hover:bg-sienna/30" title="Größer" aria-label="Ansicht vergrößern">
+          <span>+</span>
+        </button>
+      </div>
+      <!-- Schnellwahl -->
+      <div class="hidden md:flex items-center gap-1.5">
+        <button onclick="setZoom(1.0)" class="zoom-preset text-xs font-semibold px-3 py-1.5 rounded-md bg-navy/5 dark:bg-ivory/5 text-navy/60 dark:text-ivory/60 hover:bg-sienna/15 dark:hover:bg-sienna/25 hover:text-sienna dark:hover:text-sienna-light transition-colors font-body">Normal</button>
+        <button onclick="setZoom(1.25)" class="zoom-preset text-xs font-semibold px-3 py-1.5 rounded-md bg-navy/5 dark:bg-ivory/5 text-navy/60 dark:text-ivory/60 hover:bg-sienna/15 dark:hover:bg-sienna/25 hover:text-sienna dark:hover:text-sienna-light transition-colors font-body">Groß</button>
+        <button onclick="setZoom(1.5)" class="zoom-preset text-xs font-semibold px-3 py-1.5 rounded-md bg-navy/5 dark:bg-ivory/5 text-navy/60 dark:text-ivory/60 hover:bg-sienna/15 dark:hover:bg-sienna/25 hover:text-sienna dark:hover:text-sienna-light transition-colors font-body">Sehr groß</button>
+      </div>
+      <!-- Dark mode toggle (moved here from floating) -->
+      <button
+        onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('jahrweiser-dark', document.documentElement.classList.contains('dark'))"
+        class="zoom-btn bg-navy/10 dark:bg-ivory/10 text-navy dark:text-ivory hover:bg-sienna/20 dark:hover:bg-sienna/30"
+        title="Dunkel-/Hellmodus"
+        aria-label="Dunkel- oder Hellmodus umschalten"
+      >
+        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== ZOOMABLE CONTENT ========== -->
+  <div class="zoom-container flex-1 flex flex-col" id="zoomContainer" style="padding-bottom: 70px;">
+
+  <!-- ========== HEADER ========== -->
+  <header class="bg-navy dark:bg-poster-dark border-b-4 border-sienna dark:border-sienna-dark relative overflow-hidden">
+    <span class="deco-star absolute top-2 left-4 text-4xl rotate-12">&#10038;</span>
+    <span class="deco-star absolute top-1 right-6 text-3xl -rotate-6">&#10038;</span>
+
+    <div class="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between relative z-10">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-full border-2 border-mustard flex items-center justify-center bg-sienna/20">
+          <span class="font-display text-ivory text-2xl">J</span>
+        </div>
+        <div>
+          <h1 class="font-display text-ivory text-3xl md:text-4xl tracking-wide leading-none">Jahrweiser</h1>
+          <p class="font-hand text-mustard-light text-base tracking-widest mt-1">Kulturkalender Bergstraße</p>
+        </div>
+      </div>
+      <nav class="hidden md:flex items-center gap-6 text-base">
+        <span class="text-ivory/70 font-body">Angemeldet als <span class="text-ivory font-semibold">Marlene K.</span></span>
+        <a href="#" class="text-mustard-light hover:text-mustard transition-colors font-semibold border border-mustard/30 rounded px-4 py-1.5 hover:border-mustard/60 text-base">Admin</a>
+        <a href="#" class="text-ivory/50 hover:text-sienna-light transition-colors font-medium">Abmelden</a>
+      </nav>
+      <button class="md:hidden text-ivory p-2" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" aria-label="Menü öffnen">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+    <div id="mobileMenu" class="hidden md:hidden bg-navy-dark px-5 pb-4 border-t border-ivory/10">
+      <div class="flex flex-col gap-3 pt-3 text-base">
+        <span class="text-ivory/70">Angemeldet als <span class="text-ivory font-semibold">Marlene K.</span></span>
+        <a href="#" class="text-mustard-light font-semibold">Admin</a>
+        <a href="#" class="text-ivory/50">Abmelden</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== MAIN ========== -->
+  <main class="flex-1 relative z-0">
+    <div class="max-w-6xl mx-auto px-5 py-10">
+
+      <!-- Month Banner -->
+      <div class="text-center mb-10">
+        <div class="flex items-center justify-center gap-3 mb-4">
+          <span class="deco-star text-xl">&#10038;</span>
+          <div class="h-px w-20 bg-sienna/30 dark:bg-sienna/20"></div>
+          <span class="font-hand text-sienna dark:text-sienna-light text-xl tracking-wider">Anno 2026</span>
+          <div class="h-px w-20 bg-sienna/30 dark:bg-sienna/20"></div>
+          <span class="deco-star text-xl">&#10038;</span>
+        </div>
+        <div class="inline-block">
+          <div class="month-ribbon bg-sienna dark:bg-sienna-dark">
+            <h2 class="font-display text-ivory text-5xl md:text-6xl tracking-wider leading-none">Februar</h2>
+          </div>
+        </div>
+        <div class="flex items-center justify-center gap-8 mt-5">
+          <button class="group flex items-center gap-2 text-navy/60 dark:text-poster-darkMuted hover:text-sienna dark:hover:text-sienna-light transition-colors font-body font-semibold text-base">
+            <svg class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Januar
+          </button>
+          <button class="px-5 py-2 text-sm font-hand text-sienna dark:text-sienna-light border-2 border-sienna/30 dark:border-sienna/20 rounded hover:bg-sienna/5 transition-colors">Heute</button>
+          <button class="group flex items-center gap-2 text-navy/60 dark:text-poster-darkMuted hover:text-sienna dark:hover:text-sienna-light transition-colors font-body font-semibold text-base">
+            März
+            <svg class="w-5 h-5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Calendar -->
+      <div class="bg-white/60 dark:bg-poster-darkCard/80 border border-navy/10 dark:border-poster-darkBorder rounded-lg shadow-lg overflow-hidden backdrop-blur-sm">
+
+        <!-- Weekday headers -->
+        <div class="calendar-grid bg-navy dark:bg-navy-dark text-ivory">
+          <div class="py-3.5 text-center text-sm font-bold tracking-widest uppercase font-body">Mo</div>
+          <div class="py-3.5 text-center text-sm font-bold tracking-widest uppercase font-body">Di</div>
+          <div class="py-3.5 text-center text-sm font-bold tracking-widest uppercase font-body">Mi</div>
+          <div class="py-3.5 text-center text-sm font-bold tracking-widest uppercase font-body">Do</div>
+          <div class="py-3.5 text-center text-sm font-bold tracking-widest uppercase font-body">Fr</div>
+          <div class="py-3.5 text-center text-sm font-bold tracking-widest uppercase font-body bg-mustard/20">Sa</div>
+          <div class="py-3.5 text-center text-sm font-bold tracking-widest uppercase font-body bg-mustard/20">So</div>
+        </div>
+
+        <div class="calendar-grid">
+
+          <!-- Week 1: Jan 26 – Feb 1 -->
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 opacity-40">
+            <span class="text-sm font-semibold text-navy/50 dark:text-poster-darkMuted font-body">26</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 opacity-40">
+            <span class="text-sm font-semibold text-navy/50 dark:text-poster-darkMuted font-body">27</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 opacity-40">
+            <span class="text-sm font-semibold text-navy/50 dark:text-poster-darkMuted font-body">28</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 opacity-40">
+            <span class="text-sm font-semibold text-navy/50 dark:text-poster-darkMuted font-body">29</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 opacity-40">
+            <span class="text-sm font-semibold text-navy/50 dark:text-poster-darkMuted font-body">30</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 weekend-tint opacity-40">
+            <span class="text-sm font-semibold text-navy/50 dark:text-poster-darkMuted font-body">31</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-navy/5 dark:border-poster-darkBorder/50 weekend-tint">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">1</span>
+          </div>
+
+          <!-- Week 2: Feb 2–8 -->
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">2</span>
+            <div class="event-ticket bg-sienna/10 dark:bg-sienna/20 border-sienna">
+              <span>🎵 Chanson-Abend</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">3</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">4</span>
+            <div class="event-ticket bg-olive/10 dark:bg-olive/20 border-olive">
+              <span>✂️ Siebdruck-Workshop</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">5</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">6</span>
+            <div class="event-ticket bg-plum/10 dark:bg-plum/20 border-plum">
+              <span>🎪 Stand-Up Comedy</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 weekend-tint">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">7</span>
+            <div class="event-ticket bg-mustard/10 dark:bg-mustard/20 border-mustard">
+              <span>🍇 Flohmarkt</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-navy/5 dark:border-poster-darkBorder/50 weekend-tint">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">8</span>
+            <div class="event-ticket bg-sienna/10 dark:bg-sienna/20 border-sienna">
+              <span>🎵 Streichquartett</span>
+            </div>
+          </div>
+
+          <!-- Week 3: Feb 9–15 -->
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">9</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">10</span>
+            <div class="event-ticket bg-navy/10 dark:bg-navy/30 border-navy dark:border-navy-light">
+              <span>📜 Krimi-Lesung</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">11</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">12</span>
+            <div class="event-ticket bg-plum/10 dark:bg-plum/20 border-plum">
+              <span>🎪 Varieté-Show</span>
+            </div>
+            <div class="event-ticket bg-sienna/10 dark:bg-sienna/20 border-sienna">
+              <span>🎵 Swing-Tanzabend</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">13</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 weekend-tint">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">14</span>
+            <div class="event-ticket bg-mustard/15 dark:bg-mustard/20 border-mustard">
+              <span>🎉 Valentins-Dinner <span class="text-red-500">&hearts;</span></span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-navy/5 dark:border-poster-darkBorder/50 weekend-tint">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">15</span>
+          </div>
+
+          <!-- Week 4: Feb 16–22 -->
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">16</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">17</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">18</span>
+            <div class="event-ticket bg-navy/10 dark:bg-navy/30 border-navy dark:border-navy-light">
+              <span>📜 Mundart-Abend</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">19</span>
+            <div class="event-ticket bg-plum/10 dark:bg-plum/20 border-plum">
+              <span>🎪 Schattentheater</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">20</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 weekend-tint">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">21</span>
+            <div class="event-ticket bg-olive/10 dark:bg-olive/20 border-olive">
+              <span>🍇 Weinwanderung</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-navy/5 dark:border-poster-darkBorder/50 weekend-tint">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">22</span>
+            <div class="event-ticket bg-sienna/10 dark:bg-sienna/20 border-sienna">
+              <span>🎵 Klezmer-Konzert</span>
+            </div>
+          </div>
+
+          <!-- Week 5: Feb 23 – Mar 1 -->
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">23</span>
+          </div>
+          <!-- TODAY -->
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 today-cell bg-sienna/8 dark:bg-sienna/15 rounded-sm ring-2 ring-sienna/50 dark:ring-sienna/40 ring-inset">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold text-ivory bg-sienna rounded-full w-7 h-7 flex items-center justify-center font-body">24</span>
+              <span class="font-hand text-sienna dark:text-sienna-light text-sm">Heute</span>
+            </div>
+            <div class="event-ticket bg-sienna/15 dark:bg-sienna/25 border-sienna font-semibold">
+              <span>🎵 Liedermacher-Abend</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">25</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">26</span>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">27</span>
+            <div class="event-ticket bg-mustard/10 dark:bg-mustard/20 border-mustard">
+              <span>🎉 Straßenkunst-Festival</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-r border-navy/5 dark:border-poster-darkBorder/50 weekend-tint">
+            <span class="text-sm font-bold text-navy dark:text-ivory font-body">28</span>
+            <div class="event-ticket bg-mustard/10 dark:bg-mustard/20 border-mustard">
+              <span>🎉 Maskenball</span>
+            </div>
+          </div>
+          <div class="min-h-[7.5rem] p-2.5 border-b border-navy/5 dark:border-poster-darkBorder/50 weekend-tint opacity-40">
+            <span class="text-sm font-semibold text-navy/50 dark:text-poster-darkMuted font-body">1</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Category Legend -->
+      <div class="mt-10 mb-6 text-center">
+        <h3 class="font-hand text-navy dark:text-ivory/80 text-xl mb-4 tracking-wider">Kategorien</h3>
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <span class="vintage-badge border-sienna text-sienna dark:text-sienna-light dark:border-sienna/50 bg-sienna/5 dark:bg-sienna/10">🎵 Musik</span>
+          <span class="vintage-badge border-plum text-plum dark:text-plum-light dark:border-plum/50 bg-plum/5 dark:bg-plum/10">🎪 Theater</span>
+          <span class="vintage-badge border-navy text-navy dark:text-navy-light dark:border-navy-light/50 bg-navy/5 dark:bg-navy/10">📜 Lesung</span>
+          <span class="vintage-badge border-olive text-olive-dark dark:text-olive-light dark:border-olive/50 bg-olive/5 dark:bg-olive/10">🍇 Wein &amp; Markt</span>
+          <span class="vintage-badge border-olive text-olive-dark dark:text-olive-light dark:border-olive/50 bg-olive/5 dark:bg-olive/10">✂️ Workshop</span>
+          <span class="vintage-badge border-mustard text-mustard-dark dark:text-mustard-light dark:border-mustard/50 bg-mustard/5 dark:bg-mustard/10">🎉 Fest</span>
+        </div>
+      </div>
+
+      <!-- Upcoming Highlights -->
+      <div class="mt-12 mb-6">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="h-px flex-1 bg-navy/10 dark:bg-poster-darkBorder"></div>
+          <h3 class="font-display text-navy dark:text-ivory text-2xl tracking-wide">Nächste Veranstaltungen</h3>
+          <div class="h-px flex-1 bg-navy/10 dark:bg-poster-darkBorder"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Liedermacher-Abend (TODAY) -->
+          <div class="group relative bg-white dark:bg-poster-darkCard border border-navy/10 dark:border-poster-darkBorder rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all hover:-translate-y-0.5" style="transform: rotate(-0.3deg)">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-sienna"></div>
+            <div class="p-5">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="bg-sienna text-ivory text-xs font-bold px-3 py-1 rounded-sm uppercase tracking-wider font-body">Heute</span>
+                <span class="text-sm text-navy/50 dark:text-poster-darkMuted font-body">Di, 24. Feb. 2026</span>
+              </div>
+              <h4 class="font-display text-navy dark:text-ivory text-xl leading-tight mb-2">🎵 Liedermacher-Abend</h4>
+              <p class="text-sm text-navy/60 dark:text-poster-darkMuted font-body leading-relaxed">
+                Zeitgenössische Liedermacher präsentieren eigene Kompositionen in gemütlicher Atmosphäre.
+              </p>
+              <div class="mt-3 flex items-center gap-3">
+                <span class="inline-block bg-sienna/10 dark:bg-sienna/20 text-sienna dark:text-sienna-light text-sm font-semibold px-3 py-1 rounded font-body">Musik</span>
+                <span class="text-sm text-navy/40 dark:text-poster-darkMuted font-body">20:00 Uhr</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Straßenkunst-Festival -->
+          <div class="group relative bg-white dark:bg-poster-darkCard border border-navy/10 dark:border-poster-darkBorder rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all hover:-translate-y-0.5" style="transform: rotate(0.4deg)">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-mustard"></div>
+            <div class="p-5">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-sm text-navy/50 dark:text-poster-darkMuted font-body">Fr, 27. Feb. 2026</span>
+              </div>
+              <h4 class="font-display text-navy dark:text-ivory text-xl leading-tight mb-2">🎉 Straßenkunst-Festival</h4>
+              <p class="text-sm text-navy/60 dark:text-poster-darkMuted font-body leading-relaxed">
+                Akrobatik, Jonglage und Straßenmusik — ein Fest für die ganze Familie.
+              </p>
+              <div class="mt-3 flex items-center gap-3">
+                <span class="inline-block bg-mustard/10 dark:bg-mustard/20 text-mustard-dark dark:text-mustard-light text-sm font-semibold px-3 py-1 rounded font-body">Fest</span>
+                <span class="text-sm text-navy/40 dark:text-poster-darkMuted font-body">14:00 Uhr</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Maskenball -->
+          <div class="group relative bg-white dark:bg-poster-darkCard border border-navy/10 dark:border-poster-darkBorder rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all hover:-translate-y-0.5" style="transform: rotate(-0.5deg)">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-mustard"></div>
+            <div class="p-5">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-sm text-navy/50 dark:text-poster-darkMuted font-body">Sa, 28. Feb. 2026</span>
+              </div>
+              <h4 class="font-display text-navy dark:text-ivory text-xl leading-tight mb-2">🎉 Maskenball</h4>
+              <p class="text-sm text-navy/60 dark:text-poster-darkMuted font-body leading-relaxed">
+                Venezianische Masken, Live-Orchester und ein Abend voller Eleganz.
+              </p>
+              <div class="mt-3 flex items-center gap-3">
+                <span class="inline-block bg-mustard/10 dark:bg-mustard/20 text-mustard-dark dark:text-mustard-light text-sm font-semibold px-3 py-1 rounded font-body">Fest</span>
+                <span class="text-sm text-navy/40 dark:text-poster-darkMuted font-body">19:30 Uhr</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="bg-navy dark:bg-poster-dark border-t-4 border-sienna dark:border-sienna-dark relative overflow-hidden">
+    <span class="deco-star absolute bottom-2 right-8 text-3xl rotate-12">&#10038;</span>
+    <div class="max-w-6xl mx-auto px-5 py-6 relative z-10">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="font-display text-ivory text-xl">Jahrweiser</span>
+          <span class="text-ivory/30">|</span>
+          <span class="text-ivory/50 text-base font-body">&copy; 2026 webcraft media</span>
+        </div>
+        <div class="flex items-center gap-6 text-base">
+          <a href="#" class="text-ivory/50 hover:text-mustard-light transition-colors font-body">Impressum</a>
+          <span class="text-ivory/20">&#8226;</span>
+          <a href="#" class="text-ivory/50 hover:text-mustard-light transition-colors font-body">Datenschutz</a>
+        </div>
+        <span class="font-hand text-mustard/60 text-sm tracking-wider">Kultur erleben an der Bergstraße</span>
+      </div>
+    </div>
+  </footer>
+
+  </div><!-- end zoom-container -->
+
+  <!-- ========== SCRIPTS ========== -->
+  <script>
+    // --- Dark mode ---
+    if (localStorage.getItem('jahrweiser-dark') === 'true' ||
+        (!localStorage.getItem('jahrweiser-dark') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+
+    // --- Zoom ---
+    let currentZoom = parseFloat(localStorage.getItem('jahrweiser-zoom') || '1');
+    const container = document.getElementById('zoomContainer');
+    const label = document.getElementById('zoomLabel');
+    const MIN_ZOOM = 0.8;
+    const MAX_ZOOM = 2.0;
+
+    function applyZoom() {
+      container.style.setProperty('--zoom', currentZoom);
+      container.style.transform = `scale(${currentZoom})`;
+      container.style.width = `${100 / currentZoom}%`;
+      label.textContent = Math.round(currentZoom * 100) + '%';
+      localStorage.setItem('jahrweiser-zoom', currentZoom);
+    }
+
+    function changeZoom(delta) {
+      currentZoom = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, currentZoom + delta)) * 10) / 10;
+      applyZoom();
+    }
+
+    function setZoom(value) {
+      currentZoom = value;
+      applyZoom();
+    }
+
+    function resetZoom() {
+      currentZoom = 1.0;
+      applyZoom();
+    }
+
+    // Apply saved zoom on load
+    applyZoom();
+  </script>
+
+</body>
+</html>

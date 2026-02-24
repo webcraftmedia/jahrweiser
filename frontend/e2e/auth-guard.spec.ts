@@ -46,7 +46,7 @@ test.describe('Auth Guard', () => {
       })
     })
 
-    await page.locator('#navbar-desktop').getByText('Logout').click()
+    await page.locator('#navbar-desktop').getByText('Ausloggen').click()
     await expect(page).toHaveURL(/\/login/)
   })
 })

@@ -47,11 +47,11 @@ expect.addSnapshotSerializer({
 
 // Normalize SVG filter IDs to prevent snapshot mismatches across different environments
 expect.addSnapshotSerializer({
-  test: (val) => typeof val === 'string' && /id="i\d+__/.test(val),
+  test: (val) => typeof val === 'string' && /id="i-?\d+__/.test(val),
   print: (val) => {
     const normalized = (val as string)
-      .replaceAll(/id="i\d+__([a-z])"/g, 'id="filter-id-$1"')
-      .replaceAll(/url\(#i\d+__([a-z])\)/g, 'url(#filter-id-$1)')
+      .replaceAll(/id="i-?\d+__([a-z])"/g, 'id="filter-id-$1"')
+      .replaceAll(/url\(#i-?\d+__([a-z])\)/g, 'url(#filter-id-$1)')
     return '"' + normalized + '"'
   },
 })

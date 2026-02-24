@@ -52,10 +52,21 @@ describe('Page: Login', () => {
     await input.setValue('test@example.com')
     await wrapper.find('form').trigger('submit')
 
-    // Click dismiss button to return to form
-    await wrapper.find('button[aria-label="Close"]').trigger('click')
+    // Click "back to login" button to return to form
+    await wrapper.find('[role="alert"] button').trigger('click')
 
     expect(wrapper.find('form').exists()).toBe(true)
+  })
+
+  it('shows email error for invalid email', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/login' })
+    const input = wrapper.find('input')
+    await input.setValue('not-an-email')
+    await wrapper.find('form').trigger('submit')
+    // Should still show form (not success message)
+    expect(wrapper.find('form').exists()).toBe(true)
+    // Error label should be visible
+    expect(wrapper.find('label').text()).toContain('pages.login.form.email.invalid')
   })
 
   it('redirects to home when already logged in', async () => {

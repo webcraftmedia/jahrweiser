@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <footer
-    class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-1 md:py-3 shrink-0"
+    class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-1 shrink-0"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
     <div

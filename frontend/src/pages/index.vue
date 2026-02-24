@@ -33,7 +33,7 @@
       </client-only>
       <Modal ref="modal" @x="handleModalX">
         <template #title>
-          <span class="capitalize">{{ event?.summary }}</span>
+          {{ event?.summary ? event.summary.charAt(0).toUpperCase() + event.summary.slice(1) : '' }}
         </template>
 
         <template #content>
@@ -135,12 +135,17 @@
     return map
   })
 
+  function capitalize(s: string) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
+  }
+
   const items = computed<ICalendarItem[]>(() =>
     rawItems.value.map((item) => {
       const palette = calendarColorMap.value.get(item.color) ?? designPalette[0]
       const { bg, border } = isDark.value ? palette.dark : palette.light
       return {
         ...item,
+        title: capitalize(item.title),
         style: `background-color: ${bg}; border-left-color: ${border}`,
       }
     }),
@@ -417,7 +422,6 @@
     font-weight: 600;
     text-overflow: ellipsis;
     cursor: pointer;
-    text-transform: capitalize;
     max-height: 1.4em;
     overflow: hidden;
     transition:

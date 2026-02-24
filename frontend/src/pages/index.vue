@@ -186,6 +186,7 @@
       } = data as any
       event.value = null
       eventLoading.value = true
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       eventTitle.value = capitalize((data as any).title || '')
       modal.value.open()
       const eventData = await $fetch('/api/event', {

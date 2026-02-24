@@ -78,7 +78,7 @@
 
   function open() {
     isOpen.value = true
-    nextTick(() => modalBody.value?.scrollTo(0, 0))
+    void nextTick(() => modalBody.value?.scrollTo(0, 0))
   }
 
   function close() {

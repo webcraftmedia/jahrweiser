@@ -271,23 +271,26 @@
   }
 
   .theme-default .cv-header button {
-    color: #c2410c;
-    border-color: rgba(194, 65, 12, 0.2);
+    color: #1e293b;
+    background-color: rgba(194, 65, 12, 0.1);
+    border: 1.5px solid rgba(194, 65, 12, 0.3);
     border-radius: 4px;
     font-weight: 600;
+    padding: 0.3em 0.7em;
     transition:
       background-color 0.15s,
-      color 0.15s;
+      border-color 0.15s;
   }
 
   .theme-default .cv-header button:hover {
-    background-color: rgba(194, 65, 12, 0.1);
-    color: #ea580c;
+    background-color: rgba(194, 65, 12, 0.2);
+    border-color: #c2410c;
   }
 
   .theme-default .cv-header button:disabled {
     color: rgba(30, 41, 59, 0.3);
     background-color: transparent;
+    border-color: rgba(30, 41, 59, 0.1);
   }
 
   /* --- Weekday name strip (banner) --- */

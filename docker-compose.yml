@@ -9,8 +9,8 @@ services:
   mailserver:
     image: maildev/maildev
     ports:
-      - 1080:1080
-      - 1025:1025
+      - 127.0.0.1:1080:1080
+      - 127.0.0.1:1025:1025
 
   frontend:
     # name the image so that it cannot be found in a DockerHub repository, otherwise it will not be built locally from the 'dockerfile' but pulled from there

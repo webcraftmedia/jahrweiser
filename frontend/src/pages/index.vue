@@ -287,7 +287,7 @@
   }
 
   function isModalOpen() {
-    return document.getElementById('default-modal')?.classList.contains('open')
+    return document.getElementById('default-modal')?.classList.contains('modal-open')
   }
 
   onMounted(() => {

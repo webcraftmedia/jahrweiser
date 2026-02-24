@@ -206,4 +206,75 @@ describe('Page: Index', () => {
     })
     consoleSpy.mockRestore()
   })
+
+  it('navigates via previous button', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    const prevButton = navButtons[0]!
+    await prevButton.trigger('click')
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    expect(calendarView.props('showDate')).toStrictEqual(new Date('2024-12-01'))
+  })
+
+  it('navigates via today button', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    const todayButton = navButtons[1]!
+    await todayButton.trigger('click')
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    expect(calendarView.props('showDate')).toStrictEqual(new Date('2025-01-15'))
+  })
+
+  it('handles keyboard navigation', async () => {
+    await mountSuspended(Page, { route: '/' })
+    // Press ArrowRight to go to next month
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
+    await nextTick()
+    // Verify navigatePeriod was triggered (date changed)
+    expect(mock$fetch).toHaveBeenCalledWith(
+      '/api/calendar',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('handles keyboard navigation with a key', async () => {
+    await mountSuspended(Page, { route: '/' })
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))
+    await nextTick()
+    expect(mock$fetch).toHaveBeenCalledWith(
+      '/api/calendar',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('ignores keyboard when modal is open', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    await calendarView.vm.$emit('click-item', {
+      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
+    })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
+    })
+    await nextTick()
+    // Modal should be open with modal-open class
+    expect(wrapper.find('#default-modal.modal-open').exists()).toBe(true)
+    mock$fetch.mockClear()
+    // Keyboard should be ignored when modal is open
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
+    await nextTick()
+    // Should NOT have fetched calendar again (keyboard was ignored)
+    expect(mock$fetch).not.toHaveBeenCalledWith(
+      '/api/calendar',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('cleans up keyboard listener on unmount', async () => {
+    const removeSpy = vi.spyOn(window, 'removeEventListener')
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    wrapper.unmount()
+    expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function))
+    removeSpy.mockRestore()
+  })
 })

@@ -27,7 +27,7 @@
             "error-title": "Fehler aufgetreten",
             "error-unknown": "Ein unbekannter Fehler ist aufgetreten",
             "success-title": "Das war erfolgreich!",
-            "success-with-email": "Eine Begrüßungsmail wurde versendet.",
+            "success-with-email": "Eine Begrüßungsmail wurde versandt.",
             "success-without-email": "Es wurde keine E-Mail versendet.",
             "title": "Ergebnis"
           },

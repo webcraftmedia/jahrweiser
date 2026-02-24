@@ -7,13 +7,13 @@
     tabindex="-1"
     aria-hidden="false"
     :class="isOpen ? 'modal-open' : 'modal-hidden'"
-    class="modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+    class="modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
     @click="handleX"
   >
-    <div class="relative p-4 w-full max-h-full">
+    <div class="relative p-4 w-full max-w-3xl mx-auto max-h-full">
       <!-- Modal content -->
       <div
-        class="modal-card relative bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]"
+        class="modal-card relative w-full bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]"
         @click.prevent.stop
       >
         <!-- Modal header -->

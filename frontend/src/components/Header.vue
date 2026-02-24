@@ -1,14 +1,14 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <!-- Hero variant (login page) -->
-  <div v-if="variant === 'hero'" class="pt-10 pb-4 flex justify-center">
-    <NuxtLink to="/" class="flex items-center gap-3">
+  <div v-if="variant === 'hero'" class="pt-10 pb-4 flex justify-center px-4">
+    <NuxtLink to="/" class="flex items-center gap-2 md:gap-3">
       <LogoSmall class="logo-hero logo-float" />
       <div>
-        <span class="font-display text-navy dark:text-ivory text-3xl tracking-wide"
+        <span class="font-display text-navy dark:text-ivory text-2xl md:text-3xl tracking-wide"
           >Jahrweiser</span
         >
-        <span class="font-hand text-mustard text-sm tracking-widest ml-1.5">Bergstraße</span>
+        <span class="font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5">Bergstraße</span>
       </div>
     </NuxtLink>
   </div>
@@ -183,8 +183,15 @@
     height: 44px;
   }
   .logo-hero {
-    width: 56px;
-    height: 56px;
+    width: 40px;
+    height: 40px;
+  }
+
+  @media (min-width: 768px) {
+    .logo-hero {
+      width: 56px;
+      height: 56px;
+    }
   }
 
   /* Hero logo gentle float */

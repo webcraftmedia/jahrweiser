@@ -1,5 +1,8 @@
 // @ts-check
 import withNuxt from './.nuxt/eslint.config.mjs'
+// TODO: `node` und `promise` Module aus eslint-config-it4c sind nicht self-contained —
+// sie registrieren ihr Plugin nicht selbst (eslint-plugin-n / eslint-plugin-promise).
+// Bug in eslint-config-it4c melden, dann hier einbinden.
 import { security, comments, json, yaml, vitest, css } from 'eslint-config-it4c'
 import vueI18n from '@intlify/eslint-plugin-vue-i18n'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'

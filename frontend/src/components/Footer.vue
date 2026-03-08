@@ -12,16 +12,16 @@
         <a href="https://www.webcraft-media.de/" class="hover:text-sienna transition-colors">
           {{ $t('components.Footer.copyright-holder') }}
         </a>
-        <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -->
+        <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
         ·
         <button
           class="hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer"
           :title="$t('components.Footer.changelog')"
           @click="changelogModal?.open()"
         >
-          <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -->
           v{{ runtimeConfig.public.appVersion }}
         </button>
+        <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </span>
       <ChangelogModal ref="changelogModal" />
 

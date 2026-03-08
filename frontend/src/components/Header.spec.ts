@@ -127,6 +127,19 @@ describe('Header', () => {
     expect(wrapper.find('#navbar-mobile nav button').exists()).toBe(true)
   })
 
+  it('opens changelog modal from mobile menu', async () => {
+    const wrapper = await mountSuspended(Component)
+    await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+    expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
+
+    const versionBtn = wrapper.find('#navbar-mobile button[title="components.Footer.changelog"]')
+    await versionBtn.trigger('click')
+    // Mobile menu closes
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
+    // Changelog modal opens
+    expect(wrapper.find('.modal-open').exists()).toBe(true)
+  })
+
   it('applies zoom style when chromeZoom is not 1', async () => {
     mockZoomState.zoomLevel.value = 1.5
     const wrapper = await mountSuspended(Component)

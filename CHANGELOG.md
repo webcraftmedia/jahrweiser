@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.2.0...v1.2.1) (2026-03-08)
+
+
+### Bug Fixes
+
+* **frontend:** fix border color ([#88](https://github.com/webcraftmedia/jahrweiser/issues/88)) ([58ce6eb](https://github.com/webcraftmedia/jahrweiser/commit/58ce6ebfec1d7a3f7236a0f045f3ee412e7c5d84))
+
 ## [1.2.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.1.0...v1.2.0) (2026-03-08)
 
 

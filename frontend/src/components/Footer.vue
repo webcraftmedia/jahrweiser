@@ -12,6 +12,7 @@
         <a href="https://www.webcraft-media.de/" class="hover:text-sienna transition-colors">
           {{ $t('components.Footer.copyright-holder') }}
         </a>
+        · v{{ runtimeConfig.public.appVersion }}
       </span>
 
       <!-- Zoom + Dark mode -->
@@ -109,6 +110,7 @@
   import { useColorMode } from '../composables/useColorMode'
   import { useZoom } from '../composables/useZoom'
 
+  const runtimeConfig = useRuntimeConfig()
   const { zoomLevel: zoom, chromeZoom } = useZoom()
   const { isDark, toggle: toggleDark } = useColorMode()
 </script>

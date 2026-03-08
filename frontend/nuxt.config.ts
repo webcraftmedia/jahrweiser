@@ -79,7 +79,9 @@ export default defineNuxtConfig({
     CLIENT_URI: process.env.CLIENT_URI || 'http://localhost:3000',
 
     // Keys within public, will be also exposed to the client-side
-    public: {},
+    public: {
+      appVersion: process.env.npm_package_version || 'development',
+    },
   },
   hooks: {
     ready() {

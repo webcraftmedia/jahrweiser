@@ -127,10 +127,12 @@
   function linkify(str: string): string {
     // Convert escaped markdown links [text](url) back to <a> tags
     // Since we escaped HTML, brackets and parens are still intact
-    return str.replace(
-      /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-sienna dark:text-sienna-light hover:underline">$1</a>',
-    )
+    return str
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(
+        /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-sienna dark:text-sienna-light hover:underline">$1</a>',
+      )
   }
 
   const sections = parseChangelog(changelogRaw)

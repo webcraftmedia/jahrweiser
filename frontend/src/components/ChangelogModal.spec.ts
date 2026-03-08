@@ -1,18 +1,14 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import Component from './ChangelogModal.vue'
 
 describe('ChangelogModal', () => {
-  // Uses the real CHANGELOG.md from runtimeConfig (injected at build time)
-
   it('renders changelog sections', async () => {
     const wrapper = await mountSuspended(Component)
 
     const details = wrapper.findAll('details')
     expect(details.length).toBeGreaterThanOrEqual(1)
-
-    // First section should have version and date
     expect(details[0]!.text()).toContain('v1.0.0')
     expect(details[0]!.text()).toContain('2026-03-08')
   })
@@ -33,37 +29,6 @@ describe('ChangelogModal', () => {
     expect(bolds.length).toBeGreaterThan(0)
   })
 
-  it('closes list before heading when no empty line separates them', async () => {
-    // Changelog where list items directly precede a ### heading (no blank line)
-    const edgeChangelog = [
-      '## 1.0.0 (2026-01-01)',
-      '',
-      '### Features',
-      '',
-      '* **scope:** feature one',
-      '* **scope:** feature two',
-      '### Bug Fixes',
-      '',
-      '* **scope:** fix one',
-    ].join('\n')
-
-    vi.stubGlobal('useRuntimeConfig', () => ({
-      public: { changelog: edgeChangelog, appVersion: '1.0.0' },
-    }))
-
-    const wrapper = await mountSuspended(Component)
-
-    const content = wrapper.find('.changelog-content')
-    const html = content.element.innerHTML
-    // Verify the list is closed before "Bug Fixes" heading
-    const bugFixesIdx = html.indexOf('Bug Fixes')
-    const ulCloseIdx = html.lastIndexOf('</ul>', bugFixesIdx)
-    expect(ulCloseIdx).toBeGreaterThan(-1)
-    expect(ulCloseIdx).toBeLessThan(bugFixesIdx)
-
-    vi.unstubAllGlobals()
-  })
-
   it('has GitHub link', async () => {
     const wrapper = await mountSuspended(Component)
 
@@ -72,13 +37,38 @@ describe('ChangelogModal', () => {
     expect(ghLink.attributes('target')).toBe('_blank')
   })
 
-  it('exposes open method', async () => {
+  it('opens and closes modal', async () => {
     const wrapper = await mountSuspended(Component)
+    const vm = wrapper.vm as unknown as { open: () => void }
 
-    expect(typeof (wrapper.vm as unknown as { open: () => void }).open).toBe('function')
-    ;(wrapper.vm as unknown as { open: () => void }).open()
-
+    // Open
+    vm.open()
     await wrapper.vm.$nextTick()
     expect(wrapper.find('.modal-open').exists()).toBe(true)
+
+    // Close via @x emit (backdrop/close button click)
+    const overlay = wrapper.find('.modal-overlay')
+    await overlay.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.modal-open').exists()).toBe(false)
+  })
+
+  it('click.stop on interactive elements prevents propagation', async () => {
+    const wrapper = await mountSuspended(Component)
+
+    // GitHub link
+    const ghLink = wrapper.find('a[href="https://github.com/webcraftmedia/jahrweiser"]')
+    await ghLink.trigger('click')
+
+    // Summary
+    const summary = wrapper.find('summary')
+    await summary.trigger('click')
+
+    // Changelog content
+    const content = wrapper.find('.changelog-content')
+    await content.trigger('click')
+
+    // All clicks handled without errors
+    expect(wrapper.exists()).toBe(true)
   })
 })

@@ -27,14 +27,9 @@
         >.
       </p>
 
-      <div class="space-y-3">
+      <div ref="sectionsContainer" class="space-y-3">
         <details
-          v-for="(section, index) in sections"
-          :ref="
-            (el: any) => {
-              if (index === 0 && el) el.open = true
-            }
-          "
+          v-for="section in sections"
           :key="section.version"
           class="group border border-navy/15 dark:border-poster-darkBorder rounded"
         >
@@ -63,84 +58,19 @@
 </template>
 
 <script setup lang="ts">
+  import { parseChangelog } from '../utils/parseChangelog'
+
   import Modal from './Modal.vue'
 
   const modal = ref<InstanceType<typeof Modal>>()
+  const sectionsContainer = ref<HTMLElement>()
   const changelogRaw = useRuntimeConfig().public.changelog
-
-  interface ChangelogSection {
-    version: string
-    date: string
-    html: string
-  }
-
-  function parseChangelog(raw: string): ChangelogSection[] {
-    const versionBlocks = raw.split(/^## /m).slice(1)
-
-    return versionBlocks.map((block) => {
-      const lines = block.split('\n')
-      const header = lines[0]!
-      const match = header.match(/^(.+?)\s*\((.+?)\)/)
-      const version = match?.[1] ?? header
-      const date = match?.[2] ?? ''
-
-      const content = lines.slice(1).join('\n').trim()
-      const html = markdownToHtml(content)
-
-      return { version, date, html }
-    })
-  }
-
-  function markdownToHtml(md: string): string {
-    let html = ''
-    const lines = md.split('\n')
-    let inList = false
-
-    for (const line of lines) {
-      if (line.startsWith('### ')) {
-        if (inList) {
-          html += '</ul>'
-          inList = false
-        }
-        html += `<h4 class="font-semibold mt-3 mb-1">${escapeHtml(line.slice(4))}</h4>`
-      } else if (line.startsWith('* ')) {
-        if (!inList) {
-          html += '<ul class="list-disc pl-5 space-y-0.5">'
-          inList = true
-        }
-        html += `<li>${linkify(escapeHtml(line.slice(2)))}</li>`
-      } else if (line.trim() === '') {
-        if (inList) {
-          html += '</ul>'
-          inList = false
-        }
-      }
-    }
-    if (inList) html += '</ul>'
-
-    return html
-  }
-
-  function escapeHtml(str: string): string {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-  }
-
-  function linkify(str: string): string {
-    // Convert escaped markdown links [text](url) back to <a> tags
-    // Since we escaped HTML, brackets and parens are still intact
-    return str
-      .replace(/\*\*([^*]+)\*\*/g, '<span class="font-medium">$1</span>')
-      .replace(
-        /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
-        '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-sienna dark:text-sienna-light hover:underline">$1</a>',
-      )
-  }
-
   const sections = parseChangelog(changelogRaw)
+
+  onMounted(() => {
+    const first = sectionsContainer.value!.querySelector<HTMLDetailsElement>('details')
+    first!.open = true
+  })
 
   function open() {
     modal.value?.open()

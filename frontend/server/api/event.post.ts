@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
       next = expand.next()
     }
 
-    const rEnd = next.clone()
+    const rEnd = (next as ICAL.Time).clone()
     rEnd.addDuration(e.duration)
     return {
       description: e.description,
@@ -71,6 +71,7 @@ export default defineEventHandler(async (event) => {
       startDate: next.toString(),
       summary: e.summary,
       uid: e.uid,
+      url: vevent.getFirstPropertyValue('url') ?? '',
     }
   } else {
     return {
@@ -81,6 +82,7 @@ export default defineEventHandler(async (event) => {
       startDate: e.startDate.toString(),
       summary: e.summary,
       uid: e.uid,
+      url: vevent.getFirstPropertyValue('url') ?? '',
     }
   }
 })

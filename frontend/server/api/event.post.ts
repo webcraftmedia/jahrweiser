@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
       next = expand.next()
     }
 
-    const rEnd = (next as ICAL.Time).clone()
+    const rEnd = next.clone()
     rEnd.addDuration(e.duration)
     return {
       description: e.description,

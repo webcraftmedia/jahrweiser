@@ -128,7 +128,7 @@
     // Convert escaped markdown links [text](url) back to <a> tags
     // Since we escaped HTML, brackets and parens are still intact
     return str
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*\*([^*]+)\*\*/g, '<span class="font-medium">$1</span>')
       .replace(
         /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
         '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-sienna dark:text-sienna-light hover:underline">$1</a>',

@@ -2,7 +2,7 @@
   <div class="box">
     <div class="calendar row">
       <client-only>
-        <div class="cal-wrapper">
+        <div class="cal-wrapper" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
           <CalendarView
             v-bind="calendar"
             :class="[
@@ -20,7 +20,12 @@
                     :disabled="!headerProps.previousPeriod"
                     @click="setShowDate(headerProps.previousPeriod!)"
                   >
-                    ‹
+                    <span class="nav-arrow">‹</span
+                    ><span class="nav-label">
+                      {{
+                        headerProps.previousPeriod?.toLocaleDateString(locale, { month: 'long' })
+                      }}</span
+                    >
                   </button>
                   <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
                   <button
@@ -37,7 +42,11 @@
                     :disabled="!headerProps.nextPeriod"
                     @click="setShowDate(headerProps.nextPeriod!)"
                   >
-                    ›
+                    <span class="nav-label"
+                      >{{
+                        headerProps.nextPeriod?.toLocaleDateString(locale, { month: 'long' })
+                      }} </span
+                    ><span class="nav-arrow">›</span>
                   </button>
                   <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
                 </div>
@@ -293,6 +302,21 @@
     calendar.value.showDate = next
   }
 
+  let touchStartX = 0
+  let touchStartY = 0
+
+  function onTouchStart(e: TouchEvent) {
+    touchStartX = e.changedTouches[0].clientX
+    touchStartY = e.changedTouches[0].clientY
+  }
+
+  function onTouchEnd(e: TouchEvent) {
+    const dx = e.changedTouches[0].clientX - touchStartX
+    const dy = e.changedTouches[0].clientY - touchStartY
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return
+    navigatePeriod(dx < 0 ? 1 : -1)
+  }
+
   function handleKeyboard(e: KeyboardEvent) {
     if (modal.value && isModalOpen()) return
     if (e.key === 'ArrowLeft' || e.key === 'a') navigatePeriod(-1)
@@ -397,7 +421,12 @@
   .theme-default .cv-header .cv-header-nav {
     display: flex;
     align-items: center;
-    gap: 0.3em;
+    gap: 0.5em;
+  }
+
+  .theme-default .cv-header button .nav-arrow {
+    font-size: 1.4em;
+    line-height: 1;
   }
 
   .theme-default .cv-header button {
@@ -406,7 +435,13 @@
     border: 1.5px solid rgba(194, 65, 12, 0.3);
     border-radius: 4px;
     font-weight: 600;
+    font-size: 0.85em;
     padding: 0.3em 0.7em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2em;
+    min-height: 2.2em;
     transition:
       background-color 0.15s,
       border-color 0.15s;
@@ -843,6 +878,10 @@
   @media (width <= 480px) {
     .periodLabel {
       font-size: 1.2em !important;
+    }
+
+    .nav-label {
+      display: none;
     }
   }
 </style>

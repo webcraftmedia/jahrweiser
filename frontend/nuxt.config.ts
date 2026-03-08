@@ -96,7 +96,7 @@ export default defineNuxtConfig({
 
     // Keys within public, will be also exposed to the client-side
     public: {
-      appVersion: isTest ? '0.0.0-test' : (process.env.npm_package_version || 'development'),
+      appVersion: isTest ? '0.0.0-test' : process.env.npm_package_version || 'development',
       changelog,
     },
   },

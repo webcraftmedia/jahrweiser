@@ -60,7 +60,8 @@ export function parseChangelog(raw: string): ChangelogSection[] {
     // Handle both formats:
     // - release-please linked: [1.1.0](url) or [1.1.0](url) (2026-03-15)
     // - simple: 1.0.0 (2026-03-08)
-    const linkedMatch = /^\[(.+?)\]\([^)]+\)(?:\s*\((.+?)\))?/.exec(header)
+    // eslint-disable-next-line security/detect-unsafe-regex
+    const linkedMatch = /^\[([^\]]+)\]\([^)]+\)(?:\s+\(([^)]+)\))?/.exec(header)
     const simpleMatch = !linkedMatch ? /^(.+?)\s*\((.+?)\)/.exec(header) : null
     const version = linkedMatch?.[1] ?? simpleMatch?.[1] ?? header
     const date = linkedMatch?.[2] ?? simpleMatch?.[2] ?? ''

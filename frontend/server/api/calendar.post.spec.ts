@@ -129,7 +129,7 @@ describe('calendar.post', () => {
     expect(result).toHaveLength(1)
   })
 
-  it('subtracts 1ms from endDate for all-day events', async () => {
+  it('sets endDate to last day for all-day events', async () => {
     mockFindEvents.mockResolvedValue([
       {
         href: '/cal/work/allday-event-1.ics',
@@ -138,8 +138,8 @@ describe('calendar.post', () => {
     ])
     const result = (await handlerFn({})) as { startDate: Date; endDate: Date }[]
     expect(result).toHaveLength(1)
-    // endDate should have milliseconds = 999 (subtracted 1ms)
-    expect(result[0]!.endDate.getMilliseconds()).toBe(999)
+    // DTEND is exclusive (March 2), so endDate should be March 1 (same as start)
+    expect(result[0]!.endDate.getUTCDate()).toBe(result[0]!.startDate.getUTCDate())
   })
 
   it('stops expanding recurring events past endDate', async () => {

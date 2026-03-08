@@ -103,7 +103,7 @@ export default defineEventHandler(async (event) => {
         const sd = calEvent.startDate.toJSDate()
         const ed = calEvent.endDate.toJSDate()
         if (calEvent.duration.days > 0 || calEvent.duration.weeks > 0) {
-          ed.setMilliseconds(ed.getMilliseconds() - 1) // Correct Full day thingy
+          ed.setDate(ed.getDate() - 1) // DTEND is exclusive, subtract 1 day for inclusive end
         }
         results.push({
           calendar: selectedCalendar.displayName,

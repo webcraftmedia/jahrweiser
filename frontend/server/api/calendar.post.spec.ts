@@ -6,6 +6,7 @@ import {
   SIMPLE_EVENT,
   ALLDAY_EVENT,
   RECURRING_EVENT,
+  RECURRING_EVENT_WITH_TIMEZONE,
   PRIVATE_EVENT,
   VCALENDAR_NO_VEVENT,
 } from '../../test/fixtures/ical-data'
@@ -225,6 +226,20 @@ describe('calendar.post', () => {
         new Date('2025-03-05T00:00:00Z').getTime(),
       )
     })
+  })
+
+  it('registers VTIMEZONE and converts recurring event times correctly', async () => {
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/recurring-tz-1.ics',
+        props: { calendarData: RECURRING_EVENT_WITH_TIMEZONE },
+      },
+    ])
+    const result = (await handlerFn({})) as { startDate: Date; title: string }[]
+    expect(result.length).toBeGreaterThanOrEqual(1)
+    expect(result[0]!.title).toBe('Berlin Recurring')
+    // DTSTART;TZID=Europe/Berlin:20250301T190000 → 18:00 UTC (CET = UTC+1)
+    expect(result[0]!.startDate.getUTCHours()).toBe(18)
   })
 
   it('hrefToId extracts ID from path', async () => {

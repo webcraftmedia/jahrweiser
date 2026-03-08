@@ -7,6 +7,7 @@ import {
   EVENT_WITH_DETAILS,
   RECURRING_EVENT,
   RECURRING_EVENT_WITH_DETAILS,
+  RECURRING_EVENT_WITH_TIMEZONE,
 } from '../../test/fixtures/ical-data'
 
 import handler from './event.post'
@@ -93,6 +94,21 @@ describe('event.post', () => {
     expect(result.uid).toBe('recurring-event-1')
     // Without occurrence, should return non-expanded data
     expect(result.startDate).toBeDefined()
+  })
+
+  it('registers VTIMEZONE and returns local time for recurring event', async () => {
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+      return (validator as (data: unknown) => unknown)({
+        calendar: 'Work',
+        id: 'event-123',
+        occurrence: 1,
+      })
+    })
+    mockFindEvent.mockResolvedValue([{ data: RECURRING_EVENT_WITH_TIMEZONE }])
+    const result = (await handlerFn({})) as Record<string, unknown>
+    expect(result.summary).toBe('Berlin Recurring')
+    // DTSTART;TZID=Europe/Berlin:20250301T190000 → display should show 19:00 (local Berlin time)
+    expect(result.startDate).toBe('2025-03-01T19:00:00')
   })
 
   it('throws when calendar not found', async () => {

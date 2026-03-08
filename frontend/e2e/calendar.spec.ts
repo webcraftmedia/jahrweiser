@@ -74,4 +74,50 @@ test.describe('Calendar', () => {
     await page.keyboard.press('ArrowLeft')
     await expect(periodLabel).toHaveText(initialLabel!)
   })
+
+  test('swipe left navigates to next month', async ({ page }) => {
+    await expect(page.locator('.cv-item').first()).toBeVisible({ timeout: 10_000 })
+    const periodLabel = page.locator('.periodLabel')
+    const initialLabel = await periodLabel.textContent()
+
+    // Swipe left (dx < -50) → next month
+    await page.evaluate(() => {
+      const el = document.querySelector('.cal-wrapper')!
+      el.dispatchEvent(
+        new TouchEvent('touchstart', {
+          changedTouches: [new Touch({ identifier: 0, target: el, clientX: 300, clientY: 300 })],
+        }),
+      )
+      el.dispatchEvent(
+        new TouchEvent('touchend', {
+          changedTouches: [new Touch({ identifier: 0, target: el, clientX: 100, clientY: 300 })],
+        }),
+      )
+    })
+
+    await expect(periodLabel).not.toHaveText(initialLabel!)
+  })
+
+  test('swipe right navigates to previous month', async ({ page }) => {
+    await expect(page.locator('.cv-item').first()).toBeVisible({ timeout: 10_000 })
+    const periodLabel = page.locator('.periodLabel')
+    const initialLabel = await periodLabel.textContent()
+
+    // Swipe right (dx > 50) → previous month
+    await page.evaluate(() => {
+      const el = document.querySelector('.cal-wrapper')!
+      el.dispatchEvent(
+        new TouchEvent('touchstart', {
+          changedTouches: [new Touch({ identifier: 0, target: el, clientX: 100, clientY: 300 })],
+        }),
+      )
+      el.dispatchEvent(
+        new TouchEvent('touchend', {
+          changedTouches: [new Touch({ identifier: 0, target: el, clientX: 300, clientY: 300 })],
+        }),
+      )
+    })
+
+    await expect(periodLabel).not.toHaveText(initialLabel!)
+  })
 })

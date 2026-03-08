@@ -1,7 +1,7 @@
 {
   "components": {
     "Footer": {
-      "changelog": "Changelog",
+      "changelog": "Versionshistorie",
       "changelog-intro-after": "GitHub abzurufen",
       "changelog-intro-before": "Hier kannst du die Versionshistorie von Jahrweiser sehen. Der Quellcode ist auf",
       "copyright": "© 2026",

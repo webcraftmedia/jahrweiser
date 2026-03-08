@@ -49,6 +49,7 @@
           <div
             class="changelog-content px-4 py-3 text-sm text-navy/80 dark:text-ivory/80"
             v-html="section.html"
+            @click.stop
           />
         </details>
       </div>

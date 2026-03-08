@@ -20,7 +20,7 @@
                     :disabled="!headerProps.previousPeriod"
                     @click="setShowDate(headerProps.previousPeriod!)"
                   >
-                    ‹
+                    <span class="nav-arrow">‹</span><span class="nav-label"> {{ headerProps.previousPeriod?.toLocaleDateString(locale, { month: 'long' }) }}</span>
                   </button>
                   <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
                   <button
@@ -37,7 +37,7 @@
                     :disabled="!headerProps.nextPeriod"
                     @click="setShowDate(headerProps.nextPeriod!)"
                   >
-                    ›
+                    <span class="nav-label">{{ headerProps.nextPeriod?.toLocaleDateString(locale, { month: 'long' }) }} </span><span class="nav-arrow">›</span>
                   </button>
                   <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
                 </div>
@@ -397,7 +397,12 @@
   .theme-default .cv-header .cv-header-nav {
     display: flex;
     align-items: center;
-    gap: 0.3em;
+    gap: 0.5em;
+  }
+
+  .theme-default .cv-header button .nav-arrow {
+    font-size: 1.4em;
+    line-height: 1;
   }
 
   .theme-default .cv-header button {
@@ -406,7 +411,13 @@
     border: 1.5px solid rgba(194, 65, 12, 0.3);
     border-radius: 4px;
     font-weight: 600;
+    font-size: 0.85em;
     padding: 0.3em 0.7em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2em;
+    min-height: 2.2em;
     transition:
       background-color 0.15s,
       border-color 0.15s;
@@ -843,6 +854,10 @@
   @media (width <= 480px) {
     .periodLabel {
       font-size: 1.2em !important;
+    }
+
+    .nav-label {
+      display: none;
     }
   }
 </style>

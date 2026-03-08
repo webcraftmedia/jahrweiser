@@ -83,7 +83,7 @@ exports[`App > renders default page 1`] = `
     </div>
     <footer data-v-4896eafd="" class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-1 shrink-0">
       <div data-v-4896eafd="" class="max-w-screen-2xl mx-auto px-2 md:px-4 flex items-center justify-center md:justify-between text-sm text-navy/60 dark:text-ivory/60"><span data-v-4896eafd="" class="hidden md:inline">components.Footer.copyright <a data-v-4896eafd="" href="https://www.webcraft-media.de/" class="hover:text-sienna transition-colors">components.Footer.copyright-holder</a><!-- eslint-disable @intlify/vue-i18n/no-raw-text --> · <button data-v-4896eafd="" class="hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer" title="components.Footer.changelog"> v1.0.0</button><!-- eslint-enable @intlify/vue-i18n/no-raw-text --></span><!-- Main modal -->
-        <div data-v-94fcd891="" id="default-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div data-v-94fcd891="" id="changelog-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
           <div data-v-94fcd891="" class="relative p-4 w-full max-w-3xl mx-auto max-h-full">
             <!-- Modal content -->
             <div data-v-94fcd891="" class="modal-card relative w-full bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]">
@@ -136,7 +136,7 @@ exports[`App > renders default page 1`] = `
                     </g>
                   </svg>
                   <h3 data-v-94fcd891="" class="text-xl font-semibold text-navy dark:text-ivory font-display tracking-wide">components.Footer.changelog</h3>
-                </div><button data-v-94fcd891="" type="button" class="text-navy/50 hover:text-sienna w-8 h-8 inline-flex justify-center items-center transition-colors dark:text-ivory/50 dark:hover:text-sienna-light" data-modal-hide="default-modal"><svg data-v-94fcd891="" class="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                </div><button data-v-94fcd891="" type="button" class="text-navy/50 hover:text-sienna w-8 h-8 inline-flex justify-center items-center transition-colors dark:text-ivory/50 dark:hover:text-sienna-light" data-modal-hide="changelog-modal"><svg data-v-94fcd891="" class="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                     <path data-v-94fcd891="" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"></path>
                   </svg><span data-v-94fcd891="" class="sr-only">components.Modal.close</span></button>
               </div><!-- Modal body -->

@@ -1,5 +1,5 @@
 <template>
-  <Modal ref="modal" @x="modal?.close()">
+  <Modal ref="modal" modal-id="changelog-modal" @x="modal?.close()">
     <template #title>
       {{ $t('components.Footer.changelog') }}
     </template>

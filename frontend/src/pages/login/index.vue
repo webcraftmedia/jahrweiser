@@ -90,6 +90,8 @@
                   id="email-address-icon"
                   v-model="credentials.email"
                   type="email"
+                  name="email"
+                  autocomplete="email"
                   class="login-input bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted"
                   :class="
                     emailError

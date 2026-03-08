@@ -84,3 +84,52 @@ test.describe('Admin', () => {
     await expect(emailInput).toBeEnabled()
   })
 })
+
+test.describe('Admin Mobile Menu', () => {
+  test.use({ viewport: { width: 375, height: 667 } })
+
+  test.beforeEach(async ({ page }) => {
+    await loginAs(page, ADMIN_USER)
+    await mockAdminEndpoints(page)
+
+    // On mobile, use the header burger menu to navigate to admin
+    await page.locator('[aria-controls="navbar-mobile"]').click()
+    const mobileMenu = page.locator('#navbar-mobile')
+    await expect(mobileMenu).toHaveClass(/menu-open/)
+    await mobileMenu.getByText('Admin').click()
+    await page.waitForURL(/\/admin\/members\/add/)
+  })
+
+  test('hamburger button opens admin sidebar drawer', async ({ page }) => {
+    const drawer = page.locator('.drawer-slide')
+    await expect(drawer).toHaveClass(/-translate-x-full/)
+
+    // Click admin page hamburger button in main content area
+    await page.locator('main button').first().click()
+    await expect(drawer).not.toHaveClass(/-translate-x-full/)
+  })
+
+  test('close button closes admin sidebar drawer', async ({ page }) => {
+    const drawer = page.locator('.drawer-slide')
+
+    // Open drawer via admin page hamburger
+    await page.locator('main button').first().click()
+    await expect(drawer).not.toHaveClass(/-translate-x-full/)
+
+    // Click close (X) button inside drawer
+    await drawer.locator('button').click()
+    await expect(drawer).toHaveClass(/-translate-x-full/)
+  })
+
+  test('backdrop click closes admin sidebar drawer', async ({ page }) => {
+    const drawer = page.locator('.drawer-slide')
+
+    // Open drawer
+    await page.locator('main button').first().click()
+    await expect(drawer).not.toHaveClass(/-translate-x-full/)
+
+    // Click backdrop overlay
+    await page.locator('.bg-navy\\/60').click({ force: true })
+    await expect(drawer).toHaveClass(/-translate-x-full/)
+  })
+})

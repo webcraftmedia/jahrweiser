@@ -12,8 +12,18 @@
         <a href="https://www.webcraft-media.de/" class="hover:text-sienna transition-colors">
           {{ $t('components.Footer.copyright-holder') }}
         </a>
-        · v{{ runtimeConfig.public.appVersion }}
+        <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -->
+        ·
+        <button
+          class="hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer"
+          :title="$t('components.Footer.changelog')"
+          @click="changelogModal?.open()"
+        >
+          <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -->
+          v{{ runtimeConfig.public.appVersion }}
+        </button>
       </span>
+      <ChangelogModal ref="changelogModal" />
 
       <!-- Zoom + Dark mode -->
       <div
@@ -110,6 +120,9 @@
   import { useColorMode } from '../composables/useColorMode'
   import { useZoom } from '../composables/useZoom'
 
+  import ChangelogModal from './ChangelogModal.vue'
+
+  const changelogModal = ref<InstanceType<typeof ChangelogModal>>()
   const runtimeConfig = useRuntimeConfig()
   const { zoomLevel: zoom, chromeZoom } = useZoom()
   const { isDark, toggle: toggleDark } = useColorMode()

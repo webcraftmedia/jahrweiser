@@ -88,6 +88,7 @@ describe('Page: Index', () => {
             id: 'event-1',
             title: 'Test',
             color: '#ff0000',
+            calendar: 'Work',
             startDate: '2025-01-15',
             endDate: '2025-01-15',
           },
@@ -167,6 +168,7 @@ describe('Page: Index', () => {
             id: 'e1',
             title: 'T',
             color: '#ff0000',
+            calendar: 'Work',
             startDate: '2025-01-15',
             endDate: '2025-01-15',
           },
@@ -204,6 +206,7 @@ describe('Page: Index', () => {
             id: 'e1',
             title: 'T',
             color: '#ff0000',
+            calendar: 'Work',
             startDate: '2025-01-15',
             endDate: '2025-01-15',
           },
@@ -478,6 +481,7 @@ describe('Page: Index', () => {
             id: 'e1',
             title: 'Unknown',
             color: '#999999',
+            calendar: 'Work',
             startDate: '2025-01-15',
             endDate: '2025-01-15',
           },
@@ -555,6 +559,85 @@ describe('Page: Index', () => {
     await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 300 }] })
     const calendarView = wrapper.findComponent({ name: 'CalendarView' })
     expect(calendarView.props('showDate').getMonth()).toBe(0) // Still January
+  })
+
+  it('renders calendar legend items', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+    })
+    await nextTick()
+    const legendItems = wrapper.findAll('.cal-legend-item')
+    expect(legendItems.length).toBe(1)
+    expect(legendItems[0]!.text()).toContain('Work')
+    // Dot should have the border color from the design palette (light sienna: #9a3412)
+    const dot = legendItems[0]!.find('.cal-legend-dot')
+    expect((dot.element as HTMLElement).style.backgroundColor).toBeTruthy()
+  })
+
+  it('toggles calendar visibility via legend click', async () => {
+    mock$fetch.mockImplementation((url: string, opts?: { body?: { calendar?: string } }) => {
+      if (url === '/api/calendars')
+        return Promise.resolve([
+          { name: 'Work', color: '#ff0000' },
+          { name: 'Personal', color: '#00ff00' },
+        ])
+      if (url === '/api/calendar') {
+        const cal = opts?.body?.calendar
+        if (cal === 'Work')
+          return Promise.resolve([
+            {
+              id: 'e1',
+              title: 'Work Event',
+              color: '#ff0000',
+              calendar: 'Work',
+              startDate: '2025-01-15',
+              endDate: '2025-01-15',
+            },
+          ])
+        if (cal === 'Personal')
+          return Promise.resolve([
+            {
+              id: 'e2',
+              title: 'Personal Event',
+              color: '#00ff00',
+              calendar: 'Personal',
+              startDate: '2025-01-16',
+              endDate: '2025-01-16',
+            },
+          ])
+        return Promise.resolve([])
+      }
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+    })
+    await nextTick()
+
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    // Both events visible initially
+    expect((calendarView.props('items') as { title: string }[]).length).toBe(2)
+
+    // Click "Work" legend button to hide Work events
+    const legendItems = wrapper.findAll('.cal-legend-item')
+    await legendItems[0]!.trigger('click')
+    await nextTick()
+
+    const itemsAfterHide = calendarView.props('items') as { title: string }[]
+    expect(itemsAfterHide.length).toBe(1)
+    expect(itemsAfterHide[0]!.title).toBe('Personal Event')
+
+    // Hidden legend item should have the hidden class
+    expect(wrapper.findAll('.cal-legend-item')[0]!.classes()).toContain('cal-legend-hidden')
+
+    // Click again to show Work events
+    await wrapper.findAll('.cal-legend-item')[0]!.trigger('click')
+    await nextTick()
+
+    expect((calendarView.props('items') as { title: string }[]).length).toBe(2)
+    expect(wrapper.findAll('.cal-legend-item')[0]!.classes()).not.toContain('cal-legend-hidden')
   })
 
   it('shows loading overlay during data fetch', async () => {

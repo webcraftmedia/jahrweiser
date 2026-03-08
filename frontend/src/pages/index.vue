@@ -61,6 +61,19 @@
               <span class="loading-dot" style="animation-delay: 0.3s" />
             </div>
           </div>
+          <!-- Calendar legend / filter -->
+          <div class="cal-legend">
+            <button
+              v-for="cal in calendarLegend"
+              :key="cal.name"
+              class="cal-legend-item"
+              :class="{ 'cal-legend-hidden': hiddenCalendars.has(cal.name) }"
+              @click="toggleCalendar(cal.name)"
+            >
+              <span class="cal-legend-dot" :style="{ backgroundColor: cal.dotColor }" />
+              <span class="cal-legend-name">{{ cal.name }}</span>
+            </button>
+          </div>
         </div>
       </client-only>
       <Modal ref="modal" @x="handleModalX">
@@ -173,7 +186,15 @@
       .join('\n')
   })
   const calendars = ref<{ name: string; color: string }[]>([])
+  const hiddenCalendars = ref(new Set<string>())
   const { isDark } = useColorMode()
+
+  function toggleCalendar(name: string) {
+    const s = new Set(hiddenCalendars.value)
+    if (s.has(name)) s.delete(name)
+    else s.add(name)
+    hiddenCalendars.value = s
+  }
 
   /* ── Design palette — one unique color per calendar ── */
 
@@ -200,12 +221,22 @@
     return map
   })
 
+  const calendarLegend = computed(() =>
+    calendars.value.map((cal, i) => {
+      const palette = designPalette[i % designPalette.length]
+      const { border } = isDark.value ? palette.dark : palette.light
+      return { name: cal.name, dotColor: border }
+    }),
+  )
+
   function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
   }
 
   const items = computed<ICalendarItem[]>(() =>
-    rawItems.value.map((item) => {
+    rawItems.value
+      .filter((item) => !hiddenCalendars.value.has(item.calendar))
+      .map((item) => {
       const palette = calendarColorMap.value.get(item.color) ?? designPalette[0]
       const { bg, border } = isDark.value ? palette.dark : palette.light
       return {
@@ -896,6 +927,59 @@
       grid-template-rows: 1fr;
       opacity: 1;
     }
+  }
+
+  /* ===== Calendar legend ===== */
+
+  .cal-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    padding: 0.5em 0.3em;
+  }
+
+  .cal-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    padding: 0.2em 0.6em;
+    border-radius: 3px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    border: 1.5px solid rgba(194, 65, 12, 0.2);
+    background: transparent;
+    color: #1e293b;
+  }
+
+  .cal-legend-item:hover {
+    border-color: rgba(194, 65, 12, 0.4);
+  }
+
+  .cal-legend-hidden {
+    opacity: 0.4;
+    text-decoration: line-through;
+  }
+
+  .cal-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cal-legend-name {
+    line-height: 1;
+  }
+
+  /* Dark mode */
+  .dark .cal-legend-item {
+    color: #e8ddd0;
+    border-color: #3d3630;
+  }
+
+  .dark .cal-legend-item:hover {
+    border-color: rgba(234, 88, 12, 0.4);
   }
 
   /* ===== Utility ===== */

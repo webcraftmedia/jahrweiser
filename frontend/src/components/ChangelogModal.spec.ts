@@ -8,9 +8,9 @@ describe('ChangelogModal', () => {
     const wrapper = await mountSuspended(Component)
 
     const details = wrapper.findAll('details')
-    expect(details.length).toBeGreaterThanOrEqual(1)
+    expect(details).toHaveLength(1)
     expect(details[0]!.text()).toContain('v1.0.0')
-    expect(details[0]!.text()).toContain('2026-03-08')
+    expect(details[0]!.text()).toContain('2026-01-01')
   })
 
   it('renders markdown links as anchor tags', async () => {

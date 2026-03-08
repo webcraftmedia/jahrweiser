@@ -40,6 +40,7 @@ mockNuxtImport('useI18n', () => () => {
   }
 })
 
+
 expect.addSnapshotSerializer({
   test: (val) => typeof val === 'string' && val.includes('/@fs'),
   print: (val) => '"' + (val as string).replaceAll(/\/@fs(.*)\/frontend\//g, '') + '"',

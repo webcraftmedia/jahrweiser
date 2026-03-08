@@ -3,14 +3,18 @@ import { resolve } from 'node:path'
 
 import { defineNuxtConfig } from 'nuxt/config'
 
+const isTest = !!process.env.VITEST
+
 const changelogPath = resolve(__dirname, '../CHANGELOG.md')
-const changelog = (() => {
-  try {
-    return readFileSync(changelogPath, 'utf-8')
-  } catch {
-    return '## 0.0.0\n\nNo changelog available.'
-  }
-})()
+const changelog = isTest
+  ? '## 1.0.0 (2026-01-01)\n\n### Features\n\n* **scope:** feature one ([#1](https://github.com/org/repo/issues/1))\n\n### Bug Fixes\n\n* **other:** fix one\n'
+  : (() => {
+      try {
+        return readFileSync(changelogPath, 'utf-8')
+      } catch {
+        return '## 0.0.0\n\nNo changelog available.'
+      }
+    })()
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -92,7 +96,7 @@ export default defineNuxtConfig({
 
     // Keys within public, will be also exposed to the client-side
     public: {
-      appVersion: process.env.npm_package_version || 'development',
+      appVersion: isTest ? '0.0.0-test' : (process.env.npm_package_version || 'development'),
       changelog,
     },
   },

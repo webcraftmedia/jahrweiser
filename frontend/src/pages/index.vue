@@ -424,6 +424,9 @@
   .theme-default .cv-header {
     background-color: #faf5eb;
     border-color: rgba(194, 65, 12, 0.2);
+    border-left: none;
+    border-right: none;
+    border-top: none;
     justify-content: space-between;
   }
 
@@ -659,6 +662,9 @@
   .dark .theme-default .cv-header {
     background-color: #1a1714;
     border-color: #3d3630;
+    border-left: none;
+    border-right: none;
+    border-top: none;
   }
 
   .dark .theme-default .cv-header .periodLabel {

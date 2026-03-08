@@ -70,7 +70,8 @@
       "details": {
         "duration": "Duration:",
         "location": "Ort:",
-        "start": "Beginn:"
+        "start": "Beginn:",
+        "url": "Link:"
       },
       "today": "Heute"
     },

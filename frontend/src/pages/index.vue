@@ -104,6 +104,22 @@
                     </th>
                     <td class="py-1.5">{{ eventLocation }}</td>
                   </tr>
+                  <tr v-show="eventUrl">
+                    <th
+                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                    >
+                      {{ $t('pages.index.details.url') }}
+                    </th>
+                    <td class="py-1.5">
+                      <a
+                        :href="eventUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-orange-700 dark:text-orange-400 underline break-all"
+                        >{{ eventUrl }}</a
+                      >
+                    </td>
+                  </tr>
                 </tbody>
               </table>
               <div
@@ -147,6 +163,7 @@
   const eventStartDate = computed(() => event.value?.startDate ?? '')
   const eventDuration = computed(() => event.value?.duration?.replace(/^PT?/, '') ?? '')
   const eventLocation = computed(() => event.value?.location ?? '')
+  const eventUrl = computed(() => event.value?.url ?? '')
   const eventDescription = computed(() => {
     const desc = event.value?.description
     if (!desc) return ''

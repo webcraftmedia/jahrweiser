@@ -14,7 +14,7 @@
       <!-- Modal content -->
       <div
         class="modal-card relative w-full bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]"
-        @click.prevent.stop
+        @click.stop
       >
         <!-- Modal header -->
         <div
@@ -30,7 +30,7 @@
             type="button"
             class="text-navy/50 hover:text-sienna w-8 h-8 inline-flex justify-center items-center transition-colors dark:text-ivory/50 dark:hover:text-sienna-light"
             :data-modal-hide="modalId"
-            @click.prevent="handleX"
+            @click="handleX"
           >
             <svg
               class="w-3.5 h-3.5"

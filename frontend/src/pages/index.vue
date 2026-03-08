@@ -2,7 +2,11 @@
   <div class="box">
     <div class="calendar row">
       <client-only>
-        <div class="cal-wrapper">
+        <div
+          class="cal-wrapper"
+          @touchstart.passive="onTouchStart"
+          @touchend.passive="onTouchEnd"
+        >
           <CalendarView
             v-bind="calendar"
             :class="[
@@ -291,6 +295,21 @@
     next.setMonth(next.getMonth() + direction)
     triggerCalFlip(direction === 1 ? 'left' : 'right')
     calendar.value.showDate = next
+  }
+
+  let touchStartX = 0
+  let touchStartY = 0
+
+  function onTouchStart(e: TouchEvent) {
+    touchStartX = e.changedTouches[0].clientX
+    touchStartY = e.changedTouches[0].clientY
+  }
+
+  function onTouchEnd(e: TouchEvent) {
+    const dx = e.changedTouches[0].clientX - touchStartX
+    const dy = e.changedTouches[0].clientY - touchStartY
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return
+    navigatePeriod(dx < 0 ? 1 : -1)
   }
 
   function handleKeyboard(e: KeyboardEvent) {

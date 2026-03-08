@@ -58,7 +58,7 @@
         </div>
         <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
         <button
-          class="text-navy/60 dark:text-ivory/60 hover:text-navy dark:hover:text-ivory transition-colors p-1 md:p-1.5 bg-navy/10 dark:bg-ivory/10 rounded-lg"
+          class="text-navy/60 dark:text-ivory/60 hover:text-navy dark:hover:text-ivory transition-colors p-2 md:p-1.5 bg-navy/10 dark:bg-ivory/10 rounded-lg"
           :title="$t('components.Footer.dark-mode')"
           :aria-label="$t('components.Footer.dark-mode')"
           @click="toggleDark"

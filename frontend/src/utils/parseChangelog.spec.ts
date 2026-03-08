@@ -83,4 +83,20 @@ describe('parseChangelog', () => {
     expect(result[0]!.html).toContain('Features')
     expect(result[0]!.html).not.toContain('<ul')
   })
+
+  it('parses release-please linked version without date', () => {
+    const result = parseChangelog(
+      '## [1.1.0](https://github.com/org/repo/compare/v1.0.0...v1.1.0)\n\n* feat\n',
+    )
+    expect(result[0]!.version).toBe('1.1.0')
+    expect(result[0]!.date).toBe('')
+  })
+
+  it('parses release-please linked version with date', () => {
+    const result = parseChangelog(
+      '## [1.1.0](https://github.com/org/repo/compare/v1.0.0...v1.1.0) (2026-03-15)\n\n* feat\n',
+    )
+    expect(result[0]!.version).toBe('1.1.0')
+    expect(result[0]!.date).toBe('2026-03-15')
+  })
 })

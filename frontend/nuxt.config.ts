@@ -1,4 +1,16 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import { defineNuxtConfig } from 'nuxt/config'
+
+const changelogPath = resolve(__dirname, '../CHANGELOG.md')
+const changelog = (() => {
+  try {
+    return readFileSync(changelogPath, 'utf-8')
+  } catch {
+    return '## 0.0.0\n\nNo changelog available.'
+  }
+})()
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -81,6 +93,7 @@ export default defineNuxtConfig({
     // Keys within public, will be also exposed to the client-side
     public: {
       appVersion: process.env.npm_package_version || 'development',
+      changelog,
     },
   },
   hooks: {

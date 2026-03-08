@@ -156,10 +156,10 @@
               :title="$t('components.Footer.changelog')"
               @click="openChangelog"
             >
-              v{{ useRuntimeConfig().public.appVersion }}
+              v{{ appVersion }}
             </button>
-            <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
           </div>
+          <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
         </div>
       </div>
       <template v-else />
@@ -178,6 +178,7 @@
   withDefaults(defineProps<{ variant?: 'bar' | 'hero' }>(), { variant: 'bar' })
 
   const { chromeZoom } = useZoom()
+  const appVersion = useRuntimeConfig().public.appVersion
 
   const welcomeName = ref()
   const { user, loggedIn, clear: clearSession } = useUserSession()

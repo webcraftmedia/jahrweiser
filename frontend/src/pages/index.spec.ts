@@ -521,6 +521,42 @@ describe('Page: Index', () => {
     expect(calendarView.props('showDate')).toStrictEqual(dateBefore)
   })
 
+  it('swipe left navigates to next month', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    await calWrapper.trigger('touchstart', { changedTouches: [{ clientX: 200, clientY: 100 }] })
+    await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 50, clientY: 100 }] })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    expect(calendarView.props('showDate').getMonth()).toBe(1) // February
+  })
+
+  it('swipe right navigates to previous month', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    await calWrapper.trigger('touchstart', { changedTouches: [{ clientX: 50, clientY: 100 }] })
+    await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 100 }] })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    expect(calendarView.props('showDate').getMonth()).toBe(11) // December
+  })
+
+  it('ignores short swipes', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    await calWrapper.trigger('touchstart', { changedTouches: [{ clientX: 100, clientY: 100 }] })
+    await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 130, clientY: 100 }] })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    expect(calendarView.props('showDate').getMonth()).toBe(0) // Still January
+  })
+
+  it('ignores vertical swipes', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    await calWrapper.trigger('touchstart', { changedTouches: [{ clientX: 100, clientY: 100 }] })
+    await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 300 }] })
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    expect(calendarView.props('showDate').getMonth()).toBe(0) // Still January
+  })
+
   it('shows loading overlay during data fetch', async () => {
     let resolveCalendars!: (value: unknown) => void
     mock$fetch.mockImplementation((url: string) => {

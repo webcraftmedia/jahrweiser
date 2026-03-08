@@ -3,7 +3,7 @@
   <!-- Main modal -->
 
   <div
-    id="default-modal"
+    :id="modalId"
     tabindex="-1"
     aria-hidden="false"
     :class="isOpen ? 'modal-open' : 'modal-hidden'"
@@ -29,7 +29,7 @@
           <button
             type="button"
             class="text-navy/50 hover:text-sienna w-8 h-8 inline-flex justify-center items-center transition-colors dark:text-ivory/50 dark:hover:text-sienna-light"
-            data-modal-hide="default-modal"
+            :data-modal-hide="modalId"
             @click.prevent="handleX"
           >
             <svg
@@ -66,6 +66,10 @@
 
 <script setup lang="ts">
   import LogoSmall from '~/../assets/logo-small.svg'
+
+  const { modalId = 'default-modal' } = defineProps<{
+    modalId?: string
+  }>()
 
   const emit = defineEmits(['x'])
 

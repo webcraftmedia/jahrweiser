@@ -65,6 +65,15 @@ describe('Footer', () => {
     expect(wrapper.text()).toContain('110%')
   })
 
+  it('opens changelog modal on version click', async () => {
+    const wrapper = await mountSuspended(Component)
+    const versionBtn = wrapper.find('button[title="components.Footer.changelog"]')
+    expect(versionBtn.exists()).toBe(true)
+    await versionBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.modal-open').exists()).toBe(true)
+  })
+
   it('toggles dark mode', async () => {
     const wrapper = await mountSuspended(Component)
     // Initially light mode — moon icon

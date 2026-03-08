@@ -2,11 +2,7 @@
   <div class="box">
     <div class="calendar row">
       <client-only>
-        <div
-          class="cal-wrapper"
-          @touchstart.passive="onTouchStart"
-          @touchend.passive="onTouchEnd"
-        >
+        <div class="cal-wrapper" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
           <CalendarView
             v-bind="calendar"
             :class="[
@@ -24,7 +20,12 @@
                     :disabled="!headerProps.previousPeriod"
                     @click="setShowDate(headerProps.previousPeriod!)"
                   >
-                    <span class="nav-arrow">‹</span><span class="nav-label"> {{ headerProps.previousPeriod?.toLocaleDateString(locale, { month: 'long' }) }}</span>
+                    <span class="nav-arrow">‹</span
+                    ><span class="nav-label">
+                      {{
+                        headerProps.previousPeriod?.toLocaleDateString(locale, { month: 'long' })
+                      }}</span
+                    >
                   </button>
                   <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
                   <button
@@ -41,7 +42,11 @@
                     :disabled="!headerProps.nextPeriod"
                     @click="setShowDate(headerProps.nextPeriod!)"
                   >
-                    <span class="nav-label">{{ headerProps.nextPeriod?.toLocaleDateString(locale, { month: 'long' }) }} </span><span class="nav-arrow">›</span>
+                    <span class="nav-label"
+                      >{{
+                        headerProps.nextPeriod?.toLocaleDateString(locale, { month: 'long' })
+                      }} </span
+                    ><span class="nav-arrow">›</span>
                   </button>
                   <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
                 </div>

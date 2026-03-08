@@ -36,6 +36,10 @@ export default defineEventHandler(async (event) => {
 
   const vcalendar = new ICAL.Component(ICAL.parse(caldata[0].data))
   vcalendar.getFirstPropertyValue()
+  // Register VTIMEZONE components so toJSDate() can resolve timezone offsets
+  for (const vtimezone of vcalendar.getAllSubcomponents('vtimezone')) {
+    ICAL.TimezoneService.register(new ICAL.Timezone(vtimezone))
+  }
   const vevent = vcalendar.getFirstSubcomponent('vevent')
 
   if (!vevent) {
@@ -57,14 +61,14 @@ export default defineEventHandler(async (event) => {
       next = expand.next()
     }
 
-    const rStartDate = new Date(next.toString() + 'Z') // Fix German Time
-    const rEndDate = new Date(rStartDate.getTime() + e.duration.toSeconds() * 1000)
+    const rEnd = next.clone()
+    rEnd.addDuration(e.duration)
     return {
       description: e.description,
       duration: e.duration.toString(),
-      endDate: rEndDate.toISOString().slice(0, 19),
+      endDate: rEnd.toString(),
       location: e.location,
-      startDate: rStartDate.toISOString().slice(0, 19),
+      startDate: next.toString(),
       summary: e.summary,
       uid: e.uid,
     }

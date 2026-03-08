@@ -193,6 +193,8 @@
       const { bg, border } = isDark.value ? palette.dark : palette.light
       return {
         ...item,
+        startDate: new Date(item.startDate),
+        endDate: new Date(item.endDate),
         title: capitalize(item.title),
         style: `background-color: ${bg}; border-left-color: ${border}`,
       }

@@ -56,6 +56,10 @@ export default defineEventHandler(async (event) => {
   caldata.forEach((data) => {
     const vcalendar = new ICAL.Component(ICAL.parse(data.props?.calendarData))
     vcalendar.getFirstPropertyValue()
+    // Register VTIMEZONE components so toJSDate() can resolve timezone offsets
+    for (const vtimezone of vcalendar.getAllSubcomponents('vtimezone')) {
+      ICAL.TimezoneService.register(new ICAL.Timezone(vtimezone))
+    }
     const vevent = vcalendar.getFirstSubcomponent('vevent')
     if (vevent) {
       if (!showPrivate && vevent.getFirstProperty('class')?.getFirstValue() === 'PRIVATE') {
@@ -74,7 +78,7 @@ export default defineEventHandler(async (event) => {
         let next
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
         while ((next = expand.next())) {
-          const occurrence = new Date(next.toString() + 'Z') // Fix German Time
+          const occurrence = next.toJSDate()
           count += 1
           // Nur Events im gewünschten Zeitraum
           if (occurrence > endDate) break

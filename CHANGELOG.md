@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.1.0...v1.2.0) (2026-03-08)
+
+
+### Features
+
+* **frontend:** display url when available ([#87](https://github.com/webcraftmedia/jahrweiser/issues/87)) ([48b4d64](https://github.com/webcraftmedia/jahrweiser/commit/48b4d64570f7e7c42268159fcc9d5e20452eb8e6))
+
+
+### Bug Fixes
+
+* **frontend:** properly sort events, remove several hacks ([#85](https://github.com/webcraftmedia/jahrweiser/issues/85)) ([7aa56bb](https://github.com/webcraftmedia/jahrweiser/commit/7aa56bbd6bf0b380fe2320e7632ab1ca0f40424f))
+
 ## [1.1.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.0.0...v1.1.0) (2026-03-08)
 
 

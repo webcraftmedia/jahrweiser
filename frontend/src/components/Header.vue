@@ -130,9 +130,9 @@
             </button>
           </nav>
 
-          <!-- Legal Links -->
+          <!-- Legal Links & Version -->
           <div
-            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex gap-4 text-xs text-navy/60 dark:text-ivory/60"
+            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
           >
             <NuxtLink
               :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
@@ -150,16 +150,28 @@
             >
               {{ $t('components.Footer.privacy-policy') }}
             </NuxtLink>
+            <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+            <button
+              class="ml-auto hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer"
+              :title="$t('components.Footer.changelog')"
+              @click="openChangelog"
+            >
+              v{{ useRuntimeConfig().public.appVersion }}
+            </button>
+            <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
           </div>
         </div>
       </div>
       <template v-else />
     </div>
   </nav>
+  <ChangelogModal ref="changelogModal" />
 </template>
 
 <script setup lang="ts">
   import { useZoom } from '../composables/useZoom'
+
+  import ChangelogModal from './ChangelogModal.vue'
 
   import LogoSmall from '~/../assets/logo-small.svg'
 
@@ -170,6 +182,7 @@
   const welcomeName = ref()
   const { user, loggedIn, clear: clearSession } = useUserSession()
   const mobileMenuOpen = ref(false)
+  const changelogModal = ref<InstanceType<typeof ChangelogModal>>()
 
   welcomeName.value = computed(() =>
     user.value?.name ? user.value.name.split(' ').slice(-1).pop() : user.value?.email,
@@ -177,6 +190,11 @@
 
   function toggleMobileMenu() {
     mobileMenuOpen.value = !mobileMenuOpen.value
+  }
+
+  function openChangelog() {
+    mobileMenuOpen.value = false
+    changelogModal.value?.open()
   }
 
   async function logout() {

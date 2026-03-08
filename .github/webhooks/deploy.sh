@@ -5,8 +5,17 @@ SCRIPT_PATH=$(realpath $0)
 SCRIPT_DIR=$(dirname $SCRIPT_PATH)
 PROJECT_ROOT=$SCRIPT_DIR/../..
 
-# assuming you are already on the right branch
-git pull -ff
+TAG=$1
+
+cd $PROJECT_ROOT
+
+if [ -n "$TAG" ]; then
+  git fetch --tags
+  git checkout "$TAG"
+else
+  git checkout master
+  git pull
+fi
 
 ## Frontend
 FRONTEND_ROOT=$PROJECT_ROOT/frontend

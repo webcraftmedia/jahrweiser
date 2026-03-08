@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.0.0...v1.1.0) (2026-03-08)
+
+
+### Features
+
+* **frontend:** changelog ([#79](https://github.com/webcraftmedia/jahrweiser/issues/79)) ([32bacce](https://github.com/webcraftmedia/jahrweiser/commit/32bacceaa217b0aa1a127b9f3ffefbbede97a209))
+* **frontend:** open changelog on mobile ([#83](https://github.com/webcraftmedia/jahrweiser/issues/83)) ([033379e](https://github.com/webcraftmedia/jahrweiser/commit/033379e3c391aa3552ab910b32f63a95dcb8d774))
+
+
+### Bug Fixes
+
+* **frontend:** fix changelog tests ([#82](https://github.com/webcraftmedia/jahrweiser/issues/82)) ([1114940](https://github.com/webcraftmedia/jahrweiser/commit/111494047696a52b6a3f9c9afd34bce79ecb283b))
+* **frontend:** mobile darkmode button size ([#84](https://github.com/webcraftmedia/jahrweiser/issues/84)) ([4a220c1](https://github.com/webcraftmedia/jahrweiser/commit/4a220c106568be7eed3e99bbf83c714bd55c3420))
+
 ## 1.0.0 (2026-03-08)
 
 

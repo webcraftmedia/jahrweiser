@@ -20,7 +20,7 @@
   <!-- Bar variant (default nav bar) -->
   <nav
     v-else
-    class="bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
+    class="relative z-50 bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
     <div class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto p-2">
@@ -38,74 +38,67 @@
         <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </NuxtLink>
 
-      <!-- Burger menu button (mobile only) -->
-      <button
-        v-if="loggedIn"
-        type="button"
-        class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
-        aria-controls="navbar-mobile"
-        :aria-expanded="mobileMenuOpen"
-        @click="toggleMobileMenu"
-      >
-        <span class="sr-only">{{ $t('components.Header.open-menu') }}</span>
-        <svg
-          class="w-5 h-5"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 17 14"
+      <div v-show="loggedIn" class="contents">
+        <!-- Burger menu button (mobile only) -->
+        <button
+          type="button"
+          class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
+          aria-controls="navbar-mobile"
+          :aria-expanded="mobileMenuOpen"
+          @click="toggleMobileMenu"
         >
-          <path
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M1 1h15M1 7h15M1 13h15"
-          />
-        </svg>
-        <span
-          v-if="hiddenCalendars.size > 0"
-          class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sienna dark:bg-sienna-light rounded-full border-2 border-ivory dark:border-poster-dark"
-        />
-      </button>
-
-      <!-- Desktop menu -->
-      <div
-        v-if="loggedIn"
-        id="navbar-desktop"
-        class="hidden md:block text-right text-navy dark:text-ivory font-body"
-      >
-        <p>
-          {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
-        </p>
-        <div class="space-x-4">
-          <NuxtLink
-            v-if="user?.role === 'admin'"
-            to="/admin/members/add"
-            class="nav-link hover:text-sienna transition-colors"
+          <span class="sr-only">{{ $t('components.Header.open-menu') }}</span>
+          <svg
+            class="w-5 h-5"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 17 14"
           >
-            {{ $t('components.Header.admin') }}
-          </NuxtLink>
-          <button class="nav-link hover:text-sienna transition-colors" @click="logout">
-            {{ $t('components.Header.logout') }}
-          </button>
-        </div>
-      </div>
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M1 1h15M1 7h15M1 13h15"
+            />
+          </svg>
+          <span
+            v-if="hiddenCalendars.size > 0"
+            class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sienna dark:bg-sienna-light rounded-full border-2 border-ivory dark:border-poster-dark"
+          />
+        </button>
 
-      <!-- Mobile menu dropdown -->
-      <div
-        v-if="loggedIn"
-        id="navbar-mobile"
-        :class="mobileMenuOpen ? 'menu-open' : ''"
-        class="mobile-menu w-full md:hidden"
-      >
+        <!-- Desktop menu -->
         <div
-          class="bg-ivory dark:bg-poster-darkCard rounded-lg shadow-xl border border-navy/15 dark:border-poster-darkBorder overflow-hidden"
+          id="navbar-desktop"
+          class="hidden md:block text-right text-navy dark:text-ivory font-body"
+        >
+          <p>
+            {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
+          </p>
+          <div class="space-x-4">
+            <NuxtLink
+              v-if="user?.role === 'admin'"
+              to="/admin/members/add"
+              class="nav-link hover:text-sienna transition-colors"
+            >
+              {{ $t('components.Header.admin') }}
+            </NuxtLink>
+            <button class="nav-link hover:text-sienna transition-colors" @click="logout">
+              {{ $t('components.Header.logout') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile menu overlay -->
+        <div
+          id="navbar-mobile"
+          :class="mobileMenuOpen ? 'menu-open' : ''"
+          class="mobile-menu md:hidden"
         >
           <!-- User Info Header -->
-          <div
-            class="px-4 py-3 bg-navy/5 dark:bg-poster-dark border-b border-navy/10 dark:border-poster-darkBorder"
-          >
+          <div class="px-4 py-3 border-b border-navy/10 dark:border-poster-darkBorder">
             <p
               class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider"
             >
@@ -130,14 +123,14 @@
               class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
               @click="logout"
             >
-              {{ $t('components.Header.logout') }}
+              {{ $t('components.Header.logout-label') }}
             </button>
           </nav>
 
           <!-- Calendar Filter (mobile) -->
           <div
             v-if="legend.length"
-            class="md:hidden border-t border-navy/10 dark:border-poster-darkBorder px-4 py-2"
+            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-2"
           >
             <p
               class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider mb-2"
@@ -195,9 +188,15 @@
           <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
         </div>
       </div>
-      <template v-else />
     </div>
   </nav>
+  <!-- Backdrop (outside nav stacking context so it covers page content) -->
+  <div
+    v-if="loggedIn && mobileMenuOpen"
+    class="md:hidden fixed inset-0 bg-navy/30 dark:bg-black/40 z-40"
+    data-testid="mobile-backdrop"
+    @click="toggleMobileMenu"
+  />
   <ChangelogModal ref="changelogModal" />
 </template>
 
@@ -262,19 +261,31 @@
     animation: gentleFloat 4s ease-in-out infinite;
   }
 
-  /* Mobile menu smooth expand */
+  /* Mobile menu overlay */
   .mobile-menu {
-    max-height: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background-color: #faf5eb;
+    border-bottom: 2px solid rgba(194, 65, 12, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-0.5rem);
     opacity: 0;
-    overflow: hidden;
+    pointer-events: none;
     transition:
-      max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.3s ease;
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.25s ease;
+  }
+  :is(.dark .mobile-menu) {
+    background-color: #1a1714;
+    border-bottom-color: rgba(154, 52, 18, 0.5);
   }
   .mobile-menu.menu-open {
-    max-height: 500px;
+    transform: translateY(0);
     opacity: 1;
-    margin-top: 0.5rem;
+    pointer-events: auto;
   }
 
   /* Nav link hover underline */

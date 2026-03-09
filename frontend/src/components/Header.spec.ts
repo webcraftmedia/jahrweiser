@@ -111,9 +111,8 @@ describe('Header', () => {
   it('hides menus when not logged in', async () => {
     mockLoggedIn.value = false
     const wrapper = await mountSuspended(Component)
-    expect(wrapper.find('#navbar-desktop').exists()).toBe(false)
-    expect(wrapper.find('#navbar-mobile').exists()).toBe(false)
-    expect(wrapper.find('[aria-controls="navbar-mobile"]').exists()).toBe(false)
+    const authContainer = wrapper.find('[class="contents"]')
+    expect(authContainer.attributes('style')).toContain('display: none')
   })
 
   it('hides admin link for non-admin users', async () => {
@@ -141,6 +140,15 @@ describe('Header', () => {
     expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
     // Click the admin NuxtLink in mobile menu
     await wrapper.find('#navbar-mobile nav a').trigger('click')
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
+  })
+
+  it('closes mobile menu when clicking backdrop', async () => {
+    const wrapper = await mountSuspended(Component)
+    await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+    expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
+    // Click the backdrop
+    await wrapper.find('[data-testid="mobile-backdrop"]').trigger('click')
     expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
   })
 
@@ -177,7 +185,7 @@ describe('Header', () => {
     ]
     const wrapper = await mountSuspended(Component)
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
-    const filterButtons = wrapper.findAll('#navbar-mobile .md\\:hidden button')
+    const filterButtons = wrapper.findAll('#navbar-mobile .flex.flex-wrap.gap-2 button')
     expect(filterButtons).toHaveLength(2)
     expect(filterButtons[0]!.text()).toContain('Work')
     // Toggle filter

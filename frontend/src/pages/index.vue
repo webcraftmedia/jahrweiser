@@ -226,7 +226,7 @@
   const calendarColorMap = computed(() => {
     const map = new Map<string, (typeof designPalette)[0]>()
     calendars.value.forEach((cal, i) => {
-      map.set(cal.color, designPalette[i % designPalette.length])
+      map.set(cal.name, designPalette[i % designPalette.length])
     })
     return map
   })
@@ -255,7 +255,7 @@
     rawItems.value
       .filter((item) => !hiddenCalendars.value.has(item.calendar))
       .map((item) => {
-        const palette = calendarColorMap.value.get(item.color) ?? designPalette[0]
+        const palette = calendarColorMap.value.get(item.calendar) ?? designPalette[0]
         const { bg, border } = isDark.value ? palette.dark : palette.light
         return {
           ...item,

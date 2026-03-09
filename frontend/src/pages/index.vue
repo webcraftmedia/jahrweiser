@@ -62,7 +62,7 @@
             </div>
           </div>
           <!-- Calendar legend / filter -->
-          <div class="cal-legend">
+          <div class="cal-legend" :class="{ 'cal-legend-active': hiddenCalendars.size > 0 }">
             <button
               v-for="cal in calendarLegend"
               :key="cal.name"
@@ -952,7 +952,8 @@
   }
 
   .cal-legend:hover,
-  .cal-legend:focus-within {
+  .cal-legend:focus-within,
+  .cal-legend.cal-legend-active {
     opacity: 1;
     background: rgba(250, 245, 235, 0.92);
     backdrop-filter: blur(4px);
@@ -994,7 +995,8 @@
 
   /* Dark mode */
   .dark .cal-legend:hover,
-  .dark .cal-legend:focus-within {
+  .dark .cal-legend:focus-within,
+  .dark .cal-legend.cal-legend-active {
     background: rgba(26, 23, 20, 0.92);
   }
 

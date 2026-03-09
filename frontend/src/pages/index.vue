@@ -156,6 +156,7 @@
   import { CalendarView } from 'vue-simple-calendar'
 
   import Modal from '../components/Modal.vue'
+  import { useCalendarFilter } from '../composables/useCalendarFilter'
   import { useColorMode } from '../composables/useColorMode'
 
   import type { ICalendarItem, INormalizedCalendarItem } from 'vue-simple-calendar'
@@ -186,15 +187,8 @@
       .join('\n')
   })
   const calendars = ref<{ name: string; color: string }[]>([])
-  const hiddenCalendars = ref(new Set<string>())
+  const { hiddenCalendars, setLegend, toggleCalendar } = useCalendarFilter()
   const { isDark } = useColorMode()
-
-  function toggleCalendar(name: string) {
-    const s = new Set(hiddenCalendars.value)
-    if (s.has(name)) s.delete(name)
-    else s.add(name)
-    hiddenCalendars.value = s
-  }
 
   /* ── Design palette — one unique color per calendar ── */
 
@@ -228,6 +222,8 @@
       return { name: cal.name, dotColor: border }
     }),
   )
+
+  watch(calendarLegend, (v) => setLegend(v), { immediate: true })
 
   function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
@@ -929,13 +925,37 @@
     }
   }
 
-  /* ===== Calendar legend ===== */
+  /* ===== Calendar legend (desktop overlay) ===== */
 
   .cal-legend {
-    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: none;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.5em;
-    padding: 0.5em 0.3em;
+    padding: 0.35em 0.5em;
+    background: transparent;
+    z-index: 4;
+    opacity: 0;
+    transition:
+      opacity 0.3s,
+      background-color 0.3s;
+  }
+
+  @media (min-width: 768px) {
+    .cal-legend {
+      display: flex;
+    }
+  }
+
+  .cal-legend:hover,
+  .cal-legend:focus-within {
+    opacity: 1;
+    background: rgba(250, 245, 235, 0.92);
+    backdrop-filter: blur(4px);
   }
 
   .cal-legend-item {
@@ -973,6 +993,11 @@
   }
 
   /* Dark mode */
+  .dark .cal-legend:hover,
+  .dark .cal-legend:focus-within {
+    background: rgba(26, 23, 20, 0.92);
+  }
+
   .dark .cal-legend-item {
     color: #e8ddd0;
     border-color: #3d3630;

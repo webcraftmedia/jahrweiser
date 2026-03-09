@@ -15,6 +15,34 @@ const mockColorMode = vi.hoisted(() => {
   }
 })
 
+const mockCalendarFilter = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref, readonly } = require('vue')
+  const legend = ref<{ name: string; dotColor: string }[]>([])
+  const hiddenCalendars = ref(new Set<string>())
+  return { legend, hiddenCalendars, ref, readonly }
+})
+
+vi.mock('../composables/useCalendarFilter', () => ({
+  useCalendarFilter: () => {
+    function setLegend(items: { name: string; dotColor: string }[]) {
+      mockCalendarFilter.legend.value = items
+    }
+    function toggleCalendar(name: string) {
+      const s = new Set(mockCalendarFilter.hiddenCalendars.value)
+      if (s.has(name)) s.delete(name)
+      else s.add(name)
+      mockCalendarFilter.hiddenCalendars.value = s
+    }
+    return {
+      legend: mockCalendarFilter.readonly(mockCalendarFilter.legend),
+      hiddenCalendars: mockCalendarFilter.readonly(mockCalendarFilter.hiddenCalendars),
+      setLegend,
+      toggleCalendar,
+    }
+  },
+}))
+
 vi.mock('../composables/useColorMode', () => ({
   useColorMode: () => ({
     isDark: mockColorMode.readonly(mockColorMode.isDark),
@@ -74,6 +102,8 @@ describe('Page: Index', () => {
       return 0
     })
     mockColorMode.isDark.value = false
+    mockCalendarFilter.legend.value = []
+    mockCalendarFilter.hiddenCalendars.value = new Set()
     // Clean up stale modal elements from previous tests to prevent DOM pollution
     document.querySelectorAll('#default-modal').forEach((el) => {
       el.remove()

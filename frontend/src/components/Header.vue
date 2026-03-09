@@ -130,6 +130,35 @@
             </button>
           </nav>
 
+          <!-- Calendar Filter (mobile) -->
+          <div
+            v-if="legend.length"
+            class="md:hidden border-t border-navy/10 dark:border-poster-darkBorder px-4 py-2"
+          >
+            <p
+              class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider mb-2"
+            >
+              {{ $t('components.Header.calendars') }}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="cal in legend"
+                :key="cal.name"
+                class="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded border border-navy/15 dark:border-poster-darkBorder text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 transition-all duration-150"
+                :class="{
+                  'opacity-40 line-through': hiddenCalendars.has(cal.name),
+                }"
+                @click="toggleCalendar(cal.name)"
+              >
+                <span
+                  class="w-2.5 h-2.5 rounded-full shrink-0"
+                  :style="{ backgroundColor: cal.dotColor }"
+                />
+                {{ cal.name }}
+              </button>
+            </div>
+          </div>
+
           <!-- Legal Links & Version -->
           <div
             class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
@@ -169,6 +198,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useCalendarFilter } from '../composables/useCalendarFilter'
   import { useZoom } from '../composables/useZoom'
 
   import ChangelogModal from './ChangelogModal.vue'
@@ -182,6 +212,7 @@
 
   const welcomeName = ref()
   const { user, loggedIn, clear: clearSession } = useUserSession()
+  const { legend, hiddenCalendars, toggleCalendar } = useCalendarFilter()
   const mobileMenuOpen = ref(false)
   const changelogModal = ref<InstanceType<typeof ChangelogModal>>()
 

@@ -68,7 +68,7 @@
               :key="cal.name"
               class="cal-legend-item"
               :class="{ 'cal-legend-hidden': hiddenCalendars.has(cal.name) }"
-              @click="toggleCalendar(cal.name)"
+              @click="toggleCalendar(cal.name); ($event.currentTarget as HTMLElement).blur()"
             >
               <span class="cal-legend-dot" :style="{ backgroundColor: cal.dotColor }" />
               <span class="cal-legend-name">{{ cal.name }}</span>

@@ -20,7 +20,7 @@
   <!-- Bar variant (default nav bar) -->
   <nav
     v-else
-    class="bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
+    class="relative bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
     <div class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto p-2">
@@ -92,110 +92,113 @@
         </div>
       </div>
 
-      <!-- Mobile menu dropdown -->
-      <div
-        v-if="loggedIn"
-        id="navbar-mobile"
-        :class="mobileMenuOpen ? 'menu-open' : ''"
-        class="mobile-menu w-full md:hidden"
-      >
-        <div
-          class="bg-ivory dark:bg-poster-darkCard rounded-lg shadow-xl border border-navy/15 dark:border-poster-darkBorder overflow-hidden"
+      <template v-if="!loggedIn" />
+    </div>
+
+    <!-- Backdrop -->
+    <div
+      v-if="loggedIn && mobileMenuOpen"
+      class="md:hidden fixed inset-0 top-full bg-navy/30 dark:bg-black/40 z-40"
+      data-testid="mobile-backdrop"
+      @click="toggleMobileMenu"
+    />
+
+    <!-- Mobile menu overlay -->
+    <div
+      v-if="loggedIn"
+      id="navbar-mobile"
+      :class="mobileMenuOpen ? 'menu-open' : ''"
+      class="mobile-menu md:hidden"
+    >
+      <!-- User Info Header -->
+      <div class="px-4 py-3 border-b border-navy/10 dark:border-poster-darkBorder">
+        <p
+          class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider"
         >
-          <!-- User Info Header -->
-          <div
-            class="px-4 py-3 bg-navy/5 dark:bg-poster-dark border-b border-navy/10 dark:border-poster-darkBorder"
-          >
-            <p
-              class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider"
-            >
-              {{ $t('components.Header.welcome') }}
-            </p>
-            <p class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate">
-              {{ welcomeName }}
-            </p>
-          </div>
+          {{ $t('components.Header.welcome') }}
+        </p>
+        <p class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate">
+          {{ welcomeName }}
+        </p>
+      </div>
 
-          <!-- Menu Items -->
-          <nav class="py-2">
-            <NuxtLink
-              v-if="user?.role === 'admin'"
-              to="/admin/members/add"
-              class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
-              @click="toggleMobileMenu"
-            >
-              {{ $t('components.Header.admin') }}
-            </NuxtLink>
-            <button
-              class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
-              @click="logout"
-            >
-              {{ $t('components.Header.logout') }}
-            </button>
-          </nav>
+      <!-- Menu Items -->
+      <nav class="py-2">
+        <NuxtLink
+          v-if="user?.role === 'admin'"
+          to="/admin/members/add"
+          class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
+          @click="toggleMobileMenu"
+        >
+          {{ $t('components.Header.admin') }}
+        </NuxtLink>
+        <button
+          class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
+          @click="logout"
+        >
+          {{ $t('components.Header.logout') }}
+        </button>
+      </nav>
 
-          <!-- Calendar Filter (mobile) -->
-          <div
-            v-if="legend.length"
-            class="md:hidden border-t border-navy/10 dark:border-poster-darkBorder px-4 py-2"
+      <!-- Calendar Filter (mobile) -->
+      <div
+        v-if="legend.length"
+        class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-2"
+      >
+        <p
+          class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider mb-2"
+        >
+          {{ $t('components.Header.calendars') }}
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="cal in legend"
+            :key="cal.name"
+            class="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded border border-navy/15 dark:border-poster-darkBorder text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 transition-all duration-150"
+            :class="{
+              'opacity-40 line-through': hiddenCalendars.has(cal.name),
+            }"
+            @click="toggleCalendar(cal.name)"
           >
-            <p
-              class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider mb-2"
-            >
-              {{ $t('components.Header.calendars') }}
-            </p>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="cal in legend"
-                :key="cal.name"
-                class="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded border border-navy/15 dark:border-poster-darkBorder text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 transition-all duration-150"
-                :class="{
-                  'opacity-40 line-through': hiddenCalendars.has(cal.name),
-                }"
-                @click="toggleCalendar(cal.name)"
-              >
-                <span
-                  class="w-2.5 h-2.5 rounded-full shrink-0"
-                  :style="{ backgroundColor: cal.dotColor }"
-                />
-                {{ cal.name }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Legal Links & Version -->
-          <div
-            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
-          >
-            <NuxtLink
-              :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
-              external
-              class="hover:text-sienna transition-colors"
-              @click="toggleMobileMenu"
-            >
-              {{ $t('components.Footer.imprint') }}
-            </NuxtLink>
-            <NuxtLink
-              :to="{ path: 'https://www.webcraft-media.de/#!datenschutz' }"
-              external
-              class="hover:text-sienna transition-colors"
-              @click="toggleMobileMenu"
-            >
-              {{ $t('components.Footer.privacy-policy') }}
-            </NuxtLink>
-            <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-            <button
-              class="ml-auto hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer"
-              :title="$t('components.Footer.changelog')"
-              @click="openChangelog"
-            >
-              v{{ appVersion }}
-            </button>
-          </div>
-          <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+            <span
+              class="w-2.5 h-2.5 rounded-full shrink-0"
+              :style="{ backgroundColor: cal.dotColor }"
+            />
+            {{ cal.name }}
+          </button>
         </div>
       </div>
-      <template v-else />
+
+      <!-- Legal Links & Version -->
+      <div
+        class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
+      >
+        <NuxtLink
+          :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
+          external
+          class="hover:text-sienna transition-colors"
+          @click="toggleMobileMenu"
+        >
+          {{ $t('components.Footer.imprint') }}
+        </NuxtLink>
+        <NuxtLink
+          :to="{ path: 'https://www.webcraft-media.de/#!datenschutz' }"
+          external
+          class="hover:text-sienna transition-colors"
+          @click="toggleMobileMenu"
+        >
+          {{ $t('components.Footer.privacy-policy') }}
+        </NuxtLink>
+        <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+        <button
+          class="ml-auto hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer"
+          :title="$t('components.Footer.changelog')"
+          @click="openChangelog"
+        >
+          v{{ appVersion }}
+        </button>
+      </div>
+      <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
     </div>
   </nav>
   <ChangelogModal ref="changelogModal" />
@@ -262,19 +265,31 @@
     animation: gentleFloat 4s ease-in-out infinite;
   }
 
-  /* Mobile menu smooth expand */
+  /* Mobile menu overlay */
   .mobile-menu {
-    max-height: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background-color: #faf5eb;
+    border-bottom: 2px solid rgba(194, 65, 12, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-0.5rem);
     opacity: 0;
-    overflow: hidden;
+    pointer-events: none;
     transition:
-      max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.3s ease;
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.25s ease;
+  }
+  :is(.dark .mobile-menu) {
+    background-color: #1a1714;
+    border-bottom-color: rgba(154, 52, 18, 0.5);
   }
   .mobile-menu.menu-open {
-    max-height: 500px;
+    transform: translateY(0);
     opacity: 1;
-    margin-top: 0.5rem;
+    pointer-events: auto;
   }
 
   /* Nav link hover underline */

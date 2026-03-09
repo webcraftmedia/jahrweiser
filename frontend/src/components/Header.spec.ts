@@ -144,6 +144,15 @@ describe('Header', () => {
     expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
   })
 
+  it('closes mobile menu when clicking backdrop', async () => {
+    const wrapper = await mountSuspended(Component)
+    await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+    expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
+    // Click the backdrop
+    await wrapper.find('[data-testid="mobile-backdrop"]').trigger('click')
+    expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
+  })
+
   it('renders mobile menu content for non-admin user', async () => {
     mockUser.value = { name: 'Regular', email: 'user@example.com', role: 'user' }
     const wrapper = await mountSuspended(Component)
@@ -177,7 +186,7 @@ describe('Header', () => {
     ]
     const wrapper = await mountSuspended(Component)
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
-    const filterButtons = wrapper.findAll('#navbar-mobile .md\\:hidden button')
+    const filterButtons = wrapper.findAll('#navbar-mobile .flex.flex-wrap.gap-2 button')
     expect(filterButtons).toHaveLength(2)
     expect(filterButtons[0]!.text()).toContain('Work')
     // Toggle filter

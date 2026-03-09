@@ -2,7 +2,12 @@
   <div class="box">
     <div class="calendar row">
       <client-only>
-        <div ref="calWrapper" class="cal-wrapper" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
+        <div
+          ref="calWrapper"
+          class="cal-wrapper"
+          @touchstart.passive="onTouchStart"
+          @touchend.passive="onTouchEnd"
+        >
           <CalendarView
             v-bind="calendar"
             :class="[
@@ -75,7 +80,10 @@
                 :key="cal.name"
                 class="cal-legend-item"
                 :class="{ 'cal-legend-hidden': hiddenCalendars.has(cal.name) }"
-                @click="toggleCalendar(cal.name); ($event.currentTarget as HTMLElement).blur()"
+                @click="
+                  toggleCalendar(cal.name)
+                  ;($event.currentTarget as HTMLElement).blur()
+                "
               >
                 <span class="cal-legend-dot" :style="{ backgroundColor: cal.dotColor }" />
                 <span class="cal-legend-name">{{ cal.name }}</span>
@@ -231,7 +239,13 @@
     }),
   )
 
-  watch(calendarLegend, (v) => setLegend(v), { immediate: true })
+  watch(
+    calendarLegend,
+    (v) => {
+      setLegend(v)
+    },
+    { immediate: true },
+  )
 
   function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
@@ -241,16 +255,16 @@
     rawItems.value
       .filter((item) => !hiddenCalendars.value.has(item.calendar))
       .map((item) => {
-      const palette = calendarColorMap.value.get(item.color) ?? designPalette[0]
-      const { bg, border } = isDark.value ? palette.dark : palette.light
-      return {
-        ...item,
-        startDate: new Date(item.startDate),
-        endDate: new Date(item.endDate),
-        title: capitalize(item.title),
-        style: `background-color: ${bg}; border-left-color: ${border}`,
-      }
-    }),
+        const palette = calendarColorMap.value.get(item.color) ?? designPalette[0]
+        const { bg, border } = isDark.value ? palette.dark : palette.light
+        return {
+          ...item,
+          startDate: new Date(item.startDate),
+          endDate: new Date(item.endDate),
+          title: capitalize(item.title),
+          style: `background-color: ${bg}; border-left-color: ${border}`,
+        }
+      }),
   )
 
   function handleModalX() {

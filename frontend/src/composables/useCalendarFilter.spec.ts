@@ -11,7 +11,7 @@ describe('useCalendarFilter', () => {
 
   it('starts with empty legend and no hidden calendars', () => {
     const { legend, hiddenCalendars } = useCalendarFilter()
-    expect(legend.value).toEqual([])
+    expect(legend.value).toStrictEqual([])
     expect(hiddenCalendars.value.size).toBe(0)
   })
 
@@ -21,7 +21,7 @@ describe('useCalendarFilter', () => {
       { name: 'Work', dotColor: '#ff0000' },
       { name: 'Personal', dotColor: '#00ff00' },
     ])
-    expect(legend.value).toEqual([
+    expect(legend.value).toStrictEqual([
       { name: 'Work', dotColor: '#ff0000' },
       { name: 'Personal', dotColor: '#00ff00' },
     ])
@@ -39,7 +39,7 @@ describe('useCalendarFilter', () => {
     const a = useCalendarFilter()
     const b = useCalendarFilter()
     a.setLegend([{ name: 'Shared', dotColor: '#aaa' }])
-    expect(b.legend.value).toEqual([{ name: 'Shared', dotColor: '#aaa' }])
+    expect(b.legend.value).toStrictEqual([{ name: 'Shared', dotColor: '#aaa' }])
     a.toggleCalendar('Shared')
     expect(b.hiddenCalendars.value.has('Shared')).toBe(true)
   })
@@ -52,7 +52,7 @@ describe('useCalendarFilter', () => {
     // @ts-expect-error testing readonly
     legend.value = []
     // Value should still be the original
-    expect(legend.value).toEqual([{ name: 'A', dotColor: '#000' }])
+    expect(legend.value).toStrictEqual([{ name: 'A', dotColor: '#000' }])
     // @ts-expect-error testing readonly
     hiddenCalendars.value = new Set(['X'])
     expect(hiddenCalendars.value.size).toBe(0)

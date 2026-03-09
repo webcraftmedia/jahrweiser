@@ -598,7 +598,7 @@ describe('Page: Index', () => {
     })
     await nextTick()
     const legendItems = wrapper.findAll('.cal-legend-item')
-    expect(legendItems.length).toBe(1)
+    expect(legendItems).toHaveLength(1)
     expect(legendItems[0]!.text()).toContain('Work')
     // Dot should have the border color from the design palette (light sienna: #9a3412)
     const dot = legendItems[0]!.find('.cal-legend-dot')
@@ -648,7 +648,7 @@ describe('Page: Index', () => {
 
     const calendarView = wrapper.findComponent({ name: 'CalendarView' })
     // Both events visible initially
-    expect((calendarView.props('items') as { title: string }[]).length).toBe(2)
+    expect(calendarView.props('items') as { title: string }[]).toHaveLength(2)
 
     // Click "Work" legend button to hide Work events
     const legendItems = wrapper.findAll('.cal-legend-item')
@@ -656,7 +656,7 @@ describe('Page: Index', () => {
     await nextTick()
 
     const itemsAfterHide = calendarView.props('items') as { title: string }[]
-    expect(itemsAfterHide.length).toBe(1)
+    expect(itemsAfterHide).toHaveLength(1)
     expect(itemsAfterHide[0]!.title).toBe('Personal Event')
 
     // Hidden legend item should have the hidden class
@@ -666,7 +666,7 @@ describe('Page: Index', () => {
     await wrapper.findAll('.cal-legend-item')[0]!.trigger('click')
     await nextTick()
 
-    expect((calendarView.props('items') as { title: string }[]).length).toBe(2)
+    expect(calendarView.props('items') as { title: string }[]).toHaveLength(2)
     expect(wrapper.findAll('.cal-legend-item')[0]!.classes()).not.toContain('cal-legend-hidden')
   })
 
@@ -720,7 +720,14 @@ describe('Page: Index', () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
     const calWrapper = wrapper.find('.cal-wrapper')
     vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
-      bottom: 500, top: 0, left: 0, right: 800, width: 800, height: 500, x: 0, y: 0,
+      bottom: 500,
+      top: 0,
+      left: 0,
+      right: 800,
+      width: 800,
+      height: 500,
+      x: 0,
+      y: 0,
       toJSON: () => {},
     })
     // Open legend
@@ -742,7 +749,14 @@ describe('Page: Index', () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
     const calWrapper = wrapper.find('.cal-wrapper')
     vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
-      bottom: 500, top: 0, left: 0, right: 800, width: 800, height: 500, x: 0, y: 0,
+      bottom: 500,
+      top: 0,
+      left: 0,
+      right: 800,
+      width: 800,
+      height: 500,
+      x: 0,
+      y: 0,
       toJSON: () => {},
     })
     // Mouse far from bottom, legend not open — nothing happens

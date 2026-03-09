@@ -178,7 +178,7 @@ describe('Header', () => {
     const wrapper = await mountSuspended(Component)
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
     const filterButtons = wrapper.findAll('#navbar-mobile .md\\:hidden button')
-    expect(filterButtons.length).toBe(2)
+    expect(filterButtons).toHaveLength(2)
     expect(filterButtons[0]!.text()).toContain('Work')
     // Toggle filter
     await filterButtons[0]!.trigger('click')

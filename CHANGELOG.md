@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.2.1...v1.3.0) (2026-03-09)
+
+
+### Features
+
+* **frontend:** better mobile menu ([#100](https://github.com/webcraftmedia/jahrweiser/issues/100)) ([aed589e](https://github.com/webcraftmedia/jahrweiser/commit/aed589ec2224beb6719aa4f95ea6bfad1e8ec362))
+* **frontend:** filter calendars ([#92](https://github.com/webcraftmedia/jahrweiser/issues/92)) ([873d6f4](https://github.com/webcraftmedia/jahrweiser/commit/873d6f4b554d82c17ebd480664fe7b7973098d5b))
+
+
+### Bug Fixes
+
+* **frontend:** fix full day events - no longer spanning two days ([#90](https://github.com/webcraftmedia/jahrweiser/issues/90)) ([6a00cb5](https://github.com/webcraftmedia/jahrweiser/commit/6a00cb5f86c8208ee840c7f22eba834c95a006e3))
+* **frontend:** footer alignment ([#93](https://github.com/webcraftmedia/jahrweiser/issues/93)) ([8408513](https://github.com/webcraftmedia/jahrweiser/commit/84085136b1809594816778979ab79bf337f55aa0))
+
 ## [1.2.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.2.0...v1.2.1) (2026-03-08)
 
 

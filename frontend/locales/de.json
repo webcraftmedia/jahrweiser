@@ -18,6 +18,7 @@
       "admin": "Admin",
       "calendars": "Kalender",
       "logout": "↪ Ausloggen",
+      "logout-label": "Ausloggen",
       "open-menu": "Open menu",
       "welcome": "Willkommen"
     },

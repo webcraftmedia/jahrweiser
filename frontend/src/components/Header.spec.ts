@@ -111,9 +111,8 @@ describe('Header', () => {
   it('hides menus when not logged in', async () => {
     mockLoggedIn.value = false
     const wrapper = await mountSuspended(Component)
-    expect(wrapper.find('#navbar-desktop').exists()).toBe(false)
-    expect(wrapper.find('#navbar-mobile').exists()).toBe(false)
-    expect(wrapper.find('[aria-controls="navbar-mobile"]').exists()).toBe(false)
+    const authContainer = wrapper.find('[class="contents"]')
+    expect(authContainer.attributes('style')).toContain('display: none')
   })
 
   it('hides admin link for non-admin users', async () => {

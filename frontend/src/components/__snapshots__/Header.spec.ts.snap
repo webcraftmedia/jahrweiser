@@ -52,29 +52,31 @@ exports[`Header > renders 1`] = `
           </g>
         </svg><!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
         <div data-v-c970699f=""><span data-v-c970699f="" class="font-display text-navy dark:text-ivory text-2xl tracking-wide">Jahrweiser</span><span data-v-c970699f="" class="hidden md:inline font-hand text-mustard text-sm tracking-widest ml-1">Bergstraße</span></div><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
-      </a><!-- Burger menu button (mobile only) --><button data-v-c970699f="" type="button" class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20" aria-controls="navbar-mobile" aria-expanded="false"><span data-v-c970699f="" class="sr-only">components.Header.open-menu</span><svg data-v-c970699f="" class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
-          <path data-v-c970699f="" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"></path>
-        </svg>
+      </a>
+      <div data-v-c970699f="" class="contents">
+        <!-- Burger menu button (mobile only) --><button data-v-c970699f="" type="button" class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20" aria-controls="navbar-mobile" aria-expanded="false"><span data-v-c970699f="" class="sr-only">components.Header.open-menu</span><svg data-v-c970699f="" class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+            <path data-v-c970699f="" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"></path>
+          </svg>
+          <!--v-if-->
+        </button><!-- Desktop menu -->
+        <div data-v-c970699f="" id="navbar-desktop" class="hidden md:block text-right text-navy dark:text-ivory font-body">
+          <p data-v-c970699f="">components.Header.welcome <b data-v-c970699f="">User</b></p>
+          <div data-v-c970699f="" class="space-x-4"><a data-v-c970699f="" href="/admin/members/add" class="nav-link hover:text-sienna transition-colors">components.Header.admin</a><button data-v-c970699f="" class="nav-link hover:text-sienna transition-colors">components.Header.logout</button></div>
+        </div><!-- Backdrop -->
         <!--v-if-->
-      </button><!-- Desktop menu -->
-      <div data-v-c970699f="" id="navbar-desktop" class="hidden md:block text-right text-navy dark:text-ivory font-body">
-        <p data-v-c970699f="">components.Header.welcome <b data-v-c970699f="">User</b></p>
-        <div data-v-c970699f="" class="space-x-4"><a data-v-c970699f="" href="/admin/members/add" class="nav-link hover:text-sienna transition-colors">components.Header.admin</a><button data-v-c970699f="" class="nav-link hover:text-sienna transition-colors">components.Header.logout</button></div>
+        <!-- Mobile menu overlay -->
+        <div data-v-c970699f="" id="navbar-mobile" class="mobile-menu md:hidden">
+          <!-- User Info Header -->
+          <div data-v-c970699f="" class="px-4 py-3 border-b border-navy/10 dark:border-poster-darkBorder">
+            <p data-v-c970699f="" class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider">components.Header.welcome</p>
+            <p data-v-c970699f="" class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate">User</p>
+          </div><!-- Menu Items -->
+          <nav data-v-c970699f="" class="py-2"><a data-v-c970699f="" href="/admin/members/add" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.admin</a><button data-v-c970699f="" class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.logout-label</button></nav><!-- Calendar Filter (mobile) -->
+          <!--v-if-->
+          <!-- Legal Links & Version -->
+          <div data-v-c970699f="" class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"><a data-v-c970699f="" href="https://www.webcraft-media.de#!impressum" class="hover:text-sienna transition-colors">components.Footer.imprint</a><a data-v-c970699f="" href="https://www.webcraft-media.de#!datenschutz" class="hover:text-sienna transition-colors">components.Footer.privacy-policy</a><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button data-v-c970699f="" class="ml-auto hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer" title="components.Footer.changelog"> v0.0.0-test</button></div><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+        </div>
       </div>
-      <!--v-if-->
-    </div><!-- Backdrop -->
-    <!--v-if-->
-    <!-- Mobile menu overlay -->
-    <div data-v-c970699f="" id="navbar-mobile" class="mobile-menu md:hidden">
-      <!-- User Info Header -->
-      <div data-v-c970699f="" class="px-4 py-3 border-b border-navy/10 dark:border-poster-darkBorder">
-        <p data-v-c970699f="" class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider">components.Header.welcome</p>
-        <p data-v-c970699f="" class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate">User</p>
-      </div><!-- Menu Items -->
-      <nav data-v-c970699f="" class="py-2"><a data-v-c970699f="" href="/admin/members/add" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.admin</a><button data-v-c970699f="" class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.logout</button></nav><!-- Calendar Filter (mobile) -->
-      <!--v-if-->
-      <!-- Legal Links & Version -->
-      <div data-v-c970699f="" class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"><a data-v-c970699f="" href="https://www.webcraft-media.de#!impressum" class="hover:text-sienna transition-colors">components.Footer.imprint</a><a data-v-c970699f="" href="https://www.webcraft-media.de#!datenschutz" class="hover:text-sienna transition-colors">components.Footer.privacy-policy</a><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button data-v-c970699f="" class="ml-auto hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer" title="components.Footer.changelog"> v0.0.0-test</button></div><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
     </div>
   </nav><!-- Main modal -->
   <div data-v-94fcd891="" id="changelog-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">

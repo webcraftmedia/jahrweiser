@@ -38,78 +38,73 @@
         <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </NuxtLink>
 
-      <!-- Burger menu button (mobile only) -->
-      <button
-        v-if="loggedIn"
-        type="button"
-        class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
-        aria-controls="navbar-mobile"
-        :aria-expanded="mobileMenuOpen"
-        @click="toggleMobileMenu"
-      >
-        <span class="sr-only">{{ $t('components.Header.open-menu') }}</span>
-        <svg
-          class="w-5 h-5"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 17 14"
+      <div v-show="loggedIn" class="contents">
+        <!-- Burger menu button (mobile only) -->
+        <button
+          type="button"
+          class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
+          aria-controls="navbar-mobile"
+          :aria-expanded="mobileMenuOpen"
+          @click="toggleMobileMenu"
         >
-          <path
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M1 1h15M1 7h15M1 13h15"
-          />
-        </svg>
-        <span
-          v-if="hiddenCalendars.size > 0"
-          class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sienna dark:bg-sienna-light rounded-full border-2 border-ivory dark:border-poster-dark"
-        />
-      </button>
-
-      <!-- Desktop menu -->
-      <div
-        v-if="loggedIn"
-        id="navbar-desktop"
-        class="hidden md:block text-right text-navy dark:text-ivory font-body"
-      >
-        <p>
-          {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
-        </p>
-        <div class="space-x-4">
-          <NuxtLink
-            v-if="user?.role === 'admin'"
-            to="/admin/members/add"
-            class="nav-link hover:text-sienna transition-colors"
+          <span class="sr-only">{{ $t('components.Header.open-menu') }}</span>
+          <svg
+            class="w-5 h-5"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 17 14"
           >
-            {{ $t('components.Header.admin') }}
-          </NuxtLink>
-          <button class="nav-link hover:text-sienna transition-colors" @click="logout">
-            {{ $t('components.Header.logout') }}
-          </button>
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M1 1h15M1 7h15M1 13h15"
+            />
+          </svg>
+          <span
+            v-if="hiddenCalendars.size > 0"
+            class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sienna dark:bg-sienna-light rounded-full border-2 border-ivory dark:border-poster-dark"
+          />
+        </button>
+
+        <!-- Desktop menu -->
+        <div
+          id="navbar-desktop"
+          class="hidden md:block text-right text-navy dark:text-ivory font-body"
+        >
+          <p>
+            {{ $t('components.Header.welcome') }} <b>{{ welcomeName }}</b>
+          </p>
+          <div class="space-x-4">
+            <NuxtLink
+              v-if="user?.role === 'admin'"
+              to="/admin/members/add"
+              class="nav-link hover:text-sienna transition-colors"
+            >
+              {{ $t('components.Header.admin') }}
+            </NuxtLink>
+            <button class="nav-link hover:text-sienna transition-colors" @click="logout">
+              {{ $t('components.Header.logout') }}
+            </button>
+          </div>
         </div>
-      </div>
 
-      <template v-if="!loggedIn" />
-    </div>
+        <!-- Backdrop -->
+        <div
+          v-if="mobileMenuOpen"
+          class="md:hidden fixed inset-0 top-full bg-navy/30 dark:bg-black/40 z-40"
+          data-testid="mobile-backdrop"
+          @click="toggleMobileMenu"
+        />
 
-    <!-- Backdrop -->
-    <div
-      v-if="loggedIn && mobileMenuOpen"
-      class="md:hidden fixed inset-0 top-full bg-navy/30 dark:bg-black/40 z-40"
-      data-testid="mobile-backdrop"
-      @click="toggleMobileMenu"
-    />
-
-    <!-- Mobile menu overlay -->
-    <div
-      v-if="loggedIn"
-      id="navbar-mobile"
-      :class="mobileMenuOpen ? 'menu-open' : ''"
-      class="mobile-menu md:hidden"
-    >
+        <!-- Mobile menu overlay -->
+        <div
+          id="navbar-mobile"
+          :class="mobileMenuOpen ? 'menu-open' : ''"
+          class="mobile-menu md:hidden"
+        >
       <!-- User Info Header -->
       <div class="px-4 py-3 border-b border-navy/10 dark:border-poster-darkBorder">
         <p
@@ -136,7 +131,7 @@
           class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
           @click="logout"
         >
-          {{ $t('components.Header.logout') }}
+          {{ $t('components.Header.logout-label') }}
         </button>
       </nav>
 
@@ -198,7 +193,9 @@
           v{{ appVersion }}
         </button>
       </div>
-      <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+        <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+        </div>
+      </div>
     </div>
   </nav>
   <ChangelogModal ref="changelogModal" />

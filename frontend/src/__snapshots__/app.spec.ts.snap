@@ -51,7 +51,9 @@ exports[`App > renders default page 1`] = `
           </g>
         </svg><!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
         <div data-v-c970699f=""><span data-v-c970699f="" class="font-display text-navy dark:text-ivory text-2xl md:text-3xl tracking-wide">Jahrweiser</span><span data-v-c970699f="" class="font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5">Bergstraße</span></div><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
-      </a></div><!-- Main modal -->
+      </a></div><!-- Backdrop (outside nav stacking context so it covers page content) -->
+    <!--v-if-->
+    <!-- Main modal -->
     <div data-v-94fcd891="" id="changelog-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
       <div data-v-94fcd891="" class="relative p-4 w-full max-w-3xl mx-auto max-h-full">
         <!-- Modal content -->

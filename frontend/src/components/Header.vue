@@ -20,7 +20,7 @@
   <!-- Bar variant (default nav bar) -->
   <nav
     v-else
-    class="relative bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
+    class="relative z-50 bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
     <div class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto p-2">
@@ -90,14 +90,6 @@
             </button>
           </div>
         </div>
-
-        <!-- Backdrop -->
-        <div
-          v-if="mobileMenuOpen"
-          class="md:hidden fixed inset-0 top-full bg-navy/30 dark:bg-black/40 z-40"
-          data-testid="mobile-backdrop"
-          @click="toggleMobileMenu"
-        />
 
         <!-- Mobile menu overlay -->
         <div
@@ -198,6 +190,13 @@
       </div>
     </div>
   </nav>
+  <!-- Backdrop (outside nav stacking context so it covers page content) -->
+  <div
+    v-if="loggedIn && mobileMenuOpen"
+    class="md:hidden fixed inset-0 bg-navy/30 dark:bg-black/40 z-40"
+    data-testid="mobile-backdrop"
+    @click="toggleMobileMenu"
+  />
   <ChangelogModal ref="changelogModal" />
 </template>
 

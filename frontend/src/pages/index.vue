@@ -980,7 +980,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5em;
-    padding: 0 0.5em;
+    padding: 0;
     max-height: 0;
     overflow: hidden;
     background: transparent;
@@ -993,7 +993,7 @@
   .cal-legend.cal-legend-open .cal-legend-inner,
   .cal-legend.cal-legend-active .cal-legend-inner {
     max-height: 6em;
-    padding: 0.35em 0.5em;
+    padding: 0.35em 0;
     background: rgba(250, 245, 235, 0.92);
     backdrop-filter: blur(4px);
   }

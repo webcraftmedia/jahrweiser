@@ -63,16 +63,18 @@
           </div>
           <!-- Calendar legend / filter -->
           <div class="cal-legend" :class="{ 'cal-legend-active': hiddenCalendars.size > 0 }">
-            <button
-              v-for="cal in calendarLegend"
-              :key="cal.name"
-              class="cal-legend-item"
-              :class="{ 'cal-legend-hidden': hiddenCalendars.has(cal.name) }"
-              @click="toggleCalendar(cal.name); ($event.currentTarget as HTMLElement).blur()"
-            >
-              <span class="cal-legend-dot" :style="{ backgroundColor: cal.dotColor }" />
-              <span class="cal-legend-name">{{ cal.name }}</span>
-            </button>
+            <div class="cal-legend-inner">
+              <button
+                v-for="cal in calendarLegend"
+                :key="cal.name"
+                class="cal-legend-item"
+                :class="{ 'cal-legend-hidden': hiddenCalendars.has(cal.name) }"
+                @click="toggleCalendar(cal.name); ($event.currentTarget as HTMLElement).blur()"
+              >
+                <span class="cal-legend-dot" :style="{ backgroundColor: cal.dotColor }" />
+                <span class="cal-legend-name">{{ cal.name }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </client-only>
@@ -933,28 +935,44 @@
     left: 0;
     right: 0;
     display: none;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5em;
-    padding: 0.35em 0.5em;
-    background: transparent;
     z-index: 4;
-    opacity: 0;
-    transition:
-      opacity 0.3s,
-      background-color 0.3s;
+  }
+
+  .cal-legend::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 40px;
   }
 
   @media (min-width: 768px) {
     .cal-legend {
-      display: flex;
+      display: block;
     }
   }
 
-  .cal-legend:hover,
-  .cal-legend:focus-within,
-  .cal-legend.cal-legend-active {
-    opacity: 1;
+  .cal-legend-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0 0.5em;
+    max-height: 0;
+    overflow: hidden;
+    background: transparent;
+    transition:
+      max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      padding 0.3s,
+      background-color 0.3s;
+  }
+
+  .cal-legend:hover .cal-legend-inner,
+  .cal-legend:focus-within .cal-legend-inner,
+  .cal-legend.cal-legend-active .cal-legend-inner {
+    max-height: 6em;
+    padding: 0.35em 0.5em;
     background: rgba(250, 245, 235, 0.92);
     backdrop-filter: blur(4px);
   }
@@ -994,9 +1012,9 @@
   }
 
   /* Dark mode */
-  .dark .cal-legend:hover,
-  .dark .cal-legend:focus-within,
-  .dark .cal-legend.cal-legend-active {
+  .dark .cal-legend:hover .cal-legend-inner,
+  .dark .cal-legend:focus-within .cal-legend-inner,
+  .dark .cal-legend.cal-legend-active .cal-legend-inner {
     background: rgba(26, 23, 20, 0.92);
   }
 

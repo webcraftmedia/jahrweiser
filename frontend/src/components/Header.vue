@@ -42,7 +42,7 @@
       <button
         v-if="loggedIn"
         type="button"
-        class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
+        class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
         aria-controls="navbar-mobile"
         :aria-expanded="mobileMenuOpen"
         @click="toggleMobileMenu"
@@ -63,6 +63,10 @@
             d="M1 1h15M1 7h15M1 13h15"
           />
         </svg>
+        <span
+          v-if="hiddenCalendars.size > 0"
+          class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sienna dark:bg-sienna-light rounded-full border-2 border-ivory dark:border-poster-dark"
+        />
       </button>
 
       <!-- Desktop menu -->

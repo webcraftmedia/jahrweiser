@@ -2,7 +2,7 @@
   <div class="box">
     <div class="calendar row">
       <client-only>
-        <div class="cal-wrapper" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
+        <div ref="calWrapper" class="cal-wrapper" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
           <CalendarView
             v-bind="calendar"
             :class="[
@@ -62,7 +62,13 @@
             </div>
           </div>
           <!-- Calendar legend / filter -->
-          <div class="cal-legend" :class="{ 'cal-legend-active': hiddenCalendars.size > 0 }">
+          <div
+            class="cal-legend"
+            :class="{
+              'cal-legend-active': hiddenCalendars.size > 0,
+              'cal-legend-open': legendHover,
+            }"
+          >
             <div class="cal-legend-inner">
               <button
                 v-for="cal in calendarLegend"
@@ -324,6 +330,26 @@
         */
   })
 
+  /* ── Legend hover — open when cursor is near/below cal-wrapper bottom ── */
+  const calWrapper = ref<HTMLElement>()
+  const legendHover = ref(false)
+  const LEGEND_TRIGGER_PX = 40
+  let legendLeaveTimer: ReturnType<typeof setTimeout> | undefined
+
+  function onMouseMove(e: MouseEvent) {
+    if (!calWrapper.value) return
+    const bottom = calWrapper.value.getBoundingClientRect().bottom
+    if (e.clientY >= bottom - LEGEND_TRIGGER_PX) {
+      clearTimeout(legendLeaveTimer)
+      legendHover.value = true
+    } else if (legendHover.value) {
+      clearTimeout(legendLeaveTimer)
+      legendLeaveTimer = setTimeout(() => {
+        legendHover.value = false
+      }, 300)
+    }
+  }
+
   const calFlip = ref<'left' | 'right' | null>(null)
   const calLoading = ref(false)
 
@@ -377,9 +403,12 @@
 
   onMounted(() => {
     window.addEventListener('keydown', handleKeyboard)
+    document.addEventListener('mousemove', onMouseMove)
   })
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyboard)
+    document.removeEventListener('mousemove', onMouseMove)
+    clearTimeout(legendLeaveTimer)
   })
 
   function staggerItems() {
@@ -938,15 +967,6 @@
     z-index: 4;
   }
 
-  .cal-legend::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100%;
-    height: 40px;
-  }
-
   @media (min-width: 768px) {
     .cal-legend {
       display: block;
@@ -968,8 +988,7 @@
       background-color 0.3s;
   }
 
-  .cal-legend:hover .cal-legend-inner,
-  .cal-legend:focus-within .cal-legend-inner,
+  .cal-legend.cal-legend-open .cal-legend-inner,
   .cal-legend.cal-legend-active .cal-legend-inner {
     max-height: 6em;
     padding: 0.35em 0.5em;
@@ -1012,8 +1031,7 @@
   }
 
   /* Dark mode */
-  .dark .cal-legend:hover .cal-legend-inner,
-  .dark .cal-legend:focus-within .cal-legend-inner,
+  .dark .cal-legend.cal-legend-open .cal-legend-inner,
   .dark .cal-legend.cal-legend-active .cal-legend-inner {
     background: rgba(26, 23, 20, 0.92);
   }

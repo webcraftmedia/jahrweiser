@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.3.0...v1.3.1) (2026-03-09)
+
+
+### Bug Fixes
+
+* **frontend:** fix calendar colors ([#103](https://github.com/webcraftmedia/jahrweiser/issues/103)) ([8f97e7d](https://github.com/webcraftmedia/jahrweiser/commit/8f97e7d832b7388e98d5261598cda926cf2c5435))
+* **other:** fix problem with dotenv (use nuxt) on cli scripts ([#101](https://github.com/webcraftmedia/jahrweiser/issues/101)) ([3e8977d](https://github.com/webcraftmedia/jahrweiser/commit/3e8977df14c2e2de2948aca8f8ba7483651ccb9f))
+
 ## [1.3.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.2.1...v1.3.0) (2026-03-09)
 
 

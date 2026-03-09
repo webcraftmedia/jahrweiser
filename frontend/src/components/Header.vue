@@ -105,95 +105,95 @@
           :class="mobileMenuOpen ? 'menu-open' : ''"
           class="mobile-menu md:hidden"
         >
-      <!-- User Info Header -->
-      <div class="px-4 py-3 border-b border-navy/10 dark:border-poster-darkBorder">
-        <p
-          class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider"
-        >
-          {{ $t('components.Header.welcome') }}
-        </p>
-        <p class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate">
-          {{ welcomeName }}
-        </p>
-      </div>
+          <!-- User Info Header -->
+          <div class="px-4 py-3 border-b border-navy/10 dark:border-poster-darkBorder">
+            <p
+              class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider"
+            >
+              {{ $t('components.Header.welcome') }}
+            </p>
+            <p class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate">
+              {{ welcomeName }}
+            </p>
+          </div>
 
-      <!-- Menu Items -->
-      <nav class="py-2">
-        <NuxtLink
-          v-if="user?.role === 'admin'"
-          to="/admin/members/add"
-          class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
-          @click="toggleMobileMenu"
-        >
-          {{ $t('components.Header.admin') }}
-        </NuxtLink>
-        <button
-          class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
-          @click="logout"
-        >
-          {{ $t('components.Header.logout-label') }}
-        </button>
-      </nav>
+          <!-- Menu Items -->
+          <nav class="py-2">
+            <NuxtLink
+              v-if="user?.role === 'admin'"
+              to="/admin/members/add"
+              class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
+              @click="toggleMobileMenu"
+            >
+              {{ $t('components.Header.admin') }}
+            </NuxtLink>
+            <button
+              class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
+              @click="logout"
+            >
+              {{ $t('components.Header.logout-label') }}
+            </button>
+          </nav>
 
-      <!-- Calendar Filter (mobile) -->
-      <div
-        v-if="legend.length"
-        class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-2"
-      >
-        <p
-          class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider mb-2"
-        >
-          {{ $t('components.Header.calendars') }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="cal in legend"
-            :key="cal.name"
-            class="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded border border-navy/15 dark:border-poster-darkBorder text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 transition-all duration-150"
-            :class="{
-              'opacity-40 line-through': hiddenCalendars.has(cal.name),
-            }"
-            @click="toggleCalendar(cal.name)"
+          <!-- Calendar Filter (mobile) -->
+          <div
+            v-if="legend.length"
+            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-2"
           >
-            <span
-              class="w-2.5 h-2.5 rounded-full shrink-0"
-              :style="{ backgroundColor: cal.dotColor }"
-            />
-            {{ cal.name }}
-          </button>
-        </div>
-      </div>
+            <p
+              class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider mb-2"
+            >
+              {{ $t('components.Header.calendars') }}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="cal in legend"
+                :key="cal.name"
+                class="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded border border-navy/15 dark:border-poster-darkBorder text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 transition-all duration-150"
+                :class="{
+                  'opacity-40 line-through': hiddenCalendars.has(cal.name),
+                }"
+                @click="toggleCalendar(cal.name)"
+              >
+                <span
+                  class="w-2.5 h-2.5 rounded-full shrink-0"
+                  :style="{ backgroundColor: cal.dotColor }"
+                />
+                {{ cal.name }}
+              </button>
+            </div>
+          </div>
 
-      <!-- Legal Links & Version -->
-      <div
-        class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
-      >
-        <NuxtLink
-          :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
-          external
-          class="hover:text-sienna transition-colors"
-          @click="toggleMobileMenu"
-        >
-          {{ $t('components.Footer.imprint') }}
-        </NuxtLink>
-        <NuxtLink
-          :to="{ path: 'https://www.webcraft-media.de/#!datenschutz' }"
-          external
-          class="hover:text-sienna transition-colors"
-          @click="toggleMobileMenu"
-        >
-          {{ $t('components.Footer.privacy-policy') }}
-        </NuxtLink>
-        <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-        <button
-          class="ml-auto hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer"
-          :title="$t('components.Footer.changelog')"
-          @click="openChangelog"
-        >
-          v{{ appVersion }}
-        </button>
-      </div>
-        <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+          <!-- Legal Links & Version -->
+          <div
+            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
+          >
+            <NuxtLink
+              :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
+              external
+              class="hover:text-sienna transition-colors"
+              @click="toggleMobileMenu"
+            >
+              {{ $t('components.Footer.imprint') }}
+            </NuxtLink>
+            <NuxtLink
+              :to="{ path: 'https://www.webcraft-media.de/#!datenschutz' }"
+              external
+              class="hover:text-sienna transition-colors"
+              @click="toggleMobileMenu"
+            >
+              {{ $t('components.Footer.privacy-policy') }}
+            </NuxtLink>
+            <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+            <button
+              class="ml-auto hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer"
+              :title="$t('components.Footer.changelog')"
+              @click="openChangelog"
+            >
+              v{{ appVersion }}
+            </button>
+          </div>
+          <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
         </div>
       </div>
     </div>

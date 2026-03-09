@@ -15,6 +15,34 @@ const mockColorMode = vi.hoisted(() => {
   }
 })
 
+const mockCalendarFilter = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref, readonly } = require('vue')
+  const legend = ref<{ name: string; dotColor: string }[]>([])
+  const hiddenCalendars = ref(new Set<string>())
+  return { legend, hiddenCalendars, ref, readonly }
+})
+
+vi.mock('../composables/useCalendarFilter', () => ({
+  useCalendarFilter: () => {
+    function setLegend(items: { name: string; dotColor: string }[]) {
+      mockCalendarFilter.legend.value = items
+    }
+    function toggleCalendar(name: string) {
+      const s = new Set(mockCalendarFilter.hiddenCalendars.value)
+      if (s.has(name)) s.delete(name)
+      else s.add(name)
+      mockCalendarFilter.hiddenCalendars.value = s
+    }
+    return {
+      legend: mockCalendarFilter.readonly(mockCalendarFilter.legend),
+      hiddenCalendars: mockCalendarFilter.readonly(mockCalendarFilter.hiddenCalendars),
+      setLegend,
+      toggleCalendar,
+    }
+  },
+}))
+
 vi.mock('../composables/useColorMode', () => ({
   useColorMode: () => ({
     isDark: mockColorMode.readonly(mockColorMode.isDark),
@@ -74,6 +102,8 @@ describe('Page: Index', () => {
       return 0
     })
     mockColorMode.isDark.value = false
+    mockCalendarFilter.legend.value = []
+    mockCalendarFilter.hiddenCalendars.value = new Set()
     // Clean up stale modal elements from previous tests to prevent DOM pollution
     document.querySelectorAll('#default-modal').forEach((el) => {
       el.remove()
@@ -88,6 +118,7 @@ describe('Page: Index', () => {
             id: 'event-1',
             title: 'Test',
             color: '#ff0000',
+            calendar: 'Work',
             startDate: '2025-01-15',
             endDate: '2025-01-15',
           },
@@ -167,6 +198,7 @@ describe('Page: Index', () => {
             id: 'e1',
             title: 'T',
             color: '#ff0000',
+            calendar: 'Work',
             startDate: '2025-01-15',
             endDate: '2025-01-15',
           },
@@ -204,6 +236,7 @@ describe('Page: Index', () => {
             id: 'e1',
             title: 'T',
             color: '#ff0000',
+            calendar: 'Work',
             startDate: '2025-01-15',
             endDate: '2025-01-15',
           },
@@ -478,6 +511,7 @@ describe('Page: Index', () => {
             id: 'e1',
             title: 'Unknown',
             color: '#999999',
+            calendar: 'Work',
             startDate: '2025-01-15',
             endDate: '2025-01-15',
           },
@@ -555,6 +589,188 @@ describe('Page: Index', () => {
     await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 300 }] })
     const calendarView = wrapper.findComponent({ name: 'CalendarView' })
     expect(calendarView.props('showDate').getMonth()).toBe(0) // Still January
+  })
+
+  it('renders calendar legend items', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+    })
+    await nextTick()
+    const legendItems = wrapper.findAll('.cal-legend-item')
+    expect(legendItems).toHaveLength(1)
+    expect(legendItems[0]!.text()).toContain('Work')
+    // Dot should have the border color from the design palette (light sienna: #9a3412)
+    const dot = legendItems[0]!.find('.cal-legend-dot')
+    expect((dot.element as HTMLElement).style.backgroundColor).toBeTruthy()
+  })
+
+  it('toggles calendar visibility via legend click', async () => {
+    mock$fetch.mockImplementation((url: string, opts?: { body?: { calendar?: string } }) => {
+      if (url === '/api/calendars')
+        return Promise.resolve([
+          { name: 'Work', color: '#ff0000' },
+          { name: 'Personal', color: '#00ff00' },
+        ])
+      if (url === '/api/calendar') {
+        const cal = opts?.body?.calendar
+        if (cal === 'Work')
+          return Promise.resolve([
+            {
+              id: 'e1',
+              title: 'Work Event',
+              color: '#ff0000',
+              calendar: 'Work',
+              startDate: '2025-01-15',
+              endDate: '2025-01-15',
+            },
+          ])
+        if (cal === 'Personal')
+          return Promise.resolve([
+            {
+              id: 'e2',
+              title: 'Personal Event',
+              color: '#00ff00',
+              calendar: 'Personal',
+              startDate: '2025-01-16',
+              endDate: '2025-01-16',
+            },
+          ])
+        return Promise.resolve([])
+      }
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+    })
+    await nextTick()
+
+    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
+    // Both events visible initially
+    expect(calendarView.props('items') as { title: string }[]).toHaveLength(2)
+
+    // Click "Work" legend button to hide Work events
+    const legendItems = wrapper.findAll('.cal-legend-item')
+    await legendItems[0]!.trigger('click')
+    await nextTick()
+
+    const itemsAfterHide = calendarView.props('items') as { title: string }[]
+    expect(itemsAfterHide).toHaveLength(1)
+    expect(itemsAfterHide[0]!.title).toBe('Personal Event')
+
+    // Hidden legend item should have the hidden class
+    expect(wrapper.findAll('.cal-legend-item')[0]!.classes()).toContain('cal-legend-hidden')
+
+    // Click again to show Work events
+    await wrapper.findAll('.cal-legend-item')[0]!.trigger('click')
+    await nextTick()
+
+    expect(calendarView.props('items') as { title: string }[]).toHaveLength(2)
+    expect(wrapper.findAll('.cal-legend-item')[0]!.classes()).not.toContain('cal-legend-hidden')
+  })
+
+  it('opens legend when mouse is near bottom of cal-wrapper', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    // Mock getBoundingClientRect to return a known bottom
+    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+      bottom: 500,
+      top: 0,
+      left: 0,
+      right: 800,
+      width: 800,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    })
+    // Mouse near bottom (within 40px trigger zone)
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 470 }))
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+    // Mouse far from bottom — legend closes after timeout
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
+    vi.advanceTimersByTime(300)
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).not.toContain('cal-legend-open')
+  })
+
+  it('opens legend when mouse is below cal-wrapper', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+      bottom: 500,
+      top: 0,
+      left: 0,
+      right: 800,
+      width: 800,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    })
+    // Mouse below cal-wrapper (e.g. over footer)
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 600 }))
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+  })
+
+  it('cancels legend close timer when mouse re-enters trigger zone', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+      bottom: 500,
+      top: 0,
+      left: 0,
+      right: 800,
+      width: 800,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    })
+    // Open legend
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 470 }))
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+    // Mouse leaves — starts close timer
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
+    // Before timer fires, mouse comes back
+    vi.advanceTimersByTime(100)
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 480 }))
+    // Wait past original timeout — legend should still be open
+    vi.advanceTimersByTime(300)
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+  })
+
+  it('ignores mousemove when legend is closed and mouse is outside trigger zone', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+      bottom: 500,
+      top: 0,
+      left: 0,
+      right: 800,
+      width: 800,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    })
+    // Mouse far from bottom, legend not open — nothing happens
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).not.toContain('cal-legend-open')
+  })
+
+  it('cleans up mousemove listener on unmount', async () => {
+    const removeSpy = vi.spyOn(document, 'removeEventListener')
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    wrapper.unmount()
+    expect(removeSpy).toHaveBeenCalledWith('mousemove', expect.any(Function))
+    removeSpy.mockRestore()
   })
 
   it('shows loading overlay during data fetch', async () => {

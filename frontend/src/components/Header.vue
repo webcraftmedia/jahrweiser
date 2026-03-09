@@ -42,7 +42,7 @@
       <button
         v-if="loggedIn"
         type="button"
-        class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
+        class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
         aria-controls="navbar-mobile"
         :aria-expanded="mobileMenuOpen"
         @click="toggleMobileMenu"
@@ -63,6 +63,10 @@
             d="M1 1h15M1 7h15M1 13h15"
           />
         </svg>
+        <span
+          v-if="hiddenCalendars.size > 0"
+          class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sienna dark:bg-sienna-light rounded-full border-2 border-ivory dark:border-poster-dark"
+        />
       </button>
 
       <!-- Desktop menu -->
@@ -130,6 +134,35 @@
             </button>
           </nav>
 
+          <!-- Calendar Filter (mobile) -->
+          <div
+            v-if="legend.length"
+            class="md:hidden border-t border-navy/10 dark:border-poster-darkBorder px-4 py-2"
+          >
+            <p
+              class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider mb-2"
+            >
+              {{ $t('components.Header.calendars') }}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="cal in legend"
+                :key="cal.name"
+                class="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded border border-navy/15 dark:border-poster-darkBorder text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 transition-all duration-150"
+                :class="{
+                  'opacity-40 line-through': hiddenCalendars.has(cal.name),
+                }"
+                @click="toggleCalendar(cal.name)"
+              >
+                <span
+                  class="w-2.5 h-2.5 rounded-full shrink-0"
+                  :style="{ backgroundColor: cal.dotColor }"
+                />
+                {{ cal.name }}
+              </button>
+            </div>
+          </div>
+
           <!-- Legal Links & Version -->
           <div
             class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
@@ -169,6 +202,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useCalendarFilter } from '../composables/useCalendarFilter'
   import { useZoom } from '../composables/useZoom'
 
   import ChangelogModal from './ChangelogModal.vue'
@@ -182,6 +216,7 @@
 
   const welcomeName = ref()
   const { user, loggedIn, clear: clearSession } = useUserSession()
+  const { legend, hiddenCalendars, toggleCalendar } = useCalendarFilter()
   const mobileMenuOpen = ref(false)
   const changelogModal = ref<InstanceType<typeof ChangelogModal>>()
 

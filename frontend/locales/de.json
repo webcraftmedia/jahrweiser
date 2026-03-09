@@ -16,6 +16,7 @@
     },
     "Header": {
       "admin": "Admin",
+      "calendars": "Kalender",
       "logout": "↪ Ausloggen",
       "open-menu": "Open menu",
       "welcome": "Willkommen"

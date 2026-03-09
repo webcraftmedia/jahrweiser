@@ -2,7 +2,12 @@
   <div class="box">
     <div class="calendar row">
       <client-only>
-        <div class="cal-wrapper" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
+        <div
+          ref="calWrapper"
+          class="cal-wrapper"
+          @touchstart.passive="onTouchStart"
+          @touchend.passive="onTouchEnd"
+        >
           <CalendarView
             v-bind="calendar"
             :class="[
@@ -59,6 +64,30 @@
               <span class="loading-dot" />
               <span class="loading-dot" style="animation-delay: 0.15s" />
               <span class="loading-dot" style="animation-delay: 0.3s" />
+            </div>
+          </div>
+          <!-- Calendar legend / filter -->
+          <div
+            class="cal-legend"
+            :class="{
+              'cal-legend-active': hiddenCalendars.size > 0,
+              'cal-legend-open': legendHover,
+            }"
+          >
+            <div class="cal-legend-inner">
+              <button
+                v-for="cal in calendarLegend"
+                :key="cal.name"
+                class="cal-legend-item"
+                :class="{ 'cal-legend-hidden': hiddenCalendars.has(cal.name) }"
+                @click="
+                  toggleCalendar(cal.name)
+                  ;($event.currentTarget as HTMLElement).blur()
+                "
+              >
+                <span class="cal-legend-dot" :style="{ backgroundColor: cal.dotColor }" />
+                <span class="cal-legend-name">{{ cal.name }}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -143,6 +172,7 @@
   import { CalendarView } from 'vue-simple-calendar'
 
   import Modal from '../components/Modal.vue'
+  import { useCalendarFilter } from '../composables/useCalendarFilter'
   import { useColorMode } from '../composables/useColorMode'
 
   import type { ICalendarItem, INormalizedCalendarItem } from 'vue-simple-calendar'
@@ -173,6 +203,7 @@
       .join('\n')
   })
   const calendars = ref<{ name: string; color: string }[]>([])
+  const { hiddenCalendars, setLegend, toggleCalendar } = useCalendarFilter()
   const { isDark } = useColorMode()
 
   /* ── Design palette — one unique color per calendar ── */
@@ -200,22 +231,40 @@
     return map
   })
 
+  const calendarLegend = computed(() =>
+    calendars.value.map((cal, i) => {
+      const palette = designPalette[i % designPalette.length]
+      const { border } = isDark.value ? palette.dark : palette.light
+      return { name: cal.name, dotColor: border }
+    }),
+  )
+
+  watch(
+    calendarLegend,
+    (v) => {
+      setLegend(v)
+    },
+    { immediate: true },
+  )
+
   function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
   }
 
   const items = computed<ICalendarItem[]>(() =>
-    rawItems.value.map((item) => {
-      const palette = calendarColorMap.value.get(item.color) ?? designPalette[0]
-      const { bg, border } = isDark.value ? palette.dark : palette.light
-      return {
-        ...item,
-        startDate: new Date(item.startDate),
-        endDate: new Date(item.endDate),
-        title: capitalize(item.title),
-        style: `background-color: ${bg}; border-left-color: ${border}`,
-      }
-    }),
+    rawItems.value
+      .filter((item) => !hiddenCalendars.value.has(item.calendar))
+      .map((item) => {
+        const palette = calendarColorMap.value.get(item.color) ?? designPalette[0]
+        const { bg, border } = isDark.value ? palette.dark : palette.light
+        return {
+          ...item,
+          startDate: new Date(item.startDate),
+          endDate: new Date(item.endDate),
+          title: capitalize(item.title),
+          style: `background-color: ${bg}; border-left-color: ${border}`,
+        }
+      }),
   )
 
   function handleModalX() {
@@ -295,6 +344,28 @@
         */
   })
 
+  /* ── Legend hover — open when cursor is near/below cal-wrapper bottom ── */
+  const calWrapper = ref<HTMLElement>()
+  const legendHover = ref(false)
+  const LEGEND_TRIGGER_PX = 40
+  let legendLeaveTimer: ReturnType<typeof setTimeout> | undefined
+
+  function onMouseMove(e: MouseEvent) {
+    /* v8 ignore start -- defensive guard, calWrapper is always set when listener is active */
+    if (!calWrapper.value) return
+    const bottom = calWrapper.value.getBoundingClientRect().bottom
+    /* v8 ignore stop */
+    if (e.clientY >= bottom - LEGEND_TRIGGER_PX) {
+      clearTimeout(legendLeaveTimer)
+      legendHover.value = true
+    } else if (legendHover.value) {
+      clearTimeout(legendLeaveTimer)
+      legendLeaveTimer = setTimeout(() => {
+        legendHover.value = false
+      }, 300)
+    }
+  }
+
   const calFlip = ref<'left' | 'right' | null>(null)
   const calLoading = ref(false)
 
@@ -348,9 +419,12 @@
 
   onMounted(() => {
     window.addEventListener('keydown', handleKeyboard)
+    document.addEventListener('mousemove', onMouseMove)
   })
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyboard)
+    document.removeEventListener('mousemove', onMouseMove)
+    clearTimeout(legendLeaveTimer)
   })
 
   function staggerItems() {
@@ -896,6 +970,95 @@
       grid-template-rows: 1fr;
       opacity: 1;
     }
+  }
+
+  /* ===== Calendar legend (desktop overlay) ===== */
+
+  .cal-legend {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: none;
+    z-index: 4;
+  }
+
+  @media (min-width: 768px) {
+    .cal-legend {
+      display: block;
+    }
+  }
+
+  .cal-legend-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    background: transparent;
+    transition:
+      max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      padding 0.3s,
+      background-color 0.3s;
+  }
+
+  .cal-legend.cal-legend-open .cal-legend-inner,
+  .cal-legend.cal-legend-active .cal-legend-inner {
+    max-height: 6em;
+    padding: 0.35em 0;
+    background: rgba(250, 245, 235, 0.92);
+    backdrop-filter: blur(4px);
+  }
+
+  .cal-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    padding: 0.2em 0.6em;
+    border-radius: 3px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    border: 1.5px solid rgba(194, 65, 12, 0.2);
+    background: transparent;
+    color: #1e293b;
+  }
+
+  .cal-legend-item:hover {
+    border-color: rgba(194, 65, 12, 0.4);
+  }
+
+  .cal-legend-hidden {
+    opacity: 0.4;
+    text-decoration: line-through;
+  }
+
+  .cal-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cal-legend-name {
+    line-height: 1;
+  }
+
+  /* Dark mode */
+  .dark .cal-legend.cal-legend-open .cal-legend-inner,
+  .dark .cal-legend.cal-legend-active .cal-legend-inner {
+    background: rgba(26, 23, 20, 0.92);
+  }
+
+  .dark .cal-legend-item {
+    color: #e8ddd0;
+    border-color: #3d3630;
+  }
+
+  .dark .cal-legend-item:hover {
+    border-color: rgba(234, 88, 12, 0.4);
   }
 
   /* ===== Utility ===== */

@@ -670,6 +670,95 @@ describe('Page: Index', () => {
     expect(wrapper.findAll('.cal-legend-item')[0]!.classes()).not.toContain('cal-legend-hidden')
   })
 
+  it('opens legend when mouse is near bottom of cal-wrapper', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    // Mock getBoundingClientRect to return a known bottom
+    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+      bottom: 500,
+      top: 0,
+      left: 0,
+      right: 800,
+      width: 800,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    })
+    // Mouse near bottom (within 40px trigger zone)
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 470 }))
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+    // Mouse far from bottom — legend closes after timeout
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
+    vi.advanceTimersByTime(300)
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).not.toContain('cal-legend-open')
+  })
+
+  it('opens legend when mouse is below cal-wrapper', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+      bottom: 500,
+      top: 0,
+      left: 0,
+      right: 800,
+      width: 800,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    })
+    // Mouse below cal-wrapper (e.g. over footer)
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 600 }))
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+  })
+
+  it('cancels legend close timer when mouse re-enters trigger zone', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+      bottom: 500, top: 0, left: 0, right: 800, width: 800, height: 500, x: 0, y: 0,
+      toJSON: () => {},
+    })
+    // Open legend
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 470 }))
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+    // Mouse leaves — starts close timer
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
+    // Before timer fires, mouse comes back
+    vi.advanceTimersByTime(100)
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 480 }))
+    // Wait past original timeout — legend should still be open
+    vi.advanceTimersByTime(300)
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+  })
+
+  it('ignores mousemove when legend is closed and mouse is outside trigger zone', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    const calWrapper = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+      bottom: 500, top: 0, left: 0, right: 800, width: 800, height: 500, x: 0, y: 0,
+      toJSON: () => {},
+    })
+    // Mouse far from bottom, legend not open — nothing happens
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
+    await nextTick()
+    expect(wrapper.find('.cal-legend').classes()).not.toContain('cal-legend-open')
+  })
+
+  it('cleans up mousemove listener on unmount', async () => {
+    const removeSpy = vi.spyOn(document, 'removeEventListener')
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    wrapper.unmount()
+    expect(removeSpy).toHaveBeenCalledWith('mousemove', expect.any(Function))
+    removeSpy.mockRestore()
+  })
+
   it('shows loading overlay during data fetch', async () => {
     let resolveCalendars!: (value: unknown) => void
     mock$fetch.mockImplementation((url: string) => {

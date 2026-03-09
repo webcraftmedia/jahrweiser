@@ -45,6 +45,7 @@ describe('useCalendarFilter', () => {
   })
 
   it('legend and hiddenCalendars are readonly', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { legend, hiddenCalendars, setLegend } = useCalendarFilter()
     setLegend([{ name: 'A', dotColor: '#000' }])
     // Writing to a readonly ref is silently ignored (Vue warns but doesn't throw)
@@ -55,5 +56,6 @@ describe('useCalendarFilter', () => {
     // @ts-expect-error testing readonly
     hiddenCalendars.value = new Set(['X'])
     expect(hiddenCalendars.value.size).toBe(0)
+    warnSpy.mockRestore()
   })
 })

@@ -10,6 +10,34 @@ const mockZoomState = vi.hoisted(() => {
   return { zoomLevel, computed }
 })
 
+const mockCalendarFilter = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref, readonly } = require('vue')
+  const legend = ref<{ name: string; dotColor: string }[]>([])
+  const hiddenCalendars = ref(new Set<string>())
+  return { legend, hiddenCalendars, ref, readonly }
+})
+
+vi.mock('../composables/useCalendarFilter', () => ({
+  useCalendarFilter: () => {
+    function setLegend(items: { name: string; dotColor: string }[]) {
+      mockCalendarFilter.legend.value = items
+    }
+    function toggleCalendar(name: string) {
+      const s = new Set(mockCalendarFilter.hiddenCalendars.value)
+      if (s.has(name)) s.delete(name)
+      else s.add(name)
+      mockCalendarFilter.hiddenCalendars.value = s
+    }
+    return {
+      legend: mockCalendarFilter.readonly(mockCalendarFilter.legend),
+      hiddenCalendars: mockCalendarFilter.readonly(mockCalendarFilter.hiddenCalendars),
+      setLegend,
+      toggleCalendar,
+    }
+  },
+}))
+
 vi.mock('../composables/useZoom', () => ({
   useZoom: () => ({
     zoomLevel: mockZoomState.zoomLevel,
@@ -43,6 +71,8 @@ describe('Header', () => {
     mockUser.value = { name: 'Test User', email: 'test@example.com', role: 'admin' }
     mockLoggedIn.value = true
     mockZoomState.zoomLevel.value = 1.0
+    mockCalendarFilter.legend.value = []
+    mockCalendarFilter.hiddenCalendars.value = new Set()
   })
 
   it('renders', async () => {
@@ -138,6 +168,29 @@ describe('Header', () => {
     expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
     // Changelog modal opens
     expect(wrapper.find('.modal-open').exists()).toBe(true)
+  })
+
+  it('shows mobile calendar filter when legend has items', async () => {
+    mockCalendarFilter.legend.value = [
+      { name: 'Work', dotColor: '#ff0000' },
+      { name: 'Personal', dotColor: '#00ff00' },
+    ]
+    const wrapper = await mountSuspended(Component)
+    await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+    const filterButtons = wrapper.findAll('#navbar-mobile .md\\:hidden button')
+    expect(filterButtons.length).toBe(2)
+    expect(filterButtons[0]!.text()).toContain('Work')
+    // Toggle filter
+    await filterButtons[0]!.trigger('click')
+    expect(mockCalendarFilter.hiddenCalendars.value.has('Work')).toBe(true)
+  })
+
+  it('shows notification dot on burger when filter is active', async () => {
+    mockCalendarFilter.hiddenCalendars.value = new Set(['Work'])
+    mockCalendarFilter.legend.value = [{ name: 'Work', dotColor: '#ff0000' }]
+    const wrapper = await mountSuspended(Component)
+    const burger = wrapper.find('[aria-controls="navbar-mobile"]')
+    expect(burger.find('.rounded-full').exists()).toBe(true)
   })
 
   it('applies zoom style when chromeZoom is not 1', async () => {

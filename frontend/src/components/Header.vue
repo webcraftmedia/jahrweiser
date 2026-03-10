@@ -23,7 +23,9 @@
     class="relative z-50 bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
-    <div class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto p-2">
+    <div
+      class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto py-2 px-2 2xl:px-0"
+    >
       <NuxtLink to="/" class="flex items-center gap-2">
         <LogoSmall class="logo-bar" />
         <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->

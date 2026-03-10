@@ -5,7 +5,7 @@ exports[`Header > renders 1`] = `
   <!-- Hero variant (login page) -->
   <!-- Bar variant (default nav bar) -->
   <nav data-v-c970699f="" class="relative z-50 bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0">
-    <div data-v-c970699f="" class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto p-2"><a data-v-c970699f="" href="/" class="flex items-center gap-2"><svg data-v-c970699f="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 72.8 72.8" class="nuxt-icon nuxt-icon--fill logo-bar">
+    <div data-v-c970699f="" class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto py-2 px-2 2xl:px-0"><a data-v-c970699f="" href="/" class="flex items-center gap-2"><svg data-v-c970699f="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 72.8 72.8" class="nuxt-icon nuxt-icon--fill logo-bar">
           <defs>
             <filter id="filter-id-a" width="1.071" height="1.071" x="-.035" y="-.035" style="color-interpolation-filters:sRGB;">
               <feFlood flood-color="#000" flood-opacity=".498" result="flood"></feFlood>

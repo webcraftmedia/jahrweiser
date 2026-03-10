@@ -1001,8 +1001,26 @@
     cursor: pointer;
   }
 
-  .sx__list-event:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  .sx__list-day-events {
+    padding: 0 !important;
+  }
+
+  .sx__list-event {
+    padding: 0.75rem 0.5em 0.75rem 0 !important;
+  }
+
+  @media (max-width: 767px) {
+    .sx__list-event:hover,
+    .sx__list-event:active {
+      box-shadow: none !important;
+      background: inherit !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .sx__list-event:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
   }
 
   /* --- Schedule-X: Theme overrides (light) --- */
@@ -1114,8 +1132,10 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
-  .dark .sx__list-event:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  @media (min-width: 768px) {
+    .dark .sx__list-event:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
   }
 
   /* --- Schedule-X: Theme overrides (dark) --- */

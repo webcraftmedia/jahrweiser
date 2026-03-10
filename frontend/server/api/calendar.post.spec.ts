@@ -58,6 +58,20 @@ describe('calendar.post', () => {
     await expect(handlerFn({})).rejects.toThrowError('Calendar "Work" not found')
   })
 
+  it('throws 502 when DAV connection fails', async () => {
+    mockFindCalendars.mockRejectedValue(new Error('ECONNREFUSED'))
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await expect(handlerFn({})).rejects.toThrowError('CalDAV server unreachable')
+    expect(consoleSpy).toHaveBeenCalled()
+    consoleSpy.mockRestore()
+  })
+
+  it('re-throws errors with statusCode from DAV helpers', async () => {
+    const httpError = Object.assign(new Error('Not Found'), { statusCode: 404 })
+    mockFindCalendars.mockRejectedValue(httpError)
+    await expect(handlerFn({})).rejects.toThrowError(httpError.message)
+  })
+
   it('returns event array for simple event', async () => {
     mockFindEvents.mockResolvedValue([
       {

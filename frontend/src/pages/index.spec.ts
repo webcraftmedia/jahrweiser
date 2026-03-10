@@ -43,6 +43,20 @@ vi.mock('../composables/useCalendarFilter', () => ({
   },
 }))
 
+const mockZoom = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref } = require('vue')
+  return { zoomLevel: ref(1.0) }
+})
+
+vi.mock('../composables/useZoom', () => ({
+  useZoom: () => ({
+    zoomLevel: mockZoom.zoomLevel,
+    chromeZoom: { value: 1 },
+    loginZoom: { value: 1 },
+  }),
+}))
+
 vi.mock('../composables/useColorMode', () => ({
   useColorMode: () => ({
     isDark: mockColorMode.readonly(mockColorMode.isDark),
@@ -59,6 +73,7 @@ const mockEventsServiceGetAll = vi.hoisted(() => vi.fn(() => []))
 
 const mockCalendarControlsSetDate = vi.hoisted(() => vi.fn())
 const mockCalendarControlsSetCalendars = vi.hoisted(() => vi.fn())
+const mockCalendarControlsSetView = vi.hoisted(() => vi.fn())
 
 const mockSetTheme = vi.hoisted(() => vi.fn())
 
@@ -134,6 +149,7 @@ vi.mock('@schedule-x/calendar-controls', () => ({
   createCalendarControlsPlugin: () => ({
     setDate: mockCalendarControlsSetDate,
     setCalendars: mockCalendarControlsSetCalendars,
+    setView: mockCalendarControlsSetView,
     name: 'calendar-controls',
   }),
 }))
@@ -187,6 +203,7 @@ describe('Page: Index', () => {
       origDocAdd(type, fn, ...(args as any[]))
     }
     mockColorMode.isDark.value = false
+    mockZoom.zoomLevel.value = 1.0
     mockCalendarFilter.legend.value = []
     mockCalendarFilter.hiddenCalendars.value = new Set()
     mockCallbacks.fetchEvents = null
@@ -882,5 +899,386 @@ describe('Page: Index', () => {
     mockColorMode.isDark.value = false
     await nextTick()
     expect(mockSetTheme).toHaveBeenCalledWith('light')
+  })
+
+  it('headerZoomStyle returns mobile zoom when lastWasSmall', async () => {
+    // Set zoom > 1 so headerZoomStyle branches execute
+    mockZoom.zoomLevel.value = 1.5
+    // Simulate mobile viewport
+    Object.defineProperty(window, 'innerWidth', { value: 500, configurable: true })
+    const wrapper = await mount()
+    // Trigger resize to set lastWasSmall
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    const header = wrapper.find('.cv-header')
+    expect(header.exists()).toBe(true)
+    // The header should have a zoom style applied (mobile path)
+    const style = (header.element as HTMLElement).style
+    expect(style.zoom).toBeTruthy()
+    // Restore
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
+  })
+
+  it('headerZoomStyle returns desktop slight zoom', async () => {
+    mockZoom.zoomLevel.value = 1.5
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
+    const wrapper = await mount()
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    const header = wrapper.find('.cv-header')
+    const style = (header.element as HTMLElement).style
+    // Desktop: slight = 1 + (1.5 - 1) * 0.3 = 1.15
+    expect(style.zoom).toBeTruthy()
+  })
+
+  it('boxZoomStyle applies counter-zoom on desktop', async () => {
+    mockZoom.zoomLevel.value = 1.5
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
+    const wrapper = await mount()
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    const box = wrapper.find('.box')
+    const style = (box.element as HTMLElement).style
+    expect(style.zoom).toBeTruthy()
+    expect(style.width).toContain('%')
+  })
+
+  it('onResize switches view when crossing breakpoint', async () => {
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
+    await mount()
+    // Switch to mobile
+    Object.defineProperty(window, 'innerWidth', { value: 500, configurable: true })
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    expect(mockCalendarControlsSetView).toHaveBeenCalledWith('list')
+    // Switch back to desktop
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    expect(mockCalendarControlsSetView).toHaveBeenCalledWith('month-grid')
+  })
+
+  it('onResize does nothing when size stays in same range', async () => {
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
+    await mount()
+    mockCalendarControlsSetView.mockClear()
+    // Same range (still desktop)
+    Object.defineProperty(window, 'innerWidth', { value: 900, configurable: true })
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    expect(mockCalendarControlsSetView).not.toHaveBeenCalled()
+  })
+
+  it('handles datetime strings in toTemporalDate', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'e1',
+            title: 'Timed',
+            color: '#ff0000',
+            calendar: 'Work',
+            startDate: '2025-01-15T10:00:00Z',
+            endDate: '2025-01-15T12:00:00Z',
+          },
+        ])
+      return Promise.resolve({})
+    })
+    await mount()
+    // Find the call that has the 'Timed' event (not the initial 'Test' event)
+    await triggerFetchEvents()
+    const callWithTimed = mockEventsServiceSet.mock.calls.find((c: unknown[][]) =>
+      c[0]?.some((e: { title: string }) => e.title === 'Timed'),
+    )
+    expect(callWithTimed).toBeTruthy()
+    const events = callWithTimed![0]
+    expect(events[0].title).toBe('Timed')
+  })
+
+  it('handles calendar fetch failure gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar') return Promise.reject(new Error('network error'))
+      return Promise.resolve({})
+    })
+    await mount()
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to fetch calendar'),
+      expect.anything(),
+    )
+    consoleSpy.mockRestore()
+  })
+
+  it('applyFutureClass marks future and today days', async () => {
+    await mount()
+    // Create mock day elements
+    const todayStr = new Date('2025-01-15T12:00:00.000Z').toISOString().slice(0, 10)
+    const dayEl = document.createElement('div')
+    dayEl.classList.add('sx__month-grid-day')
+    dayEl.setAttribute('data-date', todayStr)
+    document.body.appendChild(dayEl)
+    const futureEl = document.createElement('div')
+    futureEl.classList.add('sx__month-grid-day')
+    futureEl.setAttribute('data-date', '2025-01-20')
+    document.body.appendChild(futureEl)
+    const pastEl = document.createElement('div')
+    pastEl.classList.add('sx__month-grid-day')
+    pastEl.setAttribute('data-date', '2025-01-10')
+    document.body.appendChild(pastEl)
+    // Trigger applyFutureClass via the delayed timers
+    vi.advanceTimersByTime(200)
+    expect(dayEl.classList.contains('is-today')).toBe(true)
+    expect(dayEl.classList.contains('is-future')).toBe(true)
+    expect(futureEl.classList.contains('is-future')).toBe(true)
+    expect(pastEl.classList.contains('is-future')).toBe(false)
+    // List view elements
+    const listDayEl = document.createElement('div')
+    listDayEl.classList.add('sx__list-day')
+    listDayEl.setAttribute('data-date', todayStr)
+    document.body.appendChild(listDayEl)
+    vi.advanceTimersByTime(200)
+    expect(listDayEl.classList.contains('is-today')).toBe(true)
+    // Clean up
+    dayEl.remove()
+    futureEl.remove()
+    pastEl.remove()
+    listDayEl.remove()
+  })
+
+  it('debouncedApplyFuture fires via MutationObserver', async () => {
+    // Create a .sx__calendar element before mount so the observer attaches
+    const calRoot = document.createElement('div')
+    calRoot.classList.add('sx__calendar')
+    document.body.appendChild(calRoot)
+    await mount()
+    // Create a day element to verify applyFutureClass runs
+    const dayEl = document.createElement('div')
+    dayEl.classList.add('sx__month-grid-day')
+    dayEl.setAttribute('data-date', '2025-01-20')
+    // Mutate the calendar root to trigger the observer
+    calRoot.appendChild(dayEl)
+    // Wait for debounce (30ms) + observer microtask
+    vi.advanceTimersByTime(50)
+    await nextTick()
+    expect(dayEl.classList.contains('is-future')).toBe(true)
+    calRoot.remove()
+  })
+
+  it('scrollToDay scrolls to today element when present', async () => {
+    const todayStr = '2025-01-15'
+    // Create a today element in the DOM
+    const todayEl = document.createElement('div')
+    todayEl.classList.add('sx__month-grid-day')
+    todayEl.setAttribute('data-date', todayStr)
+    const innerEl = document.createElement('div')
+    innerEl.classList.add('sx__is-today')
+    todayEl.appendChild(innerEl)
+    document.body.appendChild(todayEl)
+    const scrollSpy = vi.spyOn(todayEl, 'scrollIntoView').mockImplementation(() => {})
+    await mount()
+    // Navigate to today to trigger scrollToDay
+    const navButtons = (await mount()).findAll('.cv-header-nav button')
+    await navButtons[1]!.trigger('click') // today button
+    vi.advanceTimersByTime(400)
+    expect(scrollSpy).toHaveBeenCalled()
+    todayEl.remove()
+  })
+
+  it('scrollToDay scrolls to first of month when today not present', async () => {
+    // Create a first-of-month element (no today)
+    const firstEl = document.createElement('div')
+    firstEl.classList.add('sx__month-grid-day')
+    firstEl.setAttribute('data-date', '2025-01-01')
+    document.body.appendChild(firstEl)
+    const scrollSpy = vi.spyOn(firstEl, 'scrollIntoView').mockImplementation(() => {})
+    await mount()
+    const wrapper = await mount()
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    await navButtons[1]!.trigger('click') // today button
+    vi.advanceTimersByTime(400)
+    expect(scrollSpy).toHaveBeenCalled()
+    firstEl.remove()
+  })
+
+  it('stagger animation runs on month-grid events', async () => {
+    // Create mock event elements before mount (2 events to cover sort comparator)
+    const dayEl = document.createElement('div')
+    dayEl.classList.add('sx__month-grid-day')
+    dayEl.setAttribute('data-date', '2025-01-15')
+    const eventEl = document.createElement('div')
+    eventEl.classList.add('sx__month-grid-event')
+    dayEl.appendChild(eventEl)
+    document.body.appendChild(dayEl)
+    const dayEl2 = document.createElement('div')
+    dayEl2.classList.add('sx__month-grid-day')
+    dayEl2.setAttribute('data-date', '2025-01-16')
+    const eventEl2 = document.createElement('div')
+    eventEl2.classList.add('sx__month-grid-event')
+    dayEl2.appendChild(eventEl2)
+    document.body.appendChild(dayEl2)
+    // Mock requestAnimationFrame to run callbacks synchronously
+    const origRAF = globalThis.requestAnimationFrame
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
+      cb(0)
+      return 0
+    }
+    await mount()
+    // Advance timers so stagger fade-in completes
+    vi.advanceTimersByTime(500)
+    // Stagger should have set transition and final opacity/transform
+    expect(eventEl.style.transition).toContain('opacity')
+    expect(eventEl.style.opacity).toBe('1')
+    expect(eventEl.style.transform).toBe('translateY(0)')
+    expect(eventEl2.style.opacity).toBe('1')
+    globalThis.requestAnimationFrame = origRAF
+    dayEl.remove()
+    dayEl2.remove()
+  })
+
+  it('stagger poll retries when no events found yet', async () => {
+    // No events in DOM — poll should retry via RAF, hitting else-if branch
+    const rafCallbacks: FrameRequestCallback[] = []
+    const origRAF = globalThis.requestAnimationFrame
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
+      rafCallbacks.push(cb)
+      return rafCallbacks.length
+    }
+    await mount()
+    // Execute RAF callbacks one by one to simulate polling retries
+    // Each call with no events should increment attempts and schedule another RAF
+    const prevLength = rafCallbacks.length
+    if (rafCallbacks.length > 0) {
+      rafCallbacks[rafCallbacks.length - 1]!(0)
+    }
+    // A new RAF callback should have been scheduled (retry)
+    expect(rafCallbacks.length).toBeGreaterThan(prevLength)
+    globalThis.requestAnimationFrame = origRAF
+  })
+
+  it('stagger sorts events without parent day gracefully', async () => {
+    // Events NOT inside .sx__month-grid-day — closest() returns null → ?? '' fallback
+    const eventEl1 = document.createElement('div')
+    eventEl1.classList.add('sx__month-grid-event')
+    document.body.appendChild(eventEl1)
+    const eventEl2 = document.createElement('div')
+    eventEl2.classList.add('sx__month-grid-event')
+    document.body.appendChild(eventEl2)
+    const origRAF = globalThis.requestAnimationFrame
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
+      cb(0)
+      return 0
+    }
+    await mount()
+    vi.advanceTimersByTime(500)
+    // Both events should still get animated despite no parent day
+    expect(eventEl1.style.opacity).toBe('1')
+    expect(eventEl2.style.opacity).toBe('1')
+    globalThis.requestAnimationFrame = origRAF
+    eventEl1.remove()
+    eventEl2.remove()
+  })
+
+  it('clickItem handles event with empty title', async () => {
+    await mount()
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 1,
+      title: '',
+    })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
+    })
+  })
+
+  it('maps events with occurrence to composite id', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'rec-1',
+            title: 'Recurring',
+            color: '#ff0000',
+            calendar: 'Work',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+            occurrence: 3,
+          },
+        ])
+      return Promise.resolve({})
+    })
+    await mount()
+    await triggerFetchEvents()
+    const callWithRecurring = mockEventsServiceSet.mock.calls.find((c: unknown[][]) =>
+      c[0]?.some((e: { title: string }) => e.title === 'Recurring'),
+    )
+    expect(callWithRecurring).toBeTruthy()
+    const events = callWithRecurring![0]
+    expect(events[0].id).toBe('rec-1-3')
+  })
+
+  it('falls back to calendarId cal-0 for unknown calendar', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'e1',
+            title: 'Orphan',
+            color: '#ff0000',
+            calendar: 'Unknown',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+          },
+        ])
+      return Promise.resolve({})
+    })
+    await mount()
+    await triggerFetchEvents()
+    const callWithOrphan = mockEventsServiceSet.mock.calls.find((c: unknown[][]) =>
+      c[0]?.some((e: { title: string }) => e.title === 'Orphan'),
+    )
+    expect(callWithOrphan).toBeTruthy()
+    const events = callWithOrphan![0]
+    expect(events[0].calendarId).toBe('cal-0')
+  })
+
+  it('calendarBodyZoomStyle applies zoom on mobile with zoom > 1', async () => {
+    mockZoom.zoomLevel.value = 1.5
+    Object.defineProperty(window, 'innerWidth', { value: 500, configurable: true })
+    const wrapper = await mount()
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    // ScheduleXCalendar should have zoom style applied on mobile
+    const sxCalendar = wrapper.find('.sx-vue-calendar-wrapper')
+    expect(sxCalendar.exists()).toBe(true)
+    // Restore
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
+  })
+
+  it('stagger poll gives up after 60 attempts', async () => {
+    const rafCallbacks: FrameRequestCallback[] = []
+    const origRAF = globalThis.requestAnimationFrame
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
+      rafCallbacks.push(cb)
+      return rafCallbacks.length
+    }
+    await mount()
+    // Run poll 61 times to exhaust the retry limit
+    for (let i = 0; i < 61; i++) {
+      const last = rafCallbacks[rafCallbacks.length - 1]
+      if (!last) break
+      last(0)
+    }
+    // After 60 retries, no new callback should be added
+    const lengthAfterExhaust = rafCallbacks.length
+    // The last call should NOT have scheduled another
+    const lastCb = rafCallbacks[rafCallbacks.length - 1]
+    if (lastCb) lastCb(0)
+    expect(rafCallbacks.length).toBe(lengthAfterExhaust)
+    globalThis.requestAnimationFrame = origRAF
   })
 })

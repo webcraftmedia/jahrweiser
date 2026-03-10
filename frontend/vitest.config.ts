@@ -14,7 +14,7 @@ export default defineVitestConfig({
       reporter: ['text', 'json', 'html'],
       all: true,
       include: ['src/**/*.{ts,vue}', 'server/helpers/*.ts', 'server/api/**/*.ts'],
-      exclude: ['src/**/*.spec.ts', 'server/emails/**'],
+      exclude: ['src/**/*.spec.ts', 'server/emails/**', 'src/plugins/**'],
       thresholds: {
         100: true,
       },

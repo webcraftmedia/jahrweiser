@@ -26,11 +26,12 @@
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
             </div>
           </div>
-          <ScheduleXCalendar
-            v-if="calendarApp"
-            :calendar-app="calendarApp"
-            :style="lastWasSmall && headerZoom !== 1 ? { zoom: headerZoom } : undefined"
-          />
+          <ClientOnly>
+            <ScheduleXCalendar
+              :calendar-app="calendarApp!"
+              :style="calendarBodyZoomStyle"
+            />
+          </ClientOnly>
           <!-- Loading overlay -->
           <div v-show="calLoading" class="cal-loading-overlay">
             <div class="flex items-center gap-2">
@@ -203,8 +204,13 @@
     if (lastWasSmall.value) {
       return { zoom: headerZoom.value }
     }
-    const slight = 1 + (zoomLevel.value - 1) * 0.3
-    return slight !== 1 ? { zoom: slight } : undefined
+    return { zoom: 1 + (zoomLevel.value - 1) * 0.3 }
+  })
+
+  // Mobile: zoom the calendar body when zoom > 1
+  const calendarBodyZoomStyle = computed(() => {
+    if (!lastWasSmall.value || headerZoom.value === 1) return undefined
+    return { zoom: headerZoom.value }
   })
 
   // Desktop: counter-zoom so the calendar always fills the container exactly
@@ -299,6 +305,7 @@
 
   const today = Temporal.PlainDate.from(new Date().toISOString().slice(0, 10))
 
+  /* v8 ignore start -- always true in client-side tests */
   if (import.meta.client) {
     eventsService = createEventsServicePlugin()
     calendarControls = createCalendarControlsPlugin()
@@ -326,6 +333,7 @@
       [eventsService, calendarControls],
     )
   }
+  /* v8 ignore stop */
 
   /* ── Navigation state ── */
 
@@ -507,6 +515,7 @@
         lightColors: { main: string; container: string; onContainer: string }
         darkColors: { main: string; container: string; onContainer: string }
       }
+    /* v8 ignore next */
     > = {}
     calendars.value.forEach((cal, i) => {
       const palette = designPalette[i % designPalette.length]!

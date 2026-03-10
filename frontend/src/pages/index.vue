@@ -697,6 +697,21 @@
     border-inline-end: 0.5px solid rgba(194, 65, 12, 0.12) !important;
   }
 
+  .sx__month-grid-day__header {
+    align-items: flex-start !important;
+  }
+
+  .sx__month-grid-day__header {
+    max-height: 22px;
+    overflow: hidden;
+  }
+
+  .sx__month-grid-day__header-date {
+    font-size: 20px !important;
+    padding: 4px;
+    line-height: 20px;
+  }
+
   /* --- Schedule-X: Today highlight --- */
 
   .sx__month-grid-day__header-date.sx__is-today,

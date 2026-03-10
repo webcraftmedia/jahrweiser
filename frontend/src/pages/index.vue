@@ -743,17 +743,19 @@
   .sx__month-grid-day__header {
     align-items: flex-start !important;
     overflow: visible;
+    padding-left: 2px;
   }
 
   .sx__month-grid-day {
-    padding-top: calc(var(--sx-spacing-padding2) / 2) !important;
+    padding-top: 2px !important;
   }
 
   .sx__month-grid-day__header-date {
     font-size: 20px !important;
-    padding: 4px;
+    padding: 0;
     line-height: 20px;
     margin-bottom: 0 !important;
+    color: rgb(30, 41, 59) !important;
   }
 
   .sx__month-grid-day.is-leading-or-trailing .sx__month-grid-day__header-date {
@@ -795,8 +797,8 @@
     border-radius: 3px;
     font-size: 0.9em;
     transition: box-shadow 0.3s ease;
-    width: calc(100% - 2px) !important;
-    margin-left: 1px;
+    width: calc(100% - 1px) !important;
+    margin-left: 0.5px;
     padding: 4px 6px !important;
     border-inline-start-width: 3px !important;
     overflow: hidden !important;

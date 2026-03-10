@@ -493,12 +493,17 @@
               startDate: startDate,
               endDate: endDate,
             },
+          }).catch((err) => {
+            console.warn(`Failed to fetch calendar "${cal.name}":`, err)
+            return []
           }),
         ),
       )
 
       rawEvents.value = results.flat()
-      return mapToScheduleXEvents()
+      const mapped = mapToScheduleXEvents()
+      scheduleStagger()
+      return mapped
     } catch (error) {
       console.error(error)
       return []
@@ -538,6 +543,71 @@
   onUnmounted(() => {
     futureObserver?.disconnect()
     clearTimeout(futureDebounce)
+  })
+
+  /* ── Stagger event animations — events pop in chronologically ── */
+
+  let staggerTimers: ReturnType<typeof setTimeout>[] = []
+  let staggerPollId: ReturnType<typeof requestAnimationFrame> | undefined
+
+  function runStagger(events: HTMLElement[]) {
+    staggerTimers.forEach(clearTimeout)
+    staggerTimers = []
+
+    // Sort chronologically by parent day date
+    events.sort((a, b) => {
+      const dateA = a.closest('.sx__month-grid-day')?.getAttribute('data-date') ?? ''
+      const dateB = b.closest('.sx__month-grid-day')?.getAttribute('data-date') ?? ''
+      return dateA.localeCompare(dateB)
+    })
+
+    // Hide all immediately
+    events.forEach((el) => {
+      el.style.opacity = '0'
+      el.style.transform = 'translateY(4px)'
+    })
+
+    // Force browser to commit opacity:0 before starting fade-in
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    events[0]?.offsetHeight
+
+    // Stagger fade-in chronologically
+    events.forEach((el, i) => {
+      staggerTimers.push(
+        setTimeout(() => {
+          el.style.transition = 'opacity 0.4s ease, transform 0.4s ease'
+          el.style.opacity = '1'
+          el.style.transform = 'translateY(0)'
+        }, i * 50),
+      )
+    })
+  }
+
+  function scheduleStagger() {
+    // Cancel previous poll/timers
+    if (staggerPollId) cancelAnimationFrame(staggerPollId)
+    staggerTimers.forEach(clearTimeout)
+    staggerTimers = []
+
+    let attempts = 0
+    const poll = () => {
+      const events = Array.from(
+        document.querySelectorAll('.sx__month-grid-event'),
+      ) as HTMLElement[]
+      if (events.length > 0) {
+        runStagger(events)
+      } else if (attempts < 60) {
+        attempts++
+        staggerPollId = requestAnimationFrame(poll)
+      }
+    }
+    // Give Schedule-X a frame to start rendering
+    staggerPollId = requestAnimationFrame(poll)
+  }
+
+  onUnmounted(() => {
+    if (staggerPollId) cancelAnimationFrame(staggerPollId)
+    staggerTimers.forEach(clearTimeout)
   })
 
   /* ── Filter reactivity — re-filter events without re-fetching ── */

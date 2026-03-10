@@ -29,26 +29,37 @@ export default defineEventHandler(async (event) => {
 
   const { calendar, startDate, endDate } = await readValidatedBody(event, bodySchema.parse)
 
-  const calDavAccount = createCalDAVAccount(config)
-  const calendars = await findCalendars(calDavAccount)
+  let selectedCalendar
+  let caldata
+  let userQuery
 
-  const selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
+  try {
+    const calDavAccount = createCalDAVAccount(config)
+    const calendars = await findCalendars(calDavAccount)
 
-  if (!selectedCalendar) {
-    throw new Error('Calendar not found')
+    selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
+
+    if (!selectedCalendar) {
+      throw createError({ statusCode: 404, statusMessage: `Calendar "${calendar}" not found` })
+    }
+
+    // Find dav user
+    const cardDavAccount = createCardDAVAccount(config)
+    userQuery = await findUserByEmail(cardDavAccount, session.user.email)
+
+    // Calendar data
+    caldata = await findEvents(calDavAccount, selectedCalendar.url, startDate, endDate)
+  } catch (err) {
+    if ((err as { statusCode?: number }).statusCode) throw err
+    console.error(`DAV connection error for calendar "${calendar}":`, err)
+    throw createError({ statusCode: 502, statusMessage: 'CalDAV server unreachable' })
   }
 
-  // Find dav user
-  const cardDavAccount = createCardDAVAccount(config)
-  const userQuery = await findUserByEmail(cardDavAccount, session.user.email)
   const showPrivate =
     !userQuery ||
     (userQuery.vcard.getFirstProperty('categories')?.getValues() as string[]).find(
       (tag) => tag === calendar,
     )
-
-  // Calendar data
-  const caldata = await findEvents(calDavAccount, selectedCalendar.url, startDate, endDate)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: any[] = []

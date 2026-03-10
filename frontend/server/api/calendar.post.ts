@@ -29,26 +29,37 @@ export default defineEventHandler(async (event) => {
 
   const { calendar, startDate, endDate } = await readValidatedBody(event, bodySchema.parse)
 
-  const calDavAccount = createCalDAVAccount(config)
-  const calendars = await findCalendars(calDavAccount)
+  let selectedCalendar
+  let caldata
+  let userQuery
 
-  const selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
+  try {
+    const calDavAccount = createCalDAVAccount(config)
+    const calendars = await findCalendars(calDavAccount)
 
-  if (!selectedCalendar) {
-    throw new Error('Calendar not found')
+    selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
+
+    if (!selectedCalendar) {
+      throw createError({ statusCode: 404, statusMessage: `Calendar "${calendar}" not found` })
+    }
+
+    // Find dav user
+    const cardDavAccount = createCardDAVAccount(config)
+    userQuery = await findUserByEmail(cardDavAccount, session.user.email)
+
+    // Calendar data
+    caldata = await findEvents(calDavAccount, selectedCalendar.url, startDate, endDate)
+  } catch (err) {
+    if ((err as { statusCode?: number }).statusCode) throw err
+    console.error(`DAV connection error for calendar "${calendar}":`, err)
+    throw createError({ statusCode: 502, statusMessage: 'CalDAV server unreachable' })
   }
 
-  // Find dav user
-  const cardDavAccount = createCardDAVAccount(config)
-  const userQuery = await findUserByEmail(cardDavAccount, session.user.email)
   const showPrivate =
     !userQuery ||
     (userQuery.vcard.getFirstProperty('categories')?.getValues() as string[]).find(
       (tag) => tag === calendar,
     )
-
-  // Calendar data
-  const caldata = await findEvents(calDavAccount, selectedCalendar.url, startDate, endDate)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: any[] = []
@@ -66,6 +77,8 @@ export default defineEventHandler(async (event) => {
         return
       }
       const calEvent = new ICAL.Event(vevent)
+
+      const isAllDay = calEvent.startDate.isDate
 
       if (calEvent.isRecurring()) {
         // Expandiere wiederkehrende Events
@@ -92,8 +105,8 @@ export default defineEventHandler(async (event) => {
                   : '#e7e7ff',
               id: hrefToId(data.href as string),
               occurrence: count,
-              startDate: occurrence,
-              endDate: recEndDate,
+              startDate: isAllDay ? occurrence.toISOString().slice(0, 10) : occurrence,
+              endDate: isAllDay ? recEndDate.toISOString().slice(0, 10) : recEndDate,
               title: calEvent.summary,
               isRecurring: true,
             })
@@ -102,7 +115,7 @@ export default defineEventHandler(async (event) => {
       } else {
         const sd = calEvent.startDate.toJSDate()
         const ed = calEvent.endDate.toJSDate()
-        if (calEvent.duration.days > 0 || calEvent.duration.weeks > 0) {
+        if (isAllDay) {
           ed.setDate(ed.getDate() - 1) // DTEND is exclusive, subtract 1 day for inclusive end
         }
         results.push({
@@ -112,8 +125,8 @@ export default defineEventHandler(async (event) => {
               ? selectedCalendar.calendarColor
               : '#e7e7ff',
           id: hrefToId(data.href as string),
-          startDate: sd,
-          endDate: ed,
+          startDate: isAllDay ? sd.toISOString().slice(0, 10) : sd,
+          endDate: isAllDay ? ed.toISOString().slice(0, 10) : ed,
           title: calEvent.summary,
         })
       }

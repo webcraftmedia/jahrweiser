@@ -9,6 +9,7 @@ import {
   RECURRING_EVENT_WITH_TIMEZONE,
   PRIVATE_EVENT,
   VCALENDAR_NO_VEVENT,
+  RECURRING_ALLDAY_EVENT,
 } from '../../test/fixtures/ical-data'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
 
@@ -55,7 +56,21 @@ describe('calendar.post', () => {
 
   it('throws when calendar not found', async () => {
     mockFindCalendars.mockResolvedValue([])
-    await expect(handlerFn({})).rejects.toThrowError('Calendar not found')
+    await expect(handlerFn({})).rejects.toThrowError('Calendar "Work" not found')
+  })
+
+  it('throws 502 when DAV connection fails', async () => {
+    mockFindCalendars.mockRejectedValue(new Error('ECONNREFUSED'))
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await expect(handlerFn({})).rejects.toThrowError('CalDAV server unreachable')
+    expect(consoleSpy).toHaveBeenCalled()
+    consoleSpy.mockRestore()
+  })
+
+  it('re-throws errors with statusCode from DAV helpers', async () => {
+    const httpError = Object.assign(new Error('Not Found'), { statusCode: 404 })
+    mockFindCalendars.mockRejectedValue(httpError)
+    await expect(handlerFn({})).rejects.toThrowError(httpError.message)
   })
 
   it('returns event array for simple event', async () => {
@@ -136,10 +151,25 @@ describe('calendar.post', () => {
         props: { calendarData: ALLDAY_EVENT },
       },
     ])
-    const result = (await handlerFn({})) as { startDate: Date; endDate: Date }[]
+    const result = (await handlerFn({})) as { startDate: string; endDate: string }[]
     expect(result).toHaveLength(1)
     // DTEND is exclusive (March 2), so endDate should be March 1 (same as start)
-    expect(result[0]!.endDate.getUTCDate()).toBe(result[0]!.startDate.getUTCDate())
+    // All-day events are returned as YYYY-MM-DD strings
+    expect(result[0]!.endDate).toBe(result[0]!.startDate)
+  })
+
+  it('returns YYYY-MM-DD strings for recurring all-day events', async () => {
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/recurring-allday-1.ics',
+        props: { calendarData: RECURRING_ALLDAY_EVENT },
+      },
+    ])
+    const result = (await handlerFn({})) as { startDate: string; endDate: string }[]
+    expect(result.length).toBeGreaterThan(0)
+    // All-day recurring events should be YYYY-MM-DD strings (10 chars)
+    expect(result[0]!.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(result[0]!.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
   it('stops expanding recurring events past endDate', async () => {

@@ -61,7 +61,7 @@ export default defineNuxtConfig({
     restructureDir: './',
     defaultLocale: 'de',
     differentDomains: process.env.NODE_ENV === 'production',
-    locales: [{ code: 'de', name: 'Deutsch', file: 'de.json' }],
+    locales: [{ code: 'de', language: 'de-DE', name: 'Deutsch', file: 'de.json' }],
     detectBrowserLanguage: false,
     /* detectBrowserLanguage: {
       // This doesn't make a difference

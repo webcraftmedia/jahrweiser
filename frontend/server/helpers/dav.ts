@@ -94,6 +94,7 @@ export const findCalendars = async (account: DAVAccount) =>
   fetchCalendars({
     account,
     headers: headers(account),
+    fetchOptions: getFetchOptions(),
   })
 
 export const findEvents = async (account: DAVAccount, url: string, from: Date, to: Date) =>

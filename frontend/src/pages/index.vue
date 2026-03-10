@@ -1,5 +1,5 @@
 <template>
-  <div class="box">
+  <div class="box" :style="boxZoomStyle">
     <div class="calendar row">
       <client-only>
         <div
@@ -8,56 +8,27 @@
           @touchstart.passive="onTouchStart"
           @touchend.passive="onTouchEnd"
         >
-          <CalendarView
-            v-bind="calendar"
-            :class="[
-              'theme-default',
-              calFlip === 'left' ? 'cal-flip-left' : calFlip === 'right' ? 'cal-flip-right' : '',
-            ]"
-            @click-item="clickItem"
-          >
-            <template #header="{ headerProps }">
-              <div class="cv-header">
-                <span class="periodLabel">{{ headerProps.periodLabel }}</span>
-                <div class="cv-header-nav">
-                  <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-                  <button
-                    :disabled="!headerProps.previousPeriod"
-                    @click="setShowDate(headerProps.previousPeriod!)"
-                  >
-                    <span class="nav-arrow">‹</span
-                    ><span class="nav-label">
-                      {{
-                        headerProps.previousPeriod?.toLocaleDateString(locale, { month: 'long' })
-                      }}</span
-                    >
-                  </button>
-                  <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
-                  <button
-                    :disabled="
-                      calendar.showDate.getMonth() === headerProps.currentPeriod.getMonth() &&
-                      calendar.showDate.getFullYear() === headerProps.currentPeriod.getFullYear()
-                    "
-                    @click="setShowDate(headerProps.currentPeriod)"
-                  >
-                    {{ $t('pages.index.today') }}
-                  </button>
-                  <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-                  <button
-                    :disabled="!headerProps.nextPeriod"
-                    @click="setShowDate(headerProps.nextPeriod!)"
-                  >
-                    <span class="nav-label"
-                      >{{
-                        headerProps.nextPeriod?.toLocaleDateString(locale, { month: 'long' })
-                      }} </span
-                    ><span class="nav-arrow">›</span>
-                  </button>
-                  <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
-                </div>
-              </div>
-            </template>
-          </CalendarView>
+          <div class="cv-header" :style="headerZoomStyle">
+            <span class="periodLabel">{{ currentPeriodLabel }}</span>
+            <div class="cv-header-nav">
+              <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+              <button @click="navigatePeriod(-1)">
+                <span class="nav-arrow">‹</span><span class="nav-label"> {{ prevMonthLabel }}</span>
+              </button>
+              <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+              <button :disabled="isCurrentMonth" @click="navigateToToday()">
+                {{ $t('pages.index.today') }}
+              </button>
+              <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+              <button @click="navigatePeriod(1)">
+                <span class="nav-label">{{ nextMonthLabel }} </span><span class="nav-arrow">›</span>
+              </button>
+              <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+            </div>
+          </div>
+          <ClientOnly>
+            <ScheduleXCalendar :calendar-app="calendarApp!" :style="calendarBodyZoomStyle" />
+          </ClientOnly>
           <!-- Loading overlay -->
           <div v-show="calLoading" class="cal-loading-overlay">
             <div class="flex items-center gap-2">
@@ -92,92 +63,107 @@
           </div>
         </div>
       </client-only>
-      <Modal ref="modal" @x="handleModalX">
-        <template #title>
-          {{ eventTitle }}
-        </template>
+      <Teleport to="body">
+        <Modal ref="modal" @x="handleModalX">
+          <template #title>
+            {{ eventTitle }}
+          </template>
 
-        <template #content>
-          <!-- Loading dots -->
-          <div v-if="eventLoading" class="flex justify-center items-center gap-2 py-4">
-            <span class="loading-dot" />
-            <span class="loading-dot" style="animation-delay: 0.15s" />
-            <span class="loading-dot" style="animation-delay: 0.3s" />
-          </div>
-          <!-- Event content — rolls down when loaded -->
-          <div v-else class="modal-content-reveal">
-            <div class="modal-content-inner">
-              <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
-                <tbody>
-                  <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
-                    <th
-                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
-                    >
-                      {{ $t('pages.index.details.start') }}
-                    </th>
-                    <td class="py-1.5">{{ eventStartDate }}</td>
-                  </tr>
-                  <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
-                    <th
-                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
-                    >
-                      {{ $t('pages.index.details.duration') }}
-                    </th>
-                    <td class="py-1.5">{{ eventDuration }}</td>
-                  </tr>
-                  <tr v-show="eventLocation">
-                    <th
-                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
-                    >
-                      {{ $t('pages.index.details.location') }}
-                    </th>
-                    <td class="py-1.5">{{ eventLocation }}</td>
-                  </tr>
-                  <tr v-show="eventUrl">
-                    <th
-                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
-                    >
-                      {{ $t('pages.index.details.url') }}
-                    </th>
-                    <td class="py-1.5">
-                      <a
-                        :href="eventUrl"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-orange-700 dark:text-orange-400 underline break-all"
-                        >{{ eventUrl }}</a
+          <template #content>
+            <!-- Loading dots -->
+            <div v-if="eventLoading" class="flex justify-center items-center gap-2 py-4">
+              <span class="loading-dot" />
+              <span class="loading-dot" style="animation-delay: 0.15s" />
+              <span class="loading-dot" style="animation-delay: 0.3s" />
+            </div>
+            <!-- Event content — rolls down when loaded -->
+            <div v-else class="modal-content-reveal">
+              <div class="modal-content-inner">
+                <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
+                  <tbody>
+                    <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                      <th
+                        class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
                       >
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <div
-                v-show="eventDescription"
-                class="mt-3 pt-3 border-t border-navy/10 dark:border-poster-darkBorder"
-              >
-                <pre
-                  class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed"
-                  >{{ eventDescription }}</pre
+                        {{ $t('pages.index.details.start') }}
+                      </th>
+                      <td class="py-1.5">{{ eventStartDate }}</td>
+                    </tr>
+                    <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                      <th
+                        class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                      >
+                        {{ $t('pages.index.details.duration') }}
+                      </th>
+                      <td class="py-1.5">{{ eventDuration }}</td>
+                    </tr>
+                    <tr v-show="eventLocation">
+                      <th
+                        class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                      >
+                        {{ $t('pages.index.details.location') }}
+                      </th>
+                      <td class="py-1.5">{{ eventLocation }}</td>
+                    </tr>
+                    <tr v-show="eventUrl">
+                      <th
+                        class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                      >
+                        {{ $t('pages.index.details.url') }}
+                      </th>
+                      <td class="py-1.5">
+                        <a
+                          :href="eventUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-orange-700 dark:text-orange-400 underline break-all"
+                          >{{ eventUrl }}</a
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div
+                  v-show="eventDescription"
+                  class="mt-3 pt-3 border-t border-navy/10 dark:border-poster-darkBorder"
                 >
+                  <pre
+                    class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed"
+                    >{{ eventDescription }}</pre
+                  >
+                </div>
               </div>
             </div>
-          </div>
-        </template>
-      </Modal>
+          </template>
+        </Modal>
+      </Teleport>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { CalendarView } from 'vue-simple-calendar'
+  import { createCalendar, createViewMonthGrid, createViewList } from '@schedule-x/calendar'
+  import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls'
+  import { createEventsServicePlugin } from '@schedule-x/events-service'
+  import { ScheduleXCalendar } from '@schedule-x/vue'
+  import '@schedule-x/theme-default/dist/index.css'
+  // eslint-disable-next-line import/no-unassigned-import -- side-effect: polyfills Temporal API
+  import 'temporal-polyfill/global'
 
   import Modal from '../components/Modal.vue'
   import { useCalendarFilter } from '../composables/useCalendarFilter'
   import { useColorMode } from '../composables/useColorMode'
+  import { useZoom } from '../composables/useZoom'
 
-  import type { ICalendarItem, INormalizedCalendarItem } from 'vue-simple-calendar'
+  import type { CalendarEventExternal } from '@schedule-x/calendar'
 
-  const { locale } = useI18n()
+  interface JahrweiserEvent extends CalendarEventExternal {
+    _calendar: string
+    _originalId: string
+    _occurrence?: number
+  }
+
+  const { locale, localeProperties } = useI18n()
 
   definePageMeta({
     middleware: ['authenticated'],
@@ -185,8 +171,6 @@
 
   const modal = ref()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rawItems = ref<any[]>([])
   const event = ref()
   const eventLoading = ref(false)
   const eventTitle = ref('')
@@ -205,35 +189,92 @@
   const calendars = ref<{ name: string; color: string }[]>([])
   const { hiddenCalendars, setLegend, toggleCalendar } = useCalendarFilter()
   const { isDark } = useColorMode()
+  const { zoomLevel } = useZoom()
+
+  // Header zooms only 30% as much as the content (similar to chromeZoom)
+  const headerZoom = computed(() => (1 / zoomLevel.value) * (1 + (zoomLevel.value - 1) * 0.3))
+
+  // Desktop: box already counter-zoomed → only slight enlargement needed (chromeZoom)
+  // Mobile: no box counter-zoom → use headerZoom (partially counters parent zoom)
+  const headerZoomStyle = computed(() => {
+    if (zoomLevel.value === 1) return undefined
+    if (lastWasSmall.value) {
+      return { zoom: headerZoom.value }
+    }
+    return { zoom: 1 + (zoomLevel.value - 1) * 0.3 }
+  })
+
+  // Mobile: zoom the calendar body when zoom > 1
+  const calendarBodyZoomStyle = computed(() => {
+    if (!lastWasSmall.value || headerZoom.value === 1) return undefined
+    return { zoom: headerZoom.value }
+  })
+
+  // Desktop: counter-zoom so the calendar always fills the container exactly
+  const boxZoomStyle = computed(() => {
+    if (lastWasSmall.value || zoomLevel.value === 1) return undefined
+    return {
+      zoom: 1 / zoomLevel.value,
+      width: `${zoomLevel.value * 100}%`,
+    }
+  })
 
   /* ── Design palette — one unique color per calendar ── */
 
   const designPalette = [
-    { light: { bg: '#dfc8b4', border: '#9a3412' }, dark: { bg: '#583020', border: '#c2410c' } }, // sienna
-    { light: { bg: '#c8bdd6', border: '#6b21a8' }, dark: { bg: '#3e2260', border: '#7e22ce' } }, // plum
-    { light: { bg: '#d4b4b4', border: '#9f1239' }, dark: { bg: '#5c1a2a', border: '#e11d48' } }, // rose
-    { light: { bg: '#b4c8d8', border: '#1e5a8a' }, dark: { bg: '#1c3a54', border: '#3b82f6' } }, // steel
-    { light: { bg: '#c4c8cc', border: '#475569' }, dark: { bg: '#2e3440', border: '#94a3b8' } }, // slate
-    { light: { bg: '#b8d0b4', border: '#2d6a30' }, dark: { bg: '#1e3e20', border: '#4ade80' } }, // forest
-    { light: { bg: '#c5d0a6', border: '#4d7c0f' }, dark: { bg: '#344818', border: '#65a30d' } }, // olive
-    { light: { bg: '#ddd0a6', border: '#b45309' }, dark: { bg: '#5c4418', border: '#d97706' } }, // mustard
-    { light: { bg: '#adc8c4', border: '#0f766e' }, dark: { bg: '#184844', border: '#0d9488' } }, // craft
-    { light: { bg: '#d8c4a4', border: '#78591a' }, dark: { bg: '#4a3818', border: '#a57c2a' } }, // bronze
-    { light: { bg: '#d0bcc8', border: '#8a2060' }, dark: { bg: '#502040', border: '#c026a0' } }, // magenta
-    { light: { bg: '#d8c0c0', border: '#7a3030' }, dark: { bg: '#4a2020', border: '#b44040' } }, // brick
+    {
+      light: { bg: '#dfc8b4', border: '#9a3412', text: '#1e293b' },
+      dark: { bg: '#583020', border: '#c2410c', text: '#e8ddd0' },
+    }, // sienna
+    {
+      light: { bg: '#c8bdd6', border: '#6b21a8', text: '#1e293b' },
+      dark: { bg: '#3e2260', border: '#7e22ce', text: '#e8ddd0' },
+    }, // plum
+    {
+      light: { bg: '#d4b4b4', border: '#9f1239', text: '#1e293b' },
+      dark: { bg: '#5c1a2a', border: '#e11d48', text: '#e8ddd0' },
+    }, // rose
+    {
+      light: { bg: '#b4c8d8', border: '#1e5a8a', text: '#1e293b' },
+      dark: { bg: '#1c3a54', border: '#3b82f6', text: '#e8ddd0' },
+    }, // steel
+    {
+      light: { bg: '#c4c8cc', border: '#475569', text: '#1e293b' },
+      dark: { bg: '#2e3440', border: '#94a3b8', text: '#e8ddd0' },
+    }, // slate
+    {
+      light: { bg: '#b8d0b4', border: '#2d6a30', text: '#1e293b' },
+      dark: { bg: '#1e3e20', border: '#4ade80', text: '#e8ddd0' },
+    }, // forest
+    {
+      light: { bg: '#c5d0a6', border: '#4d7c0f', text: '#1e293b' },
+      dark: { bg: '#344818', border: '#65a30d', text: '#e8ddd0' },
+    }, // olive
+    {
+      light: { bg: '#ddd0a6', border: '#b45309', text: '#1e293b' },
+      dark: { bg: '#5c4418', border: '#d97706', text: '#e8ddd0' },
+    }, // mustard
+    {
+      light: { bg: '#adc8c4', border: '#0f766e', text: '#1e293b' },
+      dark: { bg: '#184844', border: '#0d9488', text: '#e8ddd0' },
+    }, // craft
+    {
+      light: { bg: '#d8c4a4', border: '#78591a', text: '#1e293b' },
+      dark: { bg: '#4a3818', border: '#a57c2a', text: '#e8ddd0' },
+    }, // bronze
+    {
+      light: { bg: '#d0bcc8', border: '#8a2060', text: '#1e293b' },
+      dark: { bg: '#502040', border: '#c026a0', text: '#e8ddd0' },
+    }, // magenta
+    {
+      light: { bg: '#d8c0c0', border: '#7a3030', text: '#1e293b' },
+      dark: { bg: '#4a2020', border: '#b44040', text: '#e8ddd0' },
+    }, // brick
   ]
-
-  const calendarColorMap = computed(() => {
-    const map = new Map<string, (typeof designPalette)[0]>()
-    calendars.value.forEach((cal, i) => {
-      map.set(cal.name, designPalette[i % designPalette.length])
-    })
-    return map
-  })
 
   const calendarLegend = computed(() =>
     calendars.value.map((cal, i) => {
-      const palette = designPalette[i % designPalette.length]
+      const palette = designPalette[i % designPalette.length]!
       const { border } = isDark.value ? palette.dark : palette.light
       return { name: cal.name, dotColor: border }
     }),
@@ -251,100 +292,168 @@
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
   }
 
-  const items = computed<ICalendarItem[]>(() =>
-    rawItems.value
-      .filter((item) => !hiddenCalendars.value.has(item.calendar))
-      .map((item) => {
-        const palette = calendarColorMap.value.get(item.calendar) ?? designPalette[0]
-        const { bg, border } = isDark.value ? palette.dark : palette.light
-        return {
-          ...item,
-          startDate: new Date(item.startDate),
-          endDate: new Date(item.endDate),
-          title: capitalize(item.title),
-          style: `background-color: ${bg}; border-left-color: ${border}`,
-        }
-      }),
-  )
-
-  function handleModalX() {
-    if (eventLoading.value) return
-    modal.value.close()
+  /** Local-timezone date string YYYY-MM-DD (avoids UTC shift from toISOString) */
+  function localDateStr(d: Date = new Date()): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  async function clickItem(data: INormalizedCalendarItem) {
-    try {
-      const {
-        originalItem: { calendar, id, occurrence },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } = data as any
-      event.value = null
-      eventLoading.value = true
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      eventTitle.value = capitalize((data as any).title || '')
-      modal.value.open()
-      const eventData = await $fetch('/api/event', {
-        method: 'POST',
-        body: {
-          calendar,
-          id,
-          occurrence,
+  /* ── Schedule-X setup (client-only — createCalendar accesses document) ── */
+
+  let eventsService: ReturnType<typeof createEventsServicePlugin>
+  let calendarControls: ReturnType<typeof createCalendarControlsPlugin>
+
+  // shallowRef — Schedule-X uses Preact Signals internally, no deep reactivity needed
+  const calendarApp = shallowRef<ReturnType<typeof createCalendar>>()
+
+  const today = Temporal.PlainDate.from(localDateStr())
+
+  /* v8 ignore start -- always true in client-side tests */
+  if (import.meta.client) {
+    eventsService = createEventsServicePlugin()
+    calendarControls = createCalendarControlsPlugin()
+
+    calendarApp.value = createCalendar(
+      {
+        locale: localeProperties.value.language ?? 'de-DE',
+        selectedDate: today,
+        views: [createViewMonthGrid(), createViewList()],
+        defaultView: 'month-grid',
+        isDark: isDark.value,
+        firstDayOfWeek: 1,
+        isResponsive: true,
+        timezone: Temporal.Now.timeZoneId(),
+        calendars: {},
+        callbacks: {
+          onEventClick(calendarEvent) {
+            void clickItem(calendarEvent as JahrweiserEvent)
+          },
+          async fetchEvents(range) {
+            await fetchDataForRange(range.start, range.end)
+            return mapToScheduleXEvents()
+          },
         },
-      })
-      event.value = eventData
-    } catch (error) {
-      console.error(error)
-      modal.value.close()
-    } finally {
-      eventLoading.value = false
-    }
+      },
+      [eventsService, calendarControls],
+    )
   }
+  /* v8 ignore stop */
 
-  const calendar = ref({
-    showDate: new Date(),
-    items,
-    // message: "test",
-    locale,
-    startingDayOfWeek: 1,
-    disablePast: false,
-    disableFuture: false,
-    displayPeriodUom: 'month',
-    displayPeriodCount: 1,
-    displayWeekNumbers: false,
-    showTimes: false,
-    // selectionStart: undefined,
-    // selectionEnd: undefined,
-    // newItemTitle: "",
-    // newItemStartDate: "",
-    // newItemEndDate: "",
-    //useDefaultTheme: true,
-    //useHolidayTheme: true,
-    //useTodayIcons: false,
-    // timeFormatOptions: "{ hour: 'numeric', minute: '2-digit' }",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    periodChangedCallback: (data: any) => {
-      const startDate = data.value.displayFirstDate.value
-      const endDate = data.value.displayLastDate.value
-      void getData(startDate, endDate)
-    },
-    /*
-				:
-				:enable-drag-drop="true"
-				:date-classes="myDateClasses"
-				:period-changed-callback="periodChanged"
-				:current-period-label="useTodayIcons ? 'icons' : ''"
-				:enable-date-selection="true"
-				:selection-start="selectionStart"
-				:selection-end="selectionEnd"
-				@date-selection-start="setSelection"
-				@date-selection="setSelection"
-				@date-selection-finish="finishSelection"
-				@drop-on-date="onDrop"
-				@click-date="onClickDay"
-        */
+  /* ── Navigation state ── */
+
+  const currentDate = ref(today)
+
+  const currentPeriodLabel = computed(() => {
+    const d = currentDate.value
+    const jsDate = new Date(d.year, d.month - 1, d.day)
+    return jsDate.toLocaleDateString(locale.value, { year: 'numeric', month: 'long' })
   })
 
+  const prevMonthLabel = computed(() => {
+    const d = currentDate.value.subtract({ months: 1 })
+    const jsDate = new Date(d.year, d.month - 1, d.day)
+    return jsDate.toLocaleDateString(locale.value, { month: 'long' })
+  })
+
+  const nextMonthLabel = computed(() => {
+    const d = currentDate.value.add({ months: 1 })
+    const jsDate = new Date(d.year, d.month - 1, d.day)
+    return jsDate.toLocaleDateString(locale.value, { month: 'long' })
+  })
+
+  const isCurrentMonth = computed(() => {
+    const now = Temporal.PlainDate.from(localDateStr())
+    return currentDate.value.year === now.year && currentDate.value.month === now.month
+  })
+
+  function applyFutureClassRepeatedly() {
+    setTimeout(applyFutureClass, 100)
+    setTimeout(applyFutureClass, 350)
+    setTimeout(applyFutureClass, 700)
+  }
+
+  function navigatePeriod(direction: 1 | -1) {
+    const next =
+      direction === 1
+        ? currentDate.value.add({ months: 1 })
+        : currentDate.value.subtract({ months: 1 })
+    currentDate.value = next
+    // Clear events BEFORE navigation so Schedule-X has nothing cached to render
+    eventsService.set([])
+    calendarControls.setDate(next)
+    applyFutureClassRepeatedly()
+  }
+
+  function navigateToToday() {
+    const now = Temporal.PlainDate.from(localDateStr())
+    currentDate.value = now
+    eventsService.set([])
+    calendarControls.setDate(now)
+    scrollToDay()
+    applyFutureClassRepeatedly()
+  }
+
+  function scrollToDay() {
+    setTimeout(() => {
+      // Re-apply future classes after Schedule-X re-render
+      applyFutureClass()
+
+      const todayStr = localDateStr()
+      const firstOfMonth = currentDate.value.toPlainYearMonth().toPlainDate({ day: 1 }).toString()
+
+      // Try today: month-grid (.sx__is-today) or list view (data-date)
+      const todayEl =
+        document.querySelector('.sx__is-today')?.closest('.sx__month-grid-day') ??
+        document.querySelector(`.sx__list-day[data-date="${todayStr}"]`)
+      if (todayEl) {
+        todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
+
+      // Fallback: 1st of month in month-grid or list view
+      const firstDayEl =
+        document.querySelector(`.sx__month-grid-day[data-date="${firstOfMonth}"]`) ??
+        document.querySelector(`.sx__list-day[data-date="${firstOfMonth}"]`)
+      if (firstDayEl) {
+        firstDayEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
+
+      // Last fallback: scroll to top
+      calWrapper.value?.closest('.content')?.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 350)
+  }
+
+  /* ── Touch swipe ── */
+
+  let touchStartX = 0
+  let touchStartY = 0
+
+  function onTouchStart(e: TouchEvent) {
+    touchStartX = e.changedTouches[0]!.clientX
+    touchStartY = e.changedTouches[0]!.clientY
+  }
+
+  function onTouchEnd(e: TouchEvent) {
+    const dx = e.changedTouches[0]!.clientX - touchStartX
+    const dy = e.changedTouches[0]!.clientY - touchStartY
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return
+    navigatePeriod(dx < 0 ? 1 : -1)
+  }
+
+  /* ── Keyboard navigation ── */
+
+  function handleKeyboard(e: KeyboardEvent) {
+    if (modal.value && isModalOpen()) return
+    if (e.key === 'ArrowLeft' || e.key === 'a') navigatePeriod(-1)
+    else if (e.key === 'ArrowRight' || e.key === 'd') navigatePeriod(1)
+  }
+
+  function isModalOpen() {
+    return document.getElementById('default-modal')?.classList.contains('modal-open')
+  }
+
   /* ── Legend hover — open when cursor is near/below cal-wrapper bottom ── */
+
   const calWrapper = ref<HTMLElement>()
   const legendHover = ref(false)
   const LEGEND_TRIGGER_PX = 40
@@ -366,84 +475,127 @@
     }
   }
 
-  const calFlip = ref<'left' | 'right' | null>(null)
-  const calLoading = ref(false)
+  /* ── Responsive view switching (month-grid ↔ list at 700px) ── */
 
-  function triggerCalFlip(direction: 'left' | 'right') {
-    calFlip.value = null
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        calFlip.value = direction
-      })
-    })
-  }
+  const SX_BREAKPOINT = 700
+  const lastWasSmall = ref(false)
 
-  function setShowDate(d: Date) {
-    const direction = d < calendar.value.showDate ? 'right' : 'left'
-    triggerCalFlip(direction)
-    calendar.value.showDate = d
-  }
-
-  function navigatePeriod(direction: 1 | -1) {
-    const current = calendar.value.showDate
-    const next = new Date(current)
-    next.setMonth(next.getMonth() + direction)
-    triggerCalFlip(direction === 1 ? 'left' : 'right')
-    calendar.value.showDate = next
-  }
-
-  let touchStartX = 0
-  let touchStartY = 0
-
-  function onTouchStart(e: TouchEvent) {
-    touchStartX = e.changedTouches[0].clientX
-    touchStartY = e.changedTouches[0].clientY
-  }
-
-  function onTouchEnd(e: TouchEvent) {
-    const dx = e.changedTouches[0].clientX - touchStartX
-    const dy = e.changedTouches[0].clientY - touchStartY
-    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return
-    navigatePeriod(dx < 0 ? 1 : -1)
-  }
-
-  function handleKeyboard(e: KeyboardEvent) {
-    if (modal.value && isModalOpen()) return
-    if (e.key === 'ArrowLeft' || e.key === 'a') navigatePeriod(-1)
-    else if (e.key === 'ArrowRight' || e.key === 'd') navigatePeriod(1)
-  }
-
-  function isModalOpen() {
-    return document.getElementById('default-modal')?.classList.contains('modal-open')
+  function onResize() {
+    const isSmall = window.innerWidth < SX_BREAKPOINT
+    if (isSmall === lastWasSmall.value) return
+    lastWasSmall.value = isSmall
+    calendarControls.setView(isSmall ? 'list' : 'month-grid')
+    applyFutureClassRepeatedly()
   }
 
   onMounted(() => {
+    lastWasSmall.value = window.innerWidth < SX_BREAKPOINT
     window.addEventListener('keydown', handleKeyboard)
+    window.addEventListener('resize', onResize)
     document.addEventListener('mousemove', onMouseMove)
   })
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyboard)
+    window.removeEventListener('resize', onResize)
     document.removeEventListener('mousemove', onMouseMove)
     clearTimeout(legendLeaveTimer)
   })
 
-  function staggerItems() {
-    const items = document.querySelectorAll('.cv-item')
-    items.forEach((el, i) => {
-      const htmlEl = el as HTMLElement
-      htmlEl.classList.remove('item-pop')
-      htmlEl.style.animationDelay = `${i * 30}ms`
-      void htmlEl.offsetWidth
-      htmlEl.classList.add('item-pop')
+  /* ── Dark mode reactivity ── */
+
+  watch(isDark, (dark) => {
+    calendarApp.value?.setTheme(dark ? 'dark' : 'light')
+  })
+
+  /* ── Data loading ── */
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawEvents = ref<any[]>([])
+  const calLoading = ref(false)
+
+  function buildScheduleXCalendars() {
+    const config: Record<
+      string,
+      {
+        colorName: string
+        lightColors: { main: string; container: string; onContainer: string }
+        darkColors: { main: string; container: string; onContainer: string }
+      }
+      /* v8 ignore next */
+    > = {}
+    calendars.value.forEach((cal, i) => {
+      const palette = designPalette[i % designPalette.length]!
+      config[`cal-${i}`] = {
+        colorName: `cal-${i}`,
+        lightColors: {
+          main: palette.light.border,
+          container: palette.light.bg,
+          onContainer: palette.light.text,
+        },
+        darkColors: {
+          main: palette.dark.border,
+          container: palette.dark.bg,
+          onContainer: palette.dark.text,
+        },
+      }
+    })
+    calendarControls.setCalendars(config)
+  }
+
+  function toTemporalDate(dateStr: string): Temporal.PlainDate | Temporal.ZonedDateTime {
+    // Input: 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:mm:ss...'
+    if (dateStr.length === 10) {
+      return Temporal.PlainDate.from(dateStr)
+    }
+    // Store as UTC — Schedule-X converts to configured timezone via withTimeZone()
+    const d = new Date(dateStr)
+    return Temporal.ZonedDateTime.from({
+      year: d.getUTCFullYear(),
+      month: d.getUTCMonth() + 1,
+      day: d.getUTCDate(),
+      hour: d.getUTCHours(),
+      minute: d.getUTCMinutes(),
+      second: d.getUTCSeconds(),
+      timeZone: 'UTC',
     })
   }
 
-  async function getData(startDate: Date, endDate: Date) {
+  function mapToScheduleXEvents(): JahrweiserEvent[] {
+    const calIndexMap = new Map<string, number>()
+    calendars.value.forEach((cal, i) => {
+      calIndexMap.set(cal.name, i)
+    })
+
+    return rawEvents.value
+      .filter((item) => !hiddenCalendars.value.has(item.calendar))
+      .map((item) => ({
+        id: item.occurrence ? `${item.id}-${item.occurrence}` : item.id,
+        title: capitalize(item.title),
+        start: toTemporalDate(item.startDate),
+        end: toTemporalDate(item.endDate),
+        calendarId: `cal-${calIndexMap.get(item.calendar) ?? 0}`,
+        _calendar: item.calendar,
+        _originalId: item.id,
+        _occurrence: item.occurrence,
+      }))
+  }
+
+  async function fetchDataForRange(
+    start: Temporal.ZonedDateTime,
+    end: Temporal.ZonedDateTime,
+  ): Promise<void> {
     calLoading.value = true
     try {
+      // Update currentDate from range midpoint for header labels
+      const startDate = new Date(start.epochMilliseconds)
+      const endDate = new Date(end.epochMilliseconds)
+      const mid = new Date((startDate.getTime() + endDate.getTime()) / 2)
+      currentDate.value = Temporal.PlainDate.from(mid.toISOString().slice(0, 10))
+
       // Fetch all calendars if not already loaded
       if (calendars.value.length === 0) {
         calendars.value = await $fetch('/api/calendars')
+        buildScheduleXCalendars()
       }
 
       // Fetch events from all calendars in parallel
@@ -453,29 +605,169 @@
             method: 'POST',
             body: {
               calendar: cal.name,
-              startDate,
-              endDate,
+              startDate: startDate,
+              endDate: endDate,
             },
+          }).catch((err: unknown) => {
+            console.warn(`Failed to fetch calendar "${cal.name}":`, err)
+            return []
           }),
         ),
       )
 
-      // Store raw events (colors applied via computed property)
-      rawItems.value = results.flat()
-      await nextTick()
-      staggerItems()
+      rawEvents.value = results.flat()
+      scheduleStagger()
+      scrollToDay()
     } catch (error) {
       console.error(error)
     } finally {
       calLoading.value = false
     }
   }
+
+  /* ── Mark future days ── */
+
+  function applyFutureClass() {
+    const todayStr = localDateStr()
+    document
+      .querySelectorAll('.sx__month-grid-day[data-date], .sx__list-day[data-date]')
+      .forEach((el) => {
+        const date = el.getAttribute('data-date')!
+        el.classList.toggle('is-future', date >= todayStr)
+        el.classList.toggle('is-today', date === todayStr)
+      })
+  }
+
+  let futureDebounce: ReturnType<typeof setTimeout> | undefined
+  function debouncedApplyFuture() {
+    clearTimeout(futureDebounce)
+    futureDebounce = setTimeout(applyFutureClass, 30)
+  }
+
+  /* ── Stagger event animations — events pop in chronologically ── */
+
+  let staggerTimers: ReturnType<typeof setTimeout>[] = []
+  let staggerDelay: ReturnType<typeof setTimeout> | undefined
+
+  function runStagger(events: HTMLElement[]) {
+    staggerTimers.forEach(clearTimeout)
+    staggerTimers = []
+
+    // Sort chronologically by parent day date
+    events.sort((a, b) => {
+      const dateA = a.closest('.sx__month-grid-day')?.getAttribute('data-date') ?? ''
+      const dateB = b.closest('.sx__month-grid-day')?.getAttribute('data-date') ?? ''
+      return dateA.localeCompare(dateB)
+    })
+
+    // Hide all immediately (clear transition first so the hide is instant)
+    events.forEach((el) => {
+      el.style.transition = 'none'
+      el.style.opacity = '0'
+      el.style.transform = 'translateY(4px)'
+    })
+
+    // Force browser to commit opacity:0 before starting fade-in
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    events[0]?.offsetHeight
+
+    // Stagger fade-in chronologically
+    events.forEach((el, i) => {
+      staggerTimers.push(
+        setTimeout(() => {
+          el.style.transition = 'opacity 0.4s ease, transform 0.4s ease'
+          el.style.opacity = '1'
+          el.style.transform = 'translateY(0)'
+        }, i * 50),
+      )
+    })
+  }
+
+  /** Schedule stagger — hides events immediately via synchronous DOM ops, then animates after re-render */
+  function scheduleStagger() {
+    clearTimeout(staggerDelay)
+    staggerTimers.forEach(clearTimeout)
+    staggerTimers = []
+
+    // 1) Synchronously hide ALL existing event elements (immediate, no Vue reactivity delay)
+    document
+      .querySelectorAll<HTMLElement>('.sx__month-grid-event, .sx__list-event')
+      .forEach((el) => {
+        el.style.transition = 'none'
+        el.style.opacity = '0'
+      })
+
+    // 2) Add class to wrapper so NEW elements created by Schedule-X during re-render are also hidden
+    calWrapper.value?.classList.add('stagger-pending')
+
+    staggerDelay = setTimeout(() => {
+      calWrapper.value?.classList.remove('stagger-pending')
+      const events = document.querySelectorAll<HTMLElement>('.sx__month-grid-event')
+      if (events.length > 0) {
+        runStagger(Array.from(events))
+      }
+    }, 120)
+  }
+
+  // Observe the calendar root for applyFutureClass
+  let calendarObserver: MutationObserver | undefined
+  onMounted(() => {
+    setTimeout(applyFutureClass, 100)
+    setTimeout(applyFutureClass, 500)
+
+    const root = document.querySelector('.sx__calendar')
+    if (root) {
+      calendarObserver = new MutationObserver(debouncedApplyFuture)
+      calendarObserver.observe(root, { childList: true, subtree: true })
+    }
+  })
+  onUnmounted(() => {
+    calendarObserver?.disconnect()
+    clearTimeout(futureDebounce)
+    clearTimeout(staggerDelay)
+    staggerTimers.forEach(clearTimeout)
+  })
+
+  /* ── Filter reactivity — re-filter events without re-fetching ── */
+
+  watch(hiddenCalendars, () => {
+    eventsService.set(mapToScheduleXEvents())
+  })
+
+  /* ── Event click ── */
+
+  function handleModalX() {
+    if (eventLoading.value) return
+    modal.value.close()
+  }
+
+  async function clickItem(data: JahrweiserEvent) {
+    try {
+      const { _calendar: calendar, _originalId: id, _occurrence: occurrence } = data
+      event.value = null
+      eventLoading.value = true
+      eventTitle.value = capitalize(data.title || '')
+      modal.value.open()
+      const eventData = await $fetch('/api/event', {
+        method: 'POST',
+        body: {
+          calendar,
+          id,
+          occurrence,
+        },
+      })
+      event.value = eventData
+    } catch (error) {
+      console.error(error)
+      modal.value.close()
+    } finally {
+      eventLoading.value = false
+    }
+  }
 </script>
 
 <style>
-  @import '~/../node_modules/vue-simple-calendar/dist/vue-simple-calendar.css';
-
-  /* ===== Jahrweiser Calendar Theme — Vintage-Plakat-Stil ===== */
+  /* ===== Schedule-X Calendar — Jahrweiser Vintage-Plakat Theme ===== */
 
   .box {
     display: flex;
@@ -493,39 +785,141 @@
     flex: 1 1 auto;
   }
 
-  /* --- Header (month navigation bar) --- */
-
-  .theme-default .cv-header {
-    background-color: #faf5eb;
-    border-color: rgba(194, 65, 12, 0.2);
-    border-left: none;
-    border-right: none;
-    border-top: none;
-    justify-content: space-between;
+  .cal-wrapper {
+    position: relative;
+    display: flex;
+    flex-flow: column;
+    flex: 1 1 auto;
+    height: 100%;
   }
 
-  .theme-default .cv-header .periodLabel {
+  /* --- Schedule-X wrapper sizing --- */
+
+  .sx-vue-calendar-wrapper {
+    width: 100%;
+    height: 100%;
+    min-height: 600px;
+  }
+
+  /* --- Hide view selector (auto-responsive handles view switching) --- */
+
+  .sx__view-selection {
+    display: none !important;
+  }
+
+  /* --- Override Schedule-X slide: translateX only (no blur/opacity — stagger handles events) --- */
+
+  .sx__slide-left {
+    animation: sx-slide-left-clean 0.3s ease-out !important;
+  }
+
+  .sx__slide-right {
+    animation: sx-slide-right-clean 0.3s ease-out !important;
+  }
+
+  @keyframes sx-slide-left-clean {
+    from {
+      transform: translateX(8%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes sx-slide-right-clean {
+    from {
+      transform: translateX(-8%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  /* Counter-animate weekday header row so it stays in place */
+  .sx__slide-left .sx__month-grid-week:first-child {
+    animation: sx-counter-slide-left 0.3s ease-out;
+  }
+
+  .sx__slide-right .sx__month-grid-week:first-child {
+    animation: sx-counter-slide-right 0.3s ease-out;
+  }
+
+  @keyframes sx-counter-slide-left {
+    from {
+      transform: translateX(-8%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes sx-counter-slide-right {
+    from {
+      transform: translateX(8%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  /* --- Hide Schedule-X default header — our .cv-header is outside the component --- */
+
+  .sx__calendar-header {
+    display: none;
+  }
+
+  /* --- Custom header (month navigation bar) --- */
+
+  .cv-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25em 0;
+    background-color: #faf5eb;
+    border-bottom: 1px solid rgba(194, 65, 12, 0.2);
+  }
+
+  @media (max-width: 1536px) {
+    .cv-header {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .cv-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .sx__month-grid-day,
+    .sx__list-day {
+      scroll-margin-top: 48.2px;
+    }
+  }
+
+  .cv-header .periodLabel {
     font-family: 'Abril Fatface', Georgia, serif;
     font-size: 1.8em;
     color: #1e293b;
     letter-spacing: 0.02em;
     flex: 0 1 auto;
-    margin-left: 0;
-    padding-left: 0.2em;
+    padding-left: 0.1em;
   }
 
-  .theme-default .cv-header .cv-header-nav {
+  .cv-header .cv-header-nav {
     display: flex;
     align-items: center;
     gap: 0.5em;
   }
 
-  .theme-default .cv-header button .nav-arrow {
+  .cv-header button .nav-arrow {
     font-size: 1.4em;
     line-height: 1;
   }
 
-  .theme-default .cv-header button {
+  .cv-header button {
     color: #1e293b;
     background-color: rgba(194, 65, 12, 0.1);
     border: 1.5px solid rgba(194, 65, 12, 0.3);
@@ -538,189 +932,326 @@
     justify-content: center;
     gap: 0.2em;
     min-height: 2.2em;
+    cursor: pointer;
     transition:
       background-color 0.15s,
       border-color 0.15s;
   }
 
-  .theme-default .cv-header button:hover {
+  .cv-header button:hover {
     background-color: rgba(194, 65, 12, 0.2);
     border-color: #c2410c;
   }
 
-  .theme-default .cv-header button:active:not(:disabled) {
+  .cv-header button:active:not(:disabled) {
     transform: scale(0.93);
     transition: transform 0.1s ease;
   }
 
-  .theme-default .cv-header button:disabled {
+  .cv-header button:disabled {
     color: rgba(30, 41, 59, 0.3);
     background-color: transparent;
     border-color: rgba(30, 41, 59, 0.1);
+    cursor: default;
   }
 
-  /* --- Weekday name strip (banner) --- */
+  /* --- Schedule-X: Weekday name strip (banner) --- */
 
-  .theme-default .cv-header-day {
-    background-color: #c2410c;
-    color: #faf5eb;
+  .sx__month-grid-day__header-day-name {
+    background-color: #c2410c !important;
+    color: #faf5eb !important;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.85em;
-    border-color: rgba(154, 52, 18, 0.3);
+    letter-spacing: 1.36px;
+    font-size: 17px;
+    width: 100%;
+    text-align: center;
+    padding: 0;
+    border-right: 0.5px solid rgba(154, 52, 18, 0.3);
   }
 
-  .theme-default .cv-header-days {
-    border-color: rgba(194, 65, 12, 0.15);
+  /* --- Schedule-X: Day cells --- */
+
+  .sx__month-grid-week:first-child {
+    border-top: none !important;
+    flex: 1.15 !important;
   }
 
-  /* --- Day grid --- */
-
-  .theme-default .cv-weeks {
-    border-color: rgba(194, 65, 12, 0.15);
+  .sx__month-grid-week:first-child .sx__month-grid-day {
+    padding-top: 0 !important;
+    border-inline-end: none !important;
+    gap: 0 !important;
   }
 
-  .theme-default .cv-week {
-    border-color: rgba(194, 65, 12, 0.15);
+  .sx__month-grid-week:first-child .sx__month-grid-day__header {
+    padding-left: 0 !important;
   }
 
-  .theme-default .cv-day {
-    background-color: #faf5eb;
-    border-color: rgba(194, 65, 12, 0.12);
+  .sx__month-grid-wrapper {
+    background-color: rgb(245, 237, 217);
   }
 
-  .theme-default .cv-day.past {
-    background-color: #f5edd9;
+  .sx__month-grid-week {
+    border-top: 0.5px solid rgba(194, 65, 12, 0.12) !important;
   }
 
-  .theme-default .cv-day.outsideOfMonth {
-    background-color: #efe6d0;
-    opacity: 0.5;
+  .sx__month-grid-day:not(:last-child) {
+    border-inline-end: 0.5px solid rgba(194, 65, 12, 0.12) !important;
   }
 
-  /* --- Today highlight --- */
-
-  .theme-default .cv-day.today {
-    background-color: #faf5eb;
-    background-image: linear-gradient(225deg, #c2410c 6px, transparent 6px);
-    opacity: 1;
+  .sx__month-grid-cell {
+    height: 26px !important;
   }
 
-  .theme-default .cv-day.today .cv-day-number {
-    color: #faf5eb;
+  .sx__month-grid-day__header {
+    align-items: flex-start !important;
+    overflow: visible;
+    padding-left: 2px;
+  }
+
+  .sx__month-grid-day {
+    padding-top: 2px !important;
+  }
+
+  .sx__month-grid-day__header-date {
+    font-size: 20px !important;
+    padding: 0;
+    line-height: 20px;
+    margin-bottom: 0 !important;
+    color: rgb(30, 41, 59) !important;
+  }
+
+  .sx__month-grid-day.is-leading-or-trailing .sx__month-grid-day__header-date {
+    color: #9ca3af !important;
+  }
+
+  .sx__month-grid-day.is-future:not(.is-leading-or-trailing) {
+    background-color: #faf5eb !important;
+  }
+
+  /* --- Schedule-X: Today highlight (red triangle top-right) --- */
+
+  .sx__month-grid-day__header-date.sx__is-today,
+  .sx__is-today .sx__month-grid-day__header-date {
+    color: #faf5eb !important;
     font-weight: 700;
-    background-color: #c2410c;
+    width: 30px !important;
+    height: 30px !important;
+    margin-bottom: -6px !important;
+    position: relative;
+    background-color: transparent !important;
+    z-index: 0;
+  }
+
+  .sx__month-grid-day__header-date.sx__is-today::before,
+  .sx__is-today .sx__month-grid-day__header-date::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     border-radius: 50%;
-    width: 1.5em;
-    height: 1.5em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
+    background-color: #c2410c;
+    z-index: -1;
     animation: todayCirclePulse 2s ease-in-out infinite;
   }
 
   @keyframes todayCirclePulse {
     0%,
     100% {
-      transform: scale(1);
+      transform: scale(0.95);
     }
     50% {
-      transform: scale(0.93);
+      transform: scale(1.08);
     }
   }
 
-  /* --- Selection --- */
-
-  .theme-default .cv-day[aria-selected='true'] {
-    background-color: rgba(217, 119, 6, 0.15);
-  }
-
-  /* --- Events --- */
-
-  .theme-default .cv-item {
-    border-color: rgba(30, 41, 59, 0.15);
-    border-radius: 3px;
-    border-left-width: 3px;
-    font-weight: 400;
-    font-size: 0.9em;
-    letter-spacing: 0.01em;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    max-height: 1.4em;
-    overflow: hidden;
-    transition:
-      max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.3s ease;
-  }
-
-  .theme-default .cv-item:hover {
-    white-space: normal;
-    overflow-wrap: break-word;
-    word-break: normal;
-    hyphens: auto;
-    max-height: 10em;
-    z-index: 10 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .theme-default .cv-item.continued::before,
-  .theme-default .cv-item.toBeContinued::after {
-    content: ' \21e2 ';
-    color: rgba(30, 41, 59, 0.4);
-  }
-
-  .theme-default .cv-item.toBeContinued {
-    border-right-style: none;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  .theme-default .cv-item.continued {
-    border-left-style: none;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  .theme-default .cv-item.isHovered.hasUrl {
-    text-decoration: underline;
-  }
-
-  .theme-default .cv-item .startTime,
-  .theme-default .cv-item .endTime {
-    font-weight: bold;
-    color: rgba(30, 41, 59, 0.6);
-  }
-
-  .cv-item.span3,
-  .cv-item.span4,
-  .cv-item.span5,
-  .cv-item.span6,
-  .cv-item.span7 {
-    text-align: center;
-  }
-
-  /* --- Week numbers --- */
-
-  .theme-default .cv-weeknumber {
-    background-color: #f5edd9;
-    border-color: rgba(194, 65, 12, 0.15);
-    color: rgba(30, 41, 59, 0.5);
-  }
-
-  .theme-default .cv-weeknumber span {
-    margin: 0;
+  .sx__month-grid-day:has(.sx__is-today)::after {
+    content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 12px 12px 0;
+    border-color: transparent #c2410c transparent transparent;
+    pointer-events: none;
   }
 
-  /* --- Drag & drop --- */
+  /* --- Schedule-X: Events --- */
 
-  .theme-default .cv-day.draghover {
-    box-shadow: inset 0 0 0.2em 0.2em #d97706;
+  .sx__month-grid-day__events {
+    grid-gap: 2px !important;
+  }
+
+  @media (min-width: 768px) {
+    .sx__month-grid-day__events {
+      grid-gap: 1px !important;
+    }
+  }
+
+  .stagger-pending .sx__month-grid-event,
+  .stagger-pending .sx__list-event {
+    opacity: 0 !important;
+    transition: none !important;
+  }
+
+  .sx__month-grid-event {
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 0.9em;
+    transition: box-shadow 0.2s ease;
+    width: calc(100% - 1px) !important;
+    margin-left: 0.5px;
+    padding: 4px 6px !important;
+    border-inline-start-width: 3px !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    position: relative;
+    z-index: 1;
+  }
+
+  .sx__month-grid-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .sx__month-grid-event-time {
+    display: none;
+  }
+
+  .sx__month-grid-event:hover {
+    box-shadow: none !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    z-index: 100;
+  }
+
+  .sx__month-grid-event:hover .sx__month-grid-event-title {
+    position: absolute;
+    top: 0;
+    left: -3px;
+    right: 0;
+    padding: 0 6px;
+    background: inherit;
+    white-space: normal;
+    border-radius: 3px;
+    border-inline-start: 3px solid;
+    border-inline-start-color: inherit;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    animation: expandDown 0.4s ease-out;
+  }
+
+  @keyframes expandDown {
+    from {
+      max-height: 26px;
+    }
+    to {
+      max-height: 200px;
+    }
+  }
+
+  /* --- Schedule-X: List view events --- */
+
+  .sx__list-event {
+    cursor: pointer;
+  }
+
+  .sx__list-day-events {
+    padding: 0 !important;
+  }
+
+  .sx__list-event {
+    padding: 0.75rem 8px 0.75rem 0 !important;
+  }
+
+  @media (max-width: 767px) {
+    .sx__list-event:hover,
+    .sx__list-event:active {
+      box-shadow: none !important;
+      background: inherit !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .sx__list-event:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .sx__list-day-margin {
+    height: 0 !important;
+  }
+
+  /* --- Schedule-X: List view — today triangle --- */
+
+  .sx__list-day.is-today .sx__list-day-header {
+    position: relative;
+  }
+
+  .sx__list-day.is-today .sx__list-day-date {
+    font-weight: 800 !important;
+    color: #1e293b !important;
+  }
+
+  .dark .sx__list-day.is-today .sx__list-day-date {
+    color: #e8ddd0 !important;
+  }
+
+  .sx__list-day.is-today .sx__list-day-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 12px 12px 0;
+    border-color: transparent #c2410c transparent transparent;
+    pointer-events: none;
+  }
+
+  /* --- Schedule-X: List view — past vs future contrast --- */
+
+  .sx__list-day:not(.is-future) .sx__list-day-events {
+    background-color: #efe6d0 !important;
+  }
+
+  .sx__list-day:not(.is-future) .sx__list-day-header {
+    background-color: #e8ddc8 !important;
+  }
+
+  .dark .sx__list-day:not(.is-future) .sx__list-day-events {
+    background-color: #14120f !important;
+  }
+
+  .dark .sx__list-day:not(.is-future) .sx__list-day-header {
+    background-color: #1a1714 !important;
+  }
+
+  /* --- Schedule-X: Theme overrides (light) --- */
+
+  .sx__calendar {
+    --sx-rounding-extra-small: 0;
+    --sx-rounding-small: 0;
+    --sx-rounding-extra-large: 0;
+    border: none;
+    --sx-color-surface: #faf5eb;
+    --sx-color-on-surface: #1e293b;
+    --sx-color-surface-dim: #f5edd9;
+    --sx-color-on-surface-variant: rgba(30, 41, 59, 0.6);
+    --sx-color-surface-container: #efe6d0;
+    --sx-color-surface-container-high: #e8ddd0;
+    --sx-color-surface-container-low: #f5edd9;
+    --sx-color-background: #faf5eb;
+    --sx-color-on-background: #1e293b;
+    --sx-color-neutral: rgba(30, 41, 59, 0.6);
+    --sx-color-outline: rgba(194, 65, 12, 0.15);
+    --sx-color-outline-variant: rgba(194, 65, 12, 0.12);
+    --sx-color-primary: #c2410c;
+    --sx-color-on-primary: #faf5eb;
+    font-family: 'Source Sans 3', system-ui, sans-serif;
   }
 
   /* ===================================================
@@ -731,207 +1262,106 @@
     color: #e8ddd0;
   }
 
-  /* --- Header --- */
+  /* --- Header (dark) --- */
 
-  .dark .theme-default .cv-header {
+  .dark .cv-header {
     background-color: #1a1714;
     border-color: #3d3630;
-    border-left: none;
-    border-right: none;
-    border-top: none;
   }
 
-  .dark .theme-default .cv-header .periodLabel {
+  .dark .cv-header .periodLabel {
     color: #faf5eb;
   }
 
-  .dark .theme-default .cv-header button {
+  .dark .cv-header button {
     color: #ea580c;
     border-color: #3d3630;
   }
 
-  .dark .theme-default .cv-header button:hover {
+  .dark .cv-header button:hover {
     background-color: rgba(234, 88, 12, 0.15);
     color: #f59e0b;
   }
 
-  .dark .theme-default .cv-header button:disabled {
+  .dark .cv-header button:disabled {
     color: #3d3630;
     background-color: transparent;
   }
 
-  /* --- Weekday strip --- */
+  /* --- Schedule-X: Weekday strip (dark) --- */
 
-  .dark .theme-default .cv-header-day {
-    background-color: #9a3412;
-    color: #faf5eb;
-    border-color: rgba(154, 52, 18, 0.5);
+  .dark .sx__month-grid-day__header-day-name {
+    background-color: #9a3412 !important;
+    color: #faf5eb !important;
   }
 
-  .dark .theme-default .cv-header-days {
-    border-color: #3d3630;
-  }
+  /* --- Schedule-X: Day cells (dark) --- */
 
-  /* --- Day grid --- */
-
-  .dark .theme-default .cv-weeks {
-    border-color: #3d3630;
-  }
-
-  .dark .theme-default .cv-week {
-    border-color: #3d3630;
-  }
-
-  .dark .theme-default .cv-day {
+  .dark .sx__month-grid-wrapper {
     background-color: #1a1714;
-    border-color: #3d3630;
   }
 
-  .dark .theme-default .cv-day.past {
-    background-color: #15120f;
+  .dark .sx__month-grid-day {
+    background-color: #1a1714 !important;
   }
 
-  .dark .theme-default .cv-day.outsideOfMonth {
-    background-color: #100e0c;
-    opacity: 0.5;
+  .dark .sx__month-grid-day.is-future:not(.is-leading-or-trailing) {
+    background-color: #24201b !important;
   }
 
-  /* --- Today (dark) --- */
-
-  .dark .theme-default .cv-day.today {
-    background-color: #1a1714;
-    background-image: linear-gradient(225deg, #9a3412 6px, transparent 6px);
-    opacity: 1;
+  .dark .sx__month-grid-week {
+    border-color: #3d3630 !important;
   }
 
-  .dark .theme-default .cv-day.today .cv-day-number {
-    color: #faf5eb;
-    font-weight: 700;
-    background-color: #9a3412;
-    border-radius: 50%;
-    width: 1.5em;
-    height: 1.5em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    animation: todayCirclePulseDark 2s ease-in-out infinite;
+  .dark .sx__month-grid-day:not(:last-child) {
+    border-inline-end-color: #3d3630 !important;
   }
 
-  @keyframes todayCirclePulseDark {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(0.93);
-    }
+  .dark .sx__month-grid-day__header-date {
+    color: #e8ddd0 !important;
   }
 
-  /* --- Selection (dark) --- */
-
-  .dark .theme-default .cv-day[aria-selected='true'] {
-    background-color: rgba(217, 119, 6, 0.2);
+  .dark .sx__month-grid-day.is-leading-or-trailing .sx__month-grid-day__header-date {
+    color: #5c524a !important;
   }
 
-  /* --- Events (dark) --- */
+  /* --- Schedule-X: Today (dark) --- */
 
-  .dark .theme-default .cv-item {
-    border-color: rgba(250, 245, 235, 0.15);
-    color: #e8ddd0;
+  .dark .sx__month-grid-day__header-date.sx__is-today,
+  .dark .sx__is-today .sx__month-grid-day__header-date {
+    color: #faf5eb !important;
+    background-color: #9a3412 !important;
   }
 
-  .dark .theme-default .cv-item:hover {
+  /* --- Schedule-X: Events (dark) --- */
+
+  .dark .sx__month-grid-event:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
-  .dark .theme-default .cv-item .startTime,
-  .dark .theme-default .cv-item .endTime {
-    color: rgba(232, 221, 208, 0.6);
-  }
-
-  .dark .theme-default .cv-item.continued::before,
-  .dark .theme-default .cv-item.toBeContinued::after {
-    color: rgba(232, 221, 208, 0.4);
-  }
-
-  /* --- Week numbers (dark) --- */
-
-  .dark .theme-default .cv-weeknumber {
-    background-color: #1a1714;
-    border-color: #3d3630;
-    color: #a8937e;
-  }
-
-  /* --- Drag & drop (dark) --- */
-
-  .dark .theme-default .cv-day.draghover {
-    box-shadow: inset 0 0 0.2em 0.2em #d97706;
-  }
-
-  /* ===== Calendar book-flip on period change ===== */
-
-  .cal-wrapper {
-    position: relative;
-    perspective: 1400px;
-    display: flex;
-    flex-flow: column;
-    flex: 1 1 auto;
-    height: 100%;
-  }
-
-  /* Vorwärts blättern — Seite klappt nach links weg */
-  .cal-flip-left .cv-weeks {
-    animation: pageFlipLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-origin: left center;
-  }
-
-  @keyframes pageFlipLeft {
-    0% {
-      transform: rotateY(90deg);
-      opacity: 0;
-    }
-    40% {
-      opacity: 1;
-    }
-    100% {
-      transform: rotateY(0);
+  @media (min-width: 768px) {
+    .dark .sx__list-event:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     }
   }
 
-  /* Rückwärts blättern — Seite klappt nach rechts weg */
-  .cal-flip-right .cv-weeks {
-    animation: pageFlipRight 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-origin: right center;
-  }
+  /* --- Schedule-X: Theme overrides (dark) --- */
 
-  @keyframes pageFlipRight {
-    0% {
-      transform: rotateY(-90deg);
-      opacity: 0;
-    }
-    40% {
-      opacity: 1;
-    }
-    100% {
-      transform: rotateY(0);
-    }
-  }
-
-  /* Calendar items pop-in */
-  .cv-item.item-pop {
-    animation: itemPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  }
-
-  @keyframes itemPop {
-    from {
-      opacity: 0;
-      transform: scale(0.7);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+  .dark .sx__calendar {
+    --sx-color-surface: #1a1714;
+    --sx-color-on-surface: #e8ddd0;
+    --sx-color-surface-dim: #15120f;
+    --sx-color-on-surface-variant: #a8937e;
+    --sx-color-surface-container: #100e0c;
+    --sx-color-surface-container-high: #2e2822;
+    --sx-color-surface-container-low: #2a2420;
+    --sx-color-background: #1a1714;
+    --sx-color-on-background: #e8ddd0;
+    --sx-color-neutral: #a8937e;
+    --sx-color-outline: #3d3630;
+    --sx-color-outline-variant: #3d3630;
+    --sx-color-primary: #ea580c;
+    --sx-color-on-primary: #faf5eb;
   }
 
   /* Loading overlay */

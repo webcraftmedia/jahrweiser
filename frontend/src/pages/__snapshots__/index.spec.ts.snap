@@ -15,7 +15,7 @@ exports[`Page: Index > renders 1`] = `
           <div class="flex items-center gap-2"><span class="loading-dot"></span><span class="loading-dot" style="animation-delay: 0.15s;"></span><span class="loading-dot" style="animation-delay: 0.3s;"></span></div>
         </div><!-- Calendar legend / filter -->
         <div class="cal-legend">
-          <div class="cal-legend-inner"><button class="cal-legend-item"><span class="cal-legend-dot" style="background-color: #9a3412;"></span><span class="cal-legend-name">Work</span></button></div>
+          <div class="cal-legend-inner"><button class="cal-legend-item"><span class="cal-legend-dot" style="background-color: #dfc8b4;"></span><span class="cal-legend-name">Work</span></button></div>
         </div>
       </div>
       <!--teleport start-->

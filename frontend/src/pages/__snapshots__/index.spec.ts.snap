@@ -4,7 +4,7 @@ exports[`Page: Index > renders 1`] = `
 "<div id="test-wrapper">
   <div class="box">
     <div class="calendar row">
-      <div class="cal-wrapper">
+      <div class="cal-wrapper stagger-pending">
         <div class="cv-header"><span class="periodLabel">January 2025</span>
           <div class="cv-header-nav">
             <!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button><span class="nav-arrow">‹</span><span class="nav-label">December</span></button><!-- eslint-enable @intlify/vue-i18n/no-raw-text --><button disabled="">pages.index.today</button><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button><span class="nav-label">February</span><span class="nav-arrow">›</span></button><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->

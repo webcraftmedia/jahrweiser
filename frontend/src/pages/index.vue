@@ -750,8 +750,8 @@
 
   @media (max-width: 1536px) {
     .cv-header {
-      padding-left: 0.5em;
-      padding-right: 0.5em;
+      padding-left: 8px;
+      padding-right: 8px;
     }
   }
 
@@ -1021,7 +1021,7 @@
   }
 
   .sx__list-event {
-    padding: 0.75rem 0.5em 0.75rem 0 !important;
+    padding: 0.75rem 8px 0.75rem 0 !important;
   }
 
   @media (max-width: 767px) {

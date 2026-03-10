@@ -861,7 +861,7 @@
     top: 0;
     left: -3px;
     right: 0;
-    padding: 4px 6px 4px 6px;
+    padding: 0 6px;
     background: inherit;
     white-space: normal;
     border-radius: 3px;

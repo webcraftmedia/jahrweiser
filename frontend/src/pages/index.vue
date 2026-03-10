@@ -680,12 +680,13 @@
     border-top: none !important;
   }
 
-  .sx__month-grid-week:first-child .sx__month-grid-day:not(:last-child) {
-    border-inline-end-color: rgba(154, 52, 18, 0.3) !important;
+  .sx__month-grid-week:first-child .sx__month-grid-day {
+    padding-top: 0 !important;
   }
 
+
   .sx__month-grid-wrapper {
-    background-color: #faf5eb;
+    background-color: rgb(239, 230, 208);
   }
 
   .sx__month-grid-week {

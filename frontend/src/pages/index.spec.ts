@@ -63,7 +63,10 @@ const mockCalendarControlsSetCalendars = vi.hoisted(() => vi.fn())
 const mockSetTheme = vi.hoisted(() => vi.fn())
 
 // Track the fetchEvents and onEventClick callbacks
-type RangeArg = { start: { epochMilliseconds: number }; end: { epochMilliseconds: number } }
+interface RangeArg {
+  start: { epochMilliseconds: number }
+  end: { epochMilliseconds: number }
+}
 const mockCallbacks = vi.hoisted(() => ({
   fetchEvents: null as ((range: RangeArg) => Promise<unknown[]>) | null,
   onEventClick: null as ((event: unknown) => void) | null,
@@ -81,21 +84,31 @@ vi.mock('@schedule-x/vue', () => ({
 }))
 
 vi.mock('@schedule-x/calendar', () => ({
-  createCalendar: (config: { callbacks?: { fetchEvents?: (range: RangeArg) => Promise<unknown[]>; onEventClick?: (event: unknown) => void } }, _plugins: unknown[]) => {
+  createCalendar: (
+    config: {
+      callbacks?: {
+        fetchEvents?: (range: RangeArg) => Promise<unknown[]>
+        onEventClick?: (event: unknown) => void
+      }
+    },
+    _plugins: unknown[],
+  ) => {
     // Capture the callbacks for test invocation
     if (config.callbacks?.fetchEvents) {
       mockCallbacks.fetchEvents = config.callbacks.fetchEvents
       // Simulate Schedule-X initial render: call fetchEvents and set returned events
       const start = new Date('2025-01-01T00:00:00Z')
       const end = new Date('2025-01-31T23:59:59Z')
-      Promise.resolve().then(async () => {
+      void Promise.resolve().then(async () => {
         try {
           const events = await config.callbacks!.fetchEvents!({
             start: { epochMilliseconds: start.getTime() },
             end: { epochMilliseconds: end.getTime() },
           })
           mockEventsServiceSet(events)
-        } catch { /* error handled inside fetchEvents */ }
+        } catch {
+          /* error handled inside fetchEvents */
+        }
       })
     }
     if (config.callbacks?.onEventClick) {
@@ -142,40 +155,36 @@ describe('Page: Index', () => {
   const wrappers: any[] = []
 
   // Spy on addEventListener to track and clean up all listeners between tests
-  const trackedListeners: { target: EventTarget; type: string; fn: EventListenerOrEventListenerObject }[] = []
+  const trackedListeners: {
+    target: EventTarget
+    type: string
+    fn: EventListenerOrEventListenerObject
+  }[] = []
   const origWindowAdd = window.addEventListener.bind(window)
   const origDocAdd = document.addEventListener.bind(document)
-
-  afterEach(() => {
-    wrappers.forEach((w) => {
-      try {
-        w.unmount()
-      } catch {
-        // Component may already be unmounted
-      }
-    })
-    wrappers.length = 0
-    // Remove all tracked listeners to prevent cross-test leakage
-    for (const { target, type, fn } of trackedListeners) {
-      target.removeEventListener(type, fn)
-    }
-    trackedListeners.length = 0
-  })
 
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
     // Intercept addEventListener to track listeners for cleanup
-    window.addEventListener = (type: string, fn: EventListenerOrEventListenerObject, ...args: unknown[]) => {
+    window.addEventListener = (
+      type: string,
+      fn: EventListenerOrEventListenerObject,
+      ...args: unknown[]
+    ) => {
       trackedListeners.push({ target: window, type, fn })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return origWindowAdd(type, fn, ...(args as any[]))
+      origWindowAdd(type, fn, ...(args as any[]))
     }
-    document.addEventListener = (type: string, fn: EventListenerOrEventListenerObject, ...args: unknown[]) => {
+    document.addEventListener = (
+      type: string,
+      fn: EventListenerOrEventListenerObject,
+      ...args: unknown[]
+    ) => {
       trackedListeners.push({ target: document, type, fn })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return origDocAdd(type, fn, ...(args as any[]))
+      origDocAdd(type, fn, ...(args as any[]))
     }
     mockColorMode.isDark.value = false
     mockCalendarFilter.legend.value = []
@@ -213,6 +222,22 @@ describe('Page: Index', () => {
       }
       return Promise.resolve({})
     })
+  })
+
+  afterEach(() => {
+    wrappers.forEach((w) => {
+      try {
+        w.unmount()
+      } catch {
+        // Component may already be unmounted
+      }
+    })
+    wrappers.length = 0
+    // Remove all tracked listeners to prevent cross-test leakage
+    for (const { target, type, fn } of trackedListeners) {
+      target.removeEventListener(type, fn)
+    }
+    trackedListeners.length = 0
   })
 
   /** Helper: mount and track wrapper for cleanup */
@@ -261,7 +286,9 @@ describe('Page: Index', () => {
 
   it('returns mapped events from fetchEvents', async () => {
     await mount()
-    const callWithEvents = mockEventsServiceSet.mock.calls.find((c: unknown[][]) => c[0]?.length > 0)
+    const callWithEvents = mockEventsServiceSet.mock.calls.find(
+      (c: unknown[][]) => c[0]?.length > 0,
+    )
     expect(callWithEvents).toBeTruthy()
     const events = callWithEvents![0]
     expect(events).toHaveLength(1)
@@ -474,7 +501,14 @@ describe('Page: Index', () => {
       if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ea580c' }])
       if (url === '/api/calendar')
         return Promise.resolve([
-          { id: 'e1', title: 'T', color: '#ea580c', calendar: 'Work', startDate: '2025-01-15', endDate: '2025-01-15' },
+          {
+            id: 'e1',
+            title: 'T',
+            color: '#ea580c',
+            calendar: 'Work',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+          },
         ])
       if (url === '/api/event') return new Promise((r) => (resolveEvent = r))
       return Promise.resolve({})
@@ -680,7 +714,9 @@ describe('Page: Index', () => {
     })
     const wrapper = await mount()
     // mount() already awaited the initial fetch — verify 2 events were loaded
-    const callWithEvents = mockEventsServiceSet.mock.calls.find((c: unknown[][]) => c[0]?.length === 2)
+    const callWithEvents = mockEventsServiceSet.mock.calls.find(
+      (c: unknown[][]) => c[0]?.length === 2,
+    )
     expect(callWithEvents).toBeTruthy()
 
     // Click "Work" legend button to hide Work events

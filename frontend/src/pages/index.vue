@@ -13,8 +13,7 @@
             <div class="cv-header-nav">
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
               <button @click="navigatePeriod(-1)">
-                <span class="nav-arrow">‹</span
-                ><span class="nav-label"> {{ prevMonthLabel }}</span>
+                <span class="nav-arrow">‹</span><span class="nav-label"> {{ prevMonthLabel }}</span>
               </button>
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
               <button :disabled="isCurrentMonth" @click="navigateToToday()">
@@ -22,8 +21,7 @@
               </button>
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
               <button @click="navigatePeriod(1)">
-                <span class="nav-label">{{ nextMonthLabel }} </span
-                ><span class="nav-arrow">›</span>
+                <span class="nav-label">{{ nextMonthLabel }} </span><span class="nav-arrow">›</span>
               </button>
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
             </div>
@@ -68,93 +66,90 @@
         </div>
       </client-only>
       <Teleport to="body">
-      <Modal ref="modal" @x="handleModalX">
-        <template #title>
-          {{ eventTitle }}
-        </template>
+        <Modal ref="modal" @x="handleModalX">
+          <template #title>
+            {{ eventTitle }}
+          </template>
 
-        <template #content>
-          <!-- Loading dots -->
-          <div v-if="eventLoading" class="flex justify-center items-center gap-2 py-4">
-            <span class="loading-dot" />
-            <span class="loading-dot" style="animation-delay: 0.15s" />
-            <span class="loading-dot" style="animation-delay: 0.3s" />
-          </div>
-          <!-- Event content — rolls down when loaded -->
-          <div v-else class="modal-content-reveal">
-            <div class="modal-content-inner">
-              <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
-                <tbody>
-                  <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
-                    <th
-                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
-                    >
-                      {{ $t('pages.index.details.start') }}
-                    </th>
-                    <td class="py-1.5">{{ eventStartDate }}</td>
-                  </tr>
-                  <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
-                    <th
-                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
-                    >
-                      {{ $t('pages.index.details.duration') }}
-                    </th>
-                    <td class="py-1.5">{{ eventDuration }}</td>
-                  </tr>
-                  <tr v-show="eventLocation">
-                    <th
-                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
-                    >
-                      {{ $t('pages.index.details.location') }}
-                    </th>
-                    <td class="py-1.5">{{ eventLocation }}</td>
-                  </tr>
-                  <tr v-show="eventUrl">
-                    <th
-                      class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
-                    >
-                      {{ $t('pages.index.details.url') }}
-                    </th>
-                    <td class="py-1.5">
-                      <a
-                        :href="eventUrl"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-orange-700 dark:text-orange-400 underline break-all"
-                        >{{ eventUrl }}</a
+          <template #content>
+            <!-- Loading dots -->
+            <div v-if="eventLoading" class="flex justify-center items-center gap-2 py-4">
+              <span class="loading-dot" />
+              <span class="loading-dot" style="animation-delay: 0.15s" />
+              <span class="loading-dot" style="animation-delay: 0.3s" />
+            </div>
+            <!-- Event content — rolls down when loaded -->
+            <div v-else class="modal-content-reveal">
+              <div class="modal-content-inner">
+                <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
+                  <tbody>
+                    <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                      <th
+                        class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
                       >
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <div
-                v-show="eventDescription"
-                class="mt-3 pt-3 border-t border-navy/10 dark:border-poster-darkBorder"
-              >
-                <pre
-                  class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed"
-                  >{{ eventDescription }}</pre
+                        {{ $t('pages.index.details.start') }}
+                      </th>
+                      <td class="py-1.5">{{ eventStartDate }}</td>
+                    </tr>
+                    <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                      <th
+                        class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                      >
+                        {{ $t('pages.index.details.duration') }}
+                      </th>
+                      <td class="py-1.5">{{ eventDuration }}</td>
+                    </tr>
+                    <tr v-show="eventLocation">
+                      <th
+                        class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                      >
+                        {{ $t('pages.index.details.location') }}
+                      </th>
+                      <td class="py-1.5">{{ eventLocation }}</td>
+                    </tr>
+                    <tr v-show="eventUrl">
+                      <th
+                        class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                      >
+                        {{ $t('pages.index.details.url') }}
+                      </th>
+                      <td class="py-1.5">
+                        <a
+                          :href="eventUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-orange-700 dark:text-orange-400 underline break-all"
+                          >{{ eventUrl }}</a
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div
+                  v-show="eventDescription"
+                  class="mt-3 pt-3 border-t border-navy/10 dark:border-poster-darkBorder"
                 >
+                  <pre
+                    class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed"
+                    >{{ eventDescription }}</pre
+                  >
+                </div>
               </div>
             </div>
-          </div>
-        </template>
-      </Modal>
+          </template>
+        </Modal>
       </Teleport>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ScheduleXCalendar } from '@schedule-x/vue'
-  import {
-    createCalendar,
-    createViewMonthGrid,
-    createViewList,
-  } from '@schedule-x/calendar'
-  import { createEventsServicePlugin } from '@schedule-x/events-service'
+  import { createCalendar, createViewMonthGrid, createViewList } from '@schedule-x/calendar'
   import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls'
+  import { createEventsServicePlugin } from '@schedule-x/events-service'
+  import { ScheduleXCalendar } from '@schedule-x/vue'
   import '@schedule-x/theme-default/dist/index.css'
+  // eslint-disable-next-line import/no-unassigned-import -- side-effect: polyfills Temporal API
   import 'temporal-polyfill/global'
 
   import Modal from '../components/Modal.vue'
@@ -224,18 +219,54 @@
   /* ── Design palette — one unique color per calendar ── */
 
   const designPalette = [
-    { light: { bg: '#dfc8b4', border: '#9a3412', text: '#1e293b' }, dark: { bg: '#583020', border: '#c2410c', text: '#e8ddd0' } }, // sienna
-    { light: { bg: '#c8bdd6', border: '#6b21a8', text: '#1e293b' }, dark: { bg: '#3e2260', border: '#7e22ce', text: '#e8ddd0' } }, // plum
-    { light: { bg: '#d4b4b4', border: '#9f1239', text: '#1e293b' }, dark: { bg: '#5c1a2a', border: '#e11d48', text: '#e8ddd0' } }, // rose
-    { light: { bg: '#b4c8d8', border: '#1e5a8a', text: '#1e293b' }, dark: { bg: '#1c3a54', border: '#3b82f6', text: '#e8ddd0' } }, // steel
-    { light: { bg: '#c4c8cc', border: '#475569', text: '#1e293b' }, dark: { bg: '#2e3440', border: '#94a3b8', text: '#e8ddd0' } }, // slate
-    { light: { bg: '#b8d0b4', border: '#2d6a30', text: '#1e293b' }, dark: { bg: '#1e3e20', border: '#4ade80', text: '#e8ddd0' } }, // forest
-    { light: { bg: '#c5d0a6', border: '#4d7c0f', text: '#1e293b' }, dark: { bg: '#344818', border: '#65a30d', text: '#e8ddd0' } }, // olive
-    { light: { bg: '#ddd0a6', border: '#b45309', text: '#1e293b' }, dark: { bg: '#5c4418', border: '#d97706', text: '#e8ddd0' } }, // mustard
-    { light: { bg: '#adc8c4', border: '#0f766e', text: '#1e293b' }, dark: { bg: '#184844', border: '#0d9488', text: '#e8ddd0' } }, // craft
-    { light: { bg: '#d8c4a4', border: '#78591a', text: '#1e293b' }, dark: { bg: '#4a3818', border: '#a57c2a', text: '#e8ddd0' } }, // bronze
-    { light: { bg: '#d0bcc8', border: '#8a2060', text: '#1e293b' }, dark: { bg: '#502040', border: '#c026a0', text: '#e8ddd0' } }, // magenta
-    { light: { bg: '#d8c0c0', border: '#7a3030', text: '#1e293b' }, dark: { bg: '#4a2020', border: '#b44040', text: '#e8ddd0' } }, // brick
+    {
+      light: { bg: '#dfc8b4', border: '#9a3412', text: '#1e293b' },
+      dark: { bg: '#583020', border: '#c2410c', text: '#e8ddd0' },
+    }, // sienna
+    {
+      light: { bg: '#c8bdd6', border: '#6b21a8', text: '#1e293b' },
+      dark: { bg: '#3e2260', border: '#7e22ce', text: '#e8ddd0' },
+    }, // plum
+    {
+      light: { bg: '#d4b4b4', border: '#9f1239', text: '#1e293b' },
+      dark: { bg: '#5c1a2a', border: '#e11d48', text: '#e8ddd0' },
+    }, // rose
+    {
+      light: { bg: '#b4c8d8', border: '#1e5a8a', text: '#1e293b' },
+      dark: { bg: '#1c3a54', border: '#3b82f6', text: '#e8ddd0' },
+    }, // steel
+    {
+      light: { bg: '#c4c8cc', border: '#475569', text: '#1e293b' },
+      dark: { bg: '#2e3440', border: '#94a3b8', text: '#e8ddd0' },
+    }, // slate
+    {
+      light: { bg: '#b8d0b4', border: '#2d6a30', text: '#1e293b' },
+      dark: { bg: '#1e3e20', border: '#4ade80', text: '#e8ddd0' },
+    }, // forest
+    {
+      light: { bg: '#c5d0a6', border: '#4d7c0f', text: '#1e293b' },
+      dark: { bg: '#344818', border: '#65a30d', text: '#e8ddd0' },
+    }, // olive
+    {
+      light: { bg: '#ddd0a6', border: '#b45309', text: '#1e293b' },
+      dark: { bg: '#5c4418', border: '#d97706', text: '#e8ddd0' },
+    }, // mustard
+    {
+      light: { bg: '#adc8c4', border: '#0f766e', text: '#1e293b' },
+      dark: { bg: '#184844', border: '#0d9488', text: '#e8ddd0' },
+    }, // craft
+    {
+      light: { bg: '#d8c4a4', border: '#78591a', text: '#1e293b' },
+      dark: { bg: '#4a3818', border: '#a57c2a', text: '#e8ddd0' },
+    }, // bronze
+    {
+      light: { bg: '#d0bcc8', border: '#8a2060', text: '#1e293b' },
+      dark: { bg: '#502040', border: '#c026a0', text: '#e8ddd0' },
+    }, // magenta
+    {
+      light: { bg: '#d8c0c0', border: '#7a3030', text: '#1e293b' },
+      dark: { bg: '#4a2020', border: '#b44040', text: '#e8ddd0' },
+    }, // brick
   ]
 
   const calendarLegend = computed(() =>
@@ -285,7 +316,7 @@
         calendars: {},
         callbacks: {
           onEventClick(calendarEvent) {
-            clickItem(calendarEvent as JahrweiserEvent)
+            void clickItem(calendarEvent as JahrweiserEvent)
           },
           async fetchEvents(range) {
             return await fetchDataForRange(range.start, range.end)
@@ -335,14 +366,14 @@
         ? currentDate.value.add({ months: 1 })
         : currentDate.value.subtract({ months: 1 })
     currentDate.value = next
-    calendarControls?.setDate(next)
+    calendarControls.setDate(next)
     applyFutureClassRepeatedly()
   }
 
   function navigateToToday() {
     const now = Temporal.PlainDate.from(new Date().toISOString().slice(0, 10))
     currentDate.value = now
-    calendarControls?.setDate(now)
+    calendarControls.setDate(now)
     scrollToDay()
     applyFutureClassRepeatedly()
   }
@@ -439,7 +470,7 @@
     const isSmall = window.innerWidth < SX_BREAKPOINT
     if (isSmall === lastWasSmall.value) return
     lastWasSmall.value = isSmall
-    calendarControls?.setView(isSmall ? 'list' : 'month-grid')
+    calendarControls.setView(isSmall ? 'list' : 'month-grid')
     applyFutureClassRepeatedly()
   }
 
@@ -493,7 +524,7 @@
         },
       }
     })
-    calendarControls?.setCalendars(config)
+    calendarControls.setCalendars(config)
   }
 
   function toTemporalDate(dateStr: string): Temporal.PlainDate | Temporal.ZonedDateTime {
@@ -562,7 +593,7 @@
               startDate: startDate,
               endDate: endDate,
             },
-          }).catch((err) => {
+          }).catch((err: unknown) => {
             console.warn(`Failed to fetch calendar "${cal.name}":`, err)
             return []
           }),
@@ -664,11 +695,9 @@
 
     let attempts = 0
     const poll = () => {
-      const events = Array.from(
-        document.querySelectorAll('.sx__month-grid-event'),
-      ) as HTMLElement[]
+      const events = document.querySelectorAll<HTMLElement>('.sx__month-grid-event')
       if (events.length > 0) {
-        runStagger(events)
+        runStagger(Array.from(events))
       } else if (attempts < 60) {
         attempts++
         staggerPollId = requestAnimationFrame(poll)
@@ -886,7 +915,6 @@
   .sx__month-grid-week:first-child .sx__month-grid-day__header {
     padding-left: 0 !important;
   }
-
 
   .sx__month-grid-wrapper {
     background-color: rgb(245, 237, 217);

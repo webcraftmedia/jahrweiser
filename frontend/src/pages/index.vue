@@ -28,7 +28,11 @@
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
             </div>
           </div>
-          <ScheduleXCalendar v-if="calendarApp" :calendar-app="calendarApp" />
+          <ScheduleXCalendar
+            v-if="calendarApp"
+            :calendar-app="calendarApp"
+            :style="lastWasSmall && headerZoom !== 1 ? { zoom: headerZoom } : undefined"
+          />
           <!-- Loading overlay -->
           <div v-show="calLoading" class="cal-loading-overlay">
             <div class="flex items-center gap-2">
@@ -409,18 +413,18 @@
   /* ── Responsive view switching (month-grid ↔ list at 700px) ── */
 
   const SX_BREAKPOINT = 700
-  let lastWasSmall = false
+  const lastWasSmall = ref(false)
 
   function onResize() {
     const isSmall = window.innerWidth < SX_BREAKPOINT
-    if (isSmall === lastWasSmall) return
-    lastWasSmall = isSmall
+    if (isSmall === lastWasSmall.value) return
+    lastWasSmall.value = isSmall
     calendarControls?.setView(isSmall ? 'list' : 'month-grid')
     applyFutureClassRepeatedly()
   }
 
   onMounted(() => {
-    lastWasSmall = window.innerWidth < SX_BREAKPOINT
+    lastWasSmall.value = window.innerWidth < SX_BREAKPOINT
     window.addEventListener('keydown', handleKeyboard)
     window.addEventListener('resize', onResize)
     document.addEventListener('mousemove', onMouseMove)

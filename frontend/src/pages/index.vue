@@ -8,7 +8,7 @@
           @touchstart.passive="onTouchStart"
           @touchend.passive="onTouchEnd"
         >
-          <div class="cv-header">
+          <div class="cv-header" :style="headerZoom !== 1 ? { zoom: headerZoom } : undefined">
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
@@ -154,6 +154,7 @@
   import Modal from '../components/Modal.vue'
   import { useCalendarFilter } from '../composables/useCalendarFilter'
   import { useColorMode } from '../composables/useColorMode'
+  import { useZoom } from '../composables/useZoom'
 
   import type { CalendarEventExternal } from '@schedule-x/calendar'
 
@@ -189,6 +190,10 @@
   const calendars = ref<{ name: string; color: string }[]>([])
   const { hiddenCalendars, setLegend, toggleCalendar } = useCalendarFilter()
   const { isDark } = useColorMode()
+  const { zoomLevel } = useZoom()
+
+  // Header zooms only 30% as much as the content (similar to chromeZoom)
+  const headerZoom = computed(() => (1 / zoomLevel.value) * (1 + (zoomLevel.value - 1) * 0.3))
 
   /* ── Design palette — one unique color per calendar ── */
 

@@ -859,12 +859,14 @@
   .sx__month-grid-event:hover .sx__month-grid-event-title {
     position: absolute;
     top: 0;
-    left: 0;
+    left: -3px;
     right: 0;
-    padding: 4px 6px;
+    padding: 4px 6px 4px 6px;
     background: inherit;
     white-space: normal;
     border-radius: 3px;
+    border-inline-start: 3px solid;
+    border-inline-start-color: inherit;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     animation: expandDown 0.15s ease-out;
   }

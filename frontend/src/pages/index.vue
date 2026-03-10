@@ -253,6 +253,7 @@
         isDark: isDark.value,
         firstDayOfWeek: 1,
         isResponsive: true,
+        timezone: Temporal.Now.timeZoneId(),
         calendars: {},
         callbacks: {
           onEventClick(calendarEvent) {
@@ -431,7 +432,7 @@
     if (dateStr.length === 10) {
       return Temporal.PlainDate.from(dateStr)
     }
-    // For datetime strings, use UTC timezone
+    // Store as UTC — Schedule-X converts to configured timezone via withTimeZone()
     const d = new Date(dateStr)
     return Temporal.ZonedDateTime.from({
       year: d.getUTCFullYear(),

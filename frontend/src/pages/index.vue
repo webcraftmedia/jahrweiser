@@ -166,7 +166,7 @@
     _occurrence?: number
   }
 
-  const { locale } = useI18n()
+  const { locale, localeProperties } = useI18n()
 
   definePageMeta({
     middleware: ['authenticated'],
@@ -246,7 +246,7 @@
 
     calendarApp.value = createCalendar(
       {
-        locale: locale.value,
+        locale: localeProperties.value.language ?? 'de-DE',
         selectedDate: today,
         views: [createViewMonthGrid(), createViewMonthAgenda()],
         defaultView: 'month-grid',

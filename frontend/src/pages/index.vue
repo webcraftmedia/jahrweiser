@@ -1018,6 +1018,12 @@
     grid-gap: 2px !important;
   }
 
+  @media (min-width: 768px) {
+    .sx__month-grid-day__events {
+      grid-gap: 1px !important;
+    }
+  }
+
   .sx__month-grid-event {
     cursor: pointer;
     border-radius: 3px;

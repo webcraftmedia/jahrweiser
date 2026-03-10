@@ -1127,7 +1127,7 @@
     --sx-color-on-surface-variant: #a8937e;
     --sx-color-surface-container: #100e0c;
     --sx-color-surface-container-high: #2e2822;
-    --sx-color-surface-container-low: #1e1a16;
+    --sx-color-surface-container-low: #2a2420;
     --sx-color-background: #1a1714;
     --sx-color-on-background: #e8ddd0;
     --sx-color-neutral: #a8937e;

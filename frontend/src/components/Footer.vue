@@ -5,7 +5,7 @@
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
     <div
-      class="max-w-screen-2xl mx-auto flex items-center justify-center md:justify-between text-sm text-navy/60 dark:text-ivory/60"
+      class="max-w-screen-2xl mx-auto flex items-center justify-center md:justify-between text-sm text-navy/60 dark:text-ivory/60 px-2 2xl:px-0"
     >
       <span class="hidden md:inline">
         {{ $t('components.Footer.copyright') }}

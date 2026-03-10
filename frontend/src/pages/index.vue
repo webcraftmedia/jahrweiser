@@ -517,27 +517,27 @@
     })
   }
 
-  function markFutureDays() {
-    // Schedule-X uses Preact internally — Vue nextTick is not enough
-    setTimeout(applyFutureClass, 50)
-    setTimeout(applyFutureClass, 200)
+  let futureDebounce: ReturnType<typeof setTimeout> | undefined
+  function debouncedApplyFuture() {
+    clearTimeout(futureDebounce)
+    futureDebounce = setTimeout(applyFutureClass, 30)
   }
 
-  // Re-apply when navigating months
-  watch(currentDate, markFutureDays)
-
-  // Observe DOM changes from Schedule-X re-renders
+  // Observe the calendar root — survives Schedule-X internal re-renders
   let futureObserver: MutationObserver | undefined
   onMounted(() => {
-    markFutureDays()
-    const wrapper = document.querySelector('.sx__month-grid-wrapper')
-    if (wrapper) {
-      futureObserver = new MutationObserver(applyFutureClass)
-      futureObserver.observe(wrapper, { childList: true, subtree: true })
+    setTimeout(applyFutureClass, 100)
+    setTimeout(applyFutureClass, 500)
+
+    const root = document.querySelector('.sx__calendar')
+    if (root) {
+      futureObserver = new MutationObserver(debouncedApplyFuture)
+      futureObserver.observe(root, { childList: true, subtree: true })
     }
   })
   onUnmounted(() => {
     futureObserver?.disconnect()
+    clearTimeout(futureDebounce)
   })
 
   /* ── Filter reactivity — re-filter events without re-fetching ── */

@@ -705,7 +705,8 @@
     font-size: 17px;
     width: 100%;
     text-align: center;
-    padding: 1px 0;
+    padding: 0;
+    border-right: 0.5px solid rgba(154, 52, 18, 0.3);
   }
 
   /* --- Schedule-X: Day cells --- */
@@ -717,6 +718,12 @@
 
   .sx__month-grid-week:first-child .sx__month-grid-day {
     padding-top: 0 !important;
+    border-inline-end: none !important;
+    gap: 0 !important;
+  }
+
+  .sx__month-grid-week:first-child .sx__month-grid-day__header {
+    padding-left: 0 !important;
   }
 
 

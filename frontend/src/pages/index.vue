@@ -63,6 +63,7 @@
           </div>
         </div>
       </client-only>
+      <Teleport to="body">
       <Modal ref="modal" @x="handleModalX">
         <template #title>
           {{ eventTitle }}
@@ -135,6 +136,7 @@
           </div>
         </template>
       </Modal>
+      </Teleport>
     </div>
   </div>
 </template>

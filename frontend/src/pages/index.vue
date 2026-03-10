@@ -292,6 +292,11 @@
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
   }
 
+  /** Local-timezone date string YYYY-MM-DD (avoids UTC shift from toISOString) */
+  function localDateStr(d: Date = new Date()): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+
   /* ── Schedule-X setup (client-only — createCalendar accesses document) ── */
 
   let eventsService: ReturnType<typeof createEventsServicePlugin>
@@ -300,7 +305,7 @@
   // shallowRef — Schedule-X uses Preact Signals internally, no deep reactivity needed
   const calendarApp = shallowRef<ReturnType<typeof createCalendar>>()
 
-  const today = Temporal.PlainDate.from(new Date().toISOString().slice(0, 10))
+  const today = Temporal.PlainDate.from(localDateStr())
 
   /* v8 ignore start -- always true in client-side tests */
   if (import.meta.client) {
@@ -356,7 +361,7 @@
   })
 
   const isCurrentMonth = computed(() => {
-    const now = Temporal.PlainDate.from(new Date().toISOString().slice(0, 10))
+    const now = Temporal.PlainDate.from(localDateStr())
     return currentDate.value.year === now.year && currentDate.value.month === now.month
   })
 
@@ -379,7 +384,7 @@
   }
 
   function navigateToToday() {
-    const now = Temporal.PlainDate.from(new Date().toISOString().slice(0, 10))
+    const now = Temporal.PlainDate.from(localDateStr())
     currentDate.value = now
     eventsService.set([])
     calendarControls.setDate(now)
@@ -392,7 +397,7 @@
       // Re-apply future classes after Schedule-X re-render
       applyFutureClass()
 
-      const todayStr = new Date().toISOString().slice(0, 10)
+      const todayStr = localDateStr()
       const firstOfMonth = currentDate.value.toPlainYearMonth().toPlainDate({ day: 1 }).toString()
 
       // Try today: month-grid (.sx__is-today) or list view (data-date)
@@ -623,7 +628,7 @@
   /* ── Mark future days ── */
 
   function applyFutureClass() {
-    const todayStr = new Date().toISOString().slice(0, 10)
+    const todayStr = localDateStr()
     document
       .querySelectorAll('.sx__month-grid-day[data-date], .sx__list-day[data-date]')
       .forEach((el) => {

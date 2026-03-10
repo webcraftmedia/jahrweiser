@@ -1036,6 +1036,10 @@
     }
   }
 
+  .sx__list-day-margin {
+    height: 0 !important;
+  }
+
   /* --- Schedule-X: List view future days --- */
 
   .sx__list-day.is-future .sx__list-day-events {

@@ -1040,14 +1040,22 @@
     height: 0 !important;
   }
 
-  /* --- Schedule-X: List view future days --- */
+  /* --- Schedule-X: List view — past vs future contrast --- */
 
-  .sx__list-day.is-future .sx__list-day-events {
-    background-color: #faf5eb !important;
+  .sx__list-day:not(.is-future) .sx__list-day-events {
+    background-color: #efe6d0 !important;
   }
 
-  .dark .sx__list-day.is-future .sx__list-day-events {
-    background-color: #24201b !important;
+  .sx__list-day:not(.is-future) .sx__list-day-header {
+    background-color: #e8ddc8 !important;
+  }
+
+  .dark .sx__list-day:not(.is-future) .sx__list-day-events {
+    background-color: #14120f !important;
+  }
+
+  .dark .sx__list-day:not(.is-future) .sx__list-day-header {
+    background-color: #1a1714 !important;
   }
 
   /* --- Schedule-X: Theme overrides (light) --- */

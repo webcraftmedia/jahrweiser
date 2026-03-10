@@ -711,6 +711,9 @@
   /* --- Schedule-X: Theme overrides (light) --- */
 
   .sx__calendar {
+    --sx-rounding-extra-small: 0;
+    --sx-rounding-small: 0;
+    --sx-rounding-extra-large: 0;
     --sx-color-surface: #faf5eb;
     --sx-color-on-surface: #1e293b;
     --sx-color-surface-dim: #f5edd9;

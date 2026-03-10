@@ -27,10 +27,7 @@
             </div>
           </div>
           <ClientOnly>
-            <ScheduleXCalendar
-              :calendar-app="calendarApp!"
-              :style="calendarBodyZoomStyle"
-            />
+            <ScheduleXCalendar :calendar-app="calendarApp!" :style="calendarBodyZoomStyle" />
           </ClientOnly>
           <!-- Loading overlay -->
           <div v-show="calLoading" class="cal-loading-overlay">
@@ -515,7 +512,7 @@
         lightColors: { main: string; container: string; onContainer: string }
         darkColors: { main: string; container: string; onContainer: string }
       }
-    /* v8 ignore next */
+      /* v8 ignore next */
     > = {}
     calendars.value.forEach((cal, i) => {
       const palette = designPalette[i % designPalette.length]!

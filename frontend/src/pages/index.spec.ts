@@ -1278,7 +1278,7 @@ describe('Page: Index', () => {
     // The last call should NOT have scheduled another
     const lastCb = rafCallbacks[rafCallbacks.length - 1]
     if (lastCb) lastCb(0)
-    expect(rafCallbacks.length).toBe(lengthAfterExhaust)
+    expect(rafCallbacks).toHaveLength(lengthAfterExhaust)
     globalThis.requestAnimationFrame = origRAF
   })
 })

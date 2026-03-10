@@ -712,6 +712,7 @@
 
   .sx__month-grid-week:first-child {
     border-top: none !important;
+    flex: 1.15 !important;
   }
 
   .sx__month-grid-week:first-child .sx__month-grid-day {

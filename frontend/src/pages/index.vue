@@ -305,6 +305,35 @@
     const now = Temporal.PlainDate.from(new Date().toISOString().slice(0, 10))
     currentDate.value = now
     calendarControls?.setDate(now)
+    scrollToDay()
+  }
+
+  function scrollToDay() {
+    setTimeout(() => {
+      const todayStr = new Date().toISOString().slice(0, 10)
+      const firstOfMonth = currentDate.value.toPlainYearMonth().toPlainDate({ day: 1 }).toString()
+
+      // Try today: month-grid (.sx__is-today) or list view (data-date)
+      const todayEl =
+        document.querySelector('.sx__is-today')?.closest('.sx__month-grid-day') ??
+        document.querySelector(`.sx__list-day[data-date="${todayStr}"]`)
+      if (todayEl) {
+        todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
+
+      // Fallback: 1st of month in month-grid or list view
+      const firstDayEl =
+        document.querySelector(`.sx__month-grid-day[data-date="${firstOfMonth}"]`) ??
+        document.querySelector(`.sx__list-day[data-date="${firstOfMonth}"]`)
+      if (firstDayEl) {
+        firstDayEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
+
+      // Last fallback: scroll to top
+      calWrapper.value?.closest('.content')?.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 350)
   }
 
   /* ── Touch swipe ── */
@@ -500,6 +529,7 @@
       rawEvents.value = results.flat()
       const mapped = mapToScheduleXEvents()
       scheduleStagger()
+      scrollToDay()
       return mapped
     } catch (error) {
       console.error(error)
@@ -715,6 +745,11 @@
       position: sticky;
       top: 0;
       z-index: 10;
+    }
+
+    .sx__month-grid-day,
+    .sx__list-day {
+      scroll-margin-top: 2.25em;
     }
   }
 

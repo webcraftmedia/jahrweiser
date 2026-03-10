@@ -633,7 +633,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.25em 0.4em;
+    padding: 0.25em 0;
     background-color: #faf5eb;
     border-bottom: 1px solid rgba(194, 65, 12, 0.2);
   }
@@ -920,7 +920,7 @@
 
   /* --- Schedule-X: Weekday strip (dark) --- */
 
-  .dark .sx__month-grid-day {
+  .dark .sx__month-grid-day__header-day-name {
     background-color: #9a3412 !important;
     color: #faf5eb !important;
   }
@@ -931,8 +931,28 @@
     background-color: #1a1714;
   }
 
-  .dark .sx__month-grid-cell {
+  .dark .sx__month-grid-day {
+    background-color: #1a1714 !important;
+  }
+
+  .dark .sx__month-grid-day.is-future:not(.is-leading-or-trailing) {
+    background-color: #211e1a !important;
+  }
+
+  .dark .sx__month-grid-week {
     border-color: #3d3630 !important;
+  }
+
+  .dark .sx__month-grid-day:not(:last-child) {
+    border-inline-end-color: #3d3630 !important;
+  }
+
+  .dark .sx__month-grid-day__header-date {
+    color: #e8ddd0 !important;
+  }
+
+  .dark .sx__month-grid-day.is-leading-or-trailing .sx__month-grid-day__header-date {
+    color: #5c524a !important;
   }
 
   /* --- Schedule-X: Today (dark) --- */

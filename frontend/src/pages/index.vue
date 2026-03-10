@@ -718,6 +718,10 @@
     margin-bottom: 0 !important;
   }
 
+  .sx__month-grid-day.is-leading-or-trailing .sx__month-grid-day__header-date {
+    color: #9ca3af !important;
+  }
+
   /* --- Schedule-X: Today highlight --- */
 
   .sx__month-grid-day__header-date.sx__is-today,

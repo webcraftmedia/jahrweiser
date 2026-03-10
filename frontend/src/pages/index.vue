@@ -703,6 +703,13 @@
     border-bottom: 1px solid rgba(194, 65, 12, 0.2);
   }
 
+  @media (max-width: 1536px) {
+    .cv-header {
+      padding-left: 0.5em;
+      padding-right: 0.5em;
+    }
+  }
+
   @media (max-width: 767px) {
     .cv-header {
       position: sticky;

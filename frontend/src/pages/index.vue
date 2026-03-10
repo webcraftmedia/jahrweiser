@@ -739,10 +739,6 @@
     border-inline-end: 0.5px solid rgba(194, 65, 12, 0.12) !important;
   }
 
-  .sx__month-grid-day__events {
-    grid-gap: 2px !important;
-  }
-
   .sx__month-grid-cell {
     height: 26px !important;
   }
@@ -823,16 +819,23 @@
 
   /* --- Schedule-X: Events --- */
 
+  .sx__month-grid-day__events {
+    grid-gap: 2px !important;
+  }
+
   .sx__month-grid-event {
     cursor: pointer;
     border-radius: 3px;
     font-size: 0.9em;
-    transition: box-shadow 0.3s ease;
+    transition: box-shadow 0.2s ease;
     width: calc(100% - 1px) !important;
     margin-left: 0.5px;
     padding: 4px 6px !important;
     border-inline-start-width: 3px !important;
     overflow: hidden !important;
+    white-space: nowrap !important;
+    position: relative;
+    z-index: 1;
   }
 
   .sx__month-grid-event-title {
@@ -847,7 +850,32 @@
   }
 
   .sx__month-grid-event:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    white-space: normal !important;
+    overflow: visible !important;
+    z-index: 100;
+  }
+
+  .sx__month-grid-event:hover .sx__month-grid-event-title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 4px 6px;
+    background: inherit;
+    white-space: normal;
+    border-radius: 3px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    animation: expandDown 0.15s ease-out;
+  }
+
+  @keyframes expandDown {
+    from {
+      max-height: 26px;
+    }
+    to {
+      max-height: 200px;
+    }
   }
 
   /* --- Schedule-X: List view events --- */

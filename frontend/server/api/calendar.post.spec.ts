@@ -150,10 +150,11 @@ describe('calendar.post', () => {
         props: { calendarData: ALLDAY_EVENT },
       },
     ])
-    const result = (await handlerFn({})) as { startDate: Date; endDate: Date }[]
+    const result = (await handlerFn({})) as { startDate: string; endDate: string }[]
     expect(result).toHaveLength(1)
     // DTEND is exclusive (March 2), so endDate should be March 1 (same as start)
-    expect(result[0]!.endDate.getUTCDate()).toBe(result[0]!.startDate.getUTCDate())
+    // All-day events are returned as YYYY-MM-DD strings
+    expect(result[0]!.endDate).toBe(result[0]!.startDate)
   })
 
   it('stops expanding recurring events past endDate', async () => {

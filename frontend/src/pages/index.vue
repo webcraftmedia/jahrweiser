@@ -1,5 +1,5 @@
 <template>
-  <div class="box">
+  <div class="box" :style="boxZoomStyle">
     <div class="calendar row">
       <client-only>
         <div
@@ -8,7 +8,7 @@
           @touchstart.passive="onTouchStart"
           @touchend.passive="onTouchEnd"
         >
-          <div class="cv-header" :style="headerZoom !== 1 ? { zoom: headerZoom } : undefined">
+          <div class="cv-header" :style="headerZoomStyle">
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
@@ -200,6 +200,26 @@
 
   // Header zooms only 30% as much as the content (similar to chromeZoom)
   const headerZoom = computed(() => (1 / zoomLevel.value) * (1 + (zoomLevel.value - 1) * 0.3))
+
+  // Desktop: box already counter-zoomed → only slight enlargement needed (chromeZoom)
+  // Mobile: no box counter-zoom → use headerZoom (partially counters parent zoom)
+  const headerZoomStyle = computed(() => {
+    if (zoomLevel.value === 1) return undefined
+    if (lastWasSmall.value) {
+      return { zoom: headerZoom.value }
+    }
+    const slight = 1 + (zoomLevel.value - 1) * 0.3
+    return slight !== 1 ? { zoom: slight } : undefined
+  })
+
+  // Desktop: counter-zoom so the calendar always fills the container exactly
+  const boxZoomStyle = computed(() => {
+    if (lastWasSmall.value || zoomLevel.value === 1) return undefined
+    return {
+      zoom: 1 / zoomLevel.value,
+      width: `${zoomLevel.value * 100}%`,
+    }
+  })
 
   /* ── Design palette — one unique color per calendar ── */
 

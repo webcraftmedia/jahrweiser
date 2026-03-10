@@ -409,6 +409,7 @@
     if (isSmall === lastWasSmall) return
     lastWasSmall = isSmall
     calendarControls?.setView(isSmall ? 'list' : 'month-grid')
+    applyFutureClassRepeatedly()
   }
 
   onMounted(() => {
@@ -559,6 +560,7 @@
       .forEach((el) => {
         const date = el.getAttribute('data-date')!
         el.classList.toggle('is-future', date >= todayStr)
+        el.classList.toggle('is-today', date === todayStr)
       })
   }
 
@@ -1038,6 +1040,34 @@
 
   .sx__list-day-margin {
     height: 0 !important;
+  }
+
+  /* --- Schedule-X: List view — today triangle --- */
+
+  .sx__list-day.is-today .sx__list-day-header {
+    position: relative;
+  }
+
+  .sx__list-day.is-today .sx__list-day-date {
+    font-weight: 800 !important;
+    color: #1e293b !important;
+  }
+
+  .dark .sx__list-day.is-today .sx__list-day-date {
+    color: #e8ddd0 !important;
+  }
+
+  .sx__list-day.is-today .sx__list-day-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 12px 12px 0;
+    border-color: transparent #c2410c transparent transparent;
+    pointer-events: none;
   }
 
   /* --- Schedule-X: List view — past vs future contrast --- */

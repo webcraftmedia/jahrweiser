@@ -707,10 +707,15 @@
     overflow: visible;
   }
 
+  .sx__month-grid-day {
+    padding-top: calc(var(--sx-spacing-padding2) / 2) !important;
+  }
+
   .sx__month-grid-day__header-date {
     font-size: 20px !important;
     padding: 4px;
     line-height: 20px;
+    margin-bottom: 0 !important;
   }
 
   /* --- Schedule-X: Today highlight --- */

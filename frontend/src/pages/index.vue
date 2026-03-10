@@ -570,6 +570,14 @@
     display: none !important;
   }
 
+  /* --- Reset Schedule-X header — our .cv-header handles all styling --- */
+
+  .sx__calendar-header {
+    display: block;
+    padding: 0;
+    gap: 0;
+  }
+
   /* --- Custom header (month navigation bar) --- */
 
   .cv-header {

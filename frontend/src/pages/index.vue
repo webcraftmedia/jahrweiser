@@ -662,23 +662,38 @@
 
   /* --- Schedule-X: Weekday name strip (banner) --- */
 
-  .sx__month-grid-day {
+  .sx__month-grid-day__header-day-name {
     background-color: #c2410c !important;
     color: #faf5eb !important;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.85em;
+    letter-spacing: 1.36px;
+    font-size: 17px;
+    width: 100%;
+    text-align: center;
+    padding: 1px 0;
   }
 
   /* --- Schedule-X: Day cells --- */
+
+  .sx__month-grid-week:first-child {
+    border-top: none !important;
+  }
+
+  .sx__month-grid-week:first-child .sx__month-grid-day:not(:last-child) {
+    border-inline-end-color: rgba(154, 52, 18, 0.3) !important;
+  }
 
   .sx__month-grid-wrapper {
     background-color: #faf5eb;
   }
 
-  .sx__month-grid-cell {
-    border-color: rgba(194, 65, 12, 0.12) !important;
+  .sx__month-grid-week {
+    border-top: 0.5px solid rgba(194, 65, 12, 0.12) !important;
+  }
+
+  .sx__month-grid-day:not(:last-child) {
+    border-inline-end: 0.5px solid rgba(194, 65, 12, 0.12) !important;
   }
 
   /* --- Schedule-X: Today highlight --- */

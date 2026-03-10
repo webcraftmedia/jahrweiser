@@ -721,7 +721,7 @@
 
 
   .sx__month-grid-wrapper {
-    background-color: rgb(239, 230, 208);
+    background-color: rgb(245, 237, 217);
   }
 
   .sx__month-grid-week {

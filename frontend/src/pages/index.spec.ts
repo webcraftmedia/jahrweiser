@@ -1,5 +1,5 @@
 import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Page from './index.vue'
 
@@ -124,10 +124,46 @@ if (typeof globalThis.Temporal === 'undefined') {
 }
 
 describe('Page: Index', () => {
+  // Track mounted wrappers for cleanup — prevents stale event listeners between tests
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const wrappers: any[] = []
+
+  // Spy on addEventListener to track and clean up all listeners between tests
+  const trackedListeners: { target: EventTarget; type: string; fn: EventListenerOrEventListenerObject }[] = []
+  const origWindowAdd = window.addEventListener.bind(window)
+  const origDocAdd = document.addEventListener.bind(document)
+
+  afterEach(() => {
+    wrappers.forEach((w) => {
+      try {
+        w.unmount()
+      } catch {
+        // Component may already be unmounted
+      }
+    })
+    wrappers.length = 0
+    // Remove all tracked listeners to prevent cross-test leakage
+    for (const { target, type, fn } of trackedListeners) {
+      target.removeEventListener(type, fn)
+    }
+    trackedListeners.length = 0
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
+    // Intercept addEventListener to track listeners for cleanup
+    window.addEventListener = (type: string, fn: EventListenerOrEventListenerObject, ...args: unknown[]) => {
+      trackedListeners.push({ target: window, type, fn })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return origWindowAdd(type, fn, ...(args as any[]))
+    }
+    document.addEventListener = (type: string, fn: EventListenerOrEventListenerObject, ...args: unknown[]) => {
+      trackedListeners.push({ target: document, type, fn })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return origDocAdd(type, fn, ...(args as any[]))
+    }
     mockColorMode.isDark.value = false
     mockCalendarFilter.legend.value = []
     mockCalendarFilter.hiddenCalendars.value = new Set()
@@ -166,6 +202,13 @@ describe('Page: Index', () => {
     })
   })
 
+  /** Helper: mount and track wrapper for cleanup */
+  async function mount() {
+    const w = await mountSuspended(Page, { route: '/' })
+    wrappers.push(w)
+    return w
+  }
+
   /** Helper: trigger onRangeUpdate to simulate calendar mount / period change */
   function triggerRangeUpdate(start = '2025-01-01', end = '2025-01-31') {
     const s = new Date(start + 'T00:00:00Z')
@@ -186,7 +229,7 @@ describe('Page: Index', () => {
   })
 
   it('fetches calendar data when onRangeUpdate fires', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
@@ -200,12 +243,16 @@ describe('Page: Index', () => {
   })
 
   it('calls eventsService.set with mapped events', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
+    mockEventsServiceSet.mockClear()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mockEventsServiceSet).toHaveBeenCalled()
     })
-    const events = mockEventsServiceSet.mock.calls[0]![0]
+    // Find the call that has actual events (skip stale empty calls)
+    const callWithEvents = mockEventsServiceSet.mock.calls.find((c: unknown[][]) => c[0]?.length > 0)
+    expect(callWithEvents).toBeTruthy()
+    const events = callWithEvents![0]
     expect(events).toHaveLength(1)
     expect(events[0].title).toBe('Test')
     expect(events[0]._calendar).toBe('Work')
@@ -213,7 +260,7 @@ describe('Page: Index', () => {
   })
 
   it('opens modal when clicking an event', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mockEventsServiceSet).toHaveBeenCalled()
@@ -234,7 +281,7 @@ describe('Page: Index', () => {
   })
 
   it('renders modal content with event details', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mockEventsServiceSet).toHaveBeenCalled()
@@ -277,7 +324,7 @@ describe('Page: Index', () => {
         })
       return Promise.resolve({})
     })
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mockEventsServiceSet).toHaveBeenCalled()
@@ -320,7 +367,7 @@ describe('Page: Index', () => {
         })
       return Promise.resolve({})
     })
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mockEventsServiceSet).toHaveBeenCalled()
@@ -347,7 +394,7 @@ describe('Page: Index', () => {
       if (url === '/api/event') return Promise.reject(new Error('fetch failed'))
       return Promise.resolve([])
     })
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     triggerRangeUpdate()
     await nextTick()
     mockCallbacks.onEventClick?.({
@@ -363,7 +410,7 @@ describe('Page: Index', () => {
   })
 
   it('navigates to next month via nav button', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const navButtons = wrapper.findAll('.cv-header-nav button')
     const nextButton = navButtons[2]! // ‹, today, ›
     await nextButton.trigger('click')
@@ -373,7 +420,7 @@ describe('Page: Index', () => {
   })
 
   it('navigates to previous month via nav button', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const navButtons = wrapper.findAll('.cv-header-nav button')
     const prevButton = navButtons[0]!
     await prevButton.trigger('click')
@@ -384,7 +431,7 @@ describe('Page: Index', () => {
   })
 
   it('navigates to today via nav button', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     // Navigate away first so "today" button is not disabled
     const navButtons = wrapper.findAll('.cv-header-nav button')
     await navButtons[0]!.trigger('click')
@@ -397,7 +444,7 @@ describe('Page: Index', () => {
   })
 
   it('sets up Schedule-X calendar colors after loading calendars', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
@@ -414,7 +461,7 @@ describe('Page: Index', () => {
   })
 
   it('closes modal via handleModalX', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mockEventsServiceSet).toHaveBeenCalled()
@@ -444,7 +491,7 @@ describe('Page: Index', () => {
       if (url === '/api/event') return new Promise((r) => (resolveEvent = r))
       return Promise.resolve([{ name: 'Work', color: '#ea580c' }])
     })
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'event-1',
@@ -467,7 +514,7 @@ describe('Page: Index', () => {
   })
 
   it('skips fetching calendars when already loaded', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
@@ -488,7 +535,7 @@ describe('Page: Index', () => {
   it('handles getData error gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mock$fetch.mockRejectedValue(new Error('network error'))
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(consoleSpy).toHaveBeenCalled()
@@ -497,7 +544,7 @@ describe('Page: Index', () => {
   })
 
   it('handles keyboard navigation ArrowRight', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
     await nextTick()
     expect(mockCalendarControlsSetDate).toHaveBeenCalled()
@@ -506,7 +553,8 @@ describe('Page: Index', () => {
   })
 
   it('handles keyboard navigation with a key', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
+    mockCalendarControlsSetDate.mockClear()
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))
     await nextTick()
     expect(mockCalendarControlsSetDate).toHaveBeenCalled()
@@ -515,7 +563,7 @@ describe('Page: Index', () => {
   })
 
   it('ignores keyboard when modal is open', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'event-1',
@@ -537,14 +585,14 @@ describe('Page: Index', () => {
 
   it('cleans up keyboard listener on unmount', async () => {
     const removeSpy = vi.spyOn(window, 'removeEventListener')
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     wrapper.unmount()
     expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function))
     removeSpy.mockRestore()
   })
 
   it('handles ArrowLeft keyboard navigation', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
     await nextTick()
     expect(mockCalendarControlsSetDate).toHaveBeenCalled()
@@ -553,7 +601,7 @@ describe('Page: Index', () => {
   })
 
   it('handles d key keyboard navigation', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }))
     await nextTick()
     expect(mockCalendarControlsSetDate).toHaveBeenCalled()
@@ -562,14 +610,14 @@ describe('Page: Index', () => {
   })
 
   it('ignores unhandled keyboard keys', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }))
     await nextTick()
     expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
   })
 
   it('swipe left navigates to next month', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const calWrapperEl = wrapper.find('.cal-wrapper')
     await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 200, clientY: 100 }] })
     await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 50, clientY: 100 }] })
@@ -579,7 +627,7 @@ describe('Page: Index', () => {
   })
 
   it('swipe right navigates to previous month', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const calWrapperEl = wrapper.find('.cal-wrapper')
     await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 50, clientY: 100 }] })
     await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 100 }] })
@@ -589,7 +637,7 @@ describe('Page: Index', () => {
   })
 
   it('ignores short swipes', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const calWrapperEl = wrapper.find('.cal-wrapper')
     await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 100, clientY: 100 }] })
     await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 130, clientY: 100 }] })
@@ -597,7 +645,7 @@ describe('Page: Index', () => {
   })
 
   it('ignores vertical swipes', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const calWrapperEl = wrapper.find('.cal-wrapper')
     await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 100, clientY: 100 }] })
     await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 300 }] })
@@ -605,7 +653,7 @@ describe('Page: Index', () => {
   })
 
   it('renders calendar legend items', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
@@ -619,6 +667,10 @@ describe('Page: Index', () => {
   })
 
   it('toggles calendar visibility via legend click', async () => {
+    const wrapper = await mount()
+    // Clear stale calls from previous tests before triggering our range update
+    mockEventsServiceSet.mockClear()
+    mock$fetch.mockClear()
     mock$fetch.mockImplementation((url: string, opts?: { body?: { calendar?: string } }) => {
       if (url === '/api/calendars')
         return Promise.resolve([
@@ -653,17 +705,12 @@ describe('Page: Index', () => {
       }
       return Promise.resolve({})
     })
-    const wrapper = await mountSuspended(Page, { route: '/' })
     triggerRangeUpdate()
+    // Wait for eventsService.set to be called with the 2 events
     await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+      const callWithEvents = mockEventsServiceSet.mock.calls.find((c: unknown[][]) => c[0]?.length === 2)
+      expect(callWithEvents).toBeTruthy()
     })
-    await nextTick()
-
-    // Both events should have been set initially
-    expect(mockEventsServiceSet).toHaveBeenCalled()
-    const initialEvents = mockEventsServiceSet.mock.calls[0]![0]
-    expect(initialEvents).toHaveLength(2)
 
     // Click "Work" legend button to hide Work events
     const legendItems = wrapper.findAll('.cal-legend-item')
@@ -672,8 +719,10 @@ describe('Page: Index', () => {
     await nextTick()
 
     // eventsService.set should be called again with filtered events
+    // Use last call — stale watchers from previous component instances may fire first
     expect(mockEventsServiceSet).toHaveBeenCalled()
-    const filteredEvents = mockEventsServiceSet.mock.calls[0]![0]
+    const filteredCalls = mockEventsServiceSet.mock.calls
+    const filteredEvents = filteredCalls[filteredCalls.length - 1]![0]
     expect(filteredEvents).toHaveLength(1)
     expect(filteredEvents[0].title).toBe('Personal Event')
 
@@ -686,13 +735,14 @@ describe('Page: Index', () => {
     await nextTick()
 
     expect(mockEventsServiceSet).toHaveBeenCalled()
-    const allEvents = mockEventsServiceSet.mock.calls[0]![0]
+    const allCalls = mockEventsServiceSet.mock.calls
+    const allEvents = allCalls[allCalls.length - 1]![0]
     expect(allEvents).toHaveLength(2)
     expect(wrapper.findAll('.cal-legend-item')[0]!.classes()).not.toContain('cal-legend-hidden')
   })
 
   it('opens legend when mouse is near bottom of cal-wrapper', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const calWrapperEl = wrapper.find('.cal-wrapper')
     vi.spyOn(calWrapperEl.element, 'getBoundingClientRect').mockReturnValue({
       bottom: 500,
@@ -715,7 +765,7 @@ describe('Page: Index', () => {
   })
 
   it('opens legend when mouse is below cal-wrapper', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const calWrapperEl = wrapper.find('.cal-wrapper')
     vi.spyOn(calWrapperEl.element, 'getBoundingClientRect').mockReturnValue({
       bottom: 500,
@@ -734,7 +784,7 @@ describe('Page: Index', () => {
   })
 
   it('cancels legend close timer when mouse re-enters trigger zone', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const calWrapperEl = wrapper.find('.cal-wrapper')
     vi.spyOn(calWrapperEl.element, 'getBoundingClientRect').mockReturnValue({
       bottom: 500,
@@ -759,7 +809,7 @@ describe('Page: Index', () => {
   })
 
   it('ignores mousemove when legend is closed and mouse is outside trigger zone', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     const calWrapperEl = wrapper.find('.cal-wrapper')
     vi.spyOn(calWrapperEl.element, 'getBoundingClientRect').mockReturnValue({
       bottom: 500,
@@ -779,7 +829,7 @@ describe('Page: Index', () => {
 
   it('cleans up mousemove listener on unmount', async () => {
     const removeSpy = vi.spyOn(document, 'removeEventListener')
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     wrapper.unmount()
     expect(removeSpy).toHaveBeenCalledWith('mousemove', expect.any(Function))
     removeSpy.mockRestore()
@@ -795,7 +845,7 @@ describe('Page: Index', () => {
       }
       return Promise.resolve([])
     })
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    const wrapper = await mount()
     triggerRangeUpdate()
     await nextTick()
     // Loading overlay should be visible while fetch is pending (v-show)
@@ -812,7 +862,7 @@ describe('Page: Index', () => {
   })
 
   it('updates theme when isDark changes', async () => {
-    await mountSuspended(Page, { route: '/' })
+    await mount()
     mockColorMode.isDark.value = true
     await nextTick()
     expect(mockSetTheme).toHaveBeenCalledWith('dark')

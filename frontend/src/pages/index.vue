@@ -372,6 +372,7 @@
         : currentDate.value.subtract({ months: 1 })
     currentDate.value = next
     calendarControls.setDate(next)
+    scheduleStagger()
     applyFutureClassRepeatedly()
   }
 
@@ -379,6 +380,7 @@
     const now = Temporal.PlainDate.from(new Date().toISOString().slice(0, 10))
     currentDate.value = now
     calendarControls.setDate(now)
+    scheduleStagger()
     scrollToDay()
     applyFutureClassRepeatedly()
   }
@@ -638,27 +640,10 @@
     futureDebounce = setTimeout(applyFutureClass, 30)
   }
 
-  // Observe the calendar root — survives Schedule-X internal re-renders
-  let futureObserver: MutationObserver | undefined
-  onMounted(() => {
-    setTimeout(applyFutureClass, 100)
-    setTimeout(applyFutureClass, 500)
-
-    const root = document.querySelector('.sx__calendar')
-    if (root) {
-      futureObserver = new MutationObserver(debouncedApplyFuture)
-      futureObserver.observe(root, { childList: true, subtree: true })
-    }
-  })
-  onUnmounted(() => {
-    futureObserver?.disconnect()
-    clearTimeout(futureDebounce)
-  })
-
   /* ── Stagger event animations — events pop in chronologically ── */
 
   let staggerTimers: ReturnType<typeof setTimeout>[] = []
-  let staggerPollId: ReturnType<typeof requestAnimationFrame> | undefined
+  let staggerDelay: ReturnType<typeof setTimeout> | undefined
 
   function runStagger(events: HTMLElement[]) {
     staggerTimers.forEach(clearTimeout)
@@ -671,8 +656,9 @@
       return dateA.localeCompare(dateB)
     })
 
-    // Hide all immediately
+    // Hide all immediately (clear transition first so the hide is instant)
     events.forEach((el) => {
+      el.style.transition = 'none'
       el.style.opacity = '0'
       el.style.transform = 'translateY(4px)'
     })
@@ -693,28 +679,35 @@
     })
   }
 
+  /** Schedule stagger — waits for Schedule-X to finish rendering, then animates */
   function scheduleStagger() {
-    // Cancel previous poll/timers
-    if (staggerPollId) cancelAnimationFrame(staggerPollId)
+    clearTimeout(staggerDelay)
     staggerTimers.forEach(clearTimeout)
     staggerTimers = []
-
-    let attempts = 0
-    const poll = () => {
+    staggerDelay = setTimeout(() => {
       const events = document.querySelectorAll<HTMLElement>('.sx__month-grid-event')
       if (events.length > 0) {
         runStagger(Array.from(events))
-      } else if (attempts < 60) {
-        attempts++
-        staggerPollId = requestAnimationFrame(poll)
       }
-    }
-    // Give Schedule-X a frame to start rendering
-    staggerPollId = requestAnimationFrame(poll)
+    }, 120)
   }
 
+  // Observe the calendar root for applyFutureClass
+  let calendarObserver: MutationObserver | undefined
+  onMounted(() => {
+    setTimeout(applyFutureClass, 100)
+    setTimeout(applyFutureClass, 500)
+
+    const root = document.querySelector('.sx__calendar')
+    if (root) {
+      calendarObserver = new MutationObserver(debouncedApplyFuture)
+      calendarObserver.observe(root, { childList: true, subtree: true })
+    }
+  })
   onUnmounted(() => {
-    if (staggerPollId) cancelAnimationFrame(staggerPollId)
+    calendarObserver?.disconnect()
+    clearTimeout(futureDebounce)
+    clearTimeout(staggerDelay)
     staggerTimers.forEach(clearTimeout)
   })
 

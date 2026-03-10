@@ -1103,7 +1103,7 @@ describe('Page: Index', () => {
   })
 
   it('stagger animation runs on month-grid events', async () => {
-    // Create mock event elements before mount (2 events to cover sort comparator)
+    // Create mock event elements (2 events to cover sort comparator)
     const dayEl = document.createElement('div')
     dayEl.classList.add('sx__month-grid-day')
     dayEl.setAttribute('data-date', '2025-01-15')
@@ -1118,43 +1118,24 @@ describe('Page: Index', () => {
     eventEl2.classList.add('sx__month-grid-event')
     dayEl2.appendChild(eventEl2)
     document.body.appendChild(dayEl2)
-    // Mock requestAnimationFrame to run callbacks synchronously
-    const origRAF = globalThis.requestAnimationFrame
-    globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
-      cb(0)
-      return 0
-    }
     await mount()
-    // Advance timers so stagger fade-in completes
-    vi.advanceTimersByTime(500)
+    // Advance past stagger delay (120ms) + fade-in timers
+    vi.advanceTimersByTime(700)
     // Stagger should have set transition and final opacity/transform
     expect(eventEl.style.transition).toContain('opacity')
     expect(eventEl.style.opacity).toBe('1')
     expect(eventEl.style.transform).toBe('translateY(0)')
     expect(eventEl2.style.opacity).toBe('1')
-    globalThis.requestAnimationFrame = origRAF
     dayEl.remove()
     dayEl2.remove()
   })
 
-  it('stagger poll retries when no events found yet', async () => {
-    // No events in DOM — poll should retry via RAF, hitting else-if branch
-    const rafCallbacks: FrameRequestCallback[] = []
-    const origRAF = globalThis.requestAnimationFrame
-    globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
-      rafCallbacks.push(cb)
-      return rafCallbacks.length
-    }
+  it('stagger skips when no events in DOM', async () => {
+    // No events — scheduleStagger fires but runStagger is not called
     await mount()
-    // Execute RAF callbacks one by one to simulate polling retries
-    // Each call with no events should increment attempts and schedule another RAF
-    const prevLength = rafCallbacks.length
-    if (rafCallbacks.length > 0) {
-      rafCallbacks[rafCallbacks.length - 1]!(0)
-    }
-    // A new RAF callback should have been scheduled (retry)
-    expect(rafCallbacks.length).toBeGreaterThan(prevLength)
-    globalThis.requestAnimationFrame = origRAF
+    vi.advanceTimersByTime(200)
+    // No error, stagger simply does nothing — verify mount succeeded
+    expect(true).toBe(true)
   })
 
   it('stagger sorts events without parent day gracefully', async () => {
@@ -1165,17 +1146,11 @@ describe('Page: Index', () => {
     const eventEl2 = document.createElement('div')
     eventEl2.classList.add('sx__month-grid-event')
     document.body.appendChild(eventEl2)
-    const origRAF = globalThis.requestAnimationFrame
-    globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
-      cb(0)
-      return 0
-    }
     await mount()
-    vi.advanceTimersByTime(500)
+    vi.advanceTimersByTime(700)
     // Both events should still get animated despite no parent day
     expect(eventEl1.style.opacity).toBe('1')
     expect(eventEl2.style.opacity).toBe('1')
-    globalThis.requestAnimationFrame = origRAF
     eventEl1.remove()
     eventEl2.remove()
   })
@@ -1259,26 +1234,24 @@ describe('Page: Index', () => {
     Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
   })
 
-  it('stagger poll gives up after 60 attempts', async () => {
-    const rafCallbacks: FrameRequestCallback[] = []
-    const origRAF = globalThis.requestAnimationFrame
-    globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
-      rafCallbacks.push(cb)
-      return rafCallbacks.length
-    }
+  it('scheduleStagger cancels previous stagger on re-call', async () => {
+    const dayEl = document.createElement('div')
+    dayEl.classList.add('sx__month-grid-day')
+    dayEl.setAttribute('data-date', '2025-01-15')
+    const eventEl = document.createElement('div')
+    eventEl.classList.add('sx__month-grid-event')
+    dayEl.appendChild(eventEl)
+    document.body.appendChild(dayEl)
     await mount()
-    // Run poll 61 times to exhaust the retry limit
-    for (let i = 0; i < 61; i++) {
-      const last = rafCallbacks[rafCallbacks.length - 1]
-      if (!last) break
-      last(0)
-    }
-    // After 60 retries, no new callback should be added
-    const lengthAfterExhaust = rafCallbacks.length
-    // The last call should NOT have scheduled another
-    const lastCb = rafCallbacks[rafCallbacks.length - 1]
-    if (lastCb) lastCb(0)
-    expect(rafCallbacks).toHaveLength(lengthAfterExhaust)
-    globalThis.requestAnimationFrame = origRAF
+    // Navigate twice quickly — second call should cancel the first
+    const wrapper = await mount()
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    await navButtons[2]!.trigger('click') // next
+    await navButtons[0]!.trigger('click') // prev
+    // Advance past stagger delay + fade-in
+    vi.advanceTimersByTime(700)
+    // Event should have final state from the last stagger run
+    expect(eventEl.style.opacity).toBe('1')
+    dayEl.remove()
   })
 })

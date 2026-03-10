@@ -775,6 +775,30 @@
     width: 30px !important;
     height: 30px !important;
     margin-bottom: -6px !important;
+    position: relative;
+    background-color: transparent !important;
+    z-index: 0;
+  }
+
+  .sx__month-grid-day__header-date.sx__is-today::before,
+  .sx__is-today .sx__month-grid-day__header-date::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-color: #c2410c;
+    z-index: -1;
+    animation: todayCirclePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes todayCirclePulse {
+    0%,
+    100% {
+      transform: scale(0.95);
+    }
+    50% {
+      transform: scale(1.08);
+    }
   }
 
   .sx__month-grid-day:has(.sx__is-today)::after {

@@ -299,6 +299,7 @@
         : currentDate.value.subtract({ months: 1 })
     currentDate.value = next
     calendarControls?.setDate(next)
+    setTimeout(applyFutureClass, 350)
   }
 
   function navigateToToday() {
@@ -310,6 +311,9 @@
 
   function scrollToDay() {
     setTimeout(() => {
+      // Re-apply future classes after Schedule-X re-render
+      applyFutureClass()
+
       const todayStr = new Date().toISOString().slice(0, 10)
       const firstOfMonth = currentDate.value.toPlainYearMonth().toPlainDate({ day: 1 }).toString()
 
@@ -543,10 +547,12 @@
 
   function applyFutureClass() {
     const todayStr = new Date().toISOString().slice(0, 10)
-    document.querySelectorAll('.sx__month-grid-day[data-date]').forEach((el) => {
-      const date = el.getAttribute('data-date')!
-      el.classList.toggle('is-future', date >= todayStr)
-    })
+    document
+      .querySelectorAll('.sx__month-grid-day[data-date], .sx__list-day[data-date]')
+      .forEach((el) => {
+        const date = el.getAttribute('data-date')!
+        el.classList.toggle('is-future', date >= todayStr)
+      })
   }
 
   let futureDebounce: ReturnType<typeof setTimeout> | undefined
@@ -881,7 +887,7 @@
   }
 
   .sx__month-grid-day.is-future:not(.is-leading-or-trailing) {
-    background-color: rgb(250, 245, 235) !important;
+    background-color: #faf5eb !important;
   }
 
   /* --- Schedule-X: Today highlight (red triangle top-right) --- */
@@ -1023,6 +1029,16 @@
     }
   }
 
+  /* --- Schedule-X: List view future days --- */
+
+  .sx__list-day.is-future .sx__list-day-events {
+    background-color: #faf5eb !important;
+  }
+
+  .dark .sx__list-day.is-future .sx__list-day-events {
+    background-color: #24201b !important;
+  }
+
   /* --- Schedule-X: Theme overrides (light) --- */
 
   .sx__calendar {
@@ -1099,7 +1115,7 @@
   }
 
   .dark .sx__month-grid-day.is-future:not(.is-leading-or-trailing) {
-    background-color: #211e1a !important;
+    background-color: #24201b !important;
   }
 
   .dark .sx__month-grid-week {

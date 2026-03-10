@@ -5,18 +5,18 @@ exports[`Page: Index > renders 1`] = `
   <div class="box">
     <div class="calendar row">
       <div class="cal-wrapper">
-        <div class="calendar-view theme-default" locale="de">
+        <div class="sx-vue-calendar-wrapper">
           <div class="cv-header"><span class="periodLabel">January 2025</span>
             <div class="cv-header-nav">
-              <!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button><span class="nav-arrow">‹</span><span class="nav-label">Dezember</span></button><!-- eslint-enable @intlify/vue-i18n/no-raw-text --><button disabled="">pages.index.today</button><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button><span class="nav-label">Februar</span><span class="nav-arrow">›</span></button><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+              <!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button><span class="nav-arrow">‹</span><span class="nav-label">December</span></button><!-- eslint-enable @intlify/vue-i18n/no-raw-text --><button disabled="">pages.index.today</button><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button><span class="nav-label">February</span><span class="nav-arrow">›</span></button><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
             </div>
           </div>
         </div><!-- Loading overlay -->
-        <div class="cal-loading-overlay">
+        <div class="cal-loading-overlay" style="display: none;">
           <div class="flex items-center gap-2"><span class="loading-dot"></span><span class="loading-dot" style="animation-delay: 0.15s;"></span><span class="loading-dot" style="animation-delay: 0.3s;"></span></div>
         </div><!-- Calendar legend / filter -->
         <div class="cal-legend">
-          <div class="cal-legend-inner"><button class="cal-legend-item"><span class="cal-legend-dot" style="background-color: #9a3412;"></span><span class="cal-legend-name">Work</span></button></div>
+          <div class="cal-legend-inner"></div>
         </div>
       </div><!-- Main modal -->
       <div data-v-94fcd891="" id="default-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">

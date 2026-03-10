@@ -52,58 +52,87 @@ vi.mock('../composables/useColorMode', () => ({
   }),
 }))
 
-vi.mock('vue-simple-calendar', () => ({
-  CalendarView: {
-    name: 'CalendarView',
-    template:
-      "<div class=\"calendar-view\"><slot name=\"header\" :headerProps=\"{ previousPeriod: new Date('2024-12-01'), currentPeriod: new Date('2025-01-15'), nextPeriod: new Date('2025-02-01'), periodLabel: 'January 2025' }\" /></div>",
+/* ── Schedule-X mocks ── */
+
+const mockEventsServiceSet = vi.hoisted(() => vi.fn())
+const mockEventsServiceGetAll = vi.hoisted(() => vi.fn(() => []))
+
+const mockCalendarControlsSetDate = vi.hoisted(() => vi.fn())
+const mockCalendarControlsSetCalendars = vi.hoisted(() => vi.fn())
+
+const mockSetTheme = vi.hoisted(() => vi.fn())
+
+// Track the onRangeUpdate and onEventClick callbacks
+const mockCallbacks = vi.hoisted(() => ({
+  onRangeUpdate: null as ((range: { start: { epochMilliseconds: number }; end: { epochMilliseconds: number } }) => void) | null,
+  onEventClick: null as ((event: unknown) => void) | null,
+}))
+
+vi.mock('@schedule-x/vue', () => ({
+  ScheduleXCalendar: {
+    name: 'ScheduleXCalendar',
+    template: '<div class="sx-vue-calendar-wrapper"><slot name="headerContent" /></div>',
     props: {
-      showDate: { type: Date, default: () => new Date() },
-      items: { type: Array, default: () => [] },
-      startingDayOfWeek: { type: Number, default: 1 },
-      disablePast: { type: Boolean, default: false },
-      disableFuture: { type: Boolean, default: false },
-      displayPeriodUom: { type: String, default: 'month' },
-      displayPeriodCount: { type: Number, default: 1 },
-      displayWeekNumbers: { type: Boolean, default: false },
-      showTimes: { type: Boolean, default: false },
-      periodChangedCallback: { type: Function, default: undefined },
+      calendarApp: { type: Object, required: true },
+      customComponents: { type: Object, default: () => ({}) },
     },
-    emits: ['click-item'],
-    mounted() {
-      if (this.periodChangedCallback) {
-        this.periodChangedCallback({
-          value: {
-            displayFirstDate: { value: new Date('2025-01-01') },
-            displayLastDate: { value: new Date('2025-01-31') },
-          },
-        })
-      }
-    },
-  },
-  CalendarViewHeader: {
-    name: 'CalendarViewHeader',
-    template: '<div class="calendar-header" />',
-    props: ['headerProps'],
-    emits: ['input'],
   },
 }))
 
+vi.mock('@schedule-x/calendar', () => ({
+  createCalendar: (config: { callbacks?: { onRangeUpdate?: (range: unknown) => void; onEventClick?: (event: unknown) => void } }, _plugins: unknown[]) => {
+    // Capture the callbacks for test invocation
+    if (config.callbacks?.onRangeUpdate) {
+      mockCallbacks.onRangeUpdate = config.callbacks.onRangeUpdate as typeof mockCallbacks.onRangeUpdate
+    }
+    if (config.callbacks?.onEventClick) {
+      mockCallbacks.onEventClick = config.callbacks.onEventClick as typeof mockCallbacks.onEventClick
+    }
+    return {
+      setTheme: mockSetTheme,
+    }
+  },
+  createViewMonthGrid: () => ({ name: 'month-grid' }),
+  createViewMonthAgenda: () => ({ name: 'month-agenda' }),
+}))
+
+vi.mock('@schedule-x/events-service', () => ({
+  createEventsServicePlugin: () => ({
+    set: mockEventsServiceSet,
+    getAll: mockEventsServiceGetAll,
+    name: 'events-service',
+  }),
+}))
+
+vi.mock('@schedule-x/calendar-controls', () => ({
+  createCalendarControlsPlugin: () => ({
+    setDate: mockCalendarControlsSetDate,
+    setCalendars: mockCalendarControlsSetCalendars,
+    name: 'calendar-controls',
+  }),
+}))
+
+vi.mock('temporal-polyfill/global', () => ({}))
+
 vi.stubGlobal('$fetch', mock$fetch)
+
+// Provide Temporal globally for tests (happy-dom may not have it)
+if (typeof globalThis.Temporal === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Temporal } = require('temporal-polyfill')
+  globalThis.Temporal = Temporal
+}
 
 describe('Page: Index', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
-    // Make rAF synchronous so triggerCalFlip inner callback executes
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
-      cb(0)
-      return 0
-    })
     mockColorMode.isDark.value = false
     mockCalendarFilter.legend.value = []
     mockCalendarFilter.hiddenCalendars.value = new Set()
+    mockCallbacks.onRangeUpdate = null
+    mockCallbacks.onEventClick = null
     // Clean up stale modal elements from previous tests to prevent DOM pollution
     document.querySelectorAll('#default-modal').forEach((el) => {
       el.remove()
@@ -137,6 +166,16 @@ describe('Page: Index', () => {
     })
   })
 
+  /** Helper: trigger onRangeUpdate to simulate calendar mount / period change */
+  function triggerRangeUpdate(start = '2025-01-01', end = '2025-01-31') {
+    const s = new Date(start + 'T00:00:00Z')
+    const e = new Date(end + 'T23:59:59Z')
+    mockCallbacks.onRangeUpdate?.({
+      start: { epochMilliseconds: s.getTime() } as Temporal.ZonedDateTime,
+      end: { epochMilliseconds: e.getTime() } as Temporal.ZonedDateTime,
+    })
+  }
+
   it('renders', async () => {
     const html = await (
       await renderSuspended(Page, {
@@ -146,8 +185,9 @@ describe('Page: Index', () => {
     expect(html).toMatchSnapshot()
   })
 
-  it('fetches calendar data on mount', async () => {
+  it('fetches calendar data when onRangeUpdate fires', async () => {
     await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
     })
@@ -159,11 +199,31 @@ describe('Page: Index', () => {
     })
   })
 
-  it('opens modal when clicking an item', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    await calendarView.vm.$emit('click-item', {
-      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
+  it('calls eventsService.set with mapped events', async () => {
+    await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
+    await vi.waitFor(() => {
+      expect(mockEventsServiceSet).toHaveBeenCalled()
+    })
+    const events = mockEventsServiceSet.mock.calls[0]![0]
+    expect(events).toHaveLength(1)
+    expect(events[0].title).toBe('Test')
+    expect(events[0]._calendar).toBe('Work')
+    expect(events[0].calendarId).toBe('cal-0')
+  })
+
+  it('opens modal when clicking an event', async () => {
+    await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
+    await vi.waitFor(() => {
+      expect(mockEventsServiceSet).toHaveBeenCalled()
+    })
+    // Simulate event click via the captured callback
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 1,
+      title: 'Test',
     })
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/event', {
@@ -175,16 +235,21 @@ describe('Page: Index', () => {
 
   it('renders modal content with event details', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    await calendarView.vm.$emit('click-item', {
-      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
+    triggerRangeUpdate()
+    await vi.waitFor(() => {
+      expect(mockEventsServiceSet).toHaveBeenCalled()
+    })
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 1,
+      title: 'Test',
     })
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
     })
     await nextTick()
     await nextTick()
-    // Check that modal shows event location and description
     expect(wrapper.text()).toContain('Room A')
     expect(wrapper.text()).toContain('A test event')
   })
@@ -213,9 +278,15 @@ describe('Page: Index', () => {
       return Promise.resolve({})
     })
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    await calendarView.vm.$emit('click-item', {
-      originalItem: { calendar: 'Work', id: 'e1', occurrence: 1 },
+    triggerRangeUpdate()
+    await vi.waitFor(() => {
+      expect(mockEventsServiceSet).toHaveBeenCalled()
+    })
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'e1',
+      _occurrence: 1,
+      title: 'T',
     })
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
@@ -223,7 +294,6 @@ describe('Page: Index', () => {
     await nextTick()
     await nextTick()
     expect(wrapper.text()).toContain('Room B')
-    // No description section
     expect(wrapper.text()).not.toContain('A test event')
   })
 
@@ -251,18 +321,22 @@ describe('Page: Index', () => {
       return Promise.resolve({})
     })
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    await calendarView.vm.$emit('click-item', {
-      originalItem: { calendar: 'Work', id: 'e1', occurrence: 1 },
+    triggerRangeUpdate()
+    await vi.waitFor(() => {
+      expect(mockEventsServiceSet).toHaveBeenCalled()
+    })
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'e1',
+      _occurrence: 1,
+      title: 'T',
     })
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
     })
     await nextTick()
     await nextTick()
-    // No location row
     expect(wrapper.text()).not.toContain('Room')
-    // Description should be shown
     expect(wrapper.text()).toContain('Some notes')
   })
 
@@ -273,10 +347,14 @@ describe('Page: Index', () => {
       if (url === '/api/event') return Promise.reject(new Error('fetch failed'))
       return Promise.resolve([])
     })
-    const wrapper = await mountSuspended(Page, { route: '/' })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    await calendarView.vm.$emit('click-item', {
-      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
+    await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
+    await nextTick()
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 1,
+      title: 'Test',
     })
     await vi.waitFor(() => {
       expect(consoleSpy).toHaveBeenCalled()
@@ -284,35 +362,68 @@ describe('Page: Index', () => {
     consoleSpy.mockRestore()
   })
 
-  it('setShowDate updates calendar date via nav button', async () => {
+  it('navigates to next month via nav button', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    // Click the "next" button in the custom header
     const navButtons = wrapper.findAll('.cv-header-nav button')
     const nextButton = navButtons[2]! // ‹, today, ›
     await nextButton.trigger('click')
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate')).toStrictEqual(new Date('2025-02-01'))
+    expect(mockCalendarControlsSetDate).toHaveBeenCalled()
+    const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
+    expect(dateArg.month).toBe(2) // February
   })
 
-  it('applies design palette colors to calendar items', async () => {
+  it('navigates to previous month via nav button', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    const prevButton = navButtons[0]!
+    await prevButton.trigger('click')
+    expect(mockCalendarControlsSetDate).toHaveBeenCalled()
+    const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
+    expect(dateArg.month).toBe(12) // December
+    expect(dateArg.year).toBe(2024)
+  })
+
+  it('navigates to today via nav button', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/' })
+    // Navigate away first so "today" button is not disabled
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    await navButtons[0]!.trigger('click')
+    mockCalendarControlsSetDate.mockClear()
+    await navButtons[1]!.trigger('click')
+    expect(mockCalendarControlsSetDate).toHaveBeenCalled()
+    const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
+    expect(dateArg.year).toBe(2025)
+    expect(dateArg.month).toBe(1) // January
+  })
+
+  it('sets up Schedule-X calendar colors after loading calendars', async () => {
+    await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
     })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    const items = calendarView.props('items') as { style: string }[]
-    if (items.length > 0) {
-      // Light palette sienna: bg=#dfc8b4, border=#9a3412
-      expect(items[0]!.style).toContain('#dfc8b4')
-      expect(items[0]!.style).toContain('#9a3412')
-    }
+    await vi.waitFor(() => {
+      expect(mockCalendarControlsSetCalendars).toHaveBeenCalled()
+    })
+    const calendarsConfig = mockCalendarControlsSetCalendars.mock.calls[0]![0]
+    expect(calendarsConfig['cal-0']).toBeDefined()
+    expect(calendarsConfig['cal-0'].lightColors.main).toBe('#9a3412')
+    expect(calendarsConfig['cal-0'].lightColors.container).toBe('#dfc8b4')
+    expect(calendarsConfig['cal-0'].darkColors.main).toBe('#c2410c')
+    expect(calendarsConfig['cal-0'].darkColors.container).toBe('#583020')
   })
 
   it('closes modal via handleModalX', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    await calendarView.vm.$emit('click-item', {
-      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
+    triggerRangeUpdate()
+    await vi.waitFor(() => {
+      expect(mockEventsServiceSet).toHaveBeenCalled()
+    })
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 1,
+      title: 'Test',
     })
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
@@ -334,9 +445,11 @@ describe('Page: Index', () => {
       return Promise.resolve([{ name: 'Work', color: '#ea580c' }])
     })
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    await calendarView.vm.$emit('click-item', {
-      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 1,
+      title: 'Test',
     })
     await nextTick()
     // Modal open, still loading
@@ -354,19 +467,14 @@ describe('Page: Index', () => {
   })
 
   it('skips fetching calendars when already loaded', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
     })
-    // Calendars are now loaded. Trigger another getData call
+    // Calendars are now loaded. Trigger another range update
     mock$fetch.mockClear()
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    calendarView.props('periodChangedCallback')?.({
-      value: {
-        displayFirstDate: { value: new Date('2025-02-01') },
-        displayLastDate: { value: new Date('2025-02-28') },
-      },
-    })
+    triggerRangeUpdate('2025-02-01', '2025-02-28')
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith(
         '/api/calendar',
@@ -381,75 +489,49 @@ describe('Page: Index', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mock$fetch.mockRejectedValue(new Error('network error'))
     await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(consoleSpy).toHaveBeenCalled()
     })
     consoleSpy.mockRestore()
   })
 
-  it('navigates via previous button', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
-    const navButtons = wrapper.findAll('.cv-header-nav button')
-    const prevButton = navButtons[0]!
-    await prevButton.trigger('click')
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate')).toStrictEqual(new Date('2024-12-01'))
-  })
-
-  it('navigates via today button', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
-    const navButtons = wrapper.findAll('.cv-header-nav button')
-    // Navigate away first so "today" button is not disabled
-    await navButtons[0]!.trigger('click')
-    await navButtons[1]!.trigger('click')
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    const showDate = calendarView.props('showDate') as Date
-    expect(showDate.getFullYear()).toBe(2025)
-    expect(showDate.getMonth()).toBe(0)
-    expect(showDate.getDate()).toBe(15)
-  })
-
   it('handles keyboard navigation ArrowRight', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    await mountSuspended(Page, { route: '/' })
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
     await nextTick()
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    // showDate should have advanced to next month (Feb 2025)
-    expect(calendarView.props('showDate').getMonth()).toBe(1) // February
+    expect(mockCalendarControlsSetDate).toHaveBeenCalled()
+    const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
+    expect(dateArg.month).toBe(2) // February
   })
 
   it('handles keyboard navigation with a key', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    await mountSuspended(Page, { route: '/' })
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))
     await nextTick()
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    // 'a' navigates to previous month (Dec 2024)
-    expect(calendarView.props('showDate').getMonth()).toBe(11) // December
+    expect(mockCalendarControlsSetDate).toHaveBeenCalled()
+    const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
+    expect(dateArg.month).toBe(12) // December
   })
 
   it('ignores keyboard when modal is open', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    await calendarView.vm.$emit('click-item', {
-      originalItem: { calendar: 'Work', id: 'event-1', occurrence: 1 },
-    })
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
+    await mountSuspended(Page, { route: '/' })
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 1,
+      title: 'Test',
     })
     await nextTick()
-    // Verify modal is open in component tree
-    expect(wrapper.find('#default-modal.modal-open').exists()).toBe(true)
     // Add modal element to global DOM so isModalOpen() can find it
     const fakeModal = document.createElement('div')
     fakeModal.id = 'default-modal'
     fakeModal.classList.add('modal-open')
     document.body.appendChild(fakeModal)
-    const dateBefore = calendarView.props('showDate')
     // Keyboard should be ignored when modal is open
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
     await nextTick()
-    // showDate should NOT have changed
-    expect(calendarView.props('showDate')).toStrictEqual(dateBefore)
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
     document.body.removeChild(fakeModal)
   })
 
@@ -461,138 +543,70 @@ describe('Page: Index', () => {
     removeSpy.mockRestore()
   })
 
-  it('staggers cv-item animations after data load', async () => {
-    // Add cv-item elements to the DOM so staggerItems finds them
-    const container = document.createElement('div')
-    const item1 = document.createElement('div')
-    item1.classList.add('cv-item')
-    const item2 = document.createElement('div')
-    item2.classList.add('cv-item')
-    container.append(item1, item2)
-    document.body.appendChild(container)
-
-    await mountSuspended(Page, { route: '/' })
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith(
-        '/api/calendar',
-        expect.objectContaining({ method: 'POST' }),
-      )
-    })
-    // After getData completes and nextTick, staggerItems should have run
-    await nextTick()
-    await nextTick()
-    expect(item1.classList.contains('item-pop')).toBe(true)
-    expect(item2.style.animationDelay).toBe('30ms')
-
-    document.body.removeChild(container)
-  })
-
-  it('applies dark palette colors when isDark is true', async () => {
-    mockColorMode.isDark.value = true
-    const wrapper = await mountSuspended(Page, { route: '/' })
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
-    })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    const items = calendarView.props('items') as { style: string }[]
-    if (items.length > 0) {
-      // Dark palette sienna: bg=#583020, border=#c2410c
-      expect(items[0]!.style).toContain('#583020')
-      expect(items[0]!.style).toContain('#c2410c')
-    }
-  })
-
-  it('uses fallback palette for unknown calendar colors', async () => {
-    mock$fetch.mockImplementation((url: string) => {
-      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
-      if (url === '/api/calendar')
-        return Promise.resolve([
-          {
-            id: 'e1',
-            title: 'Unknown',
-            color: '#999999',
-            calendar: 'Work',
-            startDate: '2025-01-15',
-            endDate: '2025-01-15',
-          },
-        ])
-      return Promise.resolve({})
-    })
-    const wrapper = await mountSuspended(Page, { route: '/' })
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
-    })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    const items = calendarView.props('items') as { style: string }[]
-    // Should use designPalette[0] (sienna) as fallback
-    expect(items.length).toBeGreaterThan(0)
-    expect(items[0]!.style).toContain('#dfc8b4')
-    expect(items[0]!.style).toContain('#9a3412')
-  })
-
   it('handles ArrowLeft keyboard navigation', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    await mountSuspended(Page, { route: '/' })
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
     await nextTick()
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate').getMonth()).toBe(11) // December 2024
+    expect(mockCalendarControlsSetDate).toHaveBeenCalled()
+    const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
+    expect(dateArg.month).toBe(12) // December 2024
   })
 
   it('handles d key keyboard navigation', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
+    await mountSuspended(Page, { route: '/' })
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }))
     await nextTick()
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate').getMonth()).toBe(1) // February 2025
+    expect(mockCalendarControlsSetDate).toHaveBeenCalled()
+    const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
+    expect(dateArg.month).toBe(2) // February 2025
   })
 
   it('ignores unhandled keyboard keys', async () => {
-    const wrapper = await mountSuspended(Page, { route: '/' })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    const dateBefore = calendarView.props('showDate')
+    await mountSuspended(Page, { route: '/' })
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }))
     await nextTick()
-    expect(calendarView.props('showDate')).toStrictEqual(dateBefore)
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
   })
 
   it('swipe left navigates to next month', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calWrapper = wrapper.find('.cal-wrapper')
-    await calWrapper.trigger('touchstart', { changedTouches: [{ clientX: 200, clientY: 100 }] })
-    await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 50, clientY: 100 }] })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate').getMonth()).toBe(1) // February
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 200, clientY: 100 }] })
+    await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 50, clientY: 100 }] })
+    expect(mockCalendarControlsSetDate).toHaveBeenCalled()
+    const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
+    expect(dateArg.month).toBe(2) // February
   })
 
   it('swipe right navigates to previous month', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calWrapper = wrapper.find('.cal-wrapper')
-    await calWrapper.trigger('touchstart', { changedTouches: [{ clientX: 50, clientY: 100 }] })
-    await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 100 }] })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate').getMonth()).toBe(11) // December
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 50, clientY: 100 }] })
+    await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 100 }] })
+    expect(mockCalendarControlsSetDate).toHaveBeenCalled()
+    const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
+    expect(dateArg.month).toBe(12) // December
   })
 
   it('ignores short swipes', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calWrapper = wrapper.find('.cal-wrapper')
-    await calWrapper.trigger('touchstart', { changedTouches: [{ clientX: 100, clientY: 100 }] })
-    await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 130, clientY: 100 }] })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate').getMonth()).toBe(0) // Still January
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 100, clientY: 100 }] })
+    await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 130, clientY: 100 }] })
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
   })
 
   it('ignores vertical swipes', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calWrapper = wrapper.find('.cal-wrapper')
-    await calWrapper.trigger('touchstart', { changedTouches: [{ clientX: 100, clientY: 100 }] })
-    await calWrapper.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 300 }] })
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    expect(calendarView.props('showDate').getMonth()).toBe(0) // Still January
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 100, clientY: 100 }] })
+    await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 300 }] })
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
   })
 
   it('renders calendar legend items', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
     })
@@ -600,7 +614,6 @@ describe('Page: Index', () => {
     const legendItems = wrapper.findAll('.cal-legend-item')
     expect(legendItems).toHaveLength(1)
     expect(legendItems[0]!.text()).toContain('Work')
-    // Dot should have the border color from the design palette (light sienna: #9a3412)
     const dot = legendItems[0]!.find('.cal-legend-dot')
     expect((dot.element as HTMLElement).style.backgroundColor).toBeTruthy()
   })
@@ -641,40 +654,47 @@ describe('Page: Index', () => {
       return Promise.resolve({})
     })
     const wrapper = await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
     })
     await nextTick()
 
-    const calendarView = wrapper.findComponent({ name: 'CalendarView' })
-    // Both events visible initially
-    expect(calendarView.props('items') as { title: string }[]).toHaveLength(2)
+    // Both events should have been set initially
+    expect(mockEventsServiceSet).toHaveBeenCalled()
+    const initialEvents = mockEventsServiceSet.mock.calls[0]![0]
+    expect(initialEvents).toHaveLength(2)
 
     // Click "Work" legend button to hide Work events
     const legendItems = wrapper.findAll('.cal-legend-item')
+    mockEventsServiceSet.mockClear()
     await legendItems[0]!.trigger('click')
     await nextTick()
 
-    const itemsAfterHide = calendarView.props('items') as { title: string }[]
-    expect(itemsAfterHide).toHaveLength(1)
-    expect(itemsAfterHide[0]!.title).toBe('Personal Event')
+    // eventsService.set should be called again with filtered events
+    expect(mockEventsServiceSet).toHaveBeenCalled()
+    const filteredEvents = mockEventsServiceSet.mock.calls[0]![0]
+    expect(filteredEvents).toHaveLength(1)
+    expect(filteredEvents[0].title).toBe('Personal Event')
 
     // Hidden legend item should have the hidden class
     expect(wrapper.findAll('.cal-legend-item')[0]!.classes()).toContain('cal-legend-hidden')
 
     // Click again to show Work events
+    mockEventsServiceSet.mockClear()
     await wrapper.findAll('.cal-legend-item')[0]!.trigger('click')
     await nextTick()
 
-    expect(calendarView.props('items') as { title: string }[]).toHaveLength(2)
+    expect(mockEventsServiceSet).toHaveBeenCalled()
+    const allEvents = mockEventsServiceSet.mock.calls[0]![0]
+    expect(allEvents).toHaveLength(2)
     expect(wrapper.findAll('.cal-legend-item')[0]!.classes()).not.toContain('cal-legend-hidden')
   })
 
   it('opens legend when mouse is near bottom of cal-wrapper', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calWrapper = wrapper.find('.cal-wrapper')
-    // Mock getBoundingClientRect to return a known bottom
-    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapperEl.element, 'getBoundingClientRect').mockReturnValue({
       bottom: 500,
       top: 0,
       left: 0,
@@ -685,11 +705,9 @@ describe('Page: Index', () => {
       y: 0,
       toJSON: () => {},
     })
-    // Mouse near bottom (within 40px trigger zone)
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 470 }))
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
-    // Mouse far from bottom — legend closes after timeout
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
     vi.advanceTimersByTime(300)
     await nextTick()
@@ -698,8 +716,8 @@ describe('Page: Index', () => {
 
   it('opens legend when mouse is below cal-wrapper', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calWrapper = wrapper.find('.cal-wrapper')
-    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapperEl.element, 'getBoundingClientRect').mockReturnValue({
       bottom: 500,
       top: 0,
       left: 0,
@@ -710,7 +728,6 @@ describe('Page: Index', () => {
       y: 0,
       toJSON: () => {},
     })
-    // Mouse below cal-wrapper (e.g. over footer)
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 600 }))
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
@@ -718,8 +735,8 @@ describe('Page: Index', () => {
 
   it('cancels legend close timer when mouse re-enters trigger zone', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calWrapper = wrapper.find('.cal-wrapper')
-    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapperEl.element, 'getBoundingClientRect').mockReturnValue({
       bottom: 500,
       top: 0,
       left: 0,
@@ -730,16 +747,12 @@ describe('Page: Index', () => {
       y: 0,
       toJSON: () => {},
     })
-    // Open legend
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 470 }))
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
-    // Mouse leaves — starts close timer
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
-    // Before timer fires, mouse comes back
     vi.advanceTimersByTime(100)
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 480 }))
-    // Wait past original timeout — legend should still be open
     vi.advanceTimersByTime(300)
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
@@ -747,8 +760,8 @@ describe('Page: Index', () => {
 
   it('ignores mousemove when legend is closed and mouse is outside trigger zone', async () => {
     const wrapper = await mountSuspended(Page, { route: '/' })
-    const calWrapper = wrapper.find('.cal-wrapper')
-    vi.spyOn(calWrapper.element, 'getBoundingClientRect').mockReturnValue({
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapperEl.element, 'getBoundingClientRect').mockReturnValue({
       bottom: 500,
       top: 0,
       left: 0,
@@ -759,7 +772,6 @@ describe('Page: Index', () => {
       y: 0,
       toJSON: () => {},
     })
-    // Mouse far from bottom, legend not open — nothing happens
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).not.toContain('cal-legend-open')
@@ -784,19 +796,28 @@ describe('Page: Index', () => {
       return Promise.resolve([])
     })
     const wrapper = await mountSuspended(Page, { route: '/' })
+    triggerRangeUpdate()
     await nextTick()
     // Loading overlay should be visible while fetch is pending (v-show)
     const overlay = wrapper.find('.cal-loading-overlay')
     expect(overlay.exists()).toBe(true)
-    // v-show: no display:none style when visible
     expect((overlay.element as HTMLElement).style.display).not.toBe('none')
     // Resolve the fetch
     resolveCalendars([{ name: 'Work', color: '#ff0000' }])
     await vi.waitFor(() => {
-      // After loading completes, v-show hides with display:none
       expect((wrapper.find('.cal-loading-overlay').element as HTMLElement).style.display).toBe(
         'none',
       )
     })
+  })
+
+  it('updates theme when isDark changes', async () => {
+    await mountSuspended(Page, { route: '/' })
+    mockColorMode.isDark.value = true
+    await nextTick()
+    expect(mockSetTheme).toHaveBeenCalledWith('dark')
+    mockColorMode.isDark.value = false
+    await nextTick()
+    expect(mockSetTheme).toHaveBeenCalledWith('light')
   })
 })

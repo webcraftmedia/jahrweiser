@@ -147,7 +147,7 @@
   import {
     createCalendar,
     createViewMonthGrid,
-    createViewMonthAgenda,
+    createViewList,
   } from '@schedule-x/calendar'
   import { createEventsServicePlugin } from '@schedule-x/events-service'
   import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls'
@@ -248,7 +248,7 @@
       {
         locale: localeProperties.value.language ?? 'de-DE',
         selectedDate: today,
-        views: [createViewMonthGrid(), createViewMonthAgenda()],
+        views: [createViewMonthGrid(), createViewList()],
         defaultView: 'month-grid',
         isDark: isDark.value,
         firstDayOfWeek: 1,
@@ -361,12 +361,27 @@
     }
   }
 
+  /* ── Responsive view switching (month-grid ↔ list at 700px) ── */
+
+  const SX_BREAKPOINT = 700
+  let lastWasSmall = false
+
+  function onResize() {
+    const isSmall = window.innerWidth < SX_BREAKPOINT
+    if (isSmall === lastWasSmall) return
+    lastWasSmall = isSmall
+    calendarControls?.setView(isSmall ? 'list' : 'month-grid')
+  }
+
   onMounted(() => {
+    lastWasSmall = window.innerWidth < SX_BREAKPOINT
     window.addEventListener('keydown', handleKeyboard)
+    window.addEventListener('resize', onResize)
     document.addEventListener('mousemove', onMouseMove)
   })
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyboard)
+    window.removeEventListener('resize', onResize)
     document.removeEventListener('mousemove', onMouseMove)
     clearTimeout(legendLeaveTimer)
   })
@@ -706,13 +721,13 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
-  /* --- Schedule-X: Month agenda events --- */
+  /* --- Schedule-X: List view events --- */
 
-  .sx__month-agenda-event {
+  .sx__list-event {
     cursor: pointer;
   }
 
-  .sx__month-agenda-event:hover {
+  .sx__list-event:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
@@ -729,6 +744,10 @@
     --sx-color-on-surface-variant: rgba(30, 41, 59, 0.6);
     --sx-color-surface-container: #efe6d0;
     --sx-color-surface-container-high: #e8ddd0;
+    --sx-color-surface-container-low: #f5edd9;
+    --sx-color-background: #faf5eb;
+    --sx-color-on-background: #1e293b;
+    --sx-color-neutral: rgba(30, 41, 59, 0.6);
     --sx-color-outline: rgba(194, 65, 12, 0.15);
     --sx-color-outline-variant: rgba(194, 65, 12, 0.12);
     --sx-color-primary: #c2410c;
@@ -801,7 +820,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
-  .dark .sx__month-agenda-event:hover {
+  .dark .sx__list-event:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
@@ -814,6 +833,10 @@
     --sx-color-on-surface-variant: #a8937e;
     --sx-color-surface-container: #100e0c;
     --sx-color-surface-container-high: #2e2822;
+    --sx-color-surface-container-low: #1e1a16;
+    --sx-color-background: #1a1714;
+    --sx-color-on-background: #e8ddd0;
+    --sx-color-neutral: #a8937e;
     --sx-color-outline: #3d3630;
     --sx-color-outline-variant: #3d3630;
     --sx-color-primary: #ea580c;

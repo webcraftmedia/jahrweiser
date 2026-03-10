@@ -106,7 +106,7 @@ vi.mock('@schedule-x/calendar', () => ({
     }
   },
   createViewMonthGrid: () => ({ name: 'month-grid' }),
-  createViewMonthAgenda: () => ({ name: 'month-agenda' }),
+  createViewList: () => ({ name: 'list' }),
 }))
 
 vi.mock('@schedule-x/events-service', () => ({

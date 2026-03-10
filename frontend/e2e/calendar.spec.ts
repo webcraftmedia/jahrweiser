@@ -9,13 +9,13 @@ test.describe('Calendar', () => {
 
   test('displays events in calendar', async ({ page }) => {
     await expect(
-      page.locator('.sx__month-grid-event, .sx__month-agenda-event').first(),
+      page.locator('.sx__month-grid-event, .sx__list-event').first(),
     ).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('Jahresversammlung').first()).toBeVisible()
   })
 
   test('clicking event opens modal with details', async ({ page }) => {
-    await page.locator('.sx__month-grid-event, .sx__month-agenda-event').first().click()
+    await page.locator('.sx__month-grid-event, .sx__list-event').first().click()
 
     const modal = page.locator('#default-modal')
     await expect(modal).toBeVisible()
@@ -24,7 +24,7 @@ test.describe('Calendar', () => {
   })
 
   test('modal can be closed', async ({ page }) => {
-    await page.locator('.sx__month-grid-event, .sx__month-agenda-event').first().click()
+    await page.locator('.sx__month-grid-event, .sx__list-event').first().click()
 
     const modal = page.locator('#default-modal')
     await expect(modal).toBeVisible()
@@ -43,7 +43,7 @@ test.describe('Calendar', () => {
 
   test('navigate to previous month via button', async ({ page }) => {
     await expect(
-      page.locator('.sx__month-grid-event, .sx__month-agenda-event').first(),
+      page.locator('.sx__month-grid-event, .sx__list-event').first(),
     ).toBeVisible({ timeout: 10_000 })
     const periodLabel = page.locator('.periodLabel')
     const initialLabel = await periodLabel.textContent()
@@ -55,7 +55,7 @@ test.describe('Calendar', () => {
 
   test('navigate to next month and back with today button', async ({ page }) => {
     await expect(
-      page.locator('.sx__month-grid-event, .sx__month-agenda-event').first(),
+      page.locator('.sx__month-grid-event, .sx__list-event').first(),
     ).toBeVisible({ timeout: 10_000 })
     const periodLabel = page.locator('.periodLabel')
     const initialLabel = await periodLabel.textContent()
@@ -71,7 +71,7 @@ test.describe('Calendar', () => {
 
   test('keyboard navigation changes month', async ({ page }) => {
     await expect(
-      page.locator('.sx__month-grid-event, .sx__month-agenda-event').first(),
+      page.locator('.sx__month-grid-event, .sx__list-event').first(),
     ).toBeVisible({ timeout: 10_000 })
     const periodLabel = page.locator('.periodLabel')
     const initialLabel = await periodLabel.textContent()
@@ -85,7 +85,7 @@ test.describe('Calendar', () => {
 
   test('swipe left navigates to next month', async ({ page }) => {
     await expect(
-      page.locator('.sx__month-grid-event, .sx__month-agenda-event').first(),
+      page.locator('.sx__month-grid-event, .sx__list-event').first(),
     ).toBeVisible({ timeout: 10_000 })
     const periodLabel = page.locator('.periodLabel')
     const initialLabel = await periodLabel.textContent()
@@ -110,7 +110,7 @@ test.describe('Calendar', () => {
 
   test('swipe right navigates to previous month', async ({ page }) => {
     await expect(
-      page.locator('.sx__month-grid-event, .sx__month-agenda-event').first(),
+      page.locator('.sx__month-grid-event, .sx__list-event').first(),
     ).toBeVisible({ timeout: 10_000 })
     const periodLabel = page.locator('.periodLabel')
     const initialLabel = await periodLabel.textContent()

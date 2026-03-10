@@ -599,7 +599,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5em 0.8em;
+    padding: 0.25em 0.4em;
     background-color: #faf5eb;
     border-bottom: 1px solid rgba(194, 65, 12, 0.2);
   }
@@ -610,7 +610,7 @@
     color: #1e293b;
     letter-spacing: 0.02em;
     flex: 0 1 auto;
-    padding-left: 0.2em;
+    padding-left: 0.1em;
   }
 
   .cv-header .cv-header-nav {

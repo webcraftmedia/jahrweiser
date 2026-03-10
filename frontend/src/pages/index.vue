@@ -258,8 +258,8 @@
           onEventClick(calendarEvent) {
             clickItem(calendarEvent as JahrweiserEvent)
           },
-          onRangeUpdate(range) {
-            void fetchDataForRange(range.start, range.end)
+          async fetchEvents(range) {
+            return await fetchDataForRange(range.start, range.end)
           },
         },
       },
@@ -449,7 +449,10 @@
       }))
   }
 
-  async function fetchDataForRange(start: Temporal.ZonedDateTime, end: Temporal.ZonedDateTime) {
+  async function fetchDataForRange(
+    start: Temporal.ZonedDateTime,
+    end: Temporal.ZonedDateTime,
+  ): Promise<JahrweiserEvent[]> {
     calLoading.value = true
     try {
       // Update currentDate from range midpoint for header labels
@@ -479,9 +482,10 @@
       )
 
       rawEvents.value = results.flat()
-      eventsService?.set(mapToScheduleXEvents())
+      return mapToScheduleXEvents()
     } catch (error) {
       console.error(error)
+      return []
     } finally {
       calLoading.value = false
     }

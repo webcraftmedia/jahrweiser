@@ -62,9 +62,10 @@ const mockCalendarControlsSetCalendars = vi.hoisted(() => vi.fn())
 
 const mockSetTheme = vi.hoisted(() => vi.fn())
 
-// Track the onRangeUpdate and onEventClick callbacks
+// Track the fetchEvents and onEventClick callbacks
+type RangeArg = { start: { epochMilliseconds: number }; end: { epochMilliseconds: number } }
 const mockCallbacks = vi.hoisted(() => ({
-  onRangeUpdate: null as ((range: { start: { epochMilliseconds: number }; end: { epochMilliseconds: number } }) => void) | null,
+  fetchEvents: null as ((range: RangeArg) => Promise<unknown[]>) | null,
   onEventClick: null as ((event: unknown) => void) | null,
 }))
 
@@ -80,13 +81,25 @@ vi.mock('@schedule-x/vue', () => ({
 }))
 
 vi.mock('@schedule-x/calendar', () => ({
-  createCalendar: (config: { callbacks?: { onRangeUpdate?: (range: unknown) => void; onEventClick?: (event: unknown) => void } }, _plugins: unknown[]) => {
+  createCalendar: (config: { callbacks?: { fetchEvents?: (range: RangeArg) => Promise<unknown[]>; onEventClick?: (event: unknown) => void } }, _plugins: unknown[]) => {
     // Capture the callbacks for test invocation
-    if (config.callbacks?.onRangeUpdate) {
-      mockCallbacks.onRangeUpdate = config.callbacks.onRangeUpdate as typeof mockCallbacks.onRangeUpdate
+    if (config.callbacks?.fetchEvents) {
+      mockCallbacks.fetchEvents = config.callbacks.fetchEvents
+      // Simulate Schedule-X initial render: call fetchEvents and set returned events
+      const start = new Date('2025-01-01T00:00:00Z')
+      const end = new Date('2025-01-31T23:59:59Z')
+      Promise.resolve().then(async () => {
+        try {
+          const events = await config.callbacks!.fetchEvents!({
+            start: { epochMilliseconds: start.getTime() },
+            end: { epochMilliseconds: end.getTime() },
+          })
+          mockEventsServiceSet(events)
+        } catch { /* error handled inside fetchEvents */ }
+      })
     }
     if (config.callbacks?.onEventClick) {
-      mockCallbacks.onEventClick = config.callbacks.onEventClick as typeof mockCallbacks.onEventClick
+      mockCallbacks.onEventClick = config.callbacks.onEventClick
     }
     return {
       setTheme: mockSetTheme,
@@ -167,7 +180,7 @@ describe('Page: Index', () => {
     mockColorMode.isDark.value = false
     mockCalendarFilter.legend.value = []
     mockCalendarFilter.hiddenCalendars.value = new Set()
-    mockCallbacks.onRangeUpdate = null
+    mockCallbacks.fetchEvents = null
     mockCallbacks.onEventClick = null
     // Clean up stale modal elements from previous tests to prevent DOM pollution
     document.querySelectorAll('#default-modal').forEach((el) => {
@@ -203,20 +216,29 @@ describe('Page: Index', () => {
   })
 
   /** Helper: mount and track wrapper for cleanup */
-  async function mount() {
+  async function mount({ awaitFetch = true } = {}) {
     const w = await mountSuspended(Page, { route: '/' })
     wrappers.push(w)
+    if (awaitFetch) {
+      // Wait for the initial fetchEvents (triggered by Schedule-X on render) to settle
+      await vi.waitFor(() => {
+        expect(mockEventsServiceSet).toHaveBeenCalled()
+      })
+    }
     return w
   }
 
-  /** Helper: trigger onRangeUpdate to simulate calendar mount / period change */
-  function triggerRangeUpdate(start = '2025-01-01', end = '2025-01-31') {
+  /** Helper: simulate Schedule-X calling fetchEvents for a new range (e.g. navigation) */
+  async function triggerFetchEvents(start = '2025-01-01', end = '2025-01-31') {
     const s = new Date(start + 'T00:00:00Z')
     const e = new Date(end + 'T23:59:59Z')
-    mockCallbacks.onRangeUpdate?.({
-      start: { epochMilliseconds: s.getTime() } as Temporal.ZonedDateTime,
-      end: { epochMilliseconds: e.getTime() } as Temporal.ZonedDateTime,
-    })
+    if (mockCallbacks.fetchEvents) {
+      const events = await mockCallbacks.fetchEvents({
+        start: { epochMilliseconds: s.getTime() },
+        end: { epochMilliseconds: e.getTime() },
+      })
+      mockEventsServiceSet(events)
+    }
   }
 
   it('renders', async () => {
@@ -228,28 +250,17 @@ describe('Page: Index', () => {
     expect(html).toMatchSnapshot()
   })
 
-  it('fetches calendar data when onRangeUpdate fires', async () => {
+  it('fetches calendar data on initial render via fetchEvents', async () => {
     await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
-    })
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith(
-        '/api/calendar',
-        expect.objectContaining({ method: 'POST' }),
-      )
-    })
+    expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+    expect(mock$fetch).toHaveBeenCalledWith(
+      '/api/calendar',
+      expect.objectContaining({ method: 'POST' }),
+    )
   })
 
-  it('calls eventsService.set with mapped events', async () => {
+  it('returns mapped events from fetchEvents', async () => {
     await mount()
-    mockEventsServiceSet.mockClear()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mockEventsServiceSet).toHaveBeenCalled()
-    })
-    // Find the call that has actual events (skip stale empty calls)
     const callWithEvents = mockEventsServiceSet.mock.calls.find((c: unknown[][]) => c[0]?.length > 0)
     expect(callWithEvents).toBeTruthy()
     const events = callWithEvents![0]
@@ -261,10 +272,6 @@ describe('Page: Index', () => {
 
   it('opens modal when clicking an event', async () => {
     await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mockEventsServiceSet).toHaveBeenCalled()
-    })
     // Simulate event click via the captured callback
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
@@ -282,10 +289,6 @@ describe('Page: Index', () => {
 
   it('renders modal content with event details', async () => {
     const wrapper = await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mockEventsServiceSet).toHaveBeenCalled()
-    })
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'event-1',
@@ -325,10 +328,6 @@ describe('Page: Index', () => {
       return Promise.resolve({})
     })
     const wrapper = await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mockEventsServiceSet).toHaveBeenCalled()
-    })
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'e1',
@@ -368,10 +367,6 @@ describe('Page: Index', () => {
       return Promise.resolve({})
     })
     const wrapper = await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mockEventsServiceSet).toHaveBeenCalled()
-    })
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'e1',
@@ -395,8 +390,6 @@ describe('Page: Index', () => {
       return Promise.resolve([])
     })
     await mount()
-    triggerRangeUpdate()
-    await nextTick()
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'event-1',
@@ -445,13 +438,7 @@ describe('Page: Index', () => {
 
   it('sets up Schedule-X calendar colors after loading calendars', async () => {
     await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
-    })
-    await vi.waitFor(() => {
-      expect(mockCalendarControlsSetCalendars).toHaveBeenCalled()
-    })
+    expect(mockCalendarControlsSetCalendars).toHaveBeenCalled()
     const calendarsConfig = mockCalendarControlsSetCalendars.mock.calls[0]![0]
     expect(calendarsConfig['cal-0']).toBeDefined()
     expect(calendarsConfig['cal-0'].lightColors.main).toBe('#9a3412')
@@ -462,10 +449,6 @@ describe('Page: Index', () => {
 
   it('closes modal via handleModalX', async () => {
     const wrapper = await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mockEventsServiceSet).toHaveBeenCalled()
-    })
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'event-1',
@@ -488,8 +471,13 @@ describe('Page: Index', () => {
   it('prevents closing modal while event is loading', async () => {
     let resolveEvent!: (v: unknown) => void
     mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ea580c' }])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          { id: 'e1', title: 'T', color: '#ea580c', calendar: 'Work', startDate: '2025-01-15', endDate: '2025-01-15' },
+        ])
       if (url === '/api/event') return new Promise((r) => (resolveEvent = r))
-      return Promise.resolve([{ name: 'Work', color: '#ea580c' }])
+      return Promise.resolve({})
     })
     const wrapper = await mount()
     mockCallbacks.onEventClick?.({
@@ -515,19 +503,13 @@ describe('Page: Index', () => {
 
   it('skips fetching calendars when already loaded', async () => {
     await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
-    })
-    // Calendars are now loaded. Trigger another range update
+    // Calendars are now loaded from initial fetchEvents. Trigger a second fetch for a new range
     mock$fetch.mockClear()
-    triggerRangeUpdate('2025-02-01', '2025-02-28')
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith(
-        '/api/calendar',
-        expect.objectContaining({ method: 'POST' }),
-      )
-    })
+    await triggerFetchEvents('2025-02-01', '2025-02-28')
+    expect(mock$fetch).toHaveBeenCalledWith(
+      '/api/calendar',
+      expect.objectContaining({ method: 'POST' }),
+    )
     // Should NOT have fetched calendars again
     expect(mock$fetch).not.toHaveBeenCalledWith('/api/calendars')
   })
@@ -535,11 +517,9 @@ describe('Page: Index', () => {
   it('handles getData error gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mock$fetch.mockRejectedValue(new Error('network error'))
+    // fetchEvents catches the error and returns [] — mount still completes
     await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalled()
-    })
+    expect(consoleSpy).toHaveBeenCalled()
     consoleSpy.mockRestore()
   })
 
@@ -654,10 +634,6 @@ describe('Page: Index', () => {
 
   it('renders calendar legend items', async () => {
     const wrapper = await mount()
-    triggerRangeUpdate()
-    await vi.waitFor(() => {
-      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
-    })
     await nextTick()
     const legendItems = wrapper.findAll('.cal-legend-item')
     expect(legendItems).toHaveLength(1)
@@ -667,10 +643,7 @@ describe('Page: Index', () => {
   })
 
   it('toggles calendar visibility via legend click', async () => {
-    const wrapper = await mount()
-    // Clear stale calls from previous tests before triggering our range update
-    mockEventsServiceSet.mockClear()
-    mock$fetch.mockClear()
+    // Set up 2-calendar mock BEFORE mount so initial fetch uses it
     mock$fetch.mockImplementation((url: string, opts?: { body?: { calendar?: string } }) => {
       if (url === '/api/calendars')
         return Promise.resolve([
@@ -705,12 +678,10 @@ describe('Page: Index', () => {
       }
       return Promise.resolve({})
     })
-    triggerRangeUpdate()
-    // Wait for eventsService.set to be called with the 2 events
-    await vi.waitFor(() => {
-      const callWithEvents = mockEventsServiceSet.mock.calls.find((c: unknown[][]) => c[0]?.length === 2)
-      expect(callWithEvents).toBeTruthy()
-    })
+    const wrapper = await mount()
+    // mount() already awaited the initial fetch — verify 2 events were loaded
+    const callWithEvents = mockEventsServiceSet.mock.calls.find((c: unknown[][]) => c[0]?.length === 2)
+    expect(callWithEvents).toBeTruthy()
 
     // Click "Work" legend button to hide Work events
     const legendItems = wrapper.findAll('.cal-legend-item')
@@ -845,8 +816,9 @@ describe('Page: Index', () => {
       }
       return Promise.resolve([])
     })
-    const wrapper = await mount()
-    triggerRangeUpdate()
+    // Mount without awaiting fetch — the pending promise keeps calLoading true
+    const wrapper = await mount({ awaitFetch: false })
+    await nextTick()
     await nextTick()
     // Loading overlay should be visible while fetch is pending (v-show)
     const overlay = wrapper.find('.cal-loading-overlay')

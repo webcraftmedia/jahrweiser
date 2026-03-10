@@ -8,30 +8,27 @@
           @touchstart.passive="onTouchStart"
           @touchend.passive="onTouchEnd"
         >
-          <ScheduleXCalendar v-if="calendarApp" :calendar-app="calendarApp">
-            <template #headerContent>
-              <div class="cv-header">
-                <span class="periodLabel">{{ currentPeriodLabel }}</span>
-                <div class="cv-header-nav">
-                  <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-                  <button @click="navigatePeriod(-1)">
-                    <span class="nav-arrow">‹</span
-                    ><span class="nav-label"> {{ prevMonthLabel }}</span>
-                  </button>
-                  <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
-                  <button :disabled="isCurrentMonth" @click="navigateToToday()">
-                    {{ $t('pages.index.today') }}
-                  </button>
-                  <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-                  <button @click="navigatePeriod(1)">
-                    <span class="nav-label">{{ nextMonthLabel }} </span
-                    ><span class="nav-arrow">›</span>
-                  </button>
-                  <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
-                </div>
-              </div>
-            </template>
-          </ScheduleXCalendar>
+          <div class="cv-header">
+            <span class="periodLabel">{{ currentPeriodLabel }}</span>
+            <div class="cv-header-nav">
+              <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+              <button @click="navigatePeriod(-1)">
+                <span class="nav-arrow">‹</span
+                ><span class="nav-label"> {{ prevMonthLabel }}</span>
+              </button>
+              <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+              <button :disabled="isCurrentMonth" @click="navigateToToday()">
+                {{ $t('pages.index.today') }}
+              </button>
+              <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+              <button @click="navigatePeriod(1)">
+                <span class="nav-label">{{ nextMonthLabel }} </span
+                ><span class="nav-arrow">›</span>
+              </button>
+              <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+            </div>
+          </div>
+          <ScheduleXCalendar v-if="calendarApp" :calendar-app="calendarApp" />
           <!-- Loading overlay -->
           <div v-show="calLoading" class="cal-loading-overlay">
             <div class="flex items-center gap-2">
@@ -689,12 +686,10 @@
     display: none !important;
   }
 
-  /* --- Reset Schedule-X header — our .cv-header handles all styling --- */
+  /* --- Hide Schedule-X default header — our .cv-header is outside the component --- */
 
   .sx__calendar-header {
-    display: block;
-    padding: 0;
-    gap: 0;
+    display: none;
   }
 
   /* --- Custom header (month navigation bar) --- */
@@ -706,6 +701,14 @@
     padding: 0.25em 0;
     background-color: #faf5eb;
     border-bottom: 1px solid rgba(194, 65, 12, 0.2);
+  }
+
+  @media (max-width: 767px) {
+    .cv-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
   }
 
   .cv-header .periodLabel {

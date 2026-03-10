@@ -850,7 +850,7 @@
   }
 
   .sx__month-grid-event:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: none !important;
     white-space: normal !important;
     overflow: visible !important;
     z-index: 100;

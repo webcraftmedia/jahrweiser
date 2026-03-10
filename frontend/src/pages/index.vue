@@ -507,6 +507,39 @@
     }
   }
 
+  /* ── Mark future days ── */
+
+  function applyFutureClass() {
+    const todayStr = new Date().toISOString().slice(0, 10)
+    document.querySelectorAll('.sx__month-grid-day[data-date]').forEach((el) => {
+      const date = el.getAttribute('data-date')!
+      el.classList.toggle('is-future', date >= todayStr)
+    })
+  }
+
+  function markFutureDays() {
+    // Schedule-X uses Preact internally — Vue nextTick is not enough
+    setTimeout(applyFutureClass, 50)
+    setTimeout(applyFutureClass, 200)
+  }
+
+  // Re-apply when navigating months
+  watch(currentDate, markFutureDays)
+
+  // Observe DOM changes from Schedule-X re-renders
+  let futureObserver: MutationObserver | undefined
+  onMounted(() => {
+    markFutureDays()
+    const wrapper = document.querySelector('.sx__month-grid-wrapper')
+    if (wrapper) {
+      futureObserver = new MutationObserver(applyFutureClass)
+      futureObserver.observe(wrapper, { childList: true, subtree: true })
+    }
+  })
+  onUnmounted(() => {
+    futureObserver?.disconnect()
+  })
+
   /* ── Filter reactivity — re-filter events without re-fetching ── */
 
   watch(hiddenCalendars, () => {
@@ -720,6 +753,10 @@
 
   .sx__month-grid-day.is-leading-or-trailing .sx__month-grid-day__header-date {
     color: #9ca3af !important;
+  }
+
+  .sx__month-grid-day.is-future:not(.is-leading-or-trailing) {
+    background-color: rgb(250, 245, 235) !important;
   }
 
   /* --- Schedule-X: Today highlight --- */

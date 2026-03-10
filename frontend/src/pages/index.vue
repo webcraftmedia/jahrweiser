@@ -698,6 +698,10 @@
     border-inline-end: 0.5px solid rgba(194, 65, 12, 0.12) !important;
   }
 
+  .sx__month-grid-cell {
+    height: 26px !important;
+  }
+
   .sx__month-grid-day__header {
     align-items: flex-start !important;
     overflow: visible;
@@ -743,6 +747,9 @@
     border-radius: 3px;
     font-size: 0.9em;
     transition: box-shadow 0.3s ease;
+    width: 100% !important;
+    padding: 4px 6px !important;
+    border-inline-start-width: 3px !important;
   }
 
   .sx__month-grid-event-time {

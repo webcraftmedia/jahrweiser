@@ -78,6 +78,8 @@ export default defineEventHandler(async (event) => {
       }
       const calEvent = new ICAL.Event(vevent)
 
+      const isAllDay = calEvent.startDate.isDate
+
       if (calEvent.isRecurring()) {
         // Expandiere wiederkehrende Events
         const expand = new ICAL.RecurExpansion({
@@ -103,8 +105,8 @@ export default defineEventHandler(async (event) => {
                   : '#e7e7ff',
               id: hrefToId(data.href as string),
               occurrence: count,
-              startDate: occurrence,
-              endDate: recEndDate,
+              startDate: isAllDay ? occurrence.toISOString().slice(0, 10) : occurrence,
+              endDate: isAllDay ? recEndDate.toISOString().slice(0, 10) : recEndDate,
               title: calEvent.summary,
               isRecurring: true,
             })
@@ -113,7 +115,7 @@ export default defineEventHandler(async (event) => {
       } else {
         const sd = calEvent.startDate.toJSDate()
         const ed = calEvent.endDate.toJSDate()
-        if (calEvent.duration.days > 0 || calEvent.duration.weeks > 0) {
+        if (isAllDay) {
           ed.setDate(ed.getDate() - 1) // DTEND is exclusive, subtract 1 day for inclusive end
         }
         results.push({
@@ -123,8 +125,8 @@ export default defineEventHandler(async (event) => {
               ? selectedCalendar.calendarColor
               : '#e7e7ff',
           id: hrefToId(data.href as string),
-          startDate: sd,
-          endDate: ed,
+          startDate: isAllDay ? sd.toISOString().slice(0, 10) : sd,
+          endDate: isAllDay ? ed.toISOString().slice(0, 10) : ed,
           title: calEvent.summary,
         })
       }

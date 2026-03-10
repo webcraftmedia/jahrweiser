@@ -802,6 +802,14 @@
     margin-left: 1px;
     padding: 4px 6px !important;
     border-inline-start-width: 3px !important;
+    overflow: hidden !important;
+  }
+
+  .sx__month-grid-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
   }
 
   .sx__month-grid-event-time {

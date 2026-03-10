@@ -292,6 +292,12 @@
     return currentDate.value.year === now.year && currentDate.value.month === now.month
   })
 
+  function applyFutureClassRepeatedly() {
+    setTimeout(applyFutureClass, 100)
+    setTimeout(applyFutureClass, 350)
+    setTimeout(applyFutureClass, 700)
+  }
+
   function navigatePeriod(direction: 1 | -1) {
     const next =
       direction === 1
@@ -299,7 +305,7 @@
         : currentDate.value.subtract({ months: 1 })
     currentDate.value = next
     calendarControls?.setDate(next)
-    setTimeout(applyFutureClass, 350)
+    applyFutureClassRepeatedly()
   }
 
   function navigateToToday() {
@@ -307,6 +313,7 @@
     currentDate.value = now
     calendarControls?.setDate(now)
     scrollToDay()
+    applyFutureClassRepeatedly()
   }
 
   function scrollToDay() {

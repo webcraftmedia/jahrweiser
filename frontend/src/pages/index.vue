@@ -797,6 +797,61 @@
     display: none !important;
   }
 
+  /* --- Override Schedule-X slide: translateX only (no blur/opacity — stagger handles events) --- */
+
+  .sx__slide-left {
+    animation: sx-slide-left-clean 0.3s ease-out !important;
+  }
+
+  .sx__slide-right {
+    animation: sx-slide-right-clean 0.3s ease-out !important;
+  }
+
+  @keyframes sx-slide-left-clean {
+    from {
+      transform: translateX(8%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes sx-slide-right-clean {
+    from {
+      transform: translateX(-8%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  /* Counter-animate weekday header row so it stays in place */
+  .sx__slide-left .sx__month-grid-week:first-child {
+    animation: sx-counter-slide-left 0.3s ease-out;
+  }
+
+  .sx__slide-right .sx__month-grid-week:first-child {
+    animation: sx-counter-slide-right 0.3s ease-out;
+  }
+
+  @keyframes sx-counter-slide-left {
+    from {
+      transform: translateX(-8%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes sx-counter-slide-right {
+    from {
+      transform: translateX(8%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
   /* --- Hide Schedule-X default header — our .cv-header is outside the component --- */
 
   .sx__calendar-header {

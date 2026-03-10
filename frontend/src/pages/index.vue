@@ -323,7 +323,8 @@
             void clickItem(calendarEvent as JahrweiserEvent)
           },
           async fetchEvents(range) {
-            return await fetchDataForRange(range.start, range.end)
+            await fetchDataForRange(range.start, range.end)
+            return mapToScheduleXEvents()
           },
         },
       },
@@ -371,16 +372,17 @@
         ? currentDate.value.add({ months: 1 })
         : currentDate.value.subtract({ months: 1 })
     currentDate.value = next
+    // Clear events BEFORE navigation so Schedule-X has nothing cached to render
+    eventsService.set([])
     calendarControls.setDate(next)
-    scheduleStagger()
     applyFutureClassRepeatedly()
   }
 
   function navigateToToday() {
     const now = Temporal.PlainDate.from(new Date().toISOString().slice(0, 10))
     currentDate.value = now
+    eventsService.set([])
     calendarControls.setDate(now)
-    scheduleStagger()
     scrollToDay()
     applyFutureClassRepeatedly()
   }
@@ -576,7 +578,7 @@
   async function fetchDataForRange(
     start: Temporal.ZonedDateTime,
     end: Temporal.ZonedDateTime,
-  ): Promise<JahrweiserEvent[]> {
+  ): Promise<void> {
     calLoading.value = true
     try {
       // Update currentDate from range midpoint for header labels
@@ -609,13 +611,10 @@
       )
 
       rawEvents.value = results.flat()
-      const mapped = mapToScheduleXEvents()
       scheduleStagger()
       scrollToDay()
-      return mapped
     } catch (error) {
       console.error(error)
-      return []
     } finally {
       calLoading.value = false
     }
@@ -679,12 +678,25 @@
     })
   }
 
-  /** Schedule stagger — waits for Schedule-X to finish rendering, then animates */
+  /** Schedule stagger — hides events immediately via synchronous DOM ops, then animates after re-render */
   function scheduleStagger() {
     clearTimeout(staggerDelay)
     staggerTimers.forEach(clearTimeout)
     staggerTimers = []
+
+    // 1) Synchronously hide ALL existing event elements (immediate, no Vue reactivity delay)
+    document
+      .querySelectorAll<HTMLElement>('.sx__month-grid-event, .sx__list-event')
+      .forEach((el) => {
+        el.style.transition = 'none'
+        el.style.opacity = '0'
+      })
+
+    // 2) Add class to wrapper so NEW elements created by Schedule-X during re-render are also hidden
+    calWrapper.value?.classList.add('stagger-pending')
+
     staggerDelay = setTimeout(() => {
+      calWrapper.value?.classList.remove('stagger-pending')
       const events = document.querySelectorAll<HTMLElement>('.sx__month-grid-event')
       if (events.length > 0) {
         runStagger(Array.from(events))
@@ -1070,6 +1082,12 @@
     .sx__month-grid-day__events {
       grid-gap: 1px !important;
     }
+  }
+
+  .stagger-pending .sx__month-grid-event,
+  .stagger-pending .sx__list-event {
+    opacity: 0 !important;
+    transition: none !important;
   }
 
   .sx__month-grid-event {

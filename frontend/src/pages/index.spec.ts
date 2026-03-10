@@ -77,13 +77,13 @@ const mockCalendarControlsSetView = vi.hoisted(() => vi.fn())
 
 const mockSetTheme = vi.hoisted(() => vi.fn())
 
-// Track the fetchEvents and onEventClick callbacks
+// Track the onRangeUpdate and onEventClick callbacks
 interface RangeArg {
   start: { epochMilliseconds: number }
   end: { epochMilliseconds: number }
 }
 const mockCallbacks = vi.hoisted(() => ({
-  fetchEvents: null as ((range: RangeArg) => Promise<unknown[]>) | null,
+  onRangeUpdate: null as ((range: RangeArg) => void) | null,
   onEventClick: null as ((event: unknown) => void) | null,
 }))
 

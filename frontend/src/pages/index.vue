@@ -868,7 +868,7 @@
     border-inline-start: 3px solid;
     border-inline-start-color: inherit;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    animation: expandDown 0.15s ease-out;
+    animation: expandDown 0.4s ease-out;
   }
 
   @keyframes expandDown {

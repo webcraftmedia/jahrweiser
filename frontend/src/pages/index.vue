@@ -764,31 +764,25 @@
     background-color: rgb(250, 245, 235) !important;
   }
 
-  /* --- Schedule-X: Today highlight --- */
+  /* --- Schedule-X: Today highlight (red triangle top-right) --- */
 
   .sx__month-grid-day__header-date.sx__is-today,
   .sx__is-today .sx__month-grid-day__header-date {
-    color: #faf5eb !important;
+    color: #c2410c !important;
     font-weight: 700;
-    background-color: #c2410c !important;
-    border-radius: 50%;
-    width: 1.5em;
-    height: 1.5em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    animation: todayCirclePulse 2s ease-in-out infinite;
   }
 
-  @keyframes todayCirclePulse {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(0.93);
-    }
+  .sx__month-grid-day:has(.sx__is-today)::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 12px 12px 0;
+    border-color: transparent #c2410c transparent transparent;
+    pointer-events: none;
   }
 
   /* --- Schedule-X: Events --- */

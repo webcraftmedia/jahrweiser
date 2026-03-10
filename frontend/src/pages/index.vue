@@ -768,8 +768,11 @@
 
   .sx__month-grid-day__header-date.sx__is-today,
   .sx__is-today .sx__month-grid-day__header-date {
-    color: #c2410c !important;
+    color: #faf5eb !important;
     font-weight: 700;
+    width: 30px !important;
+    height: 30px !important;
+    margin-bottom: -6px !important;
   }
 
   .sx__month-grid-day:has(.sx__is-today)::after {

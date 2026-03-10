@@ -79,7 +79,7 @@ exports[`Header > renders 1`] = `
   </nav><!-- Backdrop (outside nav stacking context so it covers page content) -->
   <!--v-if-->
   <!-- Main modal -->
-  <div data-v-94fcd891="" id="changelog-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div data-v-94fcd891="" id="changelog-modal" tabindex="-1" aria-hidden="false" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-[60] flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
     <div data-v-94fcd891="" class="relative p-4 w-full max-w-3xl mx-auto max-h-full">
       <!-- Modal content -->
       <div data-v-94fcd891="" class="modal-card relative w-full bg-ivory dark:bg-poster-darkCard shadow-xl border-2 border-navy/20 dark:border-poster-darkBorder flex flex-col max-h-[calc(100vh-2rem)]">
@@ -163,6 +163,6 @@ exports[`Header > renders 1`] = `
       </div>
     </div>
   </div>
-  <div data-v-94fcd891="" class="modal-backdrop bg-navy/50 dark:bg-navy-dark/80 fixed inset-0 z-40 modal-hidden"></div>
+  <div data-v-94fcd891="" class="modal-backdrop bg-navy/50 dark:bg-navy-dark/80 fixed inset-0 z-[55] modal-hidden"></div>
 </div>"
 `;

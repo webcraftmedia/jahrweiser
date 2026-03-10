@@ -700,11 +700,7 @@
 
   .sx__month-grid-day__header {
     align-items: flex-start !important;
-  }
-
-  .sx__month-grid-day__header {
-    max-height: 22px;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .sx__month-grid-day__header-date {
@@ -747,6 +743,10 @@
     border-radius: 3px;
     font-size: 0.9em;
     transition: box-shadow 0.3s ease;
+  }
+
+  .sx__month-grid-event-time {
+    display: none;
   }
 
   .sx__month-grid-event:hover {

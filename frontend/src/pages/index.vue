@@ -722,6 +722,7 @@
     --sx-rounding-extra-small: 0;
     --sx-rounding-small: 0;
     --sx-rounding-extra-large: 0;
+    border: none;
     --sx-color-surface: #faf5eb;
     --sx-color-on-surface: #1e293b;
     --sx-color-surface-dim: #f5edd9;

@@ -275,8 +275,8 @@
   const calendarLegend = computed(() =>
     calendars.value.map((cal, i) => {
       const palette = designPalette[i % designPalette.length]!
-      const { border } = isDark.value ? palette.dark : palette.light
-      return { name: cal.name, dotColor: border }
+      const colors = isDark.value ? palette.dark : palette.light
+      return { name: cal.name, dotColor: colors.bg }
     }),
   )
 

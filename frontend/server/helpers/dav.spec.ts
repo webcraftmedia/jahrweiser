@@ -117,6 +117,7 @@ describe('dav helpers', () => {
       expect(tsdavFetchCalendars).toHaveBeenCalledWith({
         account,
         headers: headers(account),
+        fetchOptions: expect.any(Object),
       })
     })
   })

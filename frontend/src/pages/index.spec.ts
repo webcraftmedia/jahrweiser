@@ -315,7 +315,7 @@ describe('Page: Index', () => {
   })
 
   it('renders modal content with event details', async () => {
-    const wrapper = await mount()
+    await mount()
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'event-1',
@@ -327,8 +327,9 @@ describe('Page: Index', () => {
     })
     await nextTick()
     await nextTick()
-    expect(wrapper.text()).toContain('Room A')
-    expect(wrapper.text()).toContain('A test event')
+    const modal = document.getElementById('default-modal')
+    expect(modal?.textContent).toContain('Room A')
+    expect(modal?.textContent).toContain('A test event')
   })
 
   it('renders modal content without description', async () => {
@@ -354,7 +355,7 @@ describe('Page: Index', () => {
         })
       return Promise.resolve({})
     })
-    const wrapper = await mount()
+    await mount()
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'e1',
@@ -366,8 +367,9 @@ describe('Page: Index', () => {
     })
     await nextTick()
     await nextTick()
-    expect(wrapper.text()).toContain('Room B')
-    expect(wrapper.text()).not.toContain('A test event')
+    const modal = document.getElementById('default-modal')
+    expect(modal?.textContent).toContain('Room B')
+    expect(modal?.textContent).not.toContain('A test event')
   })
 
   it('renders modal content without location', async () => {
@@ -393,7 +395,7 @@ describe('Page: Index', () => {
         })
       return Promise.resolve({})
     })
-    const wrapper = await mount()
+    await mount()
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'e1',
@@ -405,8 +407,9 @@ describe('Page: Index', () => {
     })
     await nextTick()
     await nextTick()
-    expect(wrapper.text()).not.toContain('Room')
-    expect(wrapper.text()).toContain('Some notes')
+    const modal = document.getElementById('default-modal')
+    expect(modal?.textContent).not.toContain('Room')
+    expect(modal?.textContent).toContain('Some notes')
   })
 
   it('handles error in clickItem gracefully', async () => {
@@ -475,7 +478,7 @@ describe('Page: Index', () => {
   })
 
   it('closes modal via handleModalX', async () => {
-    const wrapper = await mount()
+    await mount()
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'event-1',
@@ -486,13 +489,14 @@ describe('Page: Index', () => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
     })
     await nextTick()
-    // Modal should be open
-    expect(wrapper.find('#default-modal.modal-open').exists()).toBe(true)
+    // Modal should be open (teleported to body)
+    const modal = document.getElementById('default-modal')!
+    expect(modal.classList.contains('modal-open')).toBe(true)
     // Click the modal backdrop to trigger handleModalX
-    await wrapper.find('#default-modal').trigger('click')
+    modal.click()
     await nextTick()
     // Modal should be closed
-    expect(wrapper.find('#default-modal.modal-hidden').exists()).toBe(true)
+    expect(modal.classList.contains('modal-hidden')).toBe(true)
   })
 
   it('prevents closing modal while event is loading', async () => {
@@ -513,7 +517,7 @@ describe('Page: Index', () => {
       if (url === '/api/event') return new Promise((r) => (resolveEvent = r))
       return Promise.resolve({})
     })
-    const wrapper = await mount()
+    await mount()
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'event-1',
@@ -521,18 +525,19 @@ describe('Page: Index', () => {
       title: 'Test',
     })
     await nextTick()
-    // Modal open, still loading
-    expect(wrapper.find('#default-modal.modal-open').exists()).toBe(true)
+    // Modal open, still loading (teleported to body)
+    const modal = document.getElementById('default-modal')!
+    expect(modal.classList.contains('modal-open')).toBe(true)
     // Try to close — should be blocked
-    await wrapper.find('#default-modal').trigger('click')
+    modal.click()
     await nextTick()
-    expect(wrapper.find('#default-modal.modal-open').exists()).toBe(true)
+    expect(modal.classList.contains('modal-open')).toBe(true)
     // Resolve loading, then close works
     resolveEvent({ summary: 'Test', dtstart: '2025-01-15' })
     await nextTick()
-    await wrapper.find('#default-modal').trigger('click')
+    modal.click()
     await nextTick()
-    expect(wrapper.find('#default-modal.modal-hidden').exists()).toBe(true)
+    expect(modal.classList.contains('modal-hidden')).toBe(true)
   })
 
   it('skips fetching calendars when already loaded', async () => {

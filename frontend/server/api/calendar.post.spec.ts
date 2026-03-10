@@ -55,7 +55,7 @@ describe('calendar.post', () => {
 
   it('throws when calendar not found', async () => {
     mockFindCalendars.mockResolvedValue([])
-    await expect(handlerFn({})).rejects.toThrowError('Calendar not found')
+    await expect(handlerFn({})).rejects.toThrowError('Calendar "Work" not found')
   })
 
   it('returns event array for simple event', async () => {

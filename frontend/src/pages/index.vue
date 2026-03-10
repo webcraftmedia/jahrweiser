@@ -830,7 +830,7 @@
 
     .sx__month-grid-day,
     .sx__list-day {
-      scroll-margin-top: 2.25em;
+      scroll-margin-top: 48.2px;
     }
   }
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.7](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.6...v1.4.7) (2026-03-11)
+
+
+### Bug Fixes
+
+* **frontend:** fix filter not to close when deselected at least one item ([#126](https://github.com/webcraftmedia/jahrweiser/issues/126)) ([ad765bf](https://github.com/webcraftmedia/jahrweiser/commit/ad765bf2ee9b228c2b99721f2182e48d30a9c59f))
+
 ## [1.4.6](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.5...v1.4.6) (2026-03-11)
 
 

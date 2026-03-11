@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.6](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.5...v1.4.6) (2026-03-11)
+
+
+### Bug Fixes
+
+* **frontend:** fix temporal ssr polyfill ([#124](https://github.com/webcraftmedia/jahrweiser/issues/124)) ([77e8ab5](https://github.com/webcraftmedia/jahrweiser/commit/77e8ab5a261726541a6d32b5345763acb5ca2cea))
+
 ## [1.4.5](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.4...v1.4.5) (2026-03-11)
 
 

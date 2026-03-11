@@ -29,9 +29,6 @@ export default defineNuxtConfig({
       include: ['../types/**/*.d.ts'],
     },
   },
-  routeRules: {
-    '/': { ssr: false },
-  },
   nitro: {
     typescript: {
       tsConfig: {
@@ -39,6 +36,9 @@ export default defineNuxtConfig({
       },
     },
     ignore: ['**/*.spec.ts'],
+    externals: {
+      inline: ['temporal-polyfill'],
+    },
   },
   modules: [
     ...(process.env.NODE_ENV !== 'production'

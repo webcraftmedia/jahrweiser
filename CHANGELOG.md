@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.8](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.7...v1.4.8) (2026-03-11)
+
+
+### Bug Fixes
+
+* **frontend:** fix multi day events ([#128](https://github.com/webcraftmedia/jahrweiser/issues/128)) ([ebb7b26](https://github.com/webcraftmedia/jahrweiser/commit/ebb7b26e9b5802dd9adebbc3e02528270257ab5c))
+
 ## [1.4.7](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.6...v1.4.7) (2026-03-11)
 
 

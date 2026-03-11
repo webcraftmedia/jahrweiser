@@ -218,4 +218,14 @@ describe('Header', () => {
     const nav = wrapper.find('nav')
     expect(nav.attributes('style')).toContain('zoom')
   })
+
+  it('renders hero variant', async () => {
+    const wrapper = await mountSuspended(Component, {
+      props: { variant: 'hero' },
+    })
+    // Should NOT render nav bar
+    expect(wrapper.find('nav').exists()).toBe(false)
+    // Should render hero logo link
+    expect(wrapper.find('.logo-hero').exists()).toBe(true)
+  })
 })

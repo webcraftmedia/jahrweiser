@@ -272,6 +272,21 @@ describe('calendar.post', () => {
     expect(result[0]!.startDate.getUTCHours()).toBe(18)
   })
 
+  it('hides private events when user has no categories property', async () => {
+    mockFindUserByEmail.mockResolvedValue({
+      user: { href: '/abc.vcf' },
+      vcard: createMockVCard({ email: 'test@example.com' }),
+    })
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/private-event-1.ics',
+        props: { calendarData: PRIVATE_EVENT },
+      },
+    ])
+    const result = (await handlerFn({})) as unknown[]
+    expect(result).toHaveLength(0)
+  })
+
   it('hrefToId extracts ID from path', async () => {
     mockFindEvents.mockResolvedValue([
       {

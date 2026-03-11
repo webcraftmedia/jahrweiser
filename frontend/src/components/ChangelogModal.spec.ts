@@ -97,4 +97,29 @@ describe('ChangelogModal', () => {
     // All clicks handled without errors
     expect(wrapper.exists()).toBe(true)
   })
+
+  it('uses cached sections on second open', async () => {
+    const fetchSpy = globalThis.$fetch as ReturnType<typeof vi.fn>
+    fetchSpy.mockClear()
+
+    const wrapper = await mountSuspended(Component)
+    const vm = wrapper.vm as unknown as { open: () => Promise<void> }
+
+    // First open — fetches
+    await vm.open()
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+
+    // Close via overlay click
+    const overlay = wrapper.find('.modal-overlay')
+    await overlay.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    // Second open — uses cache, no re-fetch
+    await vm.open()
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+  })
 })

@@ -111,6 +111,11 @@ describe('event.post', () => {
     expect(result.startDate).toBe('2025-03-01T19:00:00')
   })
 
+  it('throws 502 when DAV connection fails', async () => {
+    mockFindCalendars.mockRejectedValue(new Error('ECONNREFUSED'))
+    await expect(handlerFn({})).rejects.toThrowError('CalDAV server unreachable')
+  })
+
   it('throws when calendar not found', async () => {
     mockFindCalendars.mockResolvedValue([])
     await expect(handlerFn({})).rejects.toThrowError('Calendar not found')

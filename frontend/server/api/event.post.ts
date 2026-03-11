@@ -24,18 +24,17 @@ export default defineEventHandler(async (event) => {
   const selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
 
   if (!selectedCalendar) {
-    throw new Error('Calendar not found')
+    throw createError({ statusCode: 404, statusMessage: 'Calendar not found' })
   }
 
   // Calendar data
   const caldata = await findEvent(calDavAccount, selectedCalendar.url, id)
 
   if (caldata.length !== 1 || !caldata[0]?.data) {
-    throw new Error('event not found')
+    throw createError({ statusCode: 404, statusMessage: 'Event not found' })
   }
 
   const vcalendar = new ICAL.Component(ICAL.parse(caldata[0].data))
-  vcalendar.getFirstPropertyValue()
   // Register VTIMEZONE components so toJSDate() can resolve timezone offsets
   for (const vtimezone of vcalendar.getAllSubcomponents('vtimezone')) {
     ICAL.TimezoneService.register(new ICAL.Timezone(vtimezone))
@@ -43,7 +42,7 @@ export default defineEventHandler(async (event) => {
   const vevent = vcalendar.getFirstSubcomponent('vevent')
 
   if (!vevent) {
-    throw new Error('event not found')
+    throw createError({ statusCode: 404, statusMessage: 'Event not found' })
   }
 
   const e = new ICAL.Event(vevent)

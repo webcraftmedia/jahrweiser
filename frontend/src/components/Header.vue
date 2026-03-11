@@ -215,13 +215,12 @@
   const { chromeZoom } = useZoom()
   const appVersion = useRuntimeConfig().public.appVersion
 
-  const welcomeName = ref()
   const { user, loggedIn, clear: clearSession } = useUserSession()
   const { legend, hiddenCalendars, toggleCalendar } = useCalendarFilter()
   const mobileMenuOpen = ref(false)
   const changelogModal = ref<InstanceType<typeof ChangelogModal>>()
 
-  welcomeName.value = computed(() =>
+  const welcomeName = computed(() =>
     user.value?.name ? user.value.name.split(' ').slice(-1).pop() : user.value?.email,
   )
 

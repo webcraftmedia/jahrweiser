@@ -66,7 +66,6 @@ export default defineEventHandler(async (event) => {
 
   caldata.forEach((data) => {
     const vcalendar = new ICAL.Component(ICAL.parse(data.props?.calendarData))
-    vcalendar.getFirstPropertyValue()
     // Register VTIMEZONE components so toJSDate() can resolve timezone offsets
     for (const vtimezone of vcalendar.getAllSubcomponents('vtimezone')) {
       ICAL.TimezoneService.register(new ICAL.Timezone(vtimezone))

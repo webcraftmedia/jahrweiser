@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.1...v1.4.2) (2026-03-11)
+
+
+### Bug Fixes
+
+* **fontend:** do not load dev Dependencies in nuxt when in production ([#116](https://github.com/webcraftmedia/jahrweiser/issues/116)) ([c4fe8aa](https://github.com/webcraftmedia/jahrweiser/commit/c4fe8aa95383fb6aafc7ab999e90265e2e7cb03c))
+
 ## [1.4.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.0...v1.4.1) (2026-03-11)
 
 

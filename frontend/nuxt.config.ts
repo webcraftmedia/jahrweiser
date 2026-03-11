@@ -38,8 +38,12 @@ export default defineNuxtConfig({
     ignore: ['**/*.spec.ts'],
   },
   modules: [
-    ['@nuxt/eslint', { config: { typescript: { tsconfigPath: 'tsconfig.json' } } }],
-    '@nuxt/test-utils',
+    ...(process.env.NODE_ENV !== 'production'
+      ? [
+          ['@nuxt/eslint', { config: { typescript: { tsconfigPath: 'tsconfig.json' } } }],
+          '@nuxt/test-utils',
+        ]
+      : []),
     '@nuxtjs/tailwindcss',
     '@nuxtjs/i18n',
     'nuxt-svgo',

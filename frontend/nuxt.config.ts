@@ -29,6 +29,9 @@ export default defineNuxtConfig({
       include: ['../types/**/*.d.ts'],
     },
   },
+  routeRules: {
+    '/': { ssr: false },
+  },
   nitro: {
     typescript: {
       tsConfig: {

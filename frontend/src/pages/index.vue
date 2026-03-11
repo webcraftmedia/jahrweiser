@@ -141,8 +141,6 @@
   import { createEventsServicePlugin } from '@schedule-x/events-service'
   import { ScheduleXCalendar } from '@schedule-x/vue'
   import '@schedule-x/theme-default/dist/index.css'
-  // eslint-disable-next-line import/no-unassigned-import -- side-effect: polyfills Temporal API
-  import 'temporal-polyfill/global'
 
   import Modal from '../components/Modal.vue'
   import { useCalendarFilter } from '../composables/useCalendarFilter'

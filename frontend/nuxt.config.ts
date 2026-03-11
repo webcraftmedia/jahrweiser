@@ -36,6 +36,9 @@ export default defineNuxtConfig({
       },
     },
     ignore: ['**/*.spec.ts'],
+    externals: {
+      inline: ['temporal-polyfill'],
+    },
   },
   modules: [
     ...(process.env.NODE_ENV !== 'production'

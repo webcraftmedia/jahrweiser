@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.4](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.3...v1.4.4) (2026-03-11)
+
+
+### Bug Fixes
+
+* **frontend:** allow temporal to run on the server as well (ssr) ([#120](https://github.com/webcraftmedia/jahrweiser/issues/120)) ([2016c30](https://github.com/webcraftmedia/jahrweiser/commit/2016c301e7e758e800a45ea3838da21b072bdfd7))
+
 ## [1.4.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.2...v1.4.3) (2026-03-11)
 
 

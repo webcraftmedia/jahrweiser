@@ -801,6 +801,12 @@
     min-height: 600px;
   }
 
+  /* --- Prevent horizontal scrollbar during slide animation --- */
+
+  .sx__view-container {
+    overflow-x: hidden;
+  }
+
   /* --- Hide view selector (auto-responsive handles view switching) --- */
 
   .sx__view-selection {

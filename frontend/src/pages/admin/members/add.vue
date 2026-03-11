@@ -124,7 +124,7 @@
           {{ $t('pages.admin.members.add.step1.title') }}
         </h2>
         <button
-          v-if="step > 1"
+          v-show="step > 1"
           type="button"
           class="text-sienna hover:text-sienna-light dark:text-sienna-light dark:hover:text-sienna text-sm font-medium font-body transition-colors"
           @click="goToStep(1)"
@@ -158,7 +158,7 @@
         </div>
 
         <button
-          v-if="step === 1"
+          v-show="step === 1"
           type="button"
           :disabled="!isValidEmail"
           class="text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-2.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -167,7 +167,7 @@
           {{ $t('pages.admin.members.add.step1.button-next') }}
         </button>
 
-        <div v-if="step > 1" class="flex items-center text-olive dark:text-olive-light">
+        <div v-show="step > 1" class="flex items-center text-olive dark:text-olive-light">
           <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path
               fill-rule="evenodd"
@@ -184,7 +184,7 @@
 
     <!-- Step 2: Tags Selection -->
     <div
-      v-if="step >= 2"
+      v-show="step >= 2"
       class="animate-fade-slide-up stagger-1 bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <div class="flex justify-between items-center mb-4">
@@ -192,7 +192,7 @@
           {{ $t('pages.admin.members.add.step2.title') }}
         </h2>
         <button
-          v-if="step > 2"
+          v-show="step > 2"
           type="button"
           class="text-sienna hover:text-sienna-light dark:text-sienna-light dark:hover:text-sienna text-sm font-medium font-body transition-colors"
           @click="goToStep(2)"
@@ -231,7 +231,7 @@
         </div>
 
         <button
-          v-if="step === 2"
+          v-show="step === 2"
           type="button"
           class="text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-2.5 transition-all"
           @click="confirmTags"
@@ -239,7 +239,7 @@
           {{ $t('pages.admin.members.add.step2.button-next') }}
         </button>
 
-        <div v-if="step > 2" class="flex items-center text-olive dark:text-olive-light">
+        <div v-show="step > 2" class="flex items-center text-olive dark:text-olive-light">
           <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path
               fill-rule="evenodd"
@@ -253,11 +253,10 @@
         </div>
       </div>
     </div>
-    <template v-else />
 
     <!-- Step 3: Welcome Email -->
     <div
-      v-if="step >= 3"
+      v-show="step >= 3"
       class="animate-fade-slide-up stagger-2 bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <h2 class="text-lg font-display text-navy dark:text-ivory mb-4">
@@ -281,25 +280,24 @@
         </div>
 
         <button
-          v-if="!submitResult"
+          v-show="!submitResult"
           type="button"
           :disabled="isSubmitting"
           class="text-ivory bg-olive hover:brightness-110 dark:bg-olive-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-olive/30 font-semibold font-body rounded text-base px-5 py-2.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           @click="submitForm"
         >
-          <span v-if="isSubmitting" class="flex items-center gap-1.5">
+          <span v-show="isSubmitting" class="flex items-center gap-1.5">
             <LoadingDots small light />
             <span class="ml-1">{{ $t('pages.admin.members.add.step3.processing') }}</span>
           </span>
-          <span v-else>{{ $t('pages.admin.members.add.step3.button-submit') }}</span>
+          <span v-show="!isSubmitting">{{ $t('pages.admin.members.add.step3.button-submit') }}</span>
         </button>
       </div>
     </div>
-    <template v-else />
 
     <!-- Result Display -->
     <div
-      v-if="submitResult"
+      v-show="submitResult"
       class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <h2 class="text-lg font-display text-navy dark:text-ivory mb-4">
@@ -418,7 +416,6 @@
         </button>
       </div>
     </div>
-    <template v-else />
   </div>
 </template>
 

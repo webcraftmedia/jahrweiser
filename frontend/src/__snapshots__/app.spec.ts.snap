@@ -52,8 +52,7 @@ exports[`App > renders default page 1`] = `
         </svg><!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
         <div data-v-c970699f=""><span data-v-c970699f="" class="font-display text-navy dark:text-ivory text-2xl md:text-3xl tracking-wide">Jahrweiser</span><span data-v-c970699f="" class="font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5">Bergstraße</span></div><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </a></div><!-- Backdrop (outside nav stacking context so it covers page content) -->
-    <!--v-if-->
-    <!-- Content -->
+    <div data-v-c970699f="" class="md:hidden fixed inset-0 bg-navy/30 dark:bg-black/40 z-40" data-testid="mobile-backdrop" style="display: none;"></div><!-- Content -->
     <div class="flex-1 flex items-start justify-center px-4">
       <transition-stub name="page" mode="out-in" appear="false" persisted="false" css="true">
         <div data-v-45258083="">

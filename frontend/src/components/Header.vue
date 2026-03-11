@@ -192,7 +192,7 @@
   </nav>
   <!-- Backdrop (outside nav stacking context so it covers page content) -->
   <div
-    v-if="loggedIn && mobileMenuOpen"
+    v-show="loggedIn && mobileMenuOpen"
     class="md:hidden fixed inset-0 bg-navy/30 dark:bg-black/40 z-40"
     data-testid="mobile-backdrop"
     @click="toggleMobileMenu"

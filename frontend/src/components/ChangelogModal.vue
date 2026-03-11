@@ -70,11 +70,12 @@
       sections.value = parseChangelog(raw)
     }
     modal.value?.open()
+    /* v8 ignore start -- nextTick callback: sections are always loaded before this runs */
     void nextTick(() => {
       const first = sectionsContainer.value?.querySelector<HTMLDetailsElement>('details')
-      /* v8 ignore next -- sections are always loaded before this runs */
       if (first) first.open = true
     })
+    /* v8 ignore stop */
   }
 
   defineExpose({ open })

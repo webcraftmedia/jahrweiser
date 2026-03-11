@@ -6,6 +6,10 @@ import Page from './add.vue'
 const mock$fetch = vi.fn()
 vi.stubGlobal('$fetch', mock$fetch)
 
+function findButtonByText(wrapper: ReturnType<Awaited<ReturnType<typeof mountSuspended>>>, text: string) {
+  return wrapper.findAll('button[type="button"]').find((b) => b.text().includes(text))!
+}
+
 describe('Page: Add', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -34,7 +38,7 @@ describe('Page: Add', () => {
 
   it('validates email', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
-    const nextButton = wrapper.find('button[type="button"]')
+    const nextButton = findButtonByText(wrapper, 'step1.button-next')
     // Button should be disabled with empty email
     expect(nextButton.attributes('disabled')).toBeDefined()
 
@@ -46,7 +50,7 @@ describe('Page: Add', () => {
   it('progresses from step 1 to step 2', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith(
         '/api/admin/getUserTags',
@@ -64,7 +68,7 @@ describe('Page: Add', () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     // Step 1: email
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.findAll('input[type="checkbox"]').length).toBeGreaterThanOrEqual(2)
     })
@@ -85,7 +89,7 @@ describe('Page: Add', () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     // Step 1
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.find('#tag-0').exists()).toBe(true)
     })
@@ -120,7 +124,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('user@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
@@ -146,7 +150,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('user@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
@@ -172,7 +176,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('user@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
@@ -200,7 +204,7 @@ describe('Page: Add', () => {
   it('goes back to step 1 from step 2', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.find('#tag-0').exists()).toBe(true)
     })
@@ -216,7 +220,7 @@ describe('Page: Add', () => {
   it('goes back to step 2 from step 3', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.find('#tag-0').exists()).toBe(true)
     })
@@ -263,7 +267,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       expect(consoleSpy).toHaveBeenCalled()
     })
@@ -282,7 +286,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await nextTick()
     // Loading spinner should be visible
     expect(wrapper.find('.loading-dot').exists()).toBe(true)
@@ -306,7 +310,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
@@ -337,7 +341,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('user@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
@@ -368,7 +372,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('user@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
@@ -402,7 +406,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('user@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))
@@ -431,7 +435,7 @@ describe('Page: Add', () => {
   it('toggles tag checkboxes', async () => {
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.find('#tag-0').exists()).toBe(true)
     })
@@ -448,7 +452,7 @@ describe('Page: Add', () => {
     })
     const wrapper = await mountSuspended(Page, { route: '/admin/members/add' })
     await wrapper.find('#email').setValue('test@example.com')
-    await wrapper.find('button[type="button"]:not([disabled])').trigger('click')
+    await findButtonByText(wrapper, 'step1.button-next').trigger('click')
     await vi.waitFor(() => {
       const btns = wrapper.findAll('button[type="button"]')
       return btns.some((b) => b.text().includes('step2.button-next'))

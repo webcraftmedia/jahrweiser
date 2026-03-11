@@ -55,11 +55,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 502, statusMessage: 'CalDAV server unreachable' })
   }
 
-  const showPrivate =
-    !userQuery ||
-    (userQuery.vcard.getFirstProperty('categories')?.getValues() as string[]).find(
-      (tag) => tag === calendar,
-    )
+  const showPrivate = userQuery
+    ? (userQuery.vcard.getFirstProperty('categories')?.getValues() as string[] | undefined)?.includes(
+        calendar,
+      ) ?? false
+    : false
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: any[] = []

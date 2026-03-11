@@ -12,7 +12,7 @@
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-              <button @click="navigatePeriod(-1)">
+              <button :aria-label="prevMonthLabel" @click="navigatePeriod(-1)">
                 <span class="nav-arrow">‹</span><span class="nav-label"> {{ prevMonthLabel }}</span>
               </button>
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
@@ -20,7 +20,7 @@
                 {{ $t('pages.index.today') }}
               </button>
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-              <button @click="navigatePeriod(1)">
+              <button :aria-label="nextMonthLabel" @click="navigatePeriod(1)">
                 <span class="nav-label">{{ nextMonthLabel }} </span><span class="nav-arrow">›</span>
               </button>
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
@@ -174,17 +174,27 @@
     middleware: ['authenticated'],
   })
 
-  const modal = ref()
+  const modal = ref<InstanceType<typeof Modal>>()
 
-  const event = ref()
+  interface EventDetail {
+    description: string
+    duration: string
+    endDate: string
+    location: string
+    startDate: string
+    summary: string
+    uid: string
+    url: string
+  }
+  const selectedEvent = ref<EventDetail | null>(null)
   const eventLoading = ref(false)
   const eventTitle = ref('')
-  const eventStartDate = computed(() => event.value?.startDate ?? '')
-  const eventDuration = computed(() => event.value?.duration?.replace(/^PT?/, '') ?? '')
-  const eventLocation = computed(() => event.value?.location ?? '')
-  const eventUrl = computed(() => event.value?.url ?? '')
+  const eventStartDate = computed(() => selectedEvent.value?.startDate ?? '')
+  const eventDuration = computed(() => selectedEvent.value?.duration?.replace(/^PT?/, '') ?? '')
+  const eventLocation = computed(() => selectedEvent.value?.location ?? '')
+  const eventUrl = computed(() => selectedEvent.value?.url ?? '')
   const eventDescription = computed(() => {
-    const desc = event.value?.description
+    const desc = selectedEvent.value?.description
     if (!desc) return ''
     return desc
       .split('\n')
@@ -460,20 +470,25 @@
   const LEGEND_TRIGGER_PX = 40
   let legendLeaveTimer: ReturnType<typeof setTimeout> | undefined
 
+  let mouseMoveFrame: number | undefined
   function onMouseMove(e: MouseEvent) {
-    /* v8 ignore start -- defensive guard, calWrapper is always set when listener is active */
-    if (!calWrapper.value) return
-    const bottom = calWrapper.value.getBoundingClientRect().bottom
-    /* v8 ignore stop */
-    if (e.clientY >= bottom - LEGEND_TRIGGER_PX) {
-      clearTimeout(legendLeaveTimer)
-      legendHover.value = true
-    } else if (legendHover.value) {
-      clearTimeout(legendLeaveTimer)
-      legendLeaveTimer = setTimeout(() => {
-        legendHover.value = false
-      }, 300)
-    }
+    if (mouseMoveFrame) return
+    mouseMoveFrame = requestAnimationFrame(() => {
+      mouseMoveFrame = undefined
+      /* v8 ignore start -- defensive guard, calWrapper is always set when listener is active */
+      if (!calWrapper.value) return
+      const bottom = calWrapper.value.getBoundingClientRect().bottom
+      /* v8 ignore stop */
+      if (e.clientY >= bottom - LEGEND_TRIGGER_PX) {
+        clearTimeout(legendLeaveTimer)
+        legendHover.value = true
+      } else if (legendHover.value) {
+        clearTimeout(legendLeaveTimer)
+        legendLeaveTimer = setTimeout(() => {
+          legendHover.value = false
+        }, 300)
+      }
+    })
   }
 
   /* ── Responsive view switching (month-grid ↔ list at 700px) ── */
@@ -500,6 +515,7 @@
     window.removeEventListener('resize', onResize)
     document.removeEventListener('mousemove', onMouseMove)
     clearTimeout(legendLeaveTimer)
+    if (mouseMoveFrame) cancelAnimationFrame(mouseMoveFrame)
   })
 
   /* ── Dark mode reactivity ── */
@@ -738,16 +754,16 @@
 
   function handleModalX() {
     if (eventLoading.value) return
-    modal.value.close()
+    modal.value?.close()
   }
 
   async function clickItem(data: JahrweiserEvent) {
     try {
       const { _calendar: calendar, _originalId: id, _occurrence: occurrence } = data
-      event.value = null
+      selectedEvent.value = null
       eventLoading.value = true
       eventTitle.value = capitalize(data.title || '')
-      modal.value.open()
+      modal.value?.open()
       const eventData = await $fetch('/api/event', {
         method: 'POST',
         body: {
@@ -756,10 +772,10 @@
           occurrence,
         },
       })
-      event.value = eventData
+      selectedEvent.value = eventData
     } catch (error) {
       console.error(error)
-      modal.value.close()
+      modal.value?.close()
     } finally {
       eventLoading.value = false
     }

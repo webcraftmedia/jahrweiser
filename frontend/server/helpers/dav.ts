@@ -58,16 +58,8 @@ const httpsAgent = new HttpsAgent({
   // timeout: DAV_TIMEOUT_MS,
 })
 
-const createTimeoutSignal = (timeoutMs: number) => {
-  const controller = new AbortController()
-  setTimeout(() => {
-    controller.abort()
-  }, timeoutMs)
-  return controller.signal
-}
-
 const getFetchOptions = () => ({
-  signal: createTimeoutSignal(DAV_TIMEOUT_MS),
+  signal: AbortSignal.timeout(DAV_TIMEOUT_MS),
   agent: (parsedURL: URL) => (parsedURL.protocol === 'http:' ? httpAgent : httpsAgent),
 })
 

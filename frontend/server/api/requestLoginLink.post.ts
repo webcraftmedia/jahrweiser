@@ -72,8 +72,8 @@ export default defineEventHandler(async (event) => {
         authURL: new URL(`/login/${authtoken}`, config.CLIENT_URI),
       },
     })
-  } catch (error) {
-    throw new Error(error as string)
+  } catch {
+    throw createError({ statusCode: 500, statusMessage: 'Failed to send login email' })
   }
 
   // Always return success

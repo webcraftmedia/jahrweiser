@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import ICAL from 'ical.js'
 import { z } from 'zod'
@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
   } else {
     const { user, vcard: userVcard } = userQuery
     let userTags = userVcard.getFirstProperty('categories')?.getValues() as string[]
-    filteredTags.map((t) => {
+    for (const t of filteredTags) {
       if (t.state) {
         if (!userTags.includes(t.name)) {
           userTags.push(t.name)
@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
       } else {
         userTags = userTags.filter((item) => item !== t.name)
       }
-    })
+    }
     userVcard.getFirstProperty('categories')?.setValues(userTags)
     await saveUser(cardDavAccount, user, userVcard)
   }

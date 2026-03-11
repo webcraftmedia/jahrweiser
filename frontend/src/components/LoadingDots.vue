@@ -5,11 +5,11 @@
 </template>
 
 <script setup lang="ts">
-  const { small = false, light = false } = defineProps<{
+  const props = defineProps<{
     small?: boolean
     light?: boolean
   }>()
 
-  const dotClass = light ? 'loading-dot !bg-ivory' : 'loading-dot'
-  const sizeClass = small ? '!w-[6px] !h-[6px]' : ''
+  const dotClass = computed(() => (props.light ? 'loading-dot !bg-ivory' : 'loading-dot'))
+  const sizeClass = computed(() => (props.small ? '!w-[6px] !h-[6px]' : ''))
 </script>

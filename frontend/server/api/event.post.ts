@@ -18,17 +18,26 @@ export default defineEventHandler(async (event) => {
 
   const { calendar, id, occurrence } = await readValidatedBody(event, bodySchema.parse)
 
-  const calDavAccount = createCalDAVAccount(config)
-  const calendars = await findCalendars(calDavAccount)
+  let selectedCalendar
+  let caldata
 
-  const selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
+  try {
+    const calDavAccount = createCalDAVAccount(config)
+    const calendars = await findCalendars(calDavAccount)
 
-  if (!selectedCalendar) {
-    throw createError({ statusCode: 404, statusMessage: 'Calendar not found' })
+    selectedCalendar = calendars.find((cal) => cal.displayName === calendar)
+
+    if (!selectedCalendar) {
+      throw createError({ statusCode: 404, statusMessage: 'Calendar not found' })
+    }
+
+    // Calendar data
+    caldata = await findEvent(calDavAccount, selectedCalendar.url, id)
+  } catch (err) {
+    if ((err as { statusCode?: number }).statusCode) throw err
+    console.error('DAV connection error for event:', err)
+    throw createError({ statusCode: 502, statusMessage: 'CalDAV server unreachable' })
   }
-
-  // Calendar data
-  const caldata = await findEvent(calDavAccount, selectedCalendar.url, id)
 
   if (caldata.length !== 1 || !caldata[0]?.data) {
     throw createError({ statusCode: 404, statusMessage: 'Event not found' })

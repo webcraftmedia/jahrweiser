@@ -45,7 +45,7 @@ jobs:
         working-directory: ${{env.WORKING_DIRECTORY}}
 
       - name: Frontend | Build
-        run: npm install && npm run build
+        run: npm ci && npm run build
         working-directory: ${{env.WORKING_DIRECTORY}}
 
       - name: Frontend | Size Check

@@ -44,5 +44,5 @@ jobs:
         working-directory: ${{env.WORKING_DIRECTORY}}
 
       - name: Frontend | Lint
-        run: npm ci && npm run test:lint
+        run: npm install && npm run test:lint
         working-directory: ${{env.WORKING_DIRECTORY}}

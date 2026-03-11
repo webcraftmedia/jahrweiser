@@ -45,7 +45,7 @@ export const createCardDAVAccount = (config: DAV_CONFIG): DAVAccount => ({
   homeUrl: config.DAV_URL + `/dav.php/addressbooks/${config.DAV_USERNAME}/default/`,
 })
 
-const DAV_TIMEOUT_MS = 300000 // 30 seconds
+const DAV_TIMEOUT_MS = 300000 // 5 minutes
 
 // Create HTTP/HTTPS agents with custom timeout settings
 const httpAgent = new HttpAgent({

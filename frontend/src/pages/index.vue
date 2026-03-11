@@ -157,6 +157,17 @@
 
   import type { CalendarEventExternal } from '@schedule-x/calendar'
 
+  interface RawCalendarEvent {
+    calendar: string
+    color: string
+    id: string
+    occurrence?: number
+    startDate: string
+    endDate: string
+    title: string
+    isRecurring?: boolean
+  }
+
   interface JahrweiserEvent extends CalendarEventExternal {
     _calendar: string
     _originalId: string
@@ -443,13 +454,9 @@
   /* ── Keyboard navigation ── */
 
   function handleKeyboard(e: KeyboardEvent) {
-    if (modal.value && isModalOpen()) return
+    if (modal.value?.isOpen) return
     if (e.key === 'ArrowLeft' || e.key === 'a') navigatePeriod(-1)
     else if (e.key === 'ArrowRight' || e.key === 'd') navigatePeriod(1)
-  }
-
-  function isModalOpen() {
-    return document.getElementById('default-modal')?.classList.contains('modal-open')
   }
 
   /* ── Legend hover — open when cursor is near/below cal-wrapper bottom ── */
@@ -509,8 +516,7 @@
 
   /* ── Data loading ── */
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rawEvents = ref<any[]>([])
+  const rawEvents = ref<RawCalendarEvent[]>([])
   const calLoading = ref(false)
 
   function buildScheduleXCalendars() {

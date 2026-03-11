@@ -94,6 +94,7 @@
   defineExpose({
     open,
     close,
+    isOpen: readonly(isOpen),
   })
 </script>
 

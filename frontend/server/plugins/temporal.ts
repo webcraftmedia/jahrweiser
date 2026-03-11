@@ -1,6 +1,4 @@
-import { Temporal } from 'temporal-polyfill'
-
-// Explicitly assign to globalThis so SSR rendering can access it
-;(globalThis as Record<string, unknown>).Temporal = Temporal
+// eslint-disable-next-line import/no-unassigned-import
+import 'temporal-polyfill'
 
 export default defineNitroPlugin(() => {})

@@ -37,8 +37,7 @@
           <div
             class="cal-legend"
             :class="{
-              'cal-legend-active': hiddenCalendars.size > 0,
-              'cal-legend-open': legendHover,
+              'cal-legend-open': legendHover || (hiddenCalendars.size > 0 && !legendDismissed),
             }"
           >
             <div class="cal-legend-inner">
@@ -49,6 +48,7 @@
                 :class="{ 'cal-legend-hidden': hiddenCalendars.has(cal.name) }"
                 @click="
                   toggleCalendar(cal.name)
+                  dismissLegend()
                   ;($event.currentTarget as HTMLElement).blur()
                 "
               >
@@ -469,6 +469,12 @@
   const legendHover = ref(false)
   const LEGEND_TRIGGER_PX = 40
   let legendLeaveTimer: ReturnType<typeof setTimeout> | undefined
+  const legendDismissed = ref(false)
+
+  function dismissLegend() {
+    legendHover.value = false
+    legendDismissed.value = true
+  }
 
   let mouseMoveFrame: number | undefined
   function onMouseMove(e: MouseEvent) {
@@ -479,13 +485,18 @@
       if (!calWrapper.value) return
       const bottom = calWrapper.value.getBoundingClientRect().bottom
       if (e.clientY >= bottom - LEGEND_TRIGGER_PX) {
-        clearTimeout(legendLeaveTimer)
-        legendHover.value = true
-      } else if (legendHover.value) {
-        clearTimeout(legendLeaveTimer)
-        legendLeaveTimer = setTimeout(() => {
-          legendHover.value = false
-        }, 300)
+        if (!legendDismissed.value) {
+          clearTimeout(legendLeaveTimer)
+          legendHover.value = true
+        }
+      } else {
+        legendDismissed.value = false
+        if (legendHover.value) {
+          clearTimeout(legendLeaveTimer)
+          legendLeaveTimer = setTimeout(() => {
+            legendHover.value = false
+          }, 300)
+        }
       }
     })
     /* v8 ignore stop */
@@ -1457,8 +1468,7 @@
       background-color 0.3s;
   }
 
-  .cal-legend.cal-legend-open .cal-legend-inner,
-  .cal-legend.cal-legend-active .cal-legend-inner {
+  .cal-legend.cal-legend-open .cal-legend-inner {
     max-height: 6em;
     padding: 0.35em 0;
     background: rgba(250, 245, 235, 0.92);
@@ -1500,8 +1510,7 @@
   }
 
   /* Dark mode */
-  .dark .cal-legend.cal-legend-open .cal-legend-inner,
-  .dark .cal-legend.cal-legend-active .cal-legend-inner {
+  .dark .cal-legend.cal-legend-open .cal-legend-inner {
     background: rgba(26, 23, 20, 0.92);
   }
 

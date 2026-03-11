@@ -30,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WORKING_DIRECTORY: ./frontend
+      NODE_ENV: development
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.1.7

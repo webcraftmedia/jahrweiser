@@ -132,7 +132,7 @@ describe('calendar.post', () => {
     expect(result[0]).toMatchObject({ title: 'Private Meeting' })
   })
 
-  it('shows private events when user not in DAV', async () => {
+  it('hides private events when user not in DAV', async () => {
     mockFindUserByEmail.mockResolvedValue(false)
     mockFindEvents.mockResolvedValue([
       {
@@ -141,7 +141,7 @@ describe('calendar.post', () => {
       },
     ])
     const result = (await handlerFn({})) as unknown[]
-    expect(result).toHaveLength(1)
+    expect(result).toHaveLength(0)
   })
 
   it('sets endDate to last day for all-day events', async () => {

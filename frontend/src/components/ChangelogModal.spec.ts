@@ -1,11 +1,24 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
+import { describe, expect, it, vi } from 'vitest'
 
 import Component from './ChangelogModal.vue'
+
+const MOCK_CHANGELOG =
+  '## 1.0.0 (2026-01-01)\n\n### Features\n\n* **scope:** feature one ([#1](https://github.com/org/repo/issues/1))\n\n### Bug Fixes\n\n* **other:** fix one\n'
+
+vi.stubGlobal(
+  '$fetch',
+  vi.fn().mockResolvedValue(MOCK_CHANGELOG),
+)
 
 describe('ChangelogModal', () => {
   it('renders changelog sections', async () => {
     const wrapper = await mountSuspended(Component)
+    const vm = wrapper.vm as unknown as { open: () => Promise<void> }
+    await vm.open()
+    await flushPromises()
+    await wrapper.vm.$nextTick()
 
     const details = wrapper.findAll('details')
     expect(details).toHaveLength(1)
@@ -15,6 +28,10 @@ describe('ChangelogModal', () => {
 
   it('renders markdown links as anchor tags', async () => {
     const wrapper = await mountSuspended(Component)
+    const vm = wrapper.vm as unknown as { open: () => Promise<void> }
+    await vm.open()
+    await flushPromises()
+    await wrapper.vm.$nextTick()
 
     const links = wrapper.findAll('.changelog-content a')
     expect(links.length).toBeGreaterThan(0)
@@ -24,6 +41,10 @@ describe('ChangelogModal', () => {
 
   it('renders bold markdown as font-medium spans', async () => {
     const wrapper = await mountSuspended(Component)
+    const vm = wrapper.vm as unknown as { open: () => Promise<void> }
+    await vm.open()
+    await flushPromises()
+    await wrapper.vm.$nextTick()
 
     const bolds = wrapper.findAll('.changelog-content .font-medium')
     expect(bolds.length).toBeGreaterThan(0)
@@ -39,10 +60,11 @@ describe('ChangelogModal', () => {
 
   it('opens and closes modal', async () => {
     const wrapper = await mountSuspended(Component)
-    const vm = wrapper.vm as unknown as { open: () => void }
+    const vm = wrapper.vm as unknown as { open: () => Promise<void> }
 
     // Open
-    vm.open()
+    await vm.open()
+    await flushPromises()
     await wrapper.vm.$nextTick()
     expect(wrapper.find('.modal-open').exists()).toBe(true)
 
@@ -55,6 +77,10 @@ describe('ChangelogModal', () => {
 
   it('click.stop on interactive elements prevents propagation', async () => {
     const wrapper = await mountSuspended(Component)
+    const vm = wrapper.vm as unknown as { open: () => Promise<void> }
+    await vm.open()
+    await flushPromises()
+    await wrapper.vm.$nextTick()
 
     // GitHub link
     const ghLink = wrapper.find('a[href="https://github.com/webcraftmedia/jahrweiser"]')

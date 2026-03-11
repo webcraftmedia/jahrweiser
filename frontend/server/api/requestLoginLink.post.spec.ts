@@ -134,6 +134,6 @@ describe('requestLoginLink.post', () => {
     mockSaveUser.mockResolvedValue(undefined)
     mockEmailSend.mockRejectedValue('SMTP error')
 
-    await expect(handlerFn({})).rejects.toThrowError('SMTP error')
+    await expect(handlerFn({})).rejects.toThrowError('Failed to send login email')
   })
 })

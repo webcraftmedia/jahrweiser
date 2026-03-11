@@ -17,7 +17,7 @@ exports[`Page: Admin > renders 1`] = `
       <div data-v-20ac04fb="" class="md:hidden fixed inset-0 bg-navy/60 z-40 transition-opacity ease-linear duration-300 opacity-0 pointer-events-none"></div><!-- Mobile Drawer -->
       <div data-v-20ac04fb="" class="md:hidden fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-ivory dark:bg-poster-darkCard shadow-xl drawer-slide -translate-x-full">
         <div data-v-20ac04fb="" class="flex items-center justify-between flex-shrink-0 px-4 pt-5 pb-4">
-          <h2 data-v-20ac04fb="" class="text-xl font-semibold text-navy dark:text-ivory">pages.admin.title</h2><button data-v-20ac04fb="" class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-sienna/5 dark:hover:bg-sienna/10 focus:outline-none"><svg data-v-20ac04fb="" class="h-6 w-6 text-navy/60 dark:text-ivory/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <h2 data-v-20ac04fb="" class="text-xl font-semibold text-navy dark:text-ivory">pages.admin.title</h2><button data-v-20ac04fb="" aria-label="components.Modal.close" class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-sienna/5 dark:hover:bg-sienna/10 focus:outline-none"><svg data-v-20ac04fb="" class="h-6 w-6 text-navy/60 dark:text-ivory/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path data-v-20ac04fb="" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg></button>
         </div>
@@ -27,7 +27,7 @@ exports[`Page: Admin > renders 1`] = `
       <div data-v-20ac04fb="" class="flex-1 overflow-auto w-full">
         <main data-v-20ac04fb="" class="w-full min-h-full">
           <!-- Mobile Menu Button -->
-          <div data-v-20ac04fb="" class="md:hidden flex items-center gap-3 px-4 pt-4 pb-3"><button data-v-20ac04fb="" class="p-2 text-navy/60 dark:text-ivory/60 bg-transparent rounded-lg hover:bg-sienna/5 dark:hover:bg-sienna/10 focus:outline-none focus:ring-4 focus:ring-navy/10 dark:focus:ring-ivory/10 transition-colors"><svg data-v-20ac04fb="" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div data-v-20ac04fb="" class="md:hidden flex items-center gap-3 px-4 pt-4 pb-3"><button data-v-20ac04fb="" aria-label="components.Header.open-menu" class="p-2 text-navy/60 dark:text-ivory/60 bg-transparent rounded-lg hover:bg-sienna/5 dark:hover:bg-sienna/10 focus:outline-none focus:ring-4 focus:ring-navy/10 dark:focus:ring-ivory/10 transition-colors"><svg data-v-20ac04fb="" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path data-v-20ac04fb="" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10"></path>
               </svg></button>
             <div data-v-20ac04fb="" class="flex items-center gap-2 text-navy dark:text-ivory"><span data-v-20ac04fb="" class="font-semibold">pages.admin.title</span><!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text --><span data-v-20ac04fb="" class="text-navy/40 dark:text-ivory/40">—</span><span data-v-20ac04fb="" class="text-navy/80 dark:text-ivory/80"></span></div>

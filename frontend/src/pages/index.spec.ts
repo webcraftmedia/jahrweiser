@@ -785,10 +785,12 @@ describe('Page: Index', () => {
       toJSON: () => {},
     })
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 470 }))
+    vi.advanceTimersByTime(20) // flush rAF
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
-    vi.advanceTimersByTime(300)
+    vi.advanceTimersByTime(20) // flush rAF (schedules 300ms leave timer)
+    vi.advanceTimersByTime(300) // fire leave timer
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).not.toContain('cal-legend-open')
   })
@@ -808,6 +810,7 @@ describe('Page: Index', () => {
       toJSON: () => {},
     })
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 600 }))
+    vi.advanceTimersByTime(20) // flush rAF
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
   })
@@ -827,12 +830,15 @@ describe('Page: Index', () => {
       toJSON: () => {},
     })
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 470 }))
+    vi.advanceTimersByTime(20) // flush rAF
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
-    vi.advanceTimersByTime(100)
+    vi.advanceTimersByTime(20) // flush rAF (schedules 300ms leave timer)
+    vi.advanceTimersByTime(80) // partial advance — leave timer still pending
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 480 }))
-    vi.advanceTimersByTime(300)
+    vi.advanceTimersByTime(20) // flush rAF (cancels leave timer, re-opens)
+    vi.advanceTimersByTime(300) // advance past where leave timer would have fired
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
   })
@@ -852,6 +858,7 @@ describe('Page: Index', () => {
       toJSON: () => {},
     })
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 100 }))
+    vi.advanceTimersByTime(20) // flush rAF
     await nextTick()
     expect(wrapper.find('.cal-legend').classes()).not.toContain('cal-legend-open')
   })

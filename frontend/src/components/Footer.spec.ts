@@ -29,6 +29,14 @@ vi.mock('../composables/useZoom', () => ({
   }),
 }))
 
+const MOCK_CHANGELOG =
+  '## 1.0.0 (2026-01-01)\n\n### Features\n\n* **scope:** feature one\n'
+
+vi.stubGlobal(
+  '$fetch',
+  vi.fn().mockResolvedValue(MOCK_CHANGELOG),
+)
+
 const { changelogShouldOpen } = mockState
 mockNuxtImport('useChangelog', () => () => ({
   openChangelog: () => {
@@ -81,6 +89,7 @@ describe('Footer', () => {
     const versionBtn = wrapper.find('button[title="components.Footer.changelog"]')
     expect(versionBtn.exists()).toBe(true)
     await versionBtn.trigger('click')
+    await flushPromises()
     await wrapper.vm.$nextTick()
     expect(wrapper.find('.modal-open').exists()).toBe(true)
   })

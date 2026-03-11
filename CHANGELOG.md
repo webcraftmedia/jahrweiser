@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.2...v1.4.3) (2026-03-11)
+
+
+### Bug Fixes
+
+* **frontend:** use temporal plugin globally ([#118](https://github.com/webcraftmedia/jahrweiser/issues/118)) ([1da06f0](https://github.com/webcraftmedia/jahrweiser/commit/1da06f0ecf4f096b2eee2f3151cf04ecdb7ab97f))
+
 ## [1.4.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.1...v1.4.2) (2026-03-11)
 
 

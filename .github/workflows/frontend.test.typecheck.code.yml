@@ -45,5 +45,5 @@ jobs:
         working-directory: ${{env.WORKING_DIRECTORY}}
 
       - name: Frontend | Typecheck
-        run: npm install && npm run test:lint:typecheck
+        run: npm ci && npm run test:lint:typecheck
         working-directory: ${{env.WORKING_DIRECTORY}}

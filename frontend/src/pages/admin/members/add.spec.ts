@@ -6,7 +6,10 @@ import Page from './add.vue'
 const mock$fetch = vi.fn()
 vi.stubGlobal('$fetch', mock$fetch)
 
-function findButtonByText(wrapper: ReturnType<Awaited<ReturnType<typeof mountSuspended>>>, text: string) {
+function findButtonByText(
+  wrapper: ReturnType<Awaited<ReturnType<typeof mountSuspended>>>,
+  text: string,
+) {
   return wrapper.findAll('button[type="button"]').find((b) => b.text().includes(text))!
 }
 

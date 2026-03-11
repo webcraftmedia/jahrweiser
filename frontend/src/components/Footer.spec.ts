@@ -29,13 +29,9 @@ vi.mock('../composables/useZoom', () => ({
   }),
 }))
 
-const MOCK_CHANGELOG =
-  '## 1.0.0 (2026-01-01)\n\n### Features\n\n* **scope:** feature one\n'
+const MOCK_CHANGELOG = '## 1.0.0 (2026-01-01)\n\n### Features\n\n* **scope:** feature one\n'
 
-vi.stubGlobal(
-  '$fetch',
-  vi.fn().mockResolvedValue(MOCK_CHANGELOG),
-)
+vi.stubGlobal('$fetch', vi.fn().mockResolvedValue(MOCK_CHANGELOG))
 
 const { changelogShouldOpen } = mockState
 mockNuxtImport('useChangelog', () => () => ({

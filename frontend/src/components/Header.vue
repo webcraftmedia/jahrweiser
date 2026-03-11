@@ -197,7 +197,6 @@
     data-testid="mobile-backdrop"
     @click="toggleMobileMenu"
   />
-
 </template>
 
 <script setup lang="ts">

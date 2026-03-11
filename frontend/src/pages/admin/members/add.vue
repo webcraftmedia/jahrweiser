@@ -290,7 +290,9 @@
             <LoadingDots small light />
             <span class="ml-1">{{ $t('pages.admin.members.add.step3.processing') }}</span>
           </span>
-          <span v-show="!isSubmitting">{{ $t('pages.admin.members.add.step3.button-submit') }}</span>
+          <span v-show="!isSubmitting">{{
+            $t('pages.admin.members.add.step3.button-submit')
+          }}</span>
         </button>
       </div>
     </div>

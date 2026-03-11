@@ -7,10 +7,7 @@ import Component from './ChangelogModal.vue'
 const MOCK_CHANGELOG =
   '## 1.0.0 (2026-01-01)\n\n### Features\n\n* **scope:** feature one ([#1](https://github.com/org/repo/issues/1))\n\n### Bug Fixes\n\n* **other:** fix one\n'
 
-vi.stubGlobal(
-  '$fetch',
-  vi.fn().mockResolvedValue(MOCK_CHANGELOG),
-)
+vi.stubGlobal('$fetch', vi.fn().mockResolvedValue(MOCK_CHANGELOG))
 
 describe('ChangelogModal', () => {
   it('renders changelog sections', async () => {

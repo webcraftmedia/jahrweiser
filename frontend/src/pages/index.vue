@@ -177,14 +177,14 @@
   const modal = ref<InstanceType<typeof Modal>>()
 
   interface EventDetail {
-    description: string
-    duration: string
-    endDate: string
-    location: string
-    startDate: string
+    description?: string
+    duration?: string
+    endDate?: string
+    location?: string
+    startDate?: string
     summary: string
     uid: string
-    url: string
+    url?: string
   }
   const selectedEvent = ref<EventDetail | null>(null)
   const eventLoading = ref(false)

@@ -130,7 +130,11 @@ export const findEvent = async (account: DAVAccount, url: string, id: string) =>
   })
 
 // TODO: This also applies if more then 1 users are found - potential flaw
-async function findUserByProperty(account: DAVAccount, propertyName: string, propertyValue: string) {
+async function findUserByProperty(
+  account: DAVAccount,
+  propertyName: string,
+  propertyValue: string,
+) {
   const users = await addressBookQuery({
     url: account.homeUrl!,
     headers: headers(account),
@@ -160,10 +164,10 @@ async function findUserByProperty(account: DAVAccount, propertyName: string, pro
   }
 }
 
-export const findUserByToken = (account: DAVAccount, token: string) =>
+export const findUserByToken = async (account: DAVAccount, token: string) =>
   findUserByProperty(account, X_LOGIN_TOKEN, token)
 
-export const findUserByEmail = (account: DAVAccount, email: string) =>
+export const findUserByEmail = async (account: DAVAccount, email: string) =>
   findUserByProperty(account, 'EMAIL', email)
 
 export const saveUser = async (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>

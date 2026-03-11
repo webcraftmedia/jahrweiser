@@ -56,9 +56,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const showPrivate = userQuery
-    ? (userQuery.vcard.getFirstProperty('categories')?.getValues() as string[] | undefined)?.includes(
-        calendar,
-      ) ?? false
+    ? ((
+        userQuery.vcard.getFirstProperty('categories')?.getValues() as string[] | undefined
+      )?.includes(calendar) ?? false)
     : false
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

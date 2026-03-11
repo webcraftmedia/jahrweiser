@@ -97,7 +97,10 @@
       </div>
 
       <div class="hidden md:flex items-center gap-4">
-        <a href="https://www.webcraft-media.de/#!impressum" class="hover:text-sienna transition-colors">
+        <a
+          href="https://www.webcraft-media.de/#!impressum"
+          class="hover:text-sienna transition-colors"
+        >
           {{ $t('components.Footer.imprint') }}
         </a>
         <a

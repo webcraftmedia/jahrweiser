@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.4.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.3.1...v1.4.0) (2026-03-11)
+
+
+### Features
+
+* **frontend:** mobile view for calendar ([#104](https://github.com/webcraftmedia/jahrweiser/issues/104)) ([eed2b42](https://github.com/webcraftmedia/jahrweiser/commit/eed2b42301727a11a749aa4b866c92150393a103))
+
+
+### Bug Fixes
+
+* **frontend:** fix colors in filter legend ([#107](https://github.com/webcraftmedia/jahrweiser/issues/107)) ([a2b8515](https://github.com/webcraftmedia/jahrweiser/commit/a2b85150000d752a5820ad0cc9a9fc230ed93562))
+* **frontend:** fix footer & header paddings on small and large devices ([#106](https://github.com/webcraftmedia/jahrweiser/issues/106)) ([fdf50ac](https://github.com/webcraftmedia/jahrweiser/commit/fdf50ac1a1f6cf7ea6811d52ddf5684d96eae8e1))
+* **frontend:** fix hover line height ([#109](https://github.com/webcraftmedia/jahrweiser/issues/109)) ([8455e9c](https://github.com/webcraftmedia/jahrweiser/commit/8455e9cbb3638ce2f813cceaa8403868727b33ff))
+* **frontend:** fix hover persisting after opening modal ([#112](https://github.com/webcraftmedia/jahrweiser/issues/112)) ([e02efef](https://github.com/webcraftmedia/jahrweiser/commit/e02efef6a21fe89097402e6a9070d2ce27c379cc))
+* **frontend:** fix mobile menu - no shadow top ([#111](https://github.com/webcraftmedia/jahrweiser/issues/111)) ([91ff1fd](https://github.com/webcraftmedia/jahrweiser/commit/91ff1fdaba4e4824a8704f7d54a272ddb871f8b1))
+* **frontend:** hide modal initially ([#108](https://github.com/webcraftmedia/jahrweiser/issues/108)) ([9995c8d](https://github.com/webcraftmedia/jahrweiser/commit/9995c8d4a608ef7c95b4d9bfa560021b92911f8b))
+
 ## [1.3.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.3.0...v1.3.1) (2026-03-09)
 
 

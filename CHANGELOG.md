@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.5](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.4...v1.4.5) (2026-03-11)
+
+
+### Bug Fixes
+
+* **frontend:** load temporal on index.vue ([#122](https://github.com/webcraftmedia/jahrweiser/issues/122)) ([2506fde](https://github.com/webcraftmedia/jahrweiser/commit/2506fde016dd33b3977acd12989f4b1436f495ac))
+
 ## [1.4.4](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.3...v1.4.4) (2026-03-11)
 
 

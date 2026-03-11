@@ -262,8 +262,9 @@
     right: 0;
     z-index: 50;
     background-color: #faf5eb;
-    border-bottom: 2px solid rgba(194, 65, 12, 0.3);
+    border: none;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    clip-path: inset(0 0 -24px 0);
     transform: translateY(-0.5rem);
     opacity: 0;
     pointer-events: none;
@@ -273,7 +274,6 @@
   }
   :is(.dark .mobile-menu) {
     background-color: #1a1714;
-    border-bottom-color: rgba(154, 52, 18, 0.5);
   }
   .mobile-menu.menu-open {
     transform: translateY(0);

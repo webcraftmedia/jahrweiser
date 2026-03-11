@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.0...v1.4.1) (2026-03-11)
+
+
+### Bug Fixes
+
+* **frontend:** fix package lock ([#113](https://github.com/webcraftmedia/jahrweiser/issues/113)) ([5bdec1d](https://github.com/webcraftmedia/jahrweiser/commit/5bdec1de81fa0bc163d423c4a125ca519ad33f4c))
+* **workflow:** use npm ci to ensure build works and package-lock.json is up to date ([#115](https://github.com/webcraftmedia/jahrweiser/issues/115)) ([46d234f](https://github.com/webcraftmedia/jahrweiser/commit/46d234f0f720f3b9424ab9384af6f32a3d330997))
+
 ## [1.4.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.3.1...v1.4.0) (2026-03-11)
 
 

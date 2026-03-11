@@ -3,6 +3,10 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { config } from '@vue/test-utils'
 import { expect, vi } from 'vitest'
 
+// Nuxt's getAppManifest fires a timer that calls $fetch — stub it to prevent
+// "ReferenceError: $fetch is not defined" in the test environment.
+globalThis.$fetch = vi.fn().mockResolvedValue({}) as typeof $fetch
+
 // Fail tests on Vue warnings and errors via Vue's built-in handlers
 config.global.config.warnHandler = (msg, _instance, trace) => {
   throw new Error(`[Vue warn]: ${msg}\n${trace}`)

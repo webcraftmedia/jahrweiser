@@ -98,7 +98,7 @@ exports[`Footer > renders 1`] = `
           </svg>
         </button>
       </div>
-      <div data-v-4896eafd="" class="hidden md:flex items-center gap-4"><a data-v-4896eafd="" href="https://www.webcraft-media.de#!impressum" class="hover:text-sienna transition-colors">components.Footer.imprint</a><a data-v-4896eafd="" href="https://www.webcraft-media.de#!datenschutz" class="hover:text-sienna transition-colors">components.Footer.privacy-policy</a></div>
+      <div data-v-4896eafd="" class="hidden md:flex items-center gap-4"><a data-v-4896eafd="" href="https://www.webcraft-media.de/#!impressum" class="hover:text-sienna transition-colors">components.Footer.imprint</a><a data-v-4896eafd="" href="https://www.webcraft-media.de/#!datenschutz" class="hover:text-sienna transition-colors">components.Footer.privacy-policy</a></div>
     </div>
   </footer>
 </div>"

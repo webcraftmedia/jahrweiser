@@ -140,16 +140,3 @@
     visibility: visible;
   }
 </style>
-
-<style>
-  .dark .logo-modal circle {
-    fill: transparent !important;
-    filter: none !important;
-  }
-  .dark .logo-modal [aria-label='G'] {
-    fill: #c2410c !important;
-  }
-  .dark .logo-modal [aria-label='&'] {
-    fill: #d97706 !important;
-  }
-</style>

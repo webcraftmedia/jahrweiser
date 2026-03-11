@@ -60,10 +60,6 @@
 </template>
 
 <script setup lang="ts">
-  import { parseChangelog } from '../utils/parseChangelog'
-
-  import Modal from './Modal.vue'
-
   const modal = ref<InstanceType<typeof Modal>>()
   const sectionsContainer = ref<HTMLElement>()
   const changelogRaw = useRuntimeConfig().public.changelog

@@ -26,15 +26,11 @@
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
             </div>
           </div>
-          <ClientOnly>
-            <ScheduleXCalendar :calendar-app="calendarApp!" :style="calendarBodyZoomStyle" />
-          </ClientOnly>
+          <ScheduleXCalendar :calendar-app="calendarApp!" :style="calendarBodyZoomStyle" />
           <!-- Loading overlay -->
           <div v-show="calLoading" class="cal-loading-overlay">
             <div class="flex items-center gap-2">
-              <span class="loading-dot" />
-              <span class="loading-dot" style="animation-delay: 0.15s" />
-              <span class="loading-dot" style="animation-delay: 0.3s" />
+              <LoadingDots />
             </div>
           </div>
           <!-- Calendar legend / filter -->
@@ -72,9 +68,7 @@
           <template #content>
             <!-- Loading dots -->
             <div v-if="eventLoading" class="flex justify-center items-center gap-2 py-4">
-              <span class="loading-dot" />
-              <span class="loading-dot" style="animation-delay: 0.15s" />
-              <span class="loading-dot" style="animation-delay: 0.3s" />
+              <LoadingDots />
             </div>
             <!-- Event content — rolls down when loaded -->
             <div v-else class="modal-content-reveal">

@@ -202,9 +202,7 @@
       </div>
 
       <div v-if="isLoadingTags" class="flex items-center justify-center gap-2 py-8">
-        <span class="loading-dot" />
-        <span class="loading-dot" style="animation-delay: 0.15s" />
-        <span class="loading-dot" style="animation-delay: 0.3s" />
+        <LoadingDots />
       </div>
 
       <div v-else class="space-y-4">
@@ -290,9 +288,7 @@
           @click="submitForm"
         >
           <span v-if="isSubmitting" class="flex items-center gap-1.5">
-            <span class="loading-dot !w-[6px] !h-[6px] !bg-ivory" />
-            <span class="loading-dot !w-[6px] !h-[6px] !bg-ivory" style="animation-delay: 0.15s" />
-            <span class="loading-dot !w-[6px] !h-[6px] !bg-ivory" style="animation-delay: 0.3s" />
+            <LoadingDots small light />
             <span class="ml-1">{{ $t('pages.admin.members.add.step3.processing') }}</span>
           </span>
           <span v-else>{{ $t('pages.admin.members.add.step3.button-submit') }}</span>

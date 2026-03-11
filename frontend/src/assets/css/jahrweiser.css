@@ -118,6 +118,27 @@
 }
 /* eslint-enable css/no-important */
 
+/* ===== Dark-Mode SVG Logo Overrides ===== */
+
+/* eslint-disable css/no-important */
+.dark .logo-bar circle,
+.dark .logo-hero circle,
+.dark .logo-modal circle {
+  fill: transparent !important;
+  filter: none !important;
+}
+.dark .logo-bar [aria-label='G'],
+.dark .logo-hero [aria-label='G'],
+.dark .logo-modal [aria-label='G'] {
+  fill: #c2410c !important;
+}
+.dark .logo-bar [aria-label='&'],
+.dark .logo-hero [aria-label='&'],
+.dark .logo-modal [aria-label='&'] {
+  fill: #d97706 !important;
+}
+/* eslint-enable css/no-important */
+
 /* ===== Loading Dots ===== */
 
 .loading-dot {

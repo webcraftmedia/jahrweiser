@@ -45,6 +45,16 @@ vi.mock('../composables/useZoom', () => ({
   }),
 }))
 
+const mockChangelogShouldOpen = ref(false)
+vi.mock('../composables/useChangelog', () => ({
+  useChangelog: () => ({
+    openChangelog: () => {
+      mockChangelogShouldOpen.value = true
+    },
+    shouldOpen: mockChangelogShouldOpen,
+  }),
+}))
+
 const { mockClear, mockNavigateTo } = vi.hoisted(() => ({
   mockClear: vi.fn(),
   mockNavigateTo: vi.fn(),
@@ -73,6 +83,7 @@ describe('Header', () => {
     mockZoomState.zoomLevel.value = 1.0
     mockCalendarFilter.legend.value = []
     mockCalendarFilter.hiddenCalendars.value = new Set()
+    mockChangelogShouldOpen.value = false
   })
 
   it('renders', async () => {
@@ -174,8 +185,8 @@ describe('Header', () => {
     await versionBtn.trigger('click')
     // Mobile menu closes
     expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
-    // Changelog modal opens
-    expect(wrapper.find('.modal-open').exists()).toBe(true)
+    // Changelog signal was triggered
+    expect(mockChangelogShouldOpen.value).toBe(true)
   })
 
   it('shows mobile calendar filter when legend has items', async () => {

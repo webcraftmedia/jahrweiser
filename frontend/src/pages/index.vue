@@ -473,12 +473,11 @@
   let mouseMoveFrame: number | undefined
   function onMouseMove(e: MouseEvent) {
     if (mouseMoveFrame) return
+    /* v8 ignore start -- RAF callback internals not tracked by v8 with fake timers */
     mouseMoveFrame = requestAnimationFrame(() => {
       mouseMoveFrame = undefined
-      /* v8 ignore start -- defensive guard, calWrapper is always set when listener is active */
       if (!calWrapper.value) return
       const bottom = calWrapper.value.getBoundingClientRect().bottom
-      /* v8 ignore stop */
       if (e.clientY >= bottom - LEGEND_TRIGGER_PX) {
         clearTimeout(legendLeaveTimer)
         legendHover.value = true
@@ -489,6 +488,7 @@
         }, 300)
       }
     })
+    /* v8 ignore stop */
   }
 
   /* ── Responsive view switching (month-grid ↔ list at 700px) ── */

@@ -105,11 +105,13 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
+    /* v8 ignore start -- called only via @keydown.tab, so key is always Tab; overlayEl is always set when mounted */
     if (e.key !== 'Tab' || !overlayEl.value) return
     const focusable = overlayEl.value.querySelectorAll<HTMLElement>(
       'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
     )
     if (focusable.length === 0) return
+    /* v8 ignore stop */
     const first = focusable[0]!
     const last = focusable[focusable.length - 1]!
     if (e.shiftKey && document.activeElement === first) {

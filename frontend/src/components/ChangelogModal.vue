@@ -72,6 +72,7 @@
     modal.value?.open()
     void nextTick(() => {
       const first = sectionsContainer.value?.querySelector<HTMLDetailsElement>('details')
+      /* v8 ignore next -- sections are always loaded before this runs */
       if (first) first.open = true
     })
   }

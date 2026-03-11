@@ -123,6 +123,8 @@
 </template>
 
 <script setup lang="ts">
+  import { z } from 'zod'
+
   definePageMeta({ layout: 'login' })
 
   const { loggedIn } = useUserSession()
@@ -138,19 +140,21 @@
     email: '',
   })
 
-  function isValidEmail(email: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  }
+  const emailSchema = z.email()
 
   async function requestLoginLink() {
-    if (!isValidEmail(credentials.email)) {
+    if (!emailSchema.safeParse(credentials.email).success) {
       emailError.value = true
       return
     }
-    await $fetch('/api/requestLoginLink', {
-      method: 'POST',
-      body: credentials,
-    })
+    try {
+      await $fetch('/api/requestLoginLink', {
+        method: 'POST',
+        body: credentials,
+      })
+    } catch (error) {
+      console.error('Failed to request login link:', error)
+    }
     requestedLogin.value = true
   }
 

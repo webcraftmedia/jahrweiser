@@ -132,7 +132,7 @@ describe('calendar.post', () => {
     expect(result[0]).toMatchObject({ title: 'Private Meeting' })
   })
 
-  it('shows private events when user not in DAV', async () => {
+  it('hides private events when user not in DAV', async () => {
     mockFindUserByEmail.mockResolvedValue(false)
     mockFindEvents.mockResolvedValue([
       {
@@ -141,7 +141,7 @@ describe('calendar.post', () => {
       },
     ])
     const result = (await handlerFn({})) as unknown[]
-    expect(result).toHaveLength(1)
+    expect(result).toHaveLength(0)
   })
 
   it('sets endDate to last day for all-day events', async () => {
@@ -270,6 +270,21 @@ describe('calendar.post', () => {
     expect(result[0]!.title).toBe('Berlin Recurring')
     // DTSTART;TZID=Europe/Berlin:20250301T190000 → 18:00 UTC (CET = UTC+1)
     expect(result[0]!.startDate.getUTCHours()).toBe(18)
+  })
+
+  it('hides private events when user has no categories property', async () => {
+    mockFindUserByEmail.mockResolvedValue({
+      user: { href: '/abc.vcf' },
+      vcard: createMockVCard({ email: 'test@example.com' }),
+    })
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/private-event-1.ics',
+        props: { calendarData: PRIVATE_EVENT },
+      },
+    ])
+    const result = (await handlerFn({})) as unknown[]
+    expect(result).toHaveLength(0)
   })
 
   it('hrefToId extracts ID from path', async () => {

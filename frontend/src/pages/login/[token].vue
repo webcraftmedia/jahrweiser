@@ -3,9 +3,7 @@
     <!-- Loading dots -->
     <div v-if="success" class="mt-8 animate-fade-slide-up">
       <div role="status" class="flex items-center gap-2">
-        <span class="loading-dot" />
-        <span class="loading-dot" style="animation-delay: 0.15s" />
-        <span class="loading-dot" style="animation-delay: 0.3s" />
+        <LoadingDots />
         <span class="sr-only">{{ $t('pages.login.token.loading') }}</span>
       </div>
     </div>

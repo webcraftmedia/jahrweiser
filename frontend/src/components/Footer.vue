@@ -97,35 +97,36 @@
       </div>
 
       <div class="hidden md:flex items-center gap-4">
-        <NuxtLink
-          :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
-          external
+        <a
+          href="https://www.webcraft-media.de/#!impressum"
           class="hover:text-sienna transition-colors"
         >
           {{ $t('components.Footer.imprint') }}
-        </NuxtLink>
-        <NuxtLink
-          :to="{ path: 'https://www.webcraft-media.de/#!datenschutz' }"
-          external
+        </a>
+        <a
+          href="https://www.webcraft-media.de/#!datenschutz"
           class="hover:text-sienna transition-colors"
         >
           {{ $t('components.Footer.privacy-policy') }}
-        </NuxtLink>
+        </a>
       </div>
     </div>
   </footer>
 </template>
 
 <script setup lang="ts">
-  import { useColorMode } from '../composables/useColorMode'
-  import { useZoom } from '../composables/useZoom'
-
-  import ChangelogModal from './ChangelogModal.vue'
-
   const changelogModal = ref<InstanceType<typeof ChangelogModal>>()
   const runtimeConfig = useRuntimeConfig()
   const { zoomLevel: zoom, chromeZoom } = useZoom()
   const { isDark, toggle: toggleDark } = useColorMode()
+  const { shouldOpen: changelogShouldOpen } = useChangelog()
+
+  watch(changelogShouldOpen, (v) => {
+    if (v) {
+      changelogModal.value?.open()
+      changelogShouldOpen.value = false
+    }
+  })
 </script>
 
 <style scoped>

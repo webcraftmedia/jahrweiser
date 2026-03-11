@@ -111,6 +111,11 @@ describe('event.post', () => {
     expect(result.startDate).toBe('2025-03-01T19:00:00')
   })
 
+  it('throws 502 when DAV connection fails', async () => {
+    mockFindCalendars.mockRejectedValue(new Error('ECONNREFUSED'))
+    await expect(handlerFn({})).rejects.toThrowError('CalDAV server unreachable')
+  })
+
   it('throws when calendar not found', async () => {
     mockFindCalendars.mockResolvedValue([])
     await expect(handlerFn({})).rejects.toThrowError('Calendar not found')
@@ -118,7 +123,7 @@ describe('event.post', () => {
 
   it('throws when event not found', async () => {
     mockFindEvent.mockResolvedValue([])
-    await expect(handlerFn({})).rejects.toThrowError('event not found')
+    await expect(handlerFn({})).rejects.toThrowError('Event not found')
   })
 
   it('throws when no vevent in calendar data', async () => {
@@ -127,6 +132,6 @@ VERSION:2.0
 PRODID:-//Test//Test//EN
 END:VCALENDAR`
     mockFindEvent.mockResolvedValue([{ data: noVevent }])
-    await expect(handlerFn({})).rejects.toThrowError('event not found')
+    await expect(handlerFn({})).rejects.toThrowError('Event not found')
   })
 })

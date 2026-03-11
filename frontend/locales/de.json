@@ -19,11 +19,11 @@
       "calendars": "Kalender",
       "logout": "↪ Ausloggen",
       "logout-label": "Ausloggen",
-      "open-menu": "Open menu",
+      "open-menu": "Menü öffnen",
       "welcome": "Willkommen"
     },
     "Modal": {
-      "close": "Close Modal"
+      "close": "Modal schließen"
     }
   },
   "pages": {
@@ -70,7 +70,7 @@
     },
     "index": {
       "details": {
-        "duration": "Duration:",
+        "duration": "Dauer:",
         "location": "Ort:",
         "start": "Beginn:",
         "url": "Link:"
@@ -102,7 +102,7 @@
         "title": "Prüfe dein Postfach"
       },
       "token": {
-        "loading": "Loading..."
+        "loading": "Laden..."
       }
     }
   }

@@ -12,7 +12,7 @@
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-              <button @click="navigatePeriod(-1)">
+              <button :aria-label="prevMonthLabel" @click="navigatePeriod(-1)">
                 <span class="nav-arrow">‹</span><span class="nav-label"> {{ prevMonthLabel }}</span>
               </button>
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
@@ -20,21 +20,17 @@
                 {{ $t('pages.index.today') }}
               </button>
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-              <button @click="navigatePeriod(1)">
+              <button :aria-label="nextMonthLabel" @click="navigatePeriod(1)">
                 <span class="nav-label">{{ nextMonthLabel }} </span><span class="nav-arrow">›</span>
               </button>
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
             </div>
           </div>
-          <ClientOnly>
-            <ScheduleXCalendar :calendar-app="calendarApp!" :style="calendarBodyZoomStyle" />
-          </ClientOnly>
+          <ScheduleXCalendar :calendar-app="calendarApp!" :style="calendarBodyZoomStyle" />
           <!-- Loading overlay -->
           <div v-show="calLoading" class="cal-loading-overlay">
             <div class="flex items-center gap-2">
-              <span class="loading-dot" />
-              <span class="loading-dot" style="animation-delay: 0.15s" />
-              <span class="loading-dot" style="animation-delay: 0.3s" />
+              <LoadingDots />
             </div>
           </div>
           <!-- Calendar legend / filter -->
@@ -72,9 +68,7 @@
           <template #content>
             <!-- Loading dots -->
             <div v-if="eventLoading" class="flex justify-center items-center gap-2 py-4">
-              <span class="loading-dot" />
-              <span class="loading-dot" style="animation-delay: 0.15s" />
-              <span class="loading-dot" style="animation-delay: 0.3s" />
+              <LoadingDots />
             </div>
             <!-- Event content — rolls down when loaded -->
             <div v-else class="modal-content-reveal">
@@ -157,6 +151,17 @@
 
   import type { CalendarEventExternal } from '@schedule-x/calendar'
 
+  interface RawCalendarEvent {
+    calendar: string
+    color: string
+    id: string
+    occurrence?: number
+    startDate: string
+    endDate: string
+    title: string
+    isRecurring?: boolean
+  }
+
   interface JahrweiserEvent extends CalendarEventExternal {
     _calendar: string
     _originalId: string
@@ -169,17 +174,27 @@
     middleware: ['authenticated'],
   })
 
-  const modal = ref()
+  const modal = ref<InstanceType<typeof Modal>>()
 
-  const event = ref()
+  interface EventDetail {
+    description?: string
+    duration?: string
+    endDate?: string
+    location?: string
+    startDate?: string
+    summary: string
+    uid: string
+    url?: string
+  }
+  const selectedEvent = ref<EventDetail | null>(null)
   const eventLoading = ref(false)
   const eventTitle = ref('')
-  const eventStartDate = computed(() => event.value?.startDate ?? '')
-  const eventDuration = computed(() => event.value?.duration?.replace(/^PT?/, '') ?? '')
-  const eventLocation = computed(() => event.value?.location ?? '')
-  const eventUrl = computed(() => event.value?.url ?? '')
+  const eventStartDate = computed(() => selectedEvent.value?.startDate ?? '')
+  const eventDuration = computed(() => selectedEvent.value?.duration?.replace(/^PT?/, '') ?? '')
+  const eventLocation = computed(() => selectedEvent.value?.location ?? '')
+  const eventUrl = computed(() => selectedEvent.value?.url ?? '')
   const eventDescription = computed(() => {
-    const desc = event.value?.description
+    const desc = selectedEvent.value?.description
     if (!desc) return ''
     return desc
       .split('\n')
@@ -443,13 +458,9 @@
   /* ── Keyboard navigation ── */
 
   function handleKeyboard(e: KeyboardEvent) {
-    if (modal.value && isModalOpen()) return
+    if (modal.value?.isOpen) return
     if (e.key === 'ArrowLeft' || e.key === 'a') navigatePeriod(-1)
     else if (e.key === 'ArrowRight' || e.key === 'd') navigatePeriod(1)
-  }
-
-  function isModalOpen() {
-    return document.getElementById('default-modal')?.classList.contains('modal-open')
   }
 
   /* ── Legend hover — open when cursor is near/below cal-wrapper bottom ── */
@@ -459,20 +470,25 @@
   const LEGEND_TRIGGER_PX = 40
   let legendLeaveTimer: ReturnType<typeof setTimeout> | undefined
 
+  let mouseMoveFrame: number | undefined
   function onMouseMove(e: MouseEvent) {
-    /* v8 ignore start -- defensive guard, calWrapper is always set when listener is active */
-    if (!calWrapper.value) return
-    const bottom = calWrapper.value.getBoundingClientRect().bottom
+    if (mouseMoveFrame) return
+    /* v8 ignore start -- RAF callback internals not tracked by v8 with fake timers */
+    mouseMoveFrame = requestAnimationFrame(() => {
+      mouseMoveFrame = undefined
+      if (!calWrapper.value) return
+      const bottom = calWrapper.value.getBoundingClientRect().bottom
+      if (e.clientY >= bottom - LEGEND_TRIGGER_PX) {
+        clearTimeout(legendLeaveTimer)
+        legendHover.value = true
+      } else if (legendHover.value) {
+        clearTimeout(legendLeaveTimer)
+        legendLeaveTimer = setTimeout(() => {
+          legendHover.value = false
+        }, 300)
+      }
+    })
     /* v8 ignore stop */
-    if (e.clientY >= bottom - LEGEND_TRIGGER_PX) {
-      clearTimeout(legendLeaveTimer)
-      legendHover.value = true
-    } else if (legendHover.value) {
-      clearTimeout(legendLeaveTimer)
-      legendLeaveTimer = setTimeout(() => {
-        legendHover.value = false
-      }, 300)
-    }
   }
 
   /* ── Responsive view switching (month-grid ↔ list at 700px) ── */
@@ -499,6 +515,7 @@
     window.removeEventListener('resize', onResize)
     document.removeEventListener('mousemove', onMouseMove)
     clearTimeout(legendLeaveTimer)
+    if (mouseMoveFrame) cancelAnimationFrame(mouseMoveFrame)
   })
 
   /* ── Dark mode reactivity ── */
@@ -509,8 +526,7 @@
 
   /* ── Data loading ── */
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rawEvents = ref<any[]>([])
+  const rawEvents = ref<RawCalendarEvent[]>([])
   const calLoading = ref(false)
 
   function buildScheduleXCalendars() {
@@ -738,16 +754,16 @@
 
   function handleModalX() {
     if (eventLoading.value) return
-    modal.value.close()
+    modal.value?.close()
   }
 
   async function clickItem(data: JahrweiserEvent) {
     try {
       const { _calendar: calendar, _originalId: id, _occurrence: occurrence } = data
-      event.value = null
+      selectedEvent.value = null
       eventLoading.value = true
       eventTitle.value = capitalize(data.title || '')
-      modal.value.open()
+      modal.value?.open()
       const eventData = await $fetch('/api/event', {
         method: 'POST',
         body: {
@@ -756,10 +772,10 @@
           occurrence,
         },
       })
-      event.value = eventData
+      selectedEvent.value = eventData
     } catch (error) {
       console.error(error)
-      modal.value.close()
+      modal.value?.close()
     } finally {
       eventLoading.value = false
     }
@@ -799,6 +815,12 @@
     width: 100%;
     height: 100%;
     min-height: 600px;
+  }
+
+  /* --- Prevent horizontal scrollbar during slide animation --- */
+
+  .sx__view-container {
+    overflow-x: hidden;
   }
 
   /* --- Hide view selector (auto-responsive handles view switching) --- */

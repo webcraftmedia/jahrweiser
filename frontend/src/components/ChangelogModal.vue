@@ -60,22 +60,22 @@
 </template>
 
 <script setup lang="ts">
-  import { parseChangelog } from '../utils/parseChangelog'
-
-  import Modal from './Modal.vue'
-
   const modal = ref<InstanceType<typeof Modal>>()
   const sectionsContainer = ref<HTMLElement>()
-  const changelogRaw = useRuntimeConfig().public.changelog
-  const sections = parseChangelog(changelogRaw)
+  const sections = ref<ReturnType<typeof parseChangelog>>([])
 
-  onMounted(() => {
-    const first = sectionsContainer.value!.querySelector<HTMLDetailsElement>('details')
-    first!.open = true
-  })
-
-  function open() {
+  async function open() {
+    if (sections.value.length === 0) {
+      const raw = await $fetch<string>('/api/changelog')
+      sections.value = parseChangelog(raw)
+    }
     modal.value?.open()
+    /* v8 ignore start -- nextTick callback: sections are always loaded before this runs */
+    void nextTick(() => {
+      const first = sectionsContainer.value?.querySelector<HTMLDetailsElement>('details')
+      if (first) first.open = true
+    })
+    /* v8 ignore stop */
   }
 
   defineExpose({ open })

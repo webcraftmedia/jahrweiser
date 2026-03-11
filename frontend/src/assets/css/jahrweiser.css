@@ -54,132 +54,6 @@
   }
 }
 
-/* ===== Component Classes ===== */
-
-@layer components {
-  /* Vintage badge — used for category labels */
-  .vintage-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border: 1.5px solid;
-    border-radius: 2px;
-    font-size: 1rem;
-    font-weight: 600;
-  }
-
-  /* Event ticket — calendar event items */
-  .event-ticket {
-    border-left-width: 4px;
-    border-left-style: solid;
-    padding: 3px 8px;
-    margin-top: 3px;
-    font-size: 1.1875rem;
-    font-weight: 600;
-    line-height: 1.3;
-    border-radius: 0 4px 4px 0;
-    cursor: pointer;
-    transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .event-ticket:hover {
-    transform: scale(1.03);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-    z-index: 10;
-    white-space: normal;
-    position: relative;
-  }
-
-  .event-ticket:nth-child(odd) {
-    transform: rotate(-0.3deg);
-  }
-
-  .event-ticket:nth-child(even) {
-    transform: rotate(0.2deg);
-  }
-
-  .event-ticket::before {
-    content: '';
-    position: absolute;
-    left: -1px;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 3px,
-      rgba(255, 255, 255, 0.5) 3px,
-      rgba(255, 255, 255, 0.5) 5px
-    );
-  }
-
-  .dark .event-ticket::before {
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 3px,
-      rgba(0, 0, 0, 0.3) 3px,
-      rgba(0, 0, 0, 0.3) 5px
-    );
-  }
-
-  /* Month ribbon arrow buttons */
-  .month-ribbon,
-  .month-ribbon-right {
-    display: block;
-    width: 0;
-    height: 0;
-    padding: 0;
-    margin: 0;
-    border: none;
-    background: none;
-    cursor: pointer;
-  }
-
-  .month-ribbon {
-    border-top: 19px solid transparent;
-    border-bottom: 19px solid transparent;
-    border-right: 14px solid #c2410c;
-  }
-
-  .month-ribbon:hover {
-    border-right-color: #ea580c;
-  }
-
-  .dark .month-ribbon {
-    border-right-color: #9a3412;
-  }
-
-  .dark .month-ribbon:hover {
-    border-right-color: #c2410c;
-  }
-
-  .month-ribbon-right {
-    border-top: 19px solid transparent;
-    border-bottom: 19px solid transparent;
-    border-left: 14px solid #c2410c;
-  }
-
-  .month-ribbon-right:hover {
-    border-left-color: #ea580c;
-  }
-
-  .dark .month-ribbon-right {
-    border-left-color: #9a3412;
-  }
-
-  .dark .month-ribbon-right:hover {
-    border-left-color: #c2410c;
-  }
-}
-
 /* ===== Animation Utilities ===== */
 
 @layer components {
@@ -207,12 +81,6 @@
 @keyframes gentleFloat {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
-}
-
-/* Handschrift-Unterstreichung einzeichnen */
-@keyframes drawUnderline {
-  from { width: 0; }
-  to { width: 100%; }
 }
 
 /* Stempel-Effekt */
@@ -250,6 +118,27 @@
 }
 /* eslint-enable css/no-important */
 
+/* ===== Dark-Mode SVG Logo Overrides ===== */
+
+/* eslint-disable css/no-important */
+.dark .logo-bar circle,
+.dark .logo-hero circle,
+.dark .logo-modal circle {
+  fill: transparent !important;
+  filter: none !important;
+}
+.dark .logo-bar [aria-label='G'],
+.dark .logo-hero [aria-label='G'],
+.dark .logo-modal [aria-label='G'] {
+  fill: #c2410c !important;
+}
+.dark .logo-bar [aria-label='&'],
+.dark .logo-hero [aria-label='&'],
+.dark .logo-modal [aria-label='&'] {
+  fill: #d97706 !important;
+}
+/* eslint-enable css/no-important */
+
 /* ===== Loading Dots ===== */
 
 .loading-dot {
@@ -276,32 +165,3 @@
   }
 }
 
-/* ===== Calendar Animations ===== */
-
-@keyframes todayPulse {
-  0%,
-  100% {
-    box-shadow:
-      inset 0 0 0 2px #c2410c,
-      0 0 0 0 rgba(194, 65, 12, 0.3);
-  }
-  50% {
-    box-shadow:
-      inset 0 0 0 2px #c2410c,
-      0 0 0 4px rgba(194, 65, 12, 0.15);
-  }
-}
-
-@keyframes todayPulseDark {
-  0%,
-  100% {
-    box-shadow:
-      inset 0 0 0 2px #9a3412,
-      0 0 0 0 rgba(154, 52, 18, 0.3);
-  }
-  50% {
-    box-shadow:
-      inset 0 0 0 2px #9a3412,
-      0 0 0 4px rgba(154, 52, 18, 0.15);
-  }
-}

@@ -69,7 +69,7 @@ describe('updateUserTags.post', () => {
       })
     })
     mockFindUserByEmail.mockResolvedValue(false)
-    await expect(handlerFn({})).rejects.toThrowError('Huston, we have a problem')
+    await expect(handlerFn({})).rejects.toThrowError('Admin account not found')
   })
 
   it('handles admin with no adminTags (empty fallback)', async () => {
@@ -294,6 +294,6 @@ describe('updateUserTags.post', () => {
     mockSaveUser.mockResolvedValue(undefined)
     mockEmailSend.mockRejectedValue('SMTP error')
 
-    await expect(handlerFn({})).rejects.toThrowError('SMTP error')
+    await expect(handlerFn({})).rejects.toThrowError('Failed to send email')
   })
 })

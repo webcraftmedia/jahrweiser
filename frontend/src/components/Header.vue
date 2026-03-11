@@ -162,22 +162,20 @@
           <div
             class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
           >
-            <NuxtLink
-              :to="{ path: 'https://www.webcraft-media.de/#!impressum' }"
-              external
+            <a
+              href="https://www.webcraft-media.de/#!impressum"
               class="hover:text-sienna transition-colors"
               @click="toggleMobileMenu"
             >
               {{ $t('components.Footer.imprint') }}
-            </NuxtLink>
-            <NuxtLink
-              :to="{ path: 'https://www.webcraft-media.de/#!datenschutz' }"
-              external
+            </a>
+            <a
+              href="https://www.webcraft-media.de/#!datenschutz"
               class="hover:text-sienna transition-colors"
               @click="toggleMobileMenu"
             >
               {{ $t('components.Footer.privacy-policy') }}
-            </NuxtLink>
+            </a>
             <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
             <button
               class="ml-auto hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer"
@@ -194,20 +192,14 @@
   </nav>
   <!-- Backdrop (outside nav stacking context so it covers page content) -->
   <div
-    v-if="loggedIn && mobileMenuOpen"
+    v-show="loggedIn && mobileMenuOpen"
     class="md:hidden fixed inset-0 bg-navy/30 dark:bg-black/40 z-40"
     data-testid="mobile-backdrop"
     @click="toggleMobileMenu"
   />
-  <ChangelogModal ref="changelogModal" />
 </template>
 
 <script setup lang="ts">
-  import { useCalendarFilter } from '../composables/useCalendarFilter'
-  import { useZoom } from '../composables/useZoom'
-
-  import ChangelogModal from './ChangelogModal.vue'
-
   import LogoSmall from '~/../assets/logo-small.svg'
 
   withDefaults(defineProps<{ variant?: 'bar' | 'hero' }>(), { variant: 'bar' })
@@ -215,13 +207,12 @@
   const { chromeZoom } = useZoom()
   const appVersion = useRuntimeConfig().public.appVersion
 
-  const welcomeName = ref()
   const { user, loggedIn, clear: clearSession } = useUserSession()
   const { legend, hiddenCalendars, toggleCalendar } = useCalendarFilter()
   const mobileMenuOpen = ref(false)
-  const changelogModal = ref<InstanceType<typeof ChangelogModal>>()
+  const { openChangelog: triggerChangelog } = useChangelog()
 
-  welcomeName.value = computed(() =>
+  const welcomeName = computed(() =>
     user.value?.name ? user.value.name.split(' ').slice(-1).pop() : user.value?.email,
   )
 
@@ -231,7 +222,7 @@
 
   function openChangelog() {
     mobileMenuOpen.value = false
-    changelogModal.value?.open()
+    triggerChangelog()
   }
 
   async function logout() {
@@ -306,21 +297,5 @@
   }
   .nav-link:hover::after {
     width: 100%;
-  }
-</style>
-
-<style>
-  .dark .logo-bar circle,
-  .dark .logo-hero circle {
-    fill: transparent !important;
-    filter: none !important;
-  }
-  .dark .logo-bar [aria-label='G'],
-  .dark .logo-hero [aria-label='G'] {
-    fill: #c2410c !important;
-  }
-  .dark .logo-bar [aria-label='&'],
-  .dark .logo-hero [aria-label='&'] {
-    fill: #d97706 !important;
   }
 </style>

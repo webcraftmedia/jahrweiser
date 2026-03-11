@@ -37,7 +37,7 @@ describe('getUserTags.post', () => {
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
     } as never)
     mockFindUserByEmail.mockResolvedValue(false)
-    await expect(handlerFn({})).rejects.toThrowError('Huston, we have a problem')
+    await expect(handlerFn({})).rejects.toThrowError('Admin account not found')
   })
 
   it('returns empty array when admin has no adminTags', async () => {

@@ -7,7 +7,7 @@
 
   const { t } = useI18n()
 
-  const menuItems = ref([
+  const menuItems = computed(() => [
     { label: t('pages.admin.menu.members-add'), path: '/admin/members/add' },
     { label: t('pages.admin.menu.calendar'), path: '/admin/cal/', external: true },
   ])
@@ -85,6 +85,7 @@
             {{ $t('pages.admin.title') }}
           </h2>
           <button
+            :aria-label="$t('components.Modal.close')"
             class="ml-1 flex items-center justify-center h-10 w-10 rounded-lg hover:bg-sienna/5 dark:hover:bg-sienna/10 focus:outline-none"
             @click="mobileMenuOpen = false"
           >
@@ -137,6 +138,7 @@
           <!-- Mobile Menu Button -->
           <div class="md:hidden flex items-center gap-3 px-4 pt-4 pb-3">
             <button
+              :aria-label="$t('components.Header.open-menu')"
               class="p-2 text-navy/60 dark:text-ivory/60 bg-transparent rounded-lg hover:bg-sienna/5 dark:hover:bg-sienna/10 focus:outline-none focus:ring-4 focus:ring-navy/10 dark:focus:ring-ivory/10 transition-colors"
               @click="toggleMobileMenu"
             >

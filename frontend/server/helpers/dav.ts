@@ -45,7 +45,7 @@ export const createCardDAVAccount = (config: DAV_CONFIG): DAVAccount => ({
   homeUrl: config.DAV_URL + `/dav.php/addressbooks/${config.DAV_USERNAME}/default/`,
 })
 
-const DAV_TIMEOUT_MS = 300000 // 30 seconds
+const DAV_TIMEOUT_MS = 300000 // 5 minutes
 
 // Create HTTP/HTTPS agents with custom timeout settings
 const httpAgent = new HttpAgent({
@@ -58,16 +58,8 @@ const httpsAgent = new HttpsAgent({
   // timeout: DAV_TIMEOUT_MS,
 })
 
-const createTimeoutSignal = (timeoutMs: number) => {
-  const controller = new AbortController()
-  setTimeout(() => {
-    controller.abort()
-  }, timeoutMs)
-  return controller.signal
-}
-
 const getFetchOptions = () => ({
-  signal: createTimeoutSignal(DAV_TIMEOUT_MS),
+  signal: AbortSignal.timeout(DAV_TIMEOUT_MS),
   agent: (parsedURL: URL) => (parsedURL.protocol === 'http:' ? httpAgent : httpsAgent),
 })
 
@@ -137,7 +129,12 @@ export const findEvent = async (account: DAVAccount, url: string, id: string) =>
     fetchOptions: getFetchOptions(),
   })
 
-export const findUserByToken = async (account: DAVAccount, token: string) => {
+// TODO: This also applies if more then 1 users are found - potential flaw
+async function findUserByProperty(
+  account: DAVAccount,
+  propertyName: string,
+  propertyValue: string,
+) {
   const users = await addressBookQuery({
     url: account.homeUrl!,
     headers: headers(account),
@@ -149,15 +146,14 @@ export const findUserByToken = async (account: DAVAccount, token: string) => {
     filters: {
       ['prop-filter']: {
         _attributes: {
-          name: X_LOGIN_TOKEN,
+          name: propertyName,
         },
-        ['text-match']: token,
+        ['text-match']: propertyValue,
       },
     },
     fetchOptions: getFetchOptions(),
   })
 
-  // TODO: This also applies if more then 1 users are found - potential flaw
   if (users.length !== 1) {
     return false
   }
@@ -168,36 +164,11 @@ export const findUserByToken = async (account: DAVAccount, token: string) => {
   }
 }
 
-export const findUserByEmail = async (account: DAVAccount, email: string) => {
-  const users = await addressBookQuery({
-    url: account.homeUrl!,
-    headers: headers(account),
-    props: {
-      [`${DAVNamespaceShort.DAV}:getetag`]: {},
-      [`${DAVNamespaceShort.CARDDAV}:address-data`]: {},
-    },
-    depth: '1',
-    filters: {
-      ['prop-filter']: {
-        _attributes: {
-          name: 'EMAIL',
-        },
-        ['text-match']: email,
-      },
-    },
-    fetchOptions: getFetchOptions(),
-  })
+export const findUserByToken = async (account: DAVAccount, token: string) =>
+  findUserByProperty(account, X_LOGIN_TOKEN, token)
 
-  // TODO: This also applies if more then 1 users are found - potential flaw
-  if (users.length !== 1) {
-    return false
-  }
-
-  return {
-    user: users[0]!,
-    vcard: new ICAL.Component(ICAL.parse(users[0]!.props?.addressData)),
-  }
-}
+export const findUserByEmail = async (account: DAVAccount, email: string) =>
+  findUserByProperty(account, 'EMAIL', email)
 
 export const saveUser = async (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>
   updateVCard({

@@ -14,8 +14,6 @@
 </template>
 
 <script setup lang="ts">
-  import { useZoom } from '../composables/useZoom'
-
   const { zoomLevel } = useZoom()
 </script>
 

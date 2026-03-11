@@ -69,6 +69,19 @@ describe('Page: Login', () => {
     expect(wrapper.find('label').text()).toContain('pages.login.form.email.invalid')
   })
 
+  it('handles $fetch error gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.mocked(globalThis.$fetch).mockRejectedValueOnce(new Error('Network error'))
+    const wrapper = await mountSuspended(Page, { route: '/login' })
+    const input = wrapper.find('input')
+    await input.setValue('test@example.com')
+    await wrapper.find('form').trigger('submit')
+    // Should still show success (requestedLogin = true even on error)
+    expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to request login link:', expect.any(Error))
+    consoleSpy.mockRestore()
+  })
+
   it('redirects to home when already logged in', async () => {
     mockLoggedIn.value = true
     await mountSuspended(Page, { route: '/login' })

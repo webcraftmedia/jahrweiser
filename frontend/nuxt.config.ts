@@ -1,20 +1,6 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-
 import { defineNuxtConfig } from 'nuxt/config'
 
 const isTest = !!process.env.VITEST
-
-const changelogPath = resolve(__dirname, '../CHANGELOG.md')
-const changelog = isTest
-  ? '## 1.0.0 (2026-01-01)\n\n### Features\n\n* **scope:** feature one ([#1](https://github.com/org/repo/issues/1))\n\n### Bug Fixes\n\n* **other:** fix one\n'
-  : (() => {
-      try {
-        return readFileSync(changelogPath, 'utf-8')
-      } catch {
-        return '## 0.0.0\n\nNo changelog available.'
-      }
-    })()
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -27,8 +13,10 @@ export default defineNuxtConfig({
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {
-          rel: 'stylesheet',
+          rel: 'preload',
+          as: 'style',
           href: 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Permanent+Marker&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&display=swap',
+          onload: "this.onload=null;this.rel='stylesheet'",
         },
       ],
     },
@@ -97,7 +85,6 @@ export default defineNuxtConfig({
     // Keys within public, will be also exposed to the client-side
     public: {
       appVersion: isTest ? '0.0.0-test' : process.env.npm_package_version || 'development',
-      changelog,
     },
   },
   hooks: {

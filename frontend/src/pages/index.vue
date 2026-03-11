@@ -1132,6 +1132,7 @@
     font-size: 0.9em;
     line-height: 1.05;
     transition: box-shadow 0.2s ease;
+    min-width: calc(100% - 1px);
     margin-left: 0.5px;
     padding: 4px 6px !important;
     border-inline-start-width: 3px !important;

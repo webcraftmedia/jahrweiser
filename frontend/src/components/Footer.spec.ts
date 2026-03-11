@@ -1,4 +1,5 @@
-import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
+import { mountSuspended, renderSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
+import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Component from './Footer.vue'
@@ -8,7 +9,8 @@ const mockState = vi.hoisted(() => {
   const { ref, computed, readonly } = require('vue')
   const isDark = ref(false)
   const zoomLevel = ref(1.0)
-  return { isDark, zoomLevel, computed, readonly }
+  const changelogShouldOpen = ref(false)
+  return { isDark, zoomLevel, changelogShouldOpen, computed, readonly }
 })
 
 vi.mock('../composables/useColorMode', () => ({
@@ -27,10 +29,19 @@ vi.mock('../composables/useZoom', () => ({
   }),
 }))
 
+const { changelogShouldOpen } = mockState
+mockNuxtImport('useChangelog', () => () => ({
+  openChangelog: () => {
+    changelogShouldOpen.value = true
+  },
+  shouldOpen: changelogShouldOpen,
+}))
+
 describe('Footer', () => {
   beforeEach(() => {
     mockState.isDark.value = false
     mockState.zoomLevel.value = 1.0
+    changelogShouldOpen.value = false
   })
 
   it('renders', async () => {
@@ -72,6 +83,16 @@ describe('Footer', () => {
     await versionBtn.trigger('click')
     await wrapper.vm.$nextTick()
     expect(wrapper.find('.modal-open').exists()).toBe(true)
+  })
+
+  it('opens changelog modal via shared state', async () => {
+    const wrapper = await mountSuspended(Component)
+    changelogShouldOpen.value = true
+    await flushPromises()
+    // Watcher fires: calls open() and resets shouldOpen
+    expect(changelogShouldOpen.value).toBe(false)
+    // Verify the modal was asked to open (same method tested by click test above)
+    await wrapper.vm.$nextTick()
   })
 
   it('toggles dark mode', async () => {

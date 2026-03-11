@@ -4,12 +4,17 @@
 
   <div
     :id="modalId"
+    ref="overlayEl"
     tabindex="-1"
-    aria-hidden="false"
+    role="dialog"
+    aria-modal="true"
+    :aria-hidden="!isOpen"
     :style="isOpen ? undefined : { display: 'none' }"
     :class="isOpen ? 'modal-open' : 'modal-hidden'"
     class="modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-[60] flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
     @click="handleX"
+    @keydown.esc="handleX"
+    @keydown.tab="handleKeydown"
   >
     <div class="relative p-4 w-full max-w-3xl mx-auto max-h-full">
       <!-- Modal content -->
@@ -81,14 +86,39 @@
 
   const isOpen = ref(false)
   const modalBody = ref<HTMLElement>()
+  const overlayEl = ref<HTMLElement>()
+  let previouslyFocused: HTMLElement | null = null
 
   function open() {
+    previouslyFocused = document.activeElement as HTMLElement | null
     isOpen.value = true
-    void nextTick(() => modalBody.value?.scrollTo(0, 0))
+    void nextTick(() => {
+      modalBody.value?.scrollTo(0, 0)
+      overlayEl.value?.focus()
+    })
   }
 
   function close() {
     isOpen.value = false
+    previouslyFocused?.focus()
+    previouslyFocused = null
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key !== 'Tab' || !overlayEl.value) return
+    const focusable = overlayEl.value.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+    )
+    if (focusable.length === 0) return
+    const first = focusable[0]!
+    const last = focusable[focusable.length - 1]!
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
   }
 
   defineExpose({

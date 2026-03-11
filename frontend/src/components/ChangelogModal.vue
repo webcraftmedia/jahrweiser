@@ -66,8 +66,8 @@
   const sections = parseChangelog(changelogRaw)
 
   onMounted(() => {
-    const first = sectionsContainer.value!.querySelector<HTMLDetailsElement>('details')
-    first!.open = true
+    const first = sectionsContainer.value?.querySelector<HTMLDetailsElement>('details')
+    if (first) first.open = true
   })
 
   function open() {

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const session = await requireUserSession(event)
 
   if (session.user.role !== 'admin') {
-    throw new Error('Not Authorized')
+    throw createError({ statusCode: 403, statusMessage: 'Not Authorized' })
   }
 
   // Find admin
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   const adminQuery = await findUserByEmail(cardDavAccount, session.user.email)
 
   if (!adminQuery) {
-    throw new Error('Huston, we have a problem')
+    throw createError({ statusCode: 403, statusMessage: 'Admin account not found' })
   }
 
   const { vcard: adminVcard } = adminQuery

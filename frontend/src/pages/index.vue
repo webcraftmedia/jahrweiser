@@ -180,14 +180,21 @@
   definePageMeta({
     middleware: [
       function (to) {
-        const m = to.path.match(/^\/(\d{4})\/([1-9])$/)
+        const m = to.path.match(/^\/(\d{4})\/([1-9])(?=\/|$)/)
         if (m) {
-          return navigateTo(`/${m[1]}/${m[2]!.padStart(2, '0')}`, { replace: true })
+          return navigateTo(
+            `/${m[1]}/${m[2]!.padStart(2, '0')}${to.path.slice(m[0]!.length)}`,
+            { replace: true },
+          )
         }
       },
       'authenticated',
     ],
-    alias: ['/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])'],
+    alias: [
+      '/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])',
+      '/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])/event/:eventId',
+      '/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])/event/:eventId/:occurrence(\\d+)',
+    ],
   })
   /* v8 ignore stop */
 
@@ -348,9 +355,26 @@
   }
 
   function parseDateFromPath(path: string): Temporal.PlainDate | null {
-    const m = path.match(/^\/(\d{4})\/(0[1-9]|[1-9]|1[0-2])$/)
+    const m = path.match(/^\/(\d{4})\/(0[1-9]|[1-9]|1[0-2])(?:\/|$)/)
     if (!m) return null
     return Temporal.PlainDate.from({ year: Number(m[1]), month: Number(m[2]), day: 1 })
+  }
+
+  function eventPath(year: number, month: number, eventId: string, occurrence?: number) {
+    const base = `${monthPath(year, month)}/event/${eventId}`
+    return occurrence != null ? `${base}/${occurrence}` : base
+  }
+
+  function parseEventFromPath(path: string): { eventId: string; occurrence?: number } | null {
+    const m = path.match(/^\/\d{4}\/(?:0[1-9]|1[0-2]|[1-9])\/event\/([^/]+?)(?:\/(\d+))?$/)
+    if (!m) return null
+    return { eventId: m[1]!, occurrence: m[2] != null ? Number(m[2]) : undefined }
+  }
+
+  function findRawEvent(eventId: string, occurrence?: number): RawCalendarEvent | undefined {
+    return rawEvents.value.find(
+      (e) => e.id === eventId && (occurrence == null || e.occurrence === occurrence),
+    )
   }
 
   const initialDate = parseDateFromPath(route.path) ?? today
@@ -589,7 +613,35 @@
   /* ── Browser back/forward ── */
 
   function onPopState() {
-    const target = parseDateFromPath(window.location.pathname)
+    const path = window.location.pathname
+
+    // Event URL → open event popup (forward navigation)
+    const ev = parseEventFromPath(path)
+    if (ev) {
+      const raw = findRawEvent(ev.eventId, ev.occurrence)
+      if (raw) {
+        void clickItem({
+          id: raw.occurrence ? `${raw.id}-${raw.occurrence}` : raw.id,
+          title: capitalize(raw.title),
+          start: toTemporalDate(raw.startDate),
+          end: toTemporalDate(raw.endDate),
+          calendarId: '',
+          _calendar: raw.calendar,
+          _originalId: raw.id,
+          _occurrence: raw.occurrence,
+        })
+      }
+      return
+    }
+
+    // Month URL while modal is open → close modal (back navigation)
+    const modalEl = document.getElementById('default-modal')
+    if (modalEl?.classList.contains('modal-open')) {
+      modal.value?.close()
+      eventLoading.value = false
+    }
+
+    const target = parseDateFromPath(path)
     if (!target) return
     if (target.year === currentDate.value.year && target.month === currentDate.value.month) return
     currentDate.value = target
@@ -801,6 +853,7 @@
 
   // Observe the calendar root for applyFutureClass
   let calendarObserver: MutationObserver | undefined
+  const pendingEventOpen = ref<{ eventId: string; occurrence?: number } | null>(null)
   onMounted(() => {
     setTimeout(applyFutureClass, 100)
     setTimeout(applyFutureClass, 500)
@@ -809,6 +862,30 @@
     if (root) {
       calendarObserver = new MutationObserver(debouncedApplyFuture)
       calendarObserver.observe(root, { childList: true, subtree: true })
+    }
+
+    pendingEventOpen.value = parseEventFromPath(route.path)
+  })
+
+  watch(calLoading, (loading) => {
+    if (loading || !pendingEventOpen.value) return
+    const { eventId, occurrence } = pendingEventOpen.value
+    pendingEventOpen.value = null
+    const raw = findRawEvent(eventId, occurrence)
+    if (raw) {
+      void clickItem({
+        id: raw.occurrence ? `${raw.id}-${raw.occurrence}` : raw.id,
+        title: capitalize(raw.title),
+        start: toTemporalDate(raw.startDate),
+        end: toTemporalDate(raw.endDate),
+        calendarId: '',
+        _calendar: raw.calendar,
+        _originalId: raw.id,
+        _occurrence: raw.occurrence,
+      })
+    } else {
+      const d = currentDate.value
+      window.history.replaceState(null, '', monthPath(d.year, d.month))
     }
   })
   onUnmounted(() => {
@@ -829,6 +906,10 @@
   function handleModalX() {
     if (eventLoading.value) return
     modal.value?.close()
+    if (parseEventFromPath(window.location.pathname)) {
+      const d = currentDate.value
+      window.history.pushState(null, '', monthPath(d.year, d.month))
+    }
   }
 
   async function clickItem(data: JahrweiserEvent) {
@@ -839,6 +920,11 @@
       eventTitle.value = capitalize(data.title || '')
       eventCalendar.value = calendar
       modal.value?.open()
+      const d = currentDate.value
+      const url = eventPath(d.year, d.month, id, occurrence)
+      if (window.location.pathname !== url) {
+        window.history.pushState(null, '', url)
+      }
       const eventData = await $fetch('/api/event', {
         method: 'POST',
         body: {
@@ -851,6 +937,8 @@
     } catch (error) {
       console.error(error)
       modal.value?.close()
+      const d = currentDate.value
+      window.history.replaceState(null, '', monthPath(d.year, d.month))
     } finally {
       eventLoading.value = false
     }

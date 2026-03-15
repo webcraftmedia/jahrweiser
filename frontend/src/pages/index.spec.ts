@@ -1398,14 +1398,243 @@ describe('Page: Index', () => {
       expect.objectContaining({ year: 2024, month: 1 }),
     )
   })
+
+  /* ── Event URL support ── */
+
+  it('clickItem pushes event URL via history.pushState', async () => {
+    await mount()
+    pushStateSpy.mockClear()
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: undefined,
+      title: 'Test',
+    })
+    await vi.waitFor(() => {
+      expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01/event/event-1')
+    })
+  })
+
+  it('clickItem pushes event URL with occurrence', async () => {
+    await mount()
+    pushStateSpy.mockClear()
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 3,
+      title: 'Test',
+    })
+    await vi.waitFor(() => {
+      expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01/event/event-1/3')
+    })
+  })
+
+  it('handleModalX restores month URL when on event URL', async () => {
+    await mount()
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 1,
+      title: 'Test',
+    })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
+    })
+    await nextTick()
+    pushStateSpy.mockClear()
+    // Click the modal backdrop to trigger handleModalX
+    const modal = document.getElementById('default-modal')!
+    modal.click()
+    await nextTick()
+    expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+  })
+
+  it('popstate from event URL back to month URL closes modal', async () => {
+    await mount()
+    // Open an event
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: undefined,
+      title: 'Test',
+    })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
+    })
+    await nextTick()
+    await nextTick()
+    // Verify modal is open (teleported to body)
+    const modal = document.getElementById('default-modal')!
+    expect(modal.classList.contains('modal-open')).toBe(true)
+    // Simulate browser back — URL becomes month URL
+    window.history.pushState(null, '', '/2025/01')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await nextTick()
+    // Modal should be closed
+    expect(modal.classList.contains('modal-hidden')).toBe(true)
+  })
+
+  it('popstate to event URL opens popup (forward navigation)', async () => {
+    await mount()
+    mock$fetch.mockClear()
+    // Simulate forward navigation to event URL
+    window.history.pushState(null, '', '/2025/01/event/event-1')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', {
+        method: 'POST',
+        body: { calendar: 'Work', id: 'event-1', occurrence: undefined },
+      })
+    })
+  })
+
+  it('popstate to event URL with occurrence opens popup', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'rec-1',
+            title: 'Recurring',
+            color: '#ff0000',
+            calendar: 'Work',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+            occurrence: 3,
+          },
+        ])
+      if (url === '/api/event')
+        return Promise.resolve({
+          summary: 'Recurring Event',
+          startDate: '2025-01-15',
+          duration: 'PT1H',
+        })
+      return Promise.resolve({})
+    })
+    await mount()
+    mock$fetch.mockClear()
+    // Simulate forward navigation to event URL with occurrence
+    window.history.pushState(null, '', '/2025/01/event/rec-1/3')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', {
+        method: 'POST',
+        body: { calendar: 'Work', id: 'rec-1', occurrence: 3 },
+      })
+    })
+  })
+
+  it('popstate to unknown event URL does not open popup', async () => {
+    await mount()
+    mock$fetch.mockClear()
+    // Navigate to event URL where event is not in rawEvents
+    window.history.pushState(null, '', '/2025/01/event/nonexistent')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await nextTick()
+    // Should not have fetched event details
+    expect(mock$fetch).not.toHaveBeenCalledWith('/api/event', expect.anything())
+  })
+
+  it('initial load with event URL opens popup after data loads', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'evt-abc',
+            title: 'Deep Link Event',
+            color: '#ff0000',
+            calendar: 'Work',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+          },
+        ])
+      if (url === '/api/event')
+        return Promise.resolve({
+          summary: 'Deep Link Event',
+          startDate: '2025-01-15',
+          duration: 'PT1H',
+        })
+      return Promise.resolve({})
+    })
+    mockRoute.path = '/2025/01/event/evt-abc'
+    await mount({ route: '/2025/01/event/evt-abc' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', {
+        method: 'POST',
+        body: { calendar: 'Work', id: 'evt-abc', occurrence: undefined },
+      })
+    })
+  })
+
+  it('initial load with event URL with occurrence opens popup', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'rec-1',
+            title: 'Recurring Event',
+            color: '#ff0000',
+            calendar: 'Work',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+            occurrence: 5,
+          },
+        ])
+      if (url === '/api/event')
+        return Promise.resolve({
+          summary: 'Recurring Event',
+          startDate: '2025-01-15',
+          duration: 'PT1H',
+        })
+      return Promise.resolve({})
+    })
+    mockRoute.path = '/2025/01/event/rec-1/5'
+    await mount({ route: '/2025/01/event/rec-1/5' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', {
+        method: 'POST',
+        body: { calendar: 'Work', id: 'rec-1', occurrence: 5 },
+      })
+    })
+  })
+
+  it('initial load with unknown event corrects URL', async () => {
+    mockRoute.path = '/2025/01/event/nonexistent'
+    await mount({ route: '/2025/01/event/nonexistent' })
+    await vi.waitFor(() => {
+      expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+    })
+  })
+
+  it('clickItem error resets URL to month path', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([])
+      if (url === '/api/event') return Promise.reject(new Error('fetch failed'))
+      return Promise.resolve([])
+    })
+    await mount()
+    mockCallbacks.onEventClick?.({
+      _calendar: 'Work',
+      _originalId: 'event-1',
+      _occurrence: 1,
+      title: 'Test',
+    })
+    await vi.waitFor(() => {
+      expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+    })
+    consoleSpy.mockRestore()
+  })
 })
 
 describe('month-pad middleware', () => {
   // Extract and test the inline middleware from definePageMeta
   // The middleware redirects /YYYY/M → /YYYY/0M for single-digit months
   function middleware(path: string) {
-    const m = /^\/(\d{4})\/([1-9])$/.exec(path)
-    if (m) return `/${m[1]}/${m[2]!.padStart(2, '0')}`
+    const m = /^\/(\d{4})\/([1-9])(?=\/|$)/.exec(path)
+    if (m) return `/${m[1]}/${m[2]!.padStart(2, '0')}${path.slice(m[0].length)}`
     return undefined
   }
 
@@ -1413,11 +1642,16 @@ describe('month-pad middleware', () => {
     ['/2025/3', '/2025/03'],
     ['/2025/1', '/2025/01'],
     ['/2025/9', '/2025/09'],
+    ['/2025/3/event/abc', '/2025/03/event/abc'],
+    ['/2025/3/event/abc/2', '/2025/03/event/abc/2'],
   ])('redirects %s → %s', (input, expected) => {
     expect(middleware(input)).toBe(expected)
   })
 
-  it.each(['/2025/01', '/2025/10', '/2025/12', '/', '/login'])('does not redirect %s', (input) => {
-    expect(middleware(input)).toBeUndefined()
-  })
+  it.each(['/2025/01', '/2025/10', '/2025/12', '/', '/login', '/2025/01/event/abc'])(
+    'does not redirect %s',
+    (input) => {
+      expect(middleware(input)).toBeUndefined()
+    },
+  )
 })

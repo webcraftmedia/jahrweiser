@@ -48,7 +48,7 @@
                 :class="{ 'cal-legend-hidden': hiddenCalendars.has(cal.name) }"
                 @click="
                   toggleCalendar(cal.name)
-                  if (hiddenCalendars.size === 0) dismissLegend()
+                  if (hiddenCalendars.size === 0 && !legendHover) dismissLegend()
                   ;($event.currentTarget as HTMLElement).blur()
                 "
               >

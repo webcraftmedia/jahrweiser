@@ -188,12 +188,10 @@
       'authenticated',
     ],
     alias: ['/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])'],
-    pageTransition: false,
   })
   /* v8 ignore stop */
 
   const route = useRoute()
-  const router = useRouter()
 
   const modal = ref<InstanceType<typeof Modal>>()
 
@@ -430,7 +428,7 @@
     // Clear events BEFORE navigation so Schedule-X has nothing cached to render
     eventsService.set([])
     calendarControls.setDate(next)
-    void router.push(monthPath(next.year, next.month))
+    window.history.pushState(null, '', monthPath(next.year, next.month))
     applyFutureClassRepeatedly()
   }
 
@@ -439,7 +437,7 @@
     currentDate.value = now
     eventsService.set([])
     calendarControls.setDate(now)
-    void router.push(monthPath(now.year, now.month))
+    window.history.pushState(null, '', monthPath(now.year, now.month))
     scrollToDay()
     applyFutureClassRepeatedly()
   }
@@ -567,14 +565,16 @@
     lastWasSmall.value = window.innerWidth < SX_BREAKPOINT
     window.addEventListener('keydown', handleKeyboard)
     window.addEventListener('resize', onResize)
+    window.addEventListener('popstate', onPopState)
     document.addEventListener('mousemove', onMouseMove)
     if (!parseDateFromPath(route.path)) {
-      void router.replace(monthPath(today.year, today.month))
+      window.history.replaceState(null, '', monthPath(today.year, today.month))
     }
   })
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyboard)
     window.removeEventListener('resize', onResize)
+    window.removeEventListener('popstate', onPopState)
     document.removeEventListener('mousemove', onMouseMove)
     clearTimeout(legendLeaveTimer)
     if (mouseMoveFrame) cancelAnimationFrame(mouseMoveFrame)
@@ -588,18 +588,15 @@
 
   /* ── Browser back/forward ── */
 
-  watch(
-    () => route.path,
-    (path) => {
-      const target = parseDateFromPath(path)
-      if (!target) return
-      if (target.year === currentDate.value.year && target.month === currentDate.value.month) return
-      currentDate.value = target
-      eventsService.set([])
-      calendarControls.setDate(target)
-      applyFutureClassRepeatedly()
-    },
-  )
+  function onPopState() {
+    const target = parseDateFromPath(window.location.pathname)
+    if (!target) return
+    if (target.year === currentDate.value.year && target.month === currentDate.value.month) return
+    currentDate.value = target
+    eventsService.set([])
+    calendarControls.setDate(target)
+    applyFutureClassRepeatedly()
+  }
 
   /* ── Data loading ── */
 
@@ -899,7 +896,6 @@
 
   .sx__view-container {
     overflow-x: hidden;
-    scrollbar-gutter: stable;
   }
 
   /* --- Hide view selector (auto-responsive handles view switching) --- */

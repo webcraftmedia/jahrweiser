@@ -5,8 +5,8 @@ import Page from './index.vue'
 
 const mock$fetch = vi.hoisted(() => vi.fn())
 
-const mockRouterPush = vi.hoisted(() => vi.fn(() => Promise.resolve()))
-const mockRouterReplace = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+const mockPushState = vi.hoisted(() => vi.fn())
+const mockReplaceState = vi.hoisted(() => vi.fn())
 
 const mockRoute = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -195,6 +195,8 @@ describe('Page: Index', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
     mockRoute.path = '/2025/01'
+    vi.spyOn(window.history, 'pushState').mockImplementation(mockPushState)
+    vi.spyOn(window.history, 'replaceState').mockImplementation(mockReplaceState)
     // Intercept addEventListener to track listeners for cleanup
     window.addEventListener = (
       type: string,
@@ -269,23 +271,10 @@ describe('Page: Index', () => {
     trackedListeners.length = 0
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const routerSpyPlugin = (app: any) => {
-    const router = app.config.globalProperties.$router
-    if (!router) return
-    if (!vi.isMockFunction(router.push)) {
-      vi.spyOn(router, 'push').mockImplementation(mockRouterPush as typeof router.push)
-    }
-    if (!vi.isMockFunction(router.replace)) {
-      vi.spyOn(router, 'replace').mockImplementation(mockRouterReplace as typeof router.replace)
-    }
-  }
-
   /** Helper: mount and track wrapper for cleanup */
   async function mount({ awaitFetch = true, route = '/2025/01' } = {}) {
     const w = await mountSuspended(Page, {
       route,
-      global: { plugins: [routerSpyPlugin] },
     })
     wrappers.push(w)
     if (awaitFetch) {
@@ -1337,48 +1326,63 @@ describe('Page: Index', () => {
 
   /* ── URL-based month navigation ── */
 
-  it('redirects / to /YYYY/M on mount', async () => {
+  it('redirects / to /YYYY/MM on mount via history.replaceState', async () => {
     mockRoute.path = '/'
     await mount({ route: '/' })
-    expect(mockRouterReplace).toHaveBeenCalledWith('/2025/01')
+    expect(mockReplaceState).toHaveBeenCalledWith(null, '', '/2025/01')
   })
 
   it('does not redirect when URL already has year/month params', async () => {
+    mockReplaceState.mockClear()
     await mount()
-    // mountSuspended calls router.replace for initial navigation —
-    // verify only that single call exists (no additional redirect from component)
-    expect(mockRouterReplace).toHaveBeenCalledTimes(1)
+    expect(mockReplaceState).not.toHaveBeenCalledWith(null, '', expect.stringMatching(/^\/\d{4}\//))
   })
 
-  it('navigatePeriod updates URL via router.push', async () => {
+  it('navigatePeriod updates URL via history.pushState', async () => {
     const wrapper = await mount()
+    mockPushState.mockClear()
     const navButtons = wrapper.findAll('.cv-header-nav button')
     await navButtons[2]!.trigger('click') // next month
-    expect(mockRouterPush).toHaveBeenCalledWith('/2025/02')
+    expect(mockPushState).toHaveBeenCalledWith(null, '', '/2025/02')
   })
 
-  it('navigateToToday updates URL via router.push', async () => {
+  it('navigateToToday updates URL via history.pushState', async () => {
     const wrapper = await mount()
     // Navigate away first
     const navButtons = wrapper.findAll('.cv-header-nav button')
     await navButtons[2]!.trigger('click') // next month
-    mockRouterPush.mockClear()
+    mockPushState.mockClear()
     await navButtons[1]!.trigger('click') // today
-    expect(mockRouterPush).toHaveBeenCalledWith('/2025/01')
+    expect(mockPushState).toHaveBeenCalledWith(null, '', '/2025/01')
   })
 
-  it('updates calendar when route path changes (browser back/forward)', async () => {
+  it('updates calendar on popstate (browser back/forward)', async () => {
     await mount()
     mockCalendarControlsSetDate.mockClear()
     mockEventsServiceSet.mockClear()
-    // Simulate browser back/forward by changing the route path
-    mockRoute.path = '/2025/3'
-    await nextTick()
-    await nextTick()
-    expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
-      expect.objectContaining({ year: 2025, month: 3 }),
-    )
-    expect(mockEventsServiceSet).toHaveBeenCalledWith([])
+    // Simulate browser back/forward by stubbing location.pathname
+    const origPathname =
+      Object.getOwnPropertyDescriptor(window.location, 'pathname') ??
+      Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'pathname')
+    Object.defineProperty(window.location, 'pathname', {
+      value: '/2025/03',
+      writable: true,
+      configurable: true,
+    })
+    try {
+      window.dispatchEvent(new PopStateEvent('popstate'))
+      expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
+        expect.objectContaining({ year: 2025, month: 3 }),
+      )
+      expect(mockEventsServiceSet).toHaveBeenCalledWith([])
+    } finally {
+      // Restore original pathname descriptor
+      if (origPathname) {
+        Object.defineProperty(window.location, 'pathname', origPathname)
+      } else {
+        delete (window.location as Record<string, unknown>).pathname
+      }
+    }
   })
 })
 

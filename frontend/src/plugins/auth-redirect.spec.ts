@@ -70,13 +70,19 @@ describe('auth-redirect plugin', () => {
   })
 
   it('handles URL object as request', async () => {
-    await capturedHandler({ request: new URL('http://localhost/api/calendars'), response: { status: 401 } })
+    await capturedHandler({
+      request: new URL('http://localhost/api/calendars'),
+      response: { status: 401 },
+    })
     expect(mockClear).toHaveBeenCalled()
     expect(mockNavigateTo).toHaveBeenCalledWith('/login')
   })
 
   it('handles Request object', async () => {
-    await capturedHandler({ request: new Request('http://localhost/api/event'), response: { status: 401 } })
+    await capturedHandler({
+      request: new Request('http://localhost/api/event'),
+      response: { status: 401 },
+    })
     expect(mockClear).toHaveBeenCalled()
     expect(mockNavigateTo).toHaveBeenCalledWith('/login')
   })

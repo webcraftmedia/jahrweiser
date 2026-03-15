@@ -13,7 +13,16 @@ export default defineNuxtPlugin(() => {
             : request.url
       if (response.status === 401 && !url.includes('/api/redeemLoginLink')) {
         await clear()
-        await navigateTo('/login')
+        const currentPath =
+          import.meta.client &&
+          window.location.pathname !== '/' &&
+          !window.location.pathname.startsWith('/login')
+            ? window.location.pathname
+            : undefined
+        await navigateTo({
+          path: '/login',
+          query: currentPath ? { redirect: currentPath } : undefined,
+        })
       }
     },
   })

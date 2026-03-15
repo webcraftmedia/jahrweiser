@@ -14,10 +14,11 @@ import { defaultParams, emailRenderer } from '../helpers/email'
 
 const bodySchema = z.object({
   email: z.email(),
+  redirect: z.string().startsWith('/').optional(),
 })
 
 export default defineEventHandler(async (event) => {
-  const { email } = await readValidatedBody(event, bodySchema.parse)
+  const { email, redirect } = await readValidatedBody(event, bodySchema.parse)
 
   const config = useRuntimeConfig()
 
@@ -69,7 +70,11 @@ export default defineEventHandler(async (event) => {
         ...defaultParams,
         locale: 'de',
         name,
-        authURL: new URL(`/login/${authtoken}`, config.CLIENT_URI),
+        authURL: (() => {
+          const url = new URL(`/login/${authtoken}`, config.CLIENT_URI)
+          if (redirect) url.searchParams.set('redirect', redirect)
+          return url
+        })(),
       },
     })
   } catch {

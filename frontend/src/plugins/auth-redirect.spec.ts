@@ -51,10 +51,43 @@ describe('auth-redirect plugin', () => {
     expect(capturedHandler).toBeDefined()
   })
 
-  it('redirects to login on 401', async () => {
+  it('redirects to login on 401 with redirect query from current path', async () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/2025/03' },
+      writable: true,
+    })
     await capturedHandler({ request: '/api/calendars', response: { status: 401 } })
     expect(mockClear).toHaveBeenCalled()
-    expect(mockNavigateTo).toHaveBeenCalledWith('/login')
+    expect(mockNavigateTo).toHaveBeenCalledWith({
+      path: '/login',
+      query: { redirect: '/2025/03' },
+    })
+  })
+
+  it('redirects to login without redirect when on root path', async () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/' },
+      writable: true,
+    })
+    await capturedHandler({ request: '/api/calendars', response: { status: 401 } })
+    expect(mockClear).toHaveBeenCalled()
+    expect(mockNavigateTo).toHaveBeenCalledWith({
+      path: '/login',
+      query: undefined,
+    })
+  })
+
+  it('redirects to login without redirect when on login path', async () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/login' },
+      writable: true,
+    })
+    await capturedHandler({ request: '/api/calendars', response: { status: 401 } })
+    expect(mockClear).toHaveBeenCalled()
+    expect(mockNavigateTo).toHaveBeenCalledWith({
+      path: '/login',
+      query: undefined,
+    })
   })
 
   it('does not redirect on other status codes', async () => {
@@ -70,21 +103,35 @@ describe('auth-redirect plugin', () => {
   })
 
   it('handles URL object as request', async () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/2025/06' },
+      writable: true,
+    })
     await capturedHandler({
       request: new URL('http://localhost/api/calendars'),
       response: { status: 401 },
     })
     expect(mockClear).toHaveBeenCalled()
-    expect(mockNavigateTo).toHaveBeenCalledWith('/login')
+    expect(mockNavigateTo).toHaveBeenCalledWith({
+      path: '/login',
+      query: { redirect: '/2025/06' },
+    })
   })
 
   it('handles Request object', async () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/2025/06' },
+      writable: true,
+    })
     await capturedHandler({
       request: new Request('http://localhost/api/event'),
       response: { status: 401 },
     })
     expect(mockClear).toHaveBeenCalled()
-    expect(mockNavigateTo).toHaveBeenCalledWith('/login')
+    expect(mockNavigateTo).toHaveBeenCalledWith({
+      path: '/login',
+      query: { redirect: '/2025/06' },
+    })
   })
 
   it('skips when $fetch.create is not available', () => {

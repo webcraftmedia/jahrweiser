@@ -87,4 +87,40 @@ describe('Page: Login', () => {
     await mountSuspended(Page, { route: '/login' })
     expect(mockNavigateTo).toHaveBeenCalledWith('/')
   })
+
+  it('redirects to redirect path when already logged in', async () => {
+    mockLoggedIn.value = true
+    await mountSuspended(Page, { route: '/login?redirect=/2025/03/event/abc' })
+    expect(mockNavigateTo).toHaveBeenCalledWith('/2025/03/event/abc')
+  })
+
+  it('passes redirect to requestLoginLink body', async () => {
+    const wrapper = await mountSuspended(Page, {
+      route: '/login?redirect=/2025/03',
+    })
+    const input = wrapper.find('input')
+    await input.setValue('test@example.com')
+    await wrapper.find('form').trigger('submit')
+    expect(globalThis.$fetch).toHaveBeenCalledWith('/api/requestLoginLink', {
+      method: 'POST',
+      body: { email: 'test@example.com', redirect: '/2025/03' },
+    })
+  })
+
+  it('does not pass redirect when not present', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/login' })
+    const input = wrapper.find('input')
+    await input.setValue('test@example.com')
+    await wrapper.find('form').trigger('submit')
+    expect(globalThis.$fetch).toHaveBeenCalledWith('/api/requestLoginLink', {
+      method: 'POST',
+      body: { email: 'test@example.com' },
+    })
+  })
+
+  it('ignores invalid redirect values', async () => {
+    mockLoggedIn.value = true
+    await mountSuspended(Page, { route: '/login?redirect=//evil.com' })
+    expect(mockNavigateTo).toHaveBeenCalledWith('/')
+  })
 })

@@ -98,6 +98,55 @@ describe('requestLoginLink.post', () => {
     expect(mockEmailSend).toHaveBeenCalled()
   })
 
+  it('includes redirect param in email URL when provided', async () => {
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+      return (validator as (data: unknown) => unknown)({
+        email: 'test@example.com',
+        redirect: '/2025/03/event/abc',
+      })
+    })
+    const vcard = createMockVCard({
+      email: 'test@example.com',
+      fn: 'Test User',
+      requestTime: Date.now() - 120000,
+    })
+    mockFindUserByEmail.mockResolvedValue({
+      user: { href: '/abc.vcf', props: { getetag: '"etag"' } },
+      vcard,
+    })
+    mockSaveUser.mockResolvedValue(undefined)
+    mockEmailSend.mockResolvedValue(undefined)
+
+    await handlerFn({})
+    expect(mockEmailSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locals: expect.objectContaining({
+          authURL: expect.any(URL),
+        }),
+      }),
+    )
+    const sentUrl = mockEmailSend.mock.calls[0][0].locals.authURL as URL
+    expect(sentUrl.searchParams.get('redirect')).toBe('/2025/03/event/abc')
+  })
+
+  it('does not include redirect param when not provided', async () => {
+    const vcard = createMockVCard({
+      email: 'test@example.com',
+      fn: 'Test User',
+      requestTime: Date.now() - 120000,
+    })
+    mockFindUserByEmail.mockResolvedValue({
+      user: { href: '/abc.vcf', props: { getetag: '"etag"' } },
+      vcard,
+    })
+    mockSaveUser.mockResolvedValue(undefined)
+    mockEmailSend.mockResolvedValue(undefined)
+
+    await handlerFn({})
+    const sentUrl = mockEmailSend.mock.calls[0][0].locals.authURL as URL
+    expect(sentUrl.searchParams.has('redirect')).toBe(false)
+  })
+
   it('sends email with empty name when fn is null', async () => {
     const vcard = createMockVCard({
       email: 'test@example.com',

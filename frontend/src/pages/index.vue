@@ -333,14 +333,14 @@
   const calendarApp = shallowRef<ReturnType<typeof createCalendar>>()
 
   const today = Temporal.PlainDate.from(localDateStr())
-  const initialDate =
-    route.params.year && route.params.month
-      ? Temporal.PlainDate.from({
-          year: Number(route.params.year),
-          month: Number(route.params.month),
-          day: 1,
-        })
-      : today
+
+  function parseDateFromPath(path: string): Temporal.PlainDate | null {
+    const m = path.match(/^\/(\d{4})\/([1-9]|1[0-2])$/)
+    if (!m) return null
+    return Temporal.PlainDate.from({ year: Number(m[1]), month: Number(m[2]), day: 1 })
+  }
+
+  const initialDate = parseDateFromPath(route.path) ?? today
 
   /* v8 ignore start -- always true in client-side tests */
   if (import.meta.client) {
@@ -553,7 +553,7 @@
     window.addEventListener('keydown', handleKeyboard)
     window.addEventListener('resize', onResize)
     document.addEventListener('mousemove', onMouseMove)
-    if (!route.params.year) {
+    if (!parseDateFromPath(route.path)) {
       void router.replace(`/${today.year}/${today.month}`)
     }
   })
@@ -574,14 +574,10 @@
   /* ── Browser back/forward ── */
 
   watch(
-    () => route.params,
-    (params) => {
-      if (!params.year || !params.month) return
-      const target = Temporal.PlainDate.from({
-        year: Number(params.year),
-        month: Number(params.month),
-        day: 1,
-      })
+    () => route.path,
+    (path) => {
+      const target = parseDateFromPath(path)
+      if (!target) return
       if (target.year === currentDate.value.year && target.month === currentDate.value.month) return
       currentDate.value = target
       eventsService.set([])

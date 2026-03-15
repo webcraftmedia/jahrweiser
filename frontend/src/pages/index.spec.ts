@@ -1,4 +1,4 @@
-import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport, mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Page from './index.vue'
@@ -7,6 +7,14 @@ const mock$fetch = vi.hoisted(() => vi.fn())
 
 const mockRouterPush = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 const mockRouterReplace = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+
+const mockRoute = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { reactive } = require('vue')
+  return reactive({ path: '/2025/1', params: {} })
+})
+
+mockNuxtImport('useRoute', () => () => mockRoute)
 
 const mockColorMode = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -186,6 +194,7 @@ describe('Page: Index', () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
+    mockRoute.path = '/2025/1'
     // Intercept addEventListener to track listeners for cleanup
     window.addEventListener = (
       type: string,
@@ -260,15 +269,24 @@ describe('Page: Index', () => {
     trackedListeners.length = 0
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const routerSpyPlugin = (app: any) => {
+    const router = app.config.globalProperties.$router
+    if (!router) return
+    if (!vi.isMockFunction(router.push)) {
+      vi.spyOn(router, 'push').mockImplementation(mockRouterPush as typeof router.push)
+    }
+    if (!vi.isMockFunction(router.replace)) {
+      vi.spyOn(router, 'replace').mockImplementation(mockRouterReplace as typeof router.replace)
+    }
+  }
+
   /** Helper: mount and track wrapper for cleanup */
   async function mount({ awaitFetch = true, route = '/2025/1' } = {}) {
-    const w = await mountSuspended(Page, { route })
-    // Spy on the actual router used by the component
-    const router = w.vm.$router
-    if (router) {
-      if (!vi.isMockFunction(router.push)) vi.spyOn(router, 'push').mockImplementation(mockRouterPush)
-      if (!vi.isMockFunction(router.replace)) vi.spyOn(router, 'replace').mockImplementation(mockRouterReplace)
-    }
+    const w = await mountSuspended(Page, {
+      route,
+      global: { plugins: [routerSpyPlugin] },
+    })
     wrappers.push(w)
     if (awaitFetch) {
       // Wait for the initial fetchEvents (triggered by Schedule-X on render) to settle
@@ -1320,13 +1338,16 @@ describe('Page: Index', () => {
   /* ── URL-based month navigation ── */
 
   it('redirects / to /YYYY/M on mount', async () => {
+    mockRoute.path = '/'
     await mount({ route: '/' })
     expect(mockRouterReplace).toHaveBeenCalledWith('/2025/1')
   })
 
   it('does not redirect when URL already has year/month params', async () => {
     await mount()
-    expect(mockRouterReplace).not.toHaveBeenCalled()
+    // mountSuspended calls router.replace for initial navigation —
+    // verify only that single call exists (no additional redirect from component)
+    expect(mockRouterReplace).toHaveBeenCalledTimes(1)
   })
 
   it('navigatePeriod updates URL via router.push', async () => {
@@ -1346,12 +1367,12 @@ describe('Page: Index', () => {
     expect(mockRouterPush).toHaveBeenCalledWith('/2025/1')
   })
 
-  it('updates calendar when route params change (browser back/forward)', async () => {
-    const wrapper = await mount()
+  it('updates calendar when route path changes (browser back/forward)', async () => {
+    await mount()
     mockCalendarControlsSetDate.mockClear()
     mockEventsServiceSet.mockClear()
-    // Simulate browser navigation to March 2025 by pushing to the router
-    await wrapper.vm.$router.push({ path: '/2025/3' })
+    // Simulate browser back/forward by changing the route path
+    mockRoute.path = '/2025/3'
     await nextTick()
     await nextTick()
     expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(

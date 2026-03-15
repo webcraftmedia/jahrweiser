@@ -1455,14 +1455,15 @@ describe('Page: Index', () => {
     mockCallbacks.onEventClick?.({
       _calendar: 'Work',
       _originalId: 'event-1',
-      _occurrence: 1,
+      _occurrence: undefined,
       title: 'Test',
     })
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/event', expect.anything())
     })
     await nextTick()
-    // Verify modal is open
+    await nextTick()
+    // Verify modal is open (teleported to body)
     const modal = document.getElementById('default-modal')!
     expect(modal.classList.contains('modal-open')).toBe(true)
     // Simulate browser back — URL becomes month URL
@@ -1471,6 +1472,67 @@ describe('Page: Index', () => {
     await nextTick()
     // Modal should be closed
     expect(modal.classList.contains('modal-hidden')).toBe(true)
+  })
+
+  it('popstate to event URL opens popup (forward navigation)', async () => {
+    await mount()
+    mock$fetch.mockClear()
+    // Simulate forward navigation to event URL
+    window.history.pushState(null, '', '/2025/01/event/event-1')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', {
+        method: 'POST',
+        body: { calendar: 'Work', id: 'event-1', occurrence: undefined },
+      })
+    })
+  })
+
+  it('popstate to event URL with occurrence opens popup', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'rec-1',
+            title: 'Recurring',
+            color: '#ff0000',
+            calendar: 'Work',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+            occurrence: 3,
+          },
+        ])
+      if (url === '/api/event')
+        return Promise.resolve({
+          summary: 'Recurring Event',
+          startDate: '2025-01-15',
+          duration: 'PT1H',
+        })
+      return Promise.resolve({})
+    })
+    await mount()
+    mock$fetch.mockClear()
+    // Simulate forward navigation to event URL with occurrence
+    window.history.pushState(null, '', '/2025/01/event/rec-1/3')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', {
+        method: 'POST',
+        body: { calendar: 'Work', id: 'rec-1', occurrence: 3 },
+      })
+    })
+  })
+
+  it('popstate to unknown event URL does not open popup', async () => {
+    await mount()
+    mock$fetch.mockClear()
+    // Navigate to event URL where event is not in rawEvents
+    window.history.pushState(null, '', '/2025/01/event/nonexistent')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await nextTick()
+    // Should not have fetched event details
+    expect(mock$fetch).not.toHaveBeenCalledWith('/api/event', expect.anything())
   })
 
   it('initial load with event URL opens popup after data loads', async () => {
@@ -1501,6 +1563,39 @@ describe('Page: Index', () => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/event', {
         method: 'POST',
         body: { calendar: 'Work', id: 'evt-abc', occurrence: undefined },
+      })
+    })
+  })
+
+  it('initial load with event URL with occurrence opens popup', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/calendar')
+        return Promise.resolve([
+          {
+            id: 'rec-1',
+            title: 'Recurring Event',
+            color: '#ff0000',
+            calendar: 'Work',
+            startDate: '2025-01-15',
+            endDate: '2025-01-15',
+            occurrence: 5,
+          },
+        ])
+      if (url === '/api/event')
+        return Promise.resolve({
+          summary: 'Recurring Event',
+          startDate: '2025-01-15',
+          duration: 'PT1H',
+        })
+      return Promise.resolve({})
+    })
+    mockRoute.path = '/2025/01/event/rec-1/5'
+    await mount({ route: '/2025/01/event/rec-1/5' })
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith('/api/event', {
+        method: 'POST',
+        body: { calendar: 'Work', id: 'rec-1', occurrence: 5 },
       })
     })
   })

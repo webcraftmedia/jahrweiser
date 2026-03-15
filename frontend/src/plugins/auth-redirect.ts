@@ -1,4 +1,6 @@
 export default defineNuxtPlugin(() => {
+  if (typeof globalThis.$fetch?.create !== 'function') return
+
   const { clear } = useUserSession()
 
   globalThis.$fetch = globalThis.$fetch.create({

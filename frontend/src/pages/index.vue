@@ -178,7 +178,7 @@
 
   definePageMeta({
     middleware: ['authenticated'],
-    alias: ['/:year(\\d{4})/:month([1-9]|1[0-2])'],
+    alias: ['/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])'],
   })
 
   const route = useRoute()
@@ -334,8 +334,12 @@
 
   const today = Temporal.PlainDate.from(localDateStr())
 
+  function monthPath(year: number, month: number) {
+    return `/${year}/${String(month).padStart(2, '0')}`
+  }
+
   function parseDateFromPath(path: string): Temporal.PlainDate | null {
-    const m = path.match(/^\/(\d{4})\/([1-9]|1[0-2])$/)
+    const m = path.match(/^\/(\d{4})\/(0[1-9]|[1-9]|1[0-2])$/)
     if (!m) return null
     return Temporal.PlainDate.from({ year: Number(m[1]), month: Number(m[2]), day: 1 })
   }
@@ -415,7 +419,7 @@
     // Clear events BEFORE navigation so Schedule-X has nothing cached to render
     eventsService.set([])
     calendarControls.setDate(next)
-    void router.push(`/${next.year}/${next.month}`)
+    void router.push(monthPath(next.year, next.month))
     applyFutureClassRepeatedly()
   }
 
@@ -424,7 +428,7 @@
     currentDate.value = now
     eventsService.set([])
     calendarControls.setDate(now)
-    void router.push(`/${now.year}/${now.month}`)
+    void router.push(monthPath(now.year, now.month))
     scrollToDay()
     applyFutureClassRepeatedly()
   }
@@ -554,7 +558,7 @@
     window.addEventListener('resize', onResize)
     document.addEventListener('mousemove', onMouseMove)
     if (!parseDateFromPath(route.path)) {
-      void router.replace(`/${today.year}/${today.month}`)
+      void router.replace(monthPath(today.year, today.month))
     }
   })
   onUnmounted(() => {

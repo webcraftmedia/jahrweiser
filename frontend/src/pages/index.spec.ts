@@ -11,7 +11,7 @@ const mockRouterReplace = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 const mockRoute = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { reactive } = require('vue')
-  return reactive({ path: '/2025/1', params: {} })
+  return reactive({ path: '/2025/01', params: {} })
 })
 
 mockNuxtImport('useRoute', () => () => mockRoute)
@@ -194,7 +194,7 @@ describe('Page: Index', () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
-    mockRoute.path = '/2025/1'
+    mockRoute.path = '/2025/01'
     // Intercept addEventListener to track listeners for cleanup
     window.addEventListener = (
       type: string,
@@ -282,7 +282,7 @@ describe('Page: Index', () => {
   }
 
   /** Helper: mount and track wrapper for cleanup */
-  async function mount({ awaitFetch = true, route = '/2025/1' } = {}) {
+  async function mount({ awaitFetch = true, route = '/2025/01' } = {}) {
     const w = await mountSuspended(Page, {
       route,
       global: { plugins: [routerSpyPlugin] },
@@ -313,7 +313,7 @@ describe('Page: Index', () => {
   it('renders', async () => {
     const html = await (
       await renderSuspended(Page, {
-        route: '/2025/1',
+        route: '/2025/01',
       })
     ).html()
     expect(html).toMatchSnapshot()
@@ -1340,7 +1340,7 @@ describe('Page: Index', () => {
   it('redirects / to /YYYY/M on mount', async () => {
     mockRoute.path = '/'
     await mount({ route: '/' })
-    expect(mockRouterReplace).toHaveBeenCalledWith('/2025/1')
+    expect(mockRouterReplace).toHaveBeenCalledWith('/2025/01')
   })
 
   it('does not redirect when URL already has year/month params', async () => {
@@ -1354,7 +1354,7 @@ describe('Page: Index', () => {
     const wrapper = await mount()
     const navButtons = wrapper.findAll('.cv-header-nav button')
     await navButtons[2]!.trigger('click') // next month
-    expect(mockRouterPush).toHaveBeenCalledWith('/2025/2')
+    expect(mockRouterPush).toHaveBeenCalledWith('/2025/02')
   })
 
   it('navigateToToday updates URL via router.push', async () => {
@@ -1364,7 +1364,7 @@ describe('Page: Index', () => {
     await navButtons[2]!.trigger('click') // next month
     mockRouterPush.mockClear()
     await navButtons[1]!.trigger('click') // today
-    expect(mockRouterPush).toHaveBeenCalledWith('/2025/1')
+    expect(mockRouterPush).toHaveBeenCalledWith('/2025/01')
   })
 
   it('updates calendar when route path changes (browser back/forward)', async () => {

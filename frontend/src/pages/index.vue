@@ -178,7 +178,11 @@
 
   definePageMeta({
     middleware: ['authenticated'],
+    alias: ['/:year(\\d{4})/:month([1-9]|1[0-2])'],
   })
+
+  const route = useRoute()
+  const router = useRouter()
 
   const modal = ref<InstanceType<typeof Modal>>()
 
@@ -329,6 +333,14 @@
   const calendarApp = shallowRef<ReturnType<typeof createCalendar>>()
 
   const today = Temporal.PlainDate.from(localDateStr())
+  const initialDate =
+    route.params.year && route.params.month
+      ? Temporal.PlainDate.from({
+          year: Number(route.params.year),
+          month: Number(route.params.month),
+          day: 1,
+        })
+      : today
 
   /* v8 ignore start -- always true in client-side tests */
   if (import.meta.client) {
@@ -338,7 +350,7 @@
     calendarApp.value = createCalendar(
       {
         locale: localeProperties.value.language ?? 'de-DE',
-        selectedDate: today,
+        selectedDate: initialDate,
         views: [createViewMonthGrid(), createViewList()],
         defaultView: 'month-grid',
         isDark: isDark.value,
@@ -363,7 +375,7 @@
 
   /* ── Navigation state ── */
 
-  const currentDate = ref(today)
+  const currentDate = ref(initialDate)
 
   const currentPeriodLabel = computed(() => {
     const d = currentDate.value
@@ -403,6 +415,7 @@
     // Clear events BEFORE navigation so Schedule-X has nothing cached to render
     eventsService.set([])
     calendarControls.setDate(next)
+    void router.push(`/${next.year}/${next.month}`)
     applyFutureClassRepeatedly()
   }
 
@@ -411,6 +424,7 @@
     currentDate.value = now
     eventsService.set([])
     calendarControls.setDate(now)
+    void router.push(`/${now.year}/${now.month}`)
     scrollToDay()
     applyFutureClassRepeatedly()
   }
@@ -539,6 +553,9 @@
     window.addEventListener('keydown', handleKeyboard)
     window.addEventListener('resize', onResize)
     document.addEventListener('mousemove', onMouseMove)
+    if (!route.params.year) {
+      void router.replace(`/${today.year}/${today.month}`)
+    }
   })
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyboard)
@@ -553,6 +570,25 @@
   watch(isDark, (dark) => {
     calendarApp.value?.setTheme(dark ? 'dark' : 'light')
   })
+
+  /* ── Browser back/forward ── */
+
+  watch(
+    () => route.params,
+    (params) => {
+      if (!params.year || !params.month) return
+      const target = Temporal.PlainDate.from({
+        year: Number(params.year),
+        month: Number(params.month),
+        day: 1,
+      })
+      if (target.year === currentDate.value.year && target.month === currentDate.value.month) return
+      currentDate.value = target
+      eventsService.set([])
+      calendarControls.setDate(target)
+      applyFutureClassRepeatedly()
+    },
+  )
 
   /* ── Data loading ── */
 

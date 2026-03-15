@@ -5,6 +5,9 @@ import Page from './index.vue'
 
 const mock$fetch = vi.hoisted(() => vi.fn())
 
+const mockRouterPush = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+const mockRouterReplace = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+
 const mockColorMode = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ref, readonly } = require('vue')
@@ -258,8 +261,14 @@ describe('Page: Index', () => {
   })
 
   /** Helper: mount and track wrapper for cleanup */
-  async function mount({ awaitFetch = true } = {}) {
-    const w = await mountSuspended(Page, { route: '/' })
+  async function mount({ awaitFetch = true, route = '/2025/1' } = {}) {
+    const w = await mountSuspended(Page, { route })
+    // Spy on the actual router used by the component
+    const router = w.vm.$router
+    if (router) {
+      if (!vi.isMockFunction(router.push)) vi.spyOn(router, 'push').mockImplementation(mockRouterPush)
+      if (!vi.isMockFunction(router.replace)) vi.spyOn(router, 'replace').mockImplementation(mockRouterReplace)
+    }
     wrappers.push(w)
     if (awaitFetch) {
       // Wait for the initial fetchEvents (triggered by Schedule-X on render) to settle
@@ -286,7 +295,7 @@ describe('Page: Index', () => {
   it('renders', async () => {
     const html = await (
       await renderSuspended(Page, {
-        route: '/',
+        route: '/2025/1',
       })
     ).html()
     expect(html).toMatchSnapshot()
@@ -1306,5 +1315,48 @@ describe('Page: Index', () => {
     // Event should have final state from the last stagger run
     expect(eventEl.style.opacity).toBe('1')
     dayEl.remove()
+  })
+
+  /* ── URL-based month navigation ── */
+
+  it('redirects / to /YYYY/M on mount', async () => {
+    await mount({ route: '/' })
+    expect(mockRouterReplace).toHaveBeenCalledWith('/2025/1')
+  })
+
+  it('does not redirect when URL already has year/month params', async () => {
+    await mount()
+    expect(mockRouterReplace).not.toHaveBeenCalled()
+  })
+
+  it('navigatePeriod updates URL via router.push', async () => {
+    const wrapper = await mount()
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    await navButtons[2]!.trigger('click') // next month
+    expect(mockRouterPush).toHaveBeenCalledWith('/2025/2')
+  })
+
+  it('navigateToToday updates URL via router.push', async () => {
+    const wrapper = await mount()
+    // Navigate away first
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    await navButtons[2]!.trigger('click') // next month
+    mockRouterPush.mockClear()
+    await navButtons[1]!.trigger('click') // today
+    expect(mockRouterPush).toHaveBeenCalledWith('/2025/1')
+  })
+
+  it('updates calendar when route params change (browser back/forward)', async () => {
+    const wrapper = await mount()
+    mockCalendarControlsSetDate.mockClear()
+    mockEventsServiceSet.mockClear()
+    // Simulate browser navigation to March 2025 by pushing to the router
+    await wrapper.vm.$router.push({ path: '/2025/3' })
+    await nextTick()
+    await nextTick()
+    expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
+      expect.objectContaining({ year: 2025, month: 3 }),
+    )
+    expect(mockEventsServiceSet).toHaveBeenCalledWith([])
   })
 })

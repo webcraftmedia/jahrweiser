@@ -177,7 +177,15 @@
   const { locale, localeProperties } = useI18n()
 
   definePageMeta({
-    middleware: ['authenticated'],
+    middleware: [
+      function (to) {
+        const m = to.path.match(/^\/(\d{4})\/([1-9])$/)
+        if (m) {
+          return navigateTo(`/${m[1]}/${m[2]!.padStart(2, '0')}`, { replace: true })
+        }
+      },
+      'authenticated',
+    ],
     alias: ['/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])'],
   })
 

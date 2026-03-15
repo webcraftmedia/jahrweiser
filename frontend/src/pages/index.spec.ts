@@ -1381,3 +1381,25 @@ describe('Page: Index', () => {
     expect(mockEventsServiceSet).toHaveBeenCalledWith([])
   })
 })
+
+describe('month-pad middleware', () => {
+  // Extract and test the inline middleware from definePageMeta
+  // The middleware redirects /YYYY/M → /YYYY/0M for single-digit months
+  function middleware(path: string) {
+    const m = /^\/(\d{4})\/([1-9])$/.exec(path)
+    if (m) return `/${m[1]}/${m[2]!.padStart(2, '0')}`
+    return undefined
+  }
+
+  it.each([
+    ['/2025/3', '/2025/03'],
+    ['/2025/1', '/2025/01'],
+    ['/2025/9', '/2025/09'],
+  ])('redirects %s → %s', (input, expected) => {
+    expect(middleware(input)).toBe(expected)
+  })
+
+  it.each(['/2025/01', '/2025/10', '/2025/12', '/', '/login'])('does not redirect %s', (input) => {
+    expect(middleware(input)).toBeUndefined()
+  })
+})

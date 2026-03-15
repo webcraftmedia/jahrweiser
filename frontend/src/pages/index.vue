@@ -176,9 +176,22 @@
 
   const { locale, localeProperties } = useI18n()
 
+  /* v8 ignore start -- definePageMeta is a compile-time macro extracted by Nuxt */
   definePageMeta({
-    middleware: ['authenticated'],
+    middleware: [
+      function (to) {
+        const m = to.path.match(/^\/(\d{4})\/([1-9])$/)
+        if (m) {
+          return navigateTo(`/${m[1]}/${m[2]!.padStart(2, '0')}`, { replace: true })
+        }
+      },
+      'authenticated',
+    ],
+    alias: ['/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])'],
   })
+  /* v8 ignore stop */
+
+  const route = useRoute()
 
   const modal = ref<InstanceType<typeof Modal>>()
 
@@ -330,6 +343,18 @@
 
   const today = Temporal.PlainDate.from(localDateStr())
 
+  function monthPath(year: number, month: number) {
+    return `/${year}/${String(month).padStart(2, '0')}`
+  }
+
+  function parseDateFromPath(path: string): Temporal.PlainDate | null {
+    const m = path.match(/^\/(\d{4})\/(0[1-9]|[1-9]|1[0-2])$/)
+    if (!m) return null
+    return Temporal.PlainDate.from({ year: Number(m[1]), month: Number(m[2]), day: 1 })
+  }
+
+  const initialDate = parseDateFromPath(route.path) ?? today
+
   /* v8 ignore start -- always true in client-side tests */
   if (import.meta.client) {
     eventsService = createEventsServicePlugin()
@@ -338,7 +363,7 @@
     calendarApp.value = createCalendar(
       {
         locale: localeProperties.value.language ?? 'de-DE',
-        selectedDate: today,
+        selectedDate: initialDate,
         views: [createViewMonthGrid(), createViewList()],
         defaultView: 'month-grid',
         isDark: isDark.value,
@@ -363,7 +388,7 @@
 
   /* ── Navigation state ── */
 
-  const currentDate = ref(today)
+  const currentDate = ref(initialDate)
 
   const currentPeriodLabel = computed(() => {
     const d = currentDate.value
@@ -403,6 +428,7 @@
     // Clear events BEFORE navigation so Schedule-X has nothing cached to render
     eventsService.set([])
     calendarControls.setDate(next)
+    window.history.pushState(null, '', monthPath(next.year, next.month))
     applyFutureClassRepeatedly()
   }
 
@@ -411,6 +437,7 @@
     currentDate.value = now
     eventsService.set([])
     calendarControls.setDate(now)
+    window.history.pushState(null, '', monthPath(now.year, now.month))
     scrollToDay()
     applyFutureClassRepeatedly()
   }
@@ -538,11 +565,16 @@
     lastWasSmall.value = window.innerWidth < SX_BREAKPOINT
     window.addEventListener('keydown', handleKeyboard)
     window.addEventListener('resize', onResize)
+    window.addEventListener('popstate', onPopState)
     document.addEventListener('mousemove', onMouseMove)
+    if (!parseDateFromPath(route.path)) {
+      window.history.replaceState(null, '', monthPath(today.year, today.month))
+    }
   })
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyboard)
     window.removeEventListener('resize', onResize)
+    window.removeEventListener('popstate', onPopState)
     document.removeEventListener('mousemove', onMouseMove)
     clearTimeout(legendLeaveTimer)
     if (mouseMoveFrame) cancelAnimationFrame(mouseMoveFrame)
@@ -553,6 +585,18 @@
   watch(isDark, (dark) => {
     calendarApp.value?.setTheme(dark ? 'dark' : 'light')
   })
+
+  /* ── Browser back/forward ── */
+
+  function onPopState() {
+    const target = parseDateFromPath(window.location.pathname)
+    if (!target) return
+    if (target.year === currentDate.value.year && target.month === currentDate.value.month) return
+    currentDate.value = target
+    eventsService.set([])
+    calendarControls.setDate(target)
+    applyFutureClassRepeatedly()
+  }
 
   /* ── Data loading ── */
 

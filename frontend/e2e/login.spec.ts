@@ -60,7 +60,7 @@ test.describe('Login Page', () => {
     await mockCalendarEndpoints(page)
 
     await page.goto('/login/valid-token-123')
-    await expect(page).toHaveURL('/', { timeout: 15_000 })
+    await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
     await expect(page.locator('#navbar-desktop').getByText('Willkommen')).toBeVisible()
   })
 

@@ -1,9 +1,20 @@
-import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport, mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Page from './index.vue'
 
 const mock$fetch = vi.hoisted(() => vi.fn())
+
+let pushStateSpy: ReturnType<typeof vi.spyOn>
+let replaceStateSpy: ReturnType<typeof vi.spyOn>
+
+const mockRoute = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { reactive } = require('vue')
+  return reactive({ path: '/2025/01', params: {} })
+})
+
+mockNuxtImport('useRoute', () => () => mockRoute)
 
 const mockColorMode = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -183,6 +194,9 @@ describe('Page: Index', () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
+    mockRoute.path = '/2025/01'
+    pushStateSpy = vi.spyOn(window.history, 'pushState')
+    replaceStateSpy = vi.spyOn(window.history, 'replaceState')
     // Intercept addEventListener to track listeners for cleanup
     window.addEventListener = (
       type: string,
@@ -258,8 +272,10 @@ describe('Page: Index', () => {
   })
 
   /** Helper: mount and track wrapper for cleanup */
-  async function mount({ awaitFetch = true } = {}) {
-    const w = await mountSuspended(Page, { route: '/' })
+  async function mount({ awaitFetch = true, route = '/2025/01' } = {}) {
+    const w = await mountSuspended(Page, {
+      route,
+    })
     wrappers.push(w)
     if (awaitFetch) {
       // Wait for the initial fetchEvents (triggered by Schedule-X on render) to settle
@@ -286,7 +302,7 @@ describe('Page: Index', () => {
   it('renders', async () => {
     const html = await (
       await renderSuspended(Page, {
-        route: '/',
+        route: '/2025/01',
       })
     ).html()
     expect(html).toMatchSnapshot()
@@ -1306,5 +1322,102 @@ describe('Page: Index', () => {
     // Event should have final state from the last stagger run
     expect(eventEl.style.opacity).toBe('1')
     dayEl.remove()
+  })
+
+  /* ── URL-based month navigation ── */
+
+  it('redirects / to /YYYY/MM on mount via history.replaceState', async () => {
+    mockRoute.path = '/'
+    await mount({ route: '/' })
+    expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+  })
+
+  it('does not redirect when URL already has year/month params', async () => {
+    replaceStateSpy.mockClear()
+    await mount()
+    expect(replaceStateSpy).not.toHaveBeenCalledWith(null, '', expect.stringMatching(/^\/\d{4}\//))
+  })
+
+  it('navigatePeriod updates URL via history.pushState', async () => {
+    const wrapper = await mount()
+    pushStateSpy.mockClear()
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    await navButtons[2]!.trigger('click') // next month
+    expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/02')
+  })
+
+  it('navigateToToday updates URL via history.pushState', async () => {
+    const wrapper = await mount()
+    // Navigate away first
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    await navButtons[2]!.trigger('click') // next month
+    pushStateSpy.mockClear()
+    await navButtons[1]!.trigger('click') // today
+    expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+  })
+
+  it('updates calendar on popstate (browser back/forward)', async () => {
+    await mount()
+    mockCalendarControlsSetDate.mockClear()
+    mockEventsServiceSet.mockClear()
+    // Change URL via real pushState, then simulate browser back/forward
+    window.history.pushState(null, '', '/2025/03')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
+      expect.objectContaining({ year: 2025, month: 3 }),
+    )
+    expect(mockEventsServiceSet).toHaveBeenCalledWith([])
+  })
+
+  it('ignores popstate when month is unchanged', async () => {
+    await mount()
+    mockCalendarControlsSetDate.mockClear()
+    mockEventsServiceSet.mockClear()
+    // URL already matches current month (Jan 2025)
+    window.history.pushState(null, '', '/2025/01')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
+    expect(mockEventsServiceSet).not.toHaveBeenCalled()
+  })
+
+  it('ignores popstate for non-calendar URLs', async () => {
+    await mount()
+    mockCalendarControlsSetDate.mockClear()
+    window.history.pushState(null, '', '/login')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
+  })
+
+  it('updates calendar on popstate with different year', async () => {
+    await mount()
+    mockCalendarControlsSetDate.mockClear()
+    mockEventsServiceSet.mockClear()
+    window.history.pushState(null, '', '/2024/01')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
+      expect.objectContaining({ year: 2024, month: 1 }),
+    )
+  })
+})
+
+describe('month-pad middleware', () => {
+  // Extract and test the inline middleware from definePageMeta
+  // The middleware redirects /YYYY/M → /YYYY/0M for single-digit months
+  function middleware(path: string) {
+    const m = /^\/(\d{4})\/([1-9])$/.exec(path)
+    if (m) return `/${m[1]}/${m[2]!.padStart(2, '0')}`
+    return undefined
+  }
+
+  it.each([
+    ['/2025/3', '/2025/03'],
+    ['/2025/1', '/2025/01'],
+    ['/2025/9', '/2025/09'],
+  ])('redirects %s → %s', (input, expected) => {
+    expect(middleware(input)).toBe(expected)
+  })
+
+  it.each(['/2025/01', '/2025/10', '/2025/12', '/', '/login'])('does not redirect %s', (input) => {
+    expect(middleware(input)).toBeUndefined()
   })
 })

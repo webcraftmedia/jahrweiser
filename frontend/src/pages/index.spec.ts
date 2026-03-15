@@ -1539,7 +1539,7 @@ describe('month-pad middleware', () => {
   // The middleware redirects /YYYY/M → /YYYY/0M for single-digit months
   function middleware(path: string) {
     const m = /^\/(\d{4})\/([1-9])(?=\/|$)/.exec(path)
-    if (m) return `/${m[1]}/${m[2]!.padStart(2, '0')}${path.slice(m[0]!.length)}`
+    if (m) return `/${m[1]}/${m[2]!.padStart(2, '0')}${path.slice(m[0].length)}`
     return undefined
   }
 

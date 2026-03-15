@@ -17,7 +17,7 @@ test.describe('Auth Guard', () => {
     await loginAs(page, DEFAULT_USER)
     // Use client-side navigation to keep mocked session state
     await navigateClientSide(page, '/admin')
-    await expect(page).toHaveURL('/')
+    await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/)
   })
 
   test('hides admin link for non-admin users', async ({ page }) => {

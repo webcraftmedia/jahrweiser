@@ -435,9 +435,9 @@
       // Nearest upcoming day with events in current month (list view)
       const nearestDay =
         isCurrentMonth.value &&
-        Array.from(
-          document.querySelectorAll<HTMLElement>('.sx__list-day[data-date]'),
-        ).find((el) => el.dataset.date! >= todayStr)
+        Array.from(document.querySelectorAll<HTMLElement>('.sx__list-day[data-date]')).find(
+          (el) => el.dataset.date! >= todayStr,
+        )
       if (nearestDay) {
         nearestDay.scrollIntoView({ behavior: 'smooth', block: 'start' })
         return

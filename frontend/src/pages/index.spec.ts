@@ -5,8 +5,8 @@ import Page from './index.vue'
 
 const mock$fetch = vi.hoisted(() => vi.fn())
 
-const mockPushState = vi.hoisted(() => vi.fn())
-const mockReplaceState = vi.hoisted(() => vi.fn())
+let pushStateSpy: ReturnType<typeof vi.spyOn>
+let replaceStateSpy: ReturnType<typeof vi.spyOn>
 
 const mockRoute = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -195,8 +195,8 @@ describe('Page: Index', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
     mockRoute.path = '/2025/01'
-    vi.spyOn(window.history, 'pushState').mockImplementation(mockPushState)
-    vi.spyOn(window.history, 'replaceState').mockImplementation(mockReplaceState)
+    pushStateSpy = vi.spyOn(window.history, 'pushState')
+    replaceStateSpy = vi.spyOn(window.history, 'replaceState')
     // Intercept addEventListener to track listeners for cleanup
     window.addEventListener = (
       type: string,
@@ -1329,21 +1329,21 @@ describe('Page: Index', () => {
   it('redirects / to /YYYY/MM on mount via history.replaceState', async () => {
     mockRoute.path = '/'
     await mount({ route: '/' })
-    expect(mockReplaceState).toHaveBeenCalledWith(null, '', '/2025/01')
+    expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
   })
 
   it('does not redirect when URL already has year/month params', async () => {
-    mockReplaceState.mockClear()
+    replaceStateSpy.mockClear()
     await mount()
-    expect(mockReplaceState).not.toHaveBeenCalledWith(null, '', expect.stringMatching(/^\/\d{4}\//))
+    expect(replaceStateSpy).not.toHaveBeenCalledWith(null, '', expect.stringMatching(/^\/\d{4}\//))
   })
 
   it('navigatePeriod updates URL via history.pushState', async () => {
     const wrapper = await mount()
-    mockPushState.mockClear()
+    pushStateSpy.mockClear()
     const navButtons = wrapper.findAll('.cv-header-nav button')
     await navButtons[2]!.trigger('click') // next month
-    expect(mockPushState).toHaveBeenCalledWith(null, '', '/2025/02')
+    expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/02')
   })
 
   it('navigateToToday updates URL via history.pushState', async () => {
@@ -1351,38 +1351,52 @@ describe('Page: Index', () => {
     // Navigate away first
     const navButtons = wrapper.findAll('.cv-header-nav button')
     await navButtons[2]!.trigger('click') // next month
-    mockPushState.mockClear()
+    pushStateSpy.mockClear()
     await navButtons[1]!.trigger('click') // today
-    expect(mockPushState).toHaveBeenCalledWith(null, '', '/2025/01')
+    expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
   })
 
   it('updates calendar on popstate (browser back/forward)', async () => {
     await mount()
     mockCalendarControlsSetDate.mockClear()
     mockEventsServiceSet.mockClear()
-    // Simulate browser back/forward by stubbing location.pathname
-    const origPathname =
-      Object.getOwnPropertyDescriptor(window.location, 'pathname') ??
-      Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window.location), 'pathname')
-    Object.defineProperty(window.location, 'pathname', {
-      value: '/2025/03',
-      writable: true,
-      configurable: true,
-    })
-    try {
-      window.dispatchEvent(new PopStateEvent('popstate'))
-      expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
-        expect.objectContaining({ year: 2025, month: 3 }),
-      )
-      expect(mockEventsServiceSet).toHaveBeenCalledWith([])
-    } finally {
-      // Restore original pathname descriptor
-      if (origPathname) {
-        Object.defineProperty(window.location, 'pathname', origPathname)
-      } else {
-        delete (window.location as Record<string, unknown>).pathname
-      }
-    }
+    // Change URL via real pushState, then simulate browser back/forward
+    window.history.pushState(null, '', '/2025/03')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
+      expect.objectContaining({ year: 2025, month: 3 }),
+    )
+    expect(mockEventsServiceSet).toHaveBeenCalledWith([])
+  })
+
+  it('ignores popstate when month is unchanged', async () => {
+    await mount()
+    mockCalendarControlsSetDate.mockClear()
+    mockEventsServiceSet.mockClear()
+    // URL already matches current month (Jan 2025)
+    window.history.pushState(null, '', '/2025/01')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
+    expect(mockEventsServiceSet).not.toHaveBeenCalled()
+  })
+
+  it('ignores popstate for non-calendar URLs', async () => {
+    await mount()
+    mockCalendarControlsSetDate.mockClear()
+    window.history.pushState(null, '', '/login')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
+  })
+
+  it('updates calendar on popstate with different year', async () => {
+    await mount()
+    mockCalendarControlsSetDate.mockClear()
+    mockEventsServiceSet.mockClear()
+    window.history.pushState(null, '', '/2024/01')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
+      expect.objectContaining({ year: 2024, month: 1 }),
+    )
   })
 })
 

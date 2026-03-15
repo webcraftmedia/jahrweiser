@@ -365,8 +365,9 @@
   }
 
   function parseEventFromPath(path: string): { eventId: string; occurrence?: number } | null {
-    const m = path.match(/^\/\d{4}\/\d{1,2}\/event\/([^/]+)$/)
-      ?? path.match(/^\/\d{4}\/\d{1,2}\/event\/([^/]+)\/(\d+)$/)
+    const m =
+      path.match(/^\/\d{4}\/\d{1,2}\/event\/([^/]+)$/) ??
+      path.match(/^\/\d{4}\/\d{1,2}\/event\/([^/]+)\/(\d+)$/)
     if (!m) return null
     return { eventId: m[1]!, occurrence: m[2] != null ? Number(m[2]) : undefined }
   }

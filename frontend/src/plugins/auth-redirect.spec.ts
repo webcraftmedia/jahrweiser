@@ -17,7 +17,10 @@ mockNuxtImport('useUserSession', () => () => ({
 const mockNavigateTo = vi.hoisted(() => vi.fn())
 mockNuxtImport('navigateTo', () => mockNavigateTo)
 
-type ResponseErrorHandler = (ctx: { response: { status: number } }) => Promise<void>
+type ResponseErrorHandler = (ctx: {
+  request: string | URL | Request
+  response: { status: number }
+}) => Promise<void>
 
 describe('auth-redirect plugin', () => {
   let capturedHandler: ResponseErrorHandler
@@ -49,15 +52,33 @@ describe('auth-redirect plugin', () => {
   })
 
   it('redirects to login on 401', async () => {
-    await capturedHandler({ response: { status: 401 } })
+    await capturedHandler({ request: '/api/calendars', response: { status: 401 } })
     expect(mockClear).toHaveBeenCalled()
     expect(mockNavigateTo).toHaveBeenCalledWith('/login')
   })
 
   it('does not redirect on other status codes', async () => {
-    await capturedHandler({ response: { status: 500 } })
+    await capturedHandler({ request: '/api/calendars', response: { status: 500 } })
     expect(mockClear).not.toHaveBeenCalled()
     expect(mockNavigateTo).not.toHaveBeenCalled()
+  })
+
+  it('does not redirect on 401 from redeemLoginLink', async () => {
+    await capturedHandler({ request: '/api/redeemLoginLink', response: { status: 401 } })
+    expect(mockClear).not.toHaveBeenCalled()
+    expect(mockNavigateTo).not.toHaveBeenCalled()
+  })
+
+  it('handles URL object as request', async () => {
+    await capturedHandler({ request: new URL('http://localhost/api/calendars'), response: { status: 401 } })
+    expect(mockClear).toHaveBeenCalled()
+    expect(mockNavigateTo).toHaveBeenCalledWith('/login')
+  })
+
+  it('handles Request object', async () => {
+    await capturedHandler({ request: new Request('http://localhost/api/event'), response: { status: 401 } })
+    expect(mockClear).toHaveBeenCalled()
+    expect(mockNavigateTo).toHaveBeenCalledWith('/login')
   })
 
   it('skips when $fetch.create is not available', () => {

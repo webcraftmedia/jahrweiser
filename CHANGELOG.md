@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.8...v1.5.0) (2026-03-15)
+
+
+### Features
+
+* **frontend:** show name of calendar in popup ([#133](https://github.com/webcraftmedia/jahrweiser/issues/133)) ([9c0f345](https://github.com/webcraftmedia/jahrweiser/commit/9c0f345a4229a063a9fca518b959467866bbadae))
+
+
+### Bug Fixes
+
+* **frontend:** fix legend closing to early when still hovering ([#132](https://github.com/webcraftmedia/jahrweiser/issues/132)) ([759161b](https://github.com/webcraftmedia/jahrweiser/commit/759161bbc9890a2eee9b5b478d5d5434ed61c9d2))
+* **frontend:** fix missing redirect when browser wakes up and authorization is missing ([#130](https://github.com/webcraftmedia/jahrweiser/issues/130)) ([11c1b18](https://github.com/webcraftmedia/jahrweiser/commit/11c1b188336e970dc90ef2735663502d35ec5edc))
+* **frontend:** fix scroll to next day in current month when today is not part of the calendar ([#134](https://github.com/webcraftmedia/jahrweiser/issues/134)) ([283478b](https://github.com/webcraftmedia/jahrweiser/commit/283478bc21560393bc579e3d52631490516ff915))
+
 ## [1.4.8](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.7...v1.4.8) (2026-03-11)
 
 

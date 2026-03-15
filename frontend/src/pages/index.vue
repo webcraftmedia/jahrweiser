@@ -79,6 +79,14 @@
                       <th
                         class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
                       >
+                        {{ $t('pages.index.details.calendar') }}
+                      </th>
+                      <td class="py-1.5">{{ eventCalendarName }}</td>
+                    </tr>
+                    <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                      <th
+                        class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
+                      >
                         {{ $t('pages.index.details.start') }}
                       </th>
                       <td class="py-1.5">{{ eventStartDate }}</td>
@@ -187,6 +195,8 @@
   const selectedEvent = ref<EventDetail | null>(null)
   const eventLoading = ref(false)
   const eventTitle = ref('')
+  const eventCalendar = ref('')
+  const eventCalendarName = computed(() => eventCalendar.value)
   const eventStartDate = computed(() => selectedEvent.value?.startDate ?? '')
   const eventDuration = computed(() => selectedEvent.value?.duration?.replace(/^PT?/, '') ?? '')
   const eventLocation = computed(() => selectedEvent.value?.location ?? '')
@@ -772,6 +782,7 @@
       selectedEvent.value = null
       eventLoading.value = true
       eventTitle.value = capitalize(data.title || '')
+      eventCalendar.value = calendar
       modal.value?.open()
       const eventData = await $fetch('/api/event', {
         method: 'POST',

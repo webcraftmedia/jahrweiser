@@ -176,6 +176,7 @@
 
   const { locale, localeProperties } = useI18n()
 
+  /* v8 ignore start -- definePageMeta is a compile-time macro extracted by Nuxt */
   definePageMeta({
     middleware: [
       function (to) {
@@ -187,7 +188,9 @@
       'authenticated',
     ],
     alias: ['/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])'],
+    pageTransition: false,
   })
+  /* v8 ignore stop */
 
   const route = useRoute()
   const router = useRouter()
@@ -896,6 +899,7 @@
 
   .sx__view-container {
     overflow-x: hidden;
+    scrollbar-gutter: stable;
   }
 
   /* --- Hide view selector (auto-responsive handles view switching) --- */

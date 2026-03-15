@@ -9,6 +9,7 @@ export default defineNuxtConfig({
   srcDir: './src',
   ignore: ['**/*.spec.ts'],
   app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
     head: {
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },

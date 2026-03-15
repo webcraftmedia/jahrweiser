@@ -433,14 +433,14 @@
       }
 
       // Nearest upcoming day with events in current month (list view)
-      if (isCurrentMonth.value) {
-        const listDays = document.querySelectorAll('.sx__list-day[data-date]')
-        for (const el of listDays) {
-          if ((el as HTMLElement).dataset.date! >= todayStr) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            return
-          }
-        }
+      const nearestDay =
+        isCurrentMonth.value &&
+        Array.from(
+          document.querySelectorAll<HTMLElement>('.sx__list-day[data-date]'),
+        ).find((el) => el.dataset.date! >= todayStr)
+      if (nearestDay) {
+        nearestDay.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
       }
 
       // Fallback: 1st of month in month-grid or list view

@@ -1093,6 +1093,52 @@ describe('Page: Index', () => {
     todayEl.remove()
   })
 
+  it('scrollToDay scrolls to nearest upcoming list-day when today not present', async () => {
+    // Create list-day elements: one past, one upcoming
+    const pastDay = document.createElement('div')
+    pastDay.classList.add('sx__list-day')
+    pastDay.setAttribute('data-date', '2025-01-10')
+    document.body.appendChild(pastDay)
+
+    const upcomingDay = document.createElement('div')
+    upcomingDay.classList.add('sx__list-day')
+    upcomingDay.setAttribute('data-date', '2025-01-16')
+    document.body.appendChild(upcomingDay)
+
+    const scrollSpy = vi.spyOn(upcomingDay, 'scrollIntoView').mockImplementation(() => {})
+    vi.spyOn(pastDay, 'scrollIntoView').mockImplementation(() => {})
+    await mount()
+    const navButtons = (await mount()).findAll('.cv-header-nav button')
+    await navButtons[1]!.trigger('click') // today button
+    vi.advanceTimersByTime(400)
+    expect(scrollSpy).toHaveBeenCalled()
+    pastDay.remove()
+    upcomingDay.remove()
+  })
+
+  it('scrollToDay falls through to first-of-month when all list-days are past', async () => {
+    // Only past list-day elements — no match for "nearest upcoming"
+    const pastDay = document.createElement('div')
+    pastDay.classList.add('sx__list-day')
+    pastDay.setAttribute('data-date', '2025-01-10')
+    document.body.appendChild(pastDay)
+
+    const firstEl = document.createElement('div')
+    firstEl.classList.add('sx__month-grid-day')
+    firstEl.setAttribute('data-date', '2025-01-01')
+    document.body.appendChild(firstEl)
+
+    const scrollSpy = vi.spyOn(firstEl, 'scrollIntoView').mockImplementation(() => {})
+    vi.spyOn(pastDay, 'scrollIntoView').mockImplementation(() => {})
+    await mount()
+    const navButtons = (await mount()).findAll('.cv-header-nav button')
+    await navButtons[1]!.trigger('click') // today button
+    vi.advanceTimersByTime(400)
+    expect(scrollSpy).toHaveBeenCalled()
+    pastDay.remove()
+    firstEl.remove()
+  })
+
   it('scrollToDay scrolls to first of month when today not present', async () => {
     // Create a first-of-month element (no today)
     const firstEl = document.createElement('div')

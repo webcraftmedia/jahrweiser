@@ -15,7 +15,7 @@ test.describe('Auth Guard', () => {
 
   test('includes redirect query param for deep-link URLs', async ({ page }) => {
     await page.goto('/2025/03')
-    await expect(page).toHaveURL(/\/login\?redirect=%2F2025%2F03/)
+    await expect(page).toHaveURL(/\/login\?redirect=\/2025\/03/)
   })
 
   test('redirects non-admin from /admin to /', async ({ page }) => {

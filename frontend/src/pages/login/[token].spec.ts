@@ -41,6 +41,18 @@ describe('Page: Login Token', () => {
     expect(mockNavigateTo).toHaveBeenCalledWith('/')
   })
 
+  it('redirects to redirect path when already logged in', async () => {
+    mockLoggedIn.value = true
+    await mountSuspended(Page, { route: '/login/test-token?redirect=/2025/03' })
+    expect(mockNavigateTo).toHaveBeenCalledWith('/2025/03')
+  })
+
+  it('ignores invalid redirect values when already logged in', async () => {
+    mockLoggedIn.value = true
+    await mountSuspended(Page, { route: '/login/test-token?redirect=//evil.com' })
+    expect(mockNavigateTo).toHaveBeenCalledWith('/')
+  })
+
   it('calls API and navigates on success', async () => {
     mock$fetch.mockResolvedValue({})
     const wrapper = await mountSuspended(Page, { route: '/login/test-token' })
@@ -56,6 +68,15 @@ describe('Page: Login Token', () => {
     expect(mockNavigateTo).toHaveBeenCalledWith('/')
     // success is true, so loading spinner is shown
     expect(wrapper.find('[role="status"]').exists()).toBe(true)
+  })
+
+  it('navigates to redirect path on success', async () => {
+    mock$fetch.mockResolvedValue({})
+    await mountSuspended(Page, { route: '/login/test-token?redirect=/2025/03/event/abc' })
+    await vi.waitFor(() => {
+      expect(mockRefreshSession).toHaveBeenCalled()
+    })
+    expect(mockNavigateTo).toHaveBeenCalledWith('/2025/03/event/abc')
   })
 
   it('shows error state when API fails', async () => {

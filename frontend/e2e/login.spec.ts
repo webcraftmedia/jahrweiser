@@ -64,6 +64,30 @@ test.describe('Login Page', () => {
     await expect(page.locator('#navbar-desktop').getByText('Willkommen')).toBeVisible()
   })
 
+  test('valid token with redirect query navigates to deep-link target', async ({ page }) => {
+    await page.route('**/api/_auth/session', async (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          user: { name: 'Test User', email: 'test@example.com', role: 'user' },
+          loggedInAt: new Date().toISOString(),
+        }),
+      }),
+    )
+    await page.route('**/api/redeemLoginLink', async (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({}),
+      }),
+    )
+    await mockCalendarEndpoints(page)
+
+    await page.goto('/login/valid-token-123?redirect=/2025/03')
+    await expect(page).toHaveURL(/\/2025\/03$/, { timeout: 15_000 })
+  })
+
   test('invalid token shows error message', async ({ page }) => {
     await page.route('**/api/redeemLoginLink', async (route) =>
       route.fulfill({

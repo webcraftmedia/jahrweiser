@@ -192,7 +192,7 @@ describe('Page: Index', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.useFakeTimers()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
     vi.setSystemTime(new Date('2025-01-15T12:00:00.000Z'))
     mockRoute.path = '/2025/01'
     pushStateSpy = vi.spyOn(window.history, 'pushState')

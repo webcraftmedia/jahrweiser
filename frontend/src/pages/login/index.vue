@@ -128,9 +128,14 @@
   definePageMeta({ layout: 'login' })
 
   const { loggedIn } = useUserSession()
+  const route = useRoute()
+
+  const raw = route.query.redirect
+  const redirect =
+    typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//') ? raw : undefined
 
   if (loggedIn.value) {
-    void navigateTo('/')
+    void navigateTo(redirect || '/')
   }
 
   const requestedLogin = ref(false)
@@ -150,7 +155,7 @@
     try {
       await $fetch('/api/requestLoginLink', {
         method: 'POST',
-        body: credentials,
+        body: { ...credentials, ...(redirect ? { redirect } : {}) },
       })
     } catch (error) {
       console.error('Failed to request login link:', error)

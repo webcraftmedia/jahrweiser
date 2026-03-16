@@ -48,12 +48,15 @@
   definePageMeta({ layout: 'login' })
 
   const { loggedIn, fetch: refreshSession } = useUserSession()
+  const route = useRoute()
+
+  const raw = route.query.redirect
+  const redirect =
+    typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//') ? raw : undefined
 
   if (loggedIn.value) {
-    void navigateTo('/')
+    void navigateTo(redirect || '/')
   }
-
-  const route = useRoute()
 
   const success = ref(true)
 
@@ -66,7 +69,7 @@
         body: route.params,
       })
       await refreshSession()
-      await navigateTo('/')
+      await navigateTo(redirect || '/')
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       success.value = false

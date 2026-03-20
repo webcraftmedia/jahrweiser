@@ -1392,10 +1392,10 @@ describe('Page: Index', () => {
     await mount()
     mockCalendarControlsSetDate.mockClear()
     mockEventsServiceSet.mockClear()
-    window.history.pushState(null, '', '/2024/01')
+    window.history.pushState(null, '', '/2024/12')
     window.dispatchEvent(new PopStateEvent('popstate'))
     expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
-      expect.objectContaining({ year: 2024, month: 1 }),
+      expect.objectContaining({ year: 2024, month: 12 }),
     )
   })
 

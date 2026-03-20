@@ -12,7 +12,7 @@
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-              <button :aria-label="prevMonthLabel" @click="navigatePeriod(-1)">
+              <button v-show="!isPastLimit" :aria-label="prevMonthLabel" @click="navigatePeriod(-1)">
                 <span class="nav-arrow">‹</span><span class="nav-label"> {{ prevMonthLabel }}</span>
               </button>
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
@@ -438,6 +438,22 @@
     return currentDate.value.year === now.year && currentDate.value.month === now.month
   })
 
+  const isPastLimit = computed(() => {
+    const now = Temporal.PlainDate.from(localDateStr())
+    const prevMonth = currentDate.value.subtract({ months: 1 })
+    // Allow navigating back to the previous month, but not further
+    // (the previous month's view already includes ~7 days from the month before)
+    const firstOfPrevMonth = Temporal.PlainDate.from({
+      year: now.year,
+      month: now.month,
+      day: 1,
+    }).subtract({ months: 1 })
+    return (
+      prevMonth.year < firstOfPrevMonth.year ||
+      (prevMonth.year === firstOfPrevMonth.year && prevMonth.month < firstOfPrevMonth.month)
+    )
+  })
+
   function applyFutureClassRepeatedly() {
     setTimeout(applyFutureClass, 100)
     setTimeout(applyFutureClass, 350)
@@ -523,15 +539,18 @@
     const dx = e.changedTouches[0]!.clientX - touchStartX
     const dy = e.changedTouches[0]!.clientY - touchStartY
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return
-    navigatePeriod(dx < 0 ? 1 : -1)
+    const direction = dx < 0 ? 1 : -1
+    if (direction === -1 && isPastLimit.value) return
+    navigatePeriod(direction)
   }
 
   /* ── Keyboard navigation ── */
 
   function handleKeyboard(e: KeyboardEvent) {
     if (modal.value?.isOpen) return
-    if (e.key === 'ArrowLeft' || e.key === 'a') navigatePeriod(-1)
-    else if (e.key === 'ArrowRight' || e.key === 'd') navigatePeriod(1)
+    if (e.key === 'ArrowLeft' || e.key === 'a') {
+      if (!isPastLimit.value) navigatePeriod(-1)
+    } else if (e.key === 'ArrowRight' || e.key === 'd') navigatePeriod(1)
   }
 
   /* ── Legend hover — open when cursor is near/below cal-wrapper bottom ── */
@@ -645,6 +664,18 @@
     const target = parseDateFromPath(path)
     if (!target) return
     if (target.year === currentDate.value.year && target.month === currentDate.value.month) return
+    // Prevent navigating to months beyond the past limit via browser back
+    const now = Temporal.PlainDate.from(localDateStr())
+    const firstOfPrevMonth = Temporal.PlainDate.from({
+      year: now.year,
+      month: now.month,
+      day: 1,
+    }).subtract({ months: 1 })
+    if (
+      target.year < firstOfPrevMonth.year ||
+      (target.year === firstOfPrevMonth.year && target.month < firstOfPrevMonth.month)
+    )
+      return
     currentDate.value = target
     eventsService.set([])
     calendarControls.setDate(target)

@@ -56,7 +56,7 @@
     "@types/email-templates": "^10.0.4",
     "@types/node": "^25.3.5",
     "@types/nodemailer": "^7.0.11",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^10.0.3",
     "eslint-config-it4c": "^0.12.0",
     "happy-dom": "^20.8.3",

@@ -96,6 +96,9 @@ export default defineEventHandler(async (event) => {
           if (occurrence > endDate) break
           if (occurrence >= startDate) {
             const recEndDate = new Date(occurrence.getTime() + calEvent.duration.toSeconds() * 1000)
+            if (isAllDay) {
+              recEndDate.setDate(recEndDate.getDate() - 1) // DTEND is exclusive, subtract 1 day for inclusive end
+            }
             results.push({
               calendar: selectedCalendar.displayName,
               color:

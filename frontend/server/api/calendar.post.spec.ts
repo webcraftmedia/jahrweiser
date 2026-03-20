@@ -170,6 +170,8 @@ describe('calendar.post', () => {
     // All-day recurring events should be YYYY-MM-DD strings (10 chars)
     expect(result[0]!.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(result[0]!.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    // DTEND is exclusive, so endDate should equal startDate for single-day recurring events
+    expect(result[0]!.endDate).toBe(result[0]!.startDate)
   })
 
   it('stops expanding recurring events past endDate', async () => {

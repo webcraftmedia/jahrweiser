@@ -12,7 +12,11 @@
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-              <button v-show="!isPastLimit" :aria-label="prevMonthLabel" @click="navigatePeriod(-1)">
+              <button
+                v-show="!isPastLimit"
+                :aria-label="prevMonthLabel"
+                @click="navigatePeriod(-1)"
+              >
                 <span class="nav-arrow">‹</span><span class="nav-label"> {{ prevMonthLabel }}</span>
               </button>
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->

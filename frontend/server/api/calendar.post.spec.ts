@@ -69,7 +69,7 @@ describe('calendar.post', () => {
       })
     })
     const result = await handlerFn({})
-    expect(result).toEqual([])
+    expect(result).toStrictEqual([])
     // Should not even attempt to fetch calendars
     expect(mockFindCalendars).not.toHaveBeenCalled()
   })
@@ -85,7 +85,7 @@ describe('calendar.post', () => {
     })
     mockFindEvents.mockResolvedValue([])
     const result = await handlerFn({})
-    expect(result).toEqual([])
+    expect(result).toStrictEqual([])
     // Should proceed to fetch calendars
     expect(mockFindCalendars).toHaveBeenCalled()
   })

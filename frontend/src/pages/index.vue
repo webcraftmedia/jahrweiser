@@ -438,21 +438,13 @@
     return currentDate.value.year === now.year && currentDate.value.month === now.month
   })
 
-  const isPastLimit = computed(() => {
-    const now = Temporal.PlainDate.from(localDateStr())
-    const prevMonth = currentDate.value.subtract({ months: 1 })
-    // Allow navigating back to the previous month, but not further
-    // (the previous month's view already includes ~7 days from the month before)
-    const firstOfPrevMonth = Temporal.PlainDate.from({
-      year: now.year,
-      month: now.month,
-      day: 1,
-    }).subtract({ months: 1 })
-    return (
-      prevMonth.year < firstOfPrevMonth.year ||
-      (prevMonth.year === firstOfPrevMonth.year && prevMonth.month < firstOfPrevMonth.month)
-    )
-  })
+  /** Check if a given month is before the earliest allowed month (previous month from today) */
+  function isBeforePastLimit(date: Temporal.PlainDate) {
+    const earliest = Temporal.PlainDate.from(localDateStr()).subtract({ months: 1 })
+    return date.year < earliest.year || (date.year === earliest.year && date.month < earliest.month)
+  }
+
+  const isPastLimit = computed(() => isBeforePastLimit(currentDate.value.subtract({ months: 1 })))
 
   function applyFutureClassRepeatedly() {
     setTimeout(applyFutureClass, 100)
@@ -664,18 +656,7 @@
     const target = parseDateFromPath(path)
     if (!target) return
     if (target.year === currentDate.value.year && target.month === currentDate.value.month) return
-    // Prevent navigating to months beyond the past limit via browser back
-    const now = Temporal.PlainDate.from(localDateStr())
-    const firstOfPrevMonth = Temporal.PlainDate.from({
-      year: now.year,
-      month: now.month,
-      day: 1,
-    }).subtract({ months: 1 })
-    if (
-      target.year < firstOfPrevMonth.year ||
-      (target.year === firstOfPrevMonth.year && target.month < firstOfPrevMonth.month)
-    )
-      return
+    if (isBeforePastLimit(target)) return
     currentDate.value = target
     eventsService.set([])
     calendarControls.setDate(target)

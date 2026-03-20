@@ -661,6 +661,18 @@ describe('Page: Index', () => {
     expect(dateArg.month).toBe(2) // February 2025
   })
 
+  it('ArrowLeft is blocked at past limit', async () => {
+    // Navigate to December 2024 first (the limit)
+    await mount()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
+    await nextTick()
+    // Now at Dec 2024, ArrowLeft should be blocked
+    mockCalendarControlsSetDate.mockClear()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
+    await nextTick()
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
+  })
+
   it('ignores unhandled keyboard keys', async () => {
     await mount()
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }))
@@ -686,6 +698,21 @@ describe('Page: Index', () => {
     expect(mockCalendarControlsSetDate).toHaveBeenCalled()
     const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
     expect(dateArg.month).toBe(12) // December
+  })
+
+  it('swipe right is blocked at past limit', async () => {
+    // System time is 2025-01-15, so previous month (Dec 2024) is the limit
+    // Start at January and navigate back to December to reach the limit
+    const wrapper = await mount()
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    // Swipe right to go to December 2024 (allowed)
+    await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 50, clientY: 100 }] })
+    await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 100 }] })
+    mockCalendarControlsSetDate.mockClear()
+    // Now at Dec 2024 (past limit), swipe right again should be blocked
+    await calWrapperEl.trigger('touchstart', { changedTouches: [{ clientX: 50, clientY: 100 }] })
+    await calWrapperEl.trigger('touchend', { changedTouches: [{ clientX: 200, clientY: 100 }] })
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
   })
 
   it('ignores short swipes', async () => {
@@ -1397,6 +1424,14 @@ describe('Page: Index', () => {
     expect(mockCalendarControlsSetDate).toHaveBeenCalledWith(
       expect.objectContaining({ year: 2024, month: 12 }),
     )
+  })
+
+  it('blocks popstate navigation beyond past limit', async () => {
+    await mount()
+    mockCalendarControlsSetDate.mockClear()
+    window.history.pushState(null, '', '/2024/11')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(mockCalendarControlsSetDate).not.toHaveBeenCalled()
   })
 
   /* ── Event URL support ── */

@@ -193,11 +193,7 @@
       },
       'authenticated',
     ],
-    alias: [
-      '/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])',
-      '/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])/event/:eventId',
-      '/:year(\\d{4})/:month(0[1-9]|[1-9]|1[0-2])/event/:eventId/:occurrence(\\d+)',
-    ],
+    path: '/:year(\\d{4})?/:month(0[1-9]|[1-9]|1[0-2])?/:_event(event)?/:eventId?/:occurrence(\\d+)?',
   })
   /* v8 ignore stop */
 

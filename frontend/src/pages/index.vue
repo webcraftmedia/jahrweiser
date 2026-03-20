@@ -12,7 +12,11 @@
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-              <button :aria-label="prevMonthLabel" @click="navigatePeriod(-1)">
+              <button
+                v-show="!isPastLimit"
+                :aria-label="prevMonthLabel"
+                @click="navigatePeriod(-1)"
+              >
                 <span class="nav-arrow">‹</span><span class="nav-label"> {{ prevMonthLabel }}</span>
               </button>
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
@@ -378,7 +382,10 @@
     )
   }
 
-  const initialDate = parseDateFromPath(route.path) ?? today
+  const parsedDate = parseDateFromPath(route.path)
+  const earliestMonth = Temporal.PlainDate.from(localDateStr()).subtract({ months: 1 })
+  const initialDate =
+    parsedDate && isBeforePastLimit(parsedDate) ? earliestMonth : (parsedDate ?? today)
 
   /* v8 ignore start -- always true in client-side tests */
   if (import.meta.client) {
@@ -437,6 +444,14 @@
     const now = Temporal.PlainDate.from(localDateStr())
     return currentDate.value.year === now.year && currentDate.value.month === now.month
   })
+
+  /** Check if a given month is before the earliest allowed month (previous month from today) */
+  function isBeforePastLimit(date: Temporal.PlainDate) {
+    const earliest = Temporal.PlainDate.from(localDateStr()).subtract({ months: 1 })
+    return date.year < earliest.year || (date.year === earliest.year && date.month < earliest.month)
+  }
+
+  const isPastLimit = computed(() => isBeforePastLimit(currentDate.value.subtract({ months: 1 })))
 
   function applyFutureClassRepeatedly() {
     setTimeout(applyFutureClass, 100)
@@ -523,15 +538,18 @@
     const dx = e.changedTouches[0]!.clientX - touchStartX
     const dy = e.changedTouches[0]!.clientY - touchStartY
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return
-    navigatePeriod(dx < 0 ? 1 : -1)
+    const direction = dx < 0 ? 1 : -1
+    if (direction === -1 && isPastLimit.value) return
+    navigatePeriod(direction)
   }
 
   /* ── Keyboard navigation ── */
 
   function handleKeyboard(e: KeyboardEvent) {
     if (modal.value?.isOpen) return
-    if (e.key === 'ArrowLeft' || e.key === 'a') navigatePeriod(-1)
-    else if (e.key === 'ArrowRight' || e.key === 'd') navigatePeriod(1)
+    if (e.key === 'ArrowLeft' || e.key === 'a') {
+      if (!isPastLimit.value) navigatePeriod(-1)
+    } else if (e.key === 'ArrowRight' || e.key === 'd') navigatePeriod(1)
   }
 
   /* ── Legend hover — open when cursor is near/below cal-wrapper bottom ── */
@@ -592,8 +610,8 @@
     window.addEventListener('resize', onResize)
     window.addEventListener('popstate', onPopState)
     document.addEventListener('mousemove', onMouseMove)
-    if (!parseDateFromPath(route.path)) {
-      window.history.replaceState(null, '', monthPath(today.year, today.month))
+    if (!parsedDate || initialDate !== parsedDate) {
+      window.history.replaceState(null, '', monthPath(initialDate.year, initialDate.month))
     }
   })
   onUnmounted(() => {
@@ -645,6 +663,7 @@
     const target = parseDateFromPath(path)
     if (!target) return
     if (target.year === currentDate.value.year && target.month === currentDate.value.month) return
+    if (isBeforePastLimit(target)) return
     currentDate.value = target
     eventsService.set([])
     calendarControls.setDate(target)

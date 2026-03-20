@@ -378,7 +378,10 @@
     )
   }
 
-  const initialDate = parseDateFromPath(route.path) ?? today
+  const parsedDate = parseDateFromPath(route.path)
+  const earliestMonth = Temporal.PlainDate.from(localDateStr()).subtract({ months: 1 })
+  const initialDate =
+    parsedDate && isBeforePastLimit(parsedDate) ? earliestMonth : (parsedDate ?? today)
 
   /* v8 ignore start -- always true in client-side tests */
   if (import.meta.client) {
@@ -603,8 +606,8 @@
     window.addEventListener('resize', onResize)
     window.addEventListener('popstate', onPopState)
     document.addEventListener('mousemove', onMouseMove)
-    if (!parseDateFromPath(route.path)) {
-      window.history.replaceState(null, '', monthPath(today.year, today.month))
+    if (!parsedDate || initialDate !== parsedDate) {
+      window.history.replaceState(null, '', monthPath(initialDate.year, initialDate.month))
     }
   })
   onUnmounted(() => {

@@ -1359,6 +1359,13 @@ describe('Page: Index', () => {
     expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
   })
 
+  it('redirects URL beyond past limit to earliest allowed month', async () => {
+    // System time is 2025-01-15, earliest allowed month is December 2024
+    mockRoute.path = '/2024/10'
+    await mount({ route: '/2024/10' })
+    expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2024/12')
+  })
+
   it('does not redirect when URL already has year/month params', async () => {
     replaceStateSpy.mockClear()
     await mount()

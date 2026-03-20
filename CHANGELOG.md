@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.5.0...v1.6.0) (2026-03-20)
+
+
+### Features
+
+* **frontend:** restrict past events ([#149](https://github.com/webcraftmedia/jahrweiser/issues/149)) ([8403c2a](https://github.com/webcraftmedia/jahrweiser/commit/8403c2ac18c530e189b7628d9c4e658220ffb602))
+
+
+### Bug Fixes
+
+* **frontend:** fix full day recurring events to span only one day ([#148](https://github.com/webcraftmedia/jahrweiser/issues/148)) ([32e6402](https://github.com/webcraftmedia/jahrweiser/commit/32e64020aa7296b89007940b53e252d7b51ed05c))
+* **frontend:** fix package-lock.json ([#146](https://github.com/webcraftmedia/jahrweiser/issues/146)) ([2db7749](https://github.com/webcraftmedia/jahrweiser/commit/2db77490bf9fa307048ebd55fe5814278fcd6398))
+* **frontend:** fix vue warnings regarding parameterized aliases ([#150](https://github.com/webcraftmedia/jahrweiser/issues/150)) ([4b1f8d7](https://github.com/webcraftmedia/jahrweiser/commit/4b1f8d717e5d755eaf6e2c2f1b33beec63ec1b72))
+
 ## [1.5.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.4.8...v1.5.0) (2026-03-16)
 
 

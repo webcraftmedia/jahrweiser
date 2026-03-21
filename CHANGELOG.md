@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.6.0...v1.6.1) (2026-03-21)
+
+
+### Bug Fixes
+
+* **frontend:** update problematic packages ([#151](https://github.com/webcraftmedia/jahrweiser/issues/151)) ([8a61800](https://github.com/webcraftmedia/jahrweiser/commit/8a6180001f8d272ebb7dad35d8ea4879e98ef2f8))
+
 ## [1.6.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.5.0...v1.6.0) (2026-03-20)
 
 

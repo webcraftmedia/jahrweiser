@@ -69,6 +69,24 @@ test.describe('Calendar', () => {
     await expect(periodLabel).toHaveText(initialLabel!)
   })
 
+  test('toggle view switches between month-grid and list', async ({ page }) => {
+    await expect(page.locator('.sx__month-grid-event, .sx__list-event').first()).toBeVisible({
+      timeout: 10_000,
+    })
+    // Month-grid should be visible initially on desktop
+    await expect(page.locator('.sx__month-grid-day').first()).toBeVisible()
+
+    // Click view-toggle button
+    await page.locator('.cv-header-nav button.view-toggle').click()
+    await expect(page.locator('.sx__list-day').first()).toBeVisible()
+    await expect(page.locator('.sx__month-grid-day')).not.toBeVisible()
+
+    // Toggle back to month-grid
+    await page.locator('.cv-header-nav button.view-toggle').click()
+    await expect(page.locator('.sx__month-grid-day').first()).toBeVisible()
+    await expect(page.locator('.sx__list-day')).not.toBeVisible()
+  })
+
   test('keyboard navigation changes month', async ({ page }) => {
     await expect(page.locator('.sx__month-grid-event, .sx__list-event').first()).toBeVisible({
       timeout: 10_000,

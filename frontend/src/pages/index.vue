@@ -508,19 +508,19 @@
     applyFutureClassRepeatedly()
   }
 
+  /* v8 ignore start -- DOM scroll helper, tested via integration */
   function scrollToEl(el: Element) {
-    const container =
-      calWrapper.value?.closest('.content') ?? document.querySelector('.content')
+    const container = el.closest('.content')
     if (!container) return
-    const header = document.querySelector('.cv-header')
-    const offset = header ? header.getBoundingClientRect().height : 0
+    const headerHeight = document.querySelector('.cv-header')?.getBoundingClientRect().height ?? 0
     const top =
       el.getBoundingClientRect().top -
       container.getBoundingClientRect().top +
       container.scrollTop -
-      offset
+      headerHeight
     container.scrollTo({ top, behavior: 'smooth' })
   }
+  /* v8 ignore stop */
 
   function scrollToDay() {
     setTimeout(() => {

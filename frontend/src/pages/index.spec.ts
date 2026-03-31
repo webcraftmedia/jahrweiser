@@ -1122,6 +1122,10 @@ describe('Page: Index', () => {
     const content = document.createElement('div')
     content.classList.add('content')
     const scrollSpy = vi.spyOn(content, 'scrollTo').mockImplementation(() => {})
+    // Create a cv-header so scrollToEl measures its height
+    const header = document.createElement('div')
+    header.classList.add('cv-header')
+    content.appendChild(header)
     // Create a today element in the DOM
     const todayEl = document.createElement('div')
     todayEl.classList.add('sx__month-grid-day')
@@ -1205,6 +1209,53 @@ describe('Page: Index', () => {
     vi.advanceTimersByTime(400)
     expect(scrollSpy).toHaveBeenCalled()
     content.remove()
+  })
+
+  it('scrollToEl does nothing when no .content container exists', async () => {
+    // Create element without .content ancestor
+    const el = document.createElement('div')
+    el.classList.add('sx__month-grid-day')
+    el.setAttribute('data-date', '2025-01-15')
+    const inner = document.createElement('div')
+    inner.classList.add('sx__is-today')
+    el.appendChild(inner)
+    document.body.appendChild(el)
+    await mount()
+    const navButtons = (await mount()).findAll('.cv-header-nav button')
+    await navButtons[2]!.trigger('click') // today button
+    vi.advanceTimersByTime(400)
+    // Should not throw — scrollToEl returns early
+    el.remove()
+  })
+
+  it('toggleView switches between list and month-grid', async () => {
+    const wrapper = await mount()
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    const viewToggle = navButtons[0]! // view-toggle is first button
+    // Toggle to list view
+    await viewToggle.trigger('click')
+    expect(mockCalendarControlsSetView).toHaveBeenCalledWith('list')
+    mockCalendarControlsSetView.mockClear()
+    // Toggle back to month-grid
+    await viewToggle.trigger('click')
+    expect(mockCalendarControlsSetView).toHaveBeenCalledWith('month-grid')
+  })
+
+  it('onResize respects isListView on desktop', async () => {
+    const wrapper = await mount()
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    // Toggle to list view while on desktop
+    await navButtons[0]!.trigger('click')
+    mockCalendarControlsSetView.mockClear()
+    // Simulate resize to small then back to large to trigger desktop branch with isListView=true
+    Object.defineProperty(window, 'innerWidth', { value: 500, configurable: true })
+    window.dispatchEvent(new Event('resize'))
+    mockCalendarControlsSetView.mockClear()
+    Object.defineProperty(window, 'innerWidth', { value: 800, configurable: true })
+    window.dispatchEvent(new Event('resize'))
+    expect(mockCalendarControlsSetView).toHaveBeenCalledWith('list')
+    // Reset
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
   })
 
   it('stagger animation runs on month-grid events', async () => {

@@ -40,7 +40,7 @@
     "nuxt-auth-utils": "^0.5.29",
     "nuxt-svgo": "^4.2.6",
     "pug": "^3.0.4",
-    "temporal-polyfill": "0.3.0",
+    "temporal-polyfill": "0.3.2",
     "tsdav": "^2.1.8",
     "vue": "^3.5.30",
     "vue-router": "^5.0.4",

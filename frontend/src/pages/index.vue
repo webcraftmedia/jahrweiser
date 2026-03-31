@@ -416,6 +416,22 @@
           onEventClick(calendarEvent) {
             void clickItem(calendarEvent as JahrweiserEvent)
           },
+          onClickPlusEvents(date: string) {
+            isListView.value = true
+            calendarControls.setView('list')
+            applyFutureClassRepeatedly()
+            const scrollToDay = () => {
+              const el = document.querySelector(`.sx__list-day[data-date="${date}"]`)
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                el.classList.add('highlight-day')
+                setTimeout(() => el.classList.remove('highlight-day'), 2000)
+              } else {
+                requestAnimationFrame(scrollToDay)
+              }
+            }
+            requestAnimationFrame(scrollToDay)
+          },
           async fetchEvents(range) {
             await fetchDataForRange(range.start, range.end)
             return mapToScheduleXEvents()
@@ -1433,6 +1449,34 @@
 
   .sx__list-day-margin {
     height: 0 !important;
+  }
+
+  /* --- Schedule-X: List view — highlight day (from +x click) --- */
+
+  .sx__list-day.highlight-day {
+    animation: highlightPulse 2s ease-out;
+  }
+
+  @keyframes highlightPulse {
+    0% {
+      background-color: rgba(194, 65, 12, 0.2);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  .dark .sx__list-day.highlight-day {
+    animation: highlightPulseDark 2s ease-out;
+  }
+
+  @keyframes highlightPulseDark {
+    0% {
+      background-color: rgba(194, 65, 12, 0.3);
+    }
+    100% {
+      background-color: transparent;
+    }
   }
 
   /* --- Schedule-X: List view — today triangle --- */

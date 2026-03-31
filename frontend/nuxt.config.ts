@@ -5,6 +5,7 @@ const isTest = !!process.env.VITEST
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
+  telemetry: false,
   devtools: { enabled: true },
   srcDir: './src',
   ignore: ['**/*.spec.ts'],
@@ -29,6 +30,20 @@ export default defineNuxtConfig({
   typescript: {
     tsConfig: {
       include: ['../types/**/*.d.ts'],
+    },
+  },
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'temporal-polyfill/global',
+        'zod',
+        '@schedule-x/calendar',
+        '@schedule-x/calendar-controls',
+        '@schedule-x/events-service',
+        '@schedule-x/vue',
+      ],
     },
   },
   nitro: {

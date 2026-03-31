@@ -550,10 +550,13 @@
         return
       }
 
-      // Fallback: 1st of month in month-grid or list view
+      // Fallback: first day of month or nearest day after it (list view may skip days without events)
       const firstDayEl =
         document.querySelector(`.sx__month-grid-day[data-date="${firstOfMonth}"]`) ??
-        document.querySelector(`.sx__list-day[data-date="${firstOfMonth}"]`)
+        document.querySelector(`.sx__list-day[data-date="${firstOfMonth}"]`) ??
+        Array.from(document.querySelectorAll<HTMLElement>('.sx__list-day[data-date]')).find(
+          (el) => el.dataset.date! >= firstOfMonth,
+        )
       if (firstDayEl) {
         scrollToEl(firstDayEl)
         return
@@ -855,8 +858,52 @@
 
   /* ── Mark future days ── */
 
+  let futureStyleEl: HTMLStyleElement | undefined
+
   function applyFutureClass() {
     const todayStr = localDateStr()
+
+    // Inject dynamic CSS targeting past dates via [data-date] attribute selectors.
+    // Uses range of all dates before today — survives Schedule-X re-renders.
+    if (!futureStyleEl) {
+      futureStyleEl = document.createElement('style')
+      futureStyleEl.id = 'jahrweiser-future-styles'
+      document.head.appendChild(futureStyleEl)
+    }
+
+    /* v8 ignore start -- dynamic style injection for list-view past/future contrast */
+    // Generate selectors for dates that should appear muted in list view:
+    // 1) Past dates (before today)
+    // 2) Dates outside the currently displayed month (leading/trailing)
+    const today = Temporal.PlainDate.from(todayStr)
+    const curMonth = currentDate.value.toPlainYearMonth()
+    const rangeStart = currentDate.value.subtract({ months: 1 }).with({ day: 1 })
+    const rangeEnd = currentDate.value.add({ months: 2 }).with({ day: 1 })
+    const mutedSelectors: string[] = []
+    let d = rangeStart
+    while (Temporal.PlainDate.compare(d, rangeEnd) < 0) {
+      const isOutsideMonth = d.toPlainYearMonth().equals(curMonth) === false
+      const isPast = Temporal.PlainDate.compare(d, today) < 0
+      if (isPast || isOutsideMonth) {
+        mutedSelectors.push(d.toString())
+      }
+      d = d.add({ days: 1 })
+    }
+
+    if (mutedSelectors.length > 0) {
+      const evSel = mutedSelectors.map((dt) => `.sx__list-day[data-date="${dt}"] .sx__list-day-events`).join(',')
+      const hdSel = mutedSelectors.map((dt) => `.sx__list-day[data-date="${dt}"] .sx__list-day-header`).join(',')
+      futureStyleEl.textContent =
+        `${evSel}{background-color:#efe6d0!important}` +
+        `${hdSel}{background-color:#e8ddc8!important}` +
+        `.dark :is(${evSel}){background-color:#14120f!important}` +
+        `.dark :is(${hdSel}){background-color:#1a1714!important}`
+    } else {
+      futureStyleEl.textContent = ''
+    }
+    /* v8 ignore stop */
+
+    // Still toggle classes for month-grid and today marker
     document
       .querySelectorAll('.sx__month-grid-day[data-date], .sx__list-day[data-date]')
       .forEach((el) => {
@@ -1535,21 +1582,7 @@
 
   /* --- Schedule-X: List view — past vs future contrast --- */
 
-  .sx__list-day:not(.is-future) .sx__list-day-events {
-    background-color: #efe6d0 !important;
-  }
-
-  .sx__list-day:not(.is-future) .sx__list-day-header {
-    background-color: #e8ddc8 !important;
-  }
-
-  .dark .sx__list-day:not(.is-future) .sx__list-day-events {
-    background-color: #14120f !important;
-  }
-
-  .dark .sx__list-day:not(.is-future) .sx__list-day-header {
-    background-color: #1a1714 !important;
-  }
+  /* List-view past/future styling is handled dynamically via #jahrweiser-future-styles */
 
   /* --- Schedule-X: Theme overrides (light) --- */
 

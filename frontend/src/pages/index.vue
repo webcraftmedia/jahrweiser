@@ -1343,6 +1343,10 @@
 
   /* --- Schedule-X: Events --- */
 
+  .sx__month-grid-day__events-more {
+    width: 100% !important;
+  }
+
   .sx__month-grid-day__events {
     grid-gap: 2px !important;
   }

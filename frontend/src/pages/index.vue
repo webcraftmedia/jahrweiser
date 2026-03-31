@@ -420,20 +420,17 @@
             isListView.value = true
             calendarControls.setView('list')
             applyFutureClassRepeatedly()
-            const scrollToDay = () => {
+            const tryScroll = () => {
               const el = document.querySelector(`.sx__list-day[data-date="${date}"]`)
               if (el) {
-                const header = document.querySelector('.cv-header')
-                const offset = header ? header.getBoundingClientRect().height : 0
-                const top = el.getBoundingClientRect().top + window.scrollY - offset
-                window.scrollTo({ top, behavior: 'smooth' })
+                scrollToEl(el)
                 el.classList.add('highlight-day')
                 setTimeout(() => el.classList.remove('highlight-day'), 2000)
               } else {
-                requestAnimationFrame(scrollToDay)
+                requestAnimationFrame(tryScroll)
               }
             }
-            requestAnimationFrame(scrollToDay)
+            requestAnimationFrame(tryScroll)
           },
           async fetchEvents(range) {
             await fetchDataForRange(range.start, range.end)
@@ -510,6 +507,15 @@
     applyFutureClassRepeatedly()
   }
 
+  function scrollToEl(el: Element) {
+    const container = calWrapper.value?.closest('.content')
+    if (!container) return
+    const header = document.querySelector('.cv-header')
+    const offset = header ? header.getBoundingClientRect().height : 0
+    const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - offset
+    container.scrollTo({ top, behavior: 'smooth' })
+  }
+
   function scrollToDay() {
     setTimeout(() => {
       // Re-apply future classes after Schedule-X re-render
@@ -523,7 +529,7 @@
         document.querySelector('.sx__is-today')?.closest('.sx__month-grid-day') ??
         document.querySelector(`.sx__list-day[data-date="${todayStr}"]`)
       if (todayEl) {
-        todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        scrollToEl(todayEl)
         return
       }
 
@@ -534,7 +540,7 @@
           (el) => el.dataset.date! >= todayStr,
         )
       if (nearestDay) {
-        nearestDay.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        scrollToEl(nearestDay)
         return
       }
 
@@ -543,7 +549,7 @@
         document.querySelector(`.sx__month-grid-day[data-date="${firstOfMonth}"]`) ??
         document.querySelector(`.sx__list-day[data-date="${firstOfMonth}"]`)
       if (firstDayEl) {
-        firstDayEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        scrollToEl(firstDayEl)
         return
       }
 
@@ -631,7 +637,18 @@
     applyFutureClassRepeatedly()
   }
 
+  function updateHeaderHeight() {
+    const header = document.querySelector('.cv-header')
+    if (header) {
+      document.documentElement.style.setProperty(
+        '--header-height',
+        `${header.getBoundingClientRect().height}px`,
+      )
+    }
+  }
+
   function onResize() {
+    updateHeaderHeight()
     const isSmall = window.innerWidth < SX_BREAKPOINT
     if (isSmall === lastWasSmall.value) return
     lastWasSmall.value = isSmall
@@ -647,6 +664,7 @@
     const isSmall = window.innerWidth < SX_BREAKPOINT
     lastWasSmall.value = isSmall
     if (isSmall) isListView.value = true
+    updateHeaderHeight()
     window.addEventListener('keydown', handleKeyboard)
     window.addEventListener('resize', onResize)
     window.addEventListener('popstate', onPopState)
@@ -1135,9 +1153,8 @@
     }
   }
 
-  .sx__month-grid-day,
   .sx__list-day {
-    scroll-margin-top: 48.2px;
+    scroll-margin-top: var(--header-height, 50px);
   }
 
   .cv-header .periodLabel {

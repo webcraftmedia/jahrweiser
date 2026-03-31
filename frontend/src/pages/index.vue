@@ -882,7 +882,7 @@
     const mutedSelectors: string[] = []
     let d = rangeStart
     while (Temporal.PlainDate.compare(d, rangeEnd) < 0) {
-      const isOutsideMonth = d.toPlainYearMonth().equals(curMonth) === false
+      const isOutsideMonth = !d.toPlainYearMonth().equals(curMonth)
       const isPast = Temporal.PlainDate.compare(d, today) < 0
       if (isPast || isOutsideMonth) {
         mutedSelectors.push(d.toString())
@@ -891,8 +891,12 @@
     }
 
     if (mutedSelectors.length > 0) {
-      const evSel = mutedSelectors.map((dt) => `.sx__list-day[data-date="${dt}"] .sx__list-day-events`).join(',')
-      const hdSel = mutedSelectors.map((dt) => `.sx__list-day[data-date="${dt}"] .sx__list-day-header`).join(',')
+      const evSel = mutedSelectors
+        .map((dt) => `.sx__list-day[data-date="${dt}"] .sx__list-day-events`)
+        .join(',')
+      const hdSel = mutedSelectors
+        .map((dt) => `.sx__list-day[data-date="${dt}"] .sx__list-day-header`)
+        .join(',')
       futureStyleEl.textContent =
         `${evSel}{background-color:#efe6d0!important}` +
         `${hdSel}{background-color:#e8ddc8!important}` +

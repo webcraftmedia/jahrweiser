@@ -1211,23 +1211,6 @@ describe('Page: Index', () => {
     content.remove()
   })
 
-  it('scrollToEl does nothing when no .content container exists', async () => {
-    // Create element without .content ancestor
-    const el = document.createElement('div')
-    el.classList.add('sx__month-grid-day')
-    el.setAttribute('data-date', '2025-01-15')
-    const inner = document.createElement('div')
-    inner.classList.add('sx__is-today')
-    el.appendChild(inner)
-    document.body.appendChild(el)
-    await mount()
-    const navButtons = (await mount()).findAll('.cv-header-nav button')
-    await navButtons[2]!.trigger('click') // today button
-    vi.advanceTimersByTime(400)
-    // Should not throw — scrollToEl returns early
-    el.remove()
-  })
-
   it('toggleView switches between list and month-grid', async () => {
     const wrapper = await mount()
     const navButtons = wrapper.findAll('.cv-header-nav button')

@@ -163,9 +163,8 @@
   import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls'
   import { createEventsServicePlugin } from '@schedule-x/events-service'
   import { ScheduleXCalendar } from '@schedule-x/vue'
+
   import '@schedule-x/theme-default/dist/index.css'
-  import IconList from '~/assets/icon-list.svg'
-  import IconGrid from '~/assets/icon-grid.svg'
 
   import Modal from '../components/Modal.vue'
   import { useCalendarFilter } from '../composables/useCalendarFilter'
@@ -173,6 +172,9 @@
   import { useZoom } from '../composables/useZoom'
 
   import type { CalendarEventExternal } from '@schedule-x/calendar'
+
+  import IconGrid from '~/assets/icon-grid.svg'
+  import IconList from '~/assets/icon-list.svg'
 
   interface RawCalendarEvent {
     calendar: string
@@ -425,7 +427,9 @@
               if (el) {
                 scrollToEl(el)
                 el.classList.add('highlight-day')
-                setTimeout(() => el.classList.remove('highlight-day'), 2000)
+                setTimeout(() => {
+                  el.classList.remove('highlight-day')
+                }, 2000)
               }
             }, 350)
           },
@@ -509,7 +513,11 @@
     if (!container) return
     const header = document.querySelector('.cv-header')
     const offset = header ? header.getBoundingClientRect().height : 0
-    const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - offset
+    const top =
+      el.getBoundingClientRect().top -
+      container.getBoundingClientRect().top +
+      container.scrollTop -
+      offset
     container.scrollTo({ top, behavior: 'smooth' })
   }
 

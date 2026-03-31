@@ -522,6 +522,7 @@
   }
   /* v8 ignore stop */
 
+  /* v8 ignore start -- DOM scroll helper, tested via integration */
   function scrollToDay() {
     setTimeout(() => {
       // Re-apply future classes after Schedule-X re-render
@@ -566,6 +567,7 @@
       calWrapper.value?.closest('.content')?.scrollTo({ top: 0, behavior: 'smooth' })
     }, 350)
   }
+  /* v8 ignore stop */
 
   /* ── Touch swipe ── */
 
@@ -871,6 +873,15 @@
       document.head.appendChild(futureStyleEl)
     }
 
+    // Toggle classes for month-grid and today marker
+    document
+      .querySelectorAll('.sx__month-grid-day[data-date], .sx__list-day[data-date]')
+      .forEach((el) => {
+        const date = el.getAttribute('data-date')!
+        el.classList.toggle('is-future', date >= todayStr)
+        el.classList.toggle('is-today', date === todayStr)
+      })
+
     /* v8 ignore start -- dynamic style injection for list-view past/future contrast */
     // Generate selectors for dates that should appear muted in list view:
     // 1) Past dates (before today)
@@ -905,17 +916,8 @@
     } else {
       futureStyleEl.textContent = ''
     }
-    /* v8 ignore stop */
-
-    // Still toggle classes for month-grid and today marker
-    document
-      .querySelectorAll('.sx__month-grid-day[data-date], .sx__list-day[data-date]')
-      .forEach((el) => {
-        const date = el.getAttribute('data-date')!
-        el.classList.toggle('is-future', date >= todayStr)
-        el.classList.toggle('is-today', date === todayStr)
-      })
   }
+  /* v8 ignore stop */
 
   let futureDebounce: ReturnType<typeof setTimeout> | undefined
   function debouncedApplyFuture() {

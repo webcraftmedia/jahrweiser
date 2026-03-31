@@ -420,17 +420,14 @@
             isListView.value = true
             calendarControls.setView('list')
             applyFutureClassRepeatedly()
-            const tryScroll = () => {
+            setTimeout(() => {
               const el = document.querySelector(`.sx__list-day[data-date="${date}"]`)
               if (el) {
                 scrollToEl(el)
                 el.classList.add('highlight-day')
                 setTimeout(() => el.classList.remove('highlight-day'), 2000)
-              } else {
-                requestAnimationFrame(tryScroll)
               }
-            }
-            requestAnimationFrame(tryScroll)
+            }, 350)
           },
           async fetchEvents(range) {
             await fetchDataForRange(range.start, range.end)

@@ -509,7 +509,8 @@
   }
 
   function scrollToEl(el: Element) {
-    const container = calWrapper.value?.closest('.content')
+    const container =
+      calWrapper.value?.closest('.content') ?? document.querySelector('.content')
     if (!container) return
     const header = document.querySelector('.cv-header')
     const offset = header ? header.getBoundingClientRect().height : 0

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.6.1...v1.7.0) (2026-03-31)
+
+
+### Features
+
+* **frontend:** list & month toggle + more button for events not displayed in moth view ([#162](https://github.com/webcraftmedia/jahrweiser/issues/162)) ([1e45c79](https://github.com/webcraftmedia/jahrweiser/commit/1e45c79c5ea65ac6290e83f5c1a356612acbc1bf))
+
+
+### Bug Fixes
+
+* **frontend:** fix bundle dependencies in development & disable telemetry ([#161](https://github.com/webcraftmedia/jahrweiser/issues/161)) ([e3de7d9](https://github.com/webcraftmedia/jahrweiser/commit/e3de7d95ba52e337da221bbf12c0f25022fef11d))
+* **frontend:** fix list mode scroll & highlight ([#163](https://github.com/webcraftmedia/jahrweiser/issues/163)) ([8829daf](https://github.com/webcraftmedia/jahrweiser/commit/8829daf5deeb3badccea28eca4de848be17d82d3))
+* **frontend:** fix today markers text color ([#159](https://github.com/webcraftmedia/jahrweiser/issues/159)) ([5d913d7](https://github.com/webcraftmedia/jahrweiser/commit/5d913d7c7e7a600776cab62bf6bc2b39be5e7f28))
+
 ## [1.6.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.6.0...v1.6.1) (2026-03-21)
 
 

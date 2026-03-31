@@ -423,7 +423,10 @@
             const scrollToDay = () => {
               const el = document.querySelector(`.sx__list-day[data-date="${date}"]`)
               if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                const header = document.querySelector('.cv-header')
+                const offset = header ? header.getBoundingClientRect().height : 0
+                const top = el.getBoundingClientRect().top + window.scrollY - offset
+                window.scrollTo({ top, behavior: 'smooth' })
                 el.classList.add('highlight-day')
                 setTimeout(() => el.classList.remove('highlight-day'), 2000)
               } else {

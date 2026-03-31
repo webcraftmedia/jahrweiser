@@ -34,7 +34,16 @@ export default defineNuxtConfig({
   },
   vite: {
     optimizeDeps: {
-      include: ['@vue/devtools-core', '@vue/devtools-kit', 'temporal-polyfill/global', 'zod'],
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'temporal-polyfill/global',
+        'zod',
+        '@schedule-x/calendar',
+        '@schedule-x/calendar-controls',
+        '@schedule-x/events-service',
+        '@schedule-x/vue',
+      ],
     },
   },
   nitro: {

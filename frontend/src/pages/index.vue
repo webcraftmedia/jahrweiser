@@ -11,6 +11,17 @@
           <div class="cv-header" :style="headerZoomStyle">
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
+              <button
+                class="view-toggle"
+                :aria-label="isListView ? $t('pages.index.monthView') : $t('pages.index.listView')"
+                @click="toggleView"
+              >
+                <IconGrid v-if="isListView" class="view-toggle-icon" />
+                <IconList v-else class="view-toggle-icon" />
+                <span class="view-toggle-label">{{
+                  isListView ? $t('pages.index.monthView') : $t('pages.index.listView')
+                }}</span>
+              </button>
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
               <button
                 v-show="!isPastLimit"
@@ -153,6 +164,8 @@
   import { createEventsServicePlugin } from '@schedule-x/events-service'
   import { ScheduleXCalendar } from '@schedule-x/vue'
   import '@schedule-x/theme-default/dist/index.css'
+  import IconList from '~/assets/icon-list.svg'
+  import IconGrid from '~/assets/icon-grid.svg'
 
   import Modal from '../components/Modal.vue'
   import { useCalendarFilter } from '../composables/useCalendarFilter'
@@ -591,17 +604,30 @@
 
   const SX_BREAKPOINT = 700
   const lastWasSmall = ref(false)
+  const isListView = ref(false)
+
+  function toggleView() {
+    isListView.value = !isListView.value
+    calendarControls.setView(isListView.value ? 'list' : 'month-grid')
+    applyFutureClassRepeatedly()
+  }
 
   function onResize() {
     const isSmall = window.innerWidth < SX_BREAKPOINT
     if (isSmall === lastWasSmall.value) return
     lastWasSmall.value = isSmall
-    calendarControls.setView(isSmall ? 'list' : 'month-grid')
+    if (isSmall) {
+      calendarControls.setView('list')
+    } else {
+      calendarControls.setView(isListView.value ? 'list' : 'month-grid')
+    }
     applyFutureClassRepeatedly()
   }
 
   onMounted(() => {
-    lastWasSmall.value = window.innerWidth < SX_BREAKPOINT
+    const isSmall = window.innerWidth < SX_BREAKPOINT
+    lastWasSmall.value = isSmall
+    if (isSmall) isListView.value = true
     window.addEventListener('keydown', handleKeyboard)
     window.addEventListener('resize', onResize)
     window.addEventListener('popstate', onPopState)
@@ -1154,6 +1180,29 @@
     background-color: transparent;
     border-color: rgba(30, 41, 59, 0.1);
     cursor: default;
+  }
+
+  .cv-header button.view-toggle {
+    display: inline-flex;
+  }
+
+  .view-toggle-label {
+    display: none;
+  }
+
+  @media (min-width: 700px) {
+    .cv-header button.view-toggle {
+      margin-right: 1em;
+    }
+
+    .view-toggle-label {
+      display: inline;
+    }
+  }
+
+  .view-toggle-icon {
+    width: 1em;
+    height: 1em;
   }
 
   /* --- Schedule-X: Weekday name strip (banner) --- */

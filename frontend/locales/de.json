@@ -76,6 +76,8 @@
         "start": "Beginn:",
         "url": "Link:"
       },
+      "listView": "Liste",
+      "monthView": "Monat",
       "today": "Heute"
     },
     "login": {

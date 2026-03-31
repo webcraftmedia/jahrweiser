@@ -35,7 +35,7 @@
     "cross-env": "^10.1.0",
     "email-templates": "^13.0.1",
     "ical.js": "^2.2.1",
-    "nodemailer": "^8.0.3",
+    "nodemailer": "^8.0.4",
     "nuxt": "^4.4.2",
     "nuxt-auth-utils": "^0.5.29",
     "nuxt-svgo": "^4.2.6",

@@ -468,7 +468,7 @@ describe('Page: Index', () => {
   it('navigates to next month via nav button', async () => {
     const wrapper = await mount()
     const navButtons = wrapper.findAll('.cv-header-nav button')
-    const nextButton = navButtons[2]! // ‹, today, ›
+    const nextButton = navButtons[3]! // view-toggle, ‹, today, ›
     await nextButton.trigger('click')
     expect(mockCalendarControlsSetDate).toHaveBeenCalled()
     const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
@@ -478,7 +478,7 @@ describe('Page: Index', () => {
   it('navigates to previous month via nav button', async () => {
     const wrapper = await mount()
     const navButtons = wrapper.findAll('.cv-header-nav button')
-    const prevButton = navButtons[0]!
+    const prevButton = navButtons[1]! // view-toggle, ‹, today, ›
     await prevButton.trigger('click')
     expect(mockCalendarControlsSetDate).toHaveBeenCalled()
     const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
@@ -490,9 +490,9 @@ describe('Page: Index', () => {
     const wrapper = await mount()
     // Navigate away first so "today" button is not disabled
     const navButtons = wrapper.findAll('.cv-header-nav button')
-    await navButtons[0]!.trigger('click')
+    await navButtons[1]!.trigger('click') // prev month (view-toggle, ‹, today, ›)
     mockCalendarControlsSetDate.mockClear()
-    await navButtons[1]!.trigger('click')
+    await navButtons[2]!.trigger('click') // today
     expect(mockCalendarControlsSetDate).toHaveBeenCalled()
     const dateArg = mockCalendarControlsSetDate.mock.calls[0]![0]
     expect(dateArg.year).toBe(2025)
@@ -1118,6 +1118,14 @@ describe('Page: Index', () => {
 
   it('scrollToDay scrolls to today element when present', async () => {
     const todayStr = '2025-01-15'
+    // Create a .content container for scrollToEl
+    const content = document.createElement('div')
+    content.classList.add('content')
+    const scrollSpy = vi.spyOn(content, 'scrollTo').mockImplementation(() => {})
+    // Create a cv-header so scrollToEl measures its height
+    const header = document.createElement('div')
+    header.classList.add('cv-header')
+    content.appendChild(header)
     // Create a today element in the DOM
     const todayEl = document.createElement('div')
     todayEl.classList.add('sx__month-grid-day')
@@ -1125,77 +1133,112 @@ describe('Page: Index', () => {
     const innerEl = document.createElement('div')
     innerEl.classList.add('sx__is-today')
     todayEl.appendChild(innerEl)
-    document.body.appendChild(todayEl)
-    const scrollSpy = vi.spyOn(todayEl, 'scrollIntoView').mockImplementation(() => {})
+    content.appendChild(todayEl)
+    document.body.appendChild(content)
     await mount()
     // Navigate to today to trigger scrollToDay
     const navButtons = (await mount()).findAll('.cv-header-nav button')
-    await navButtons[1]!.trigger('click') // today button
+    await navButtons[2]!.trigger('click') // today button (view-toggle, ‹, today, ›)
     vi.advanceTimersByTime(400)
     expect(scrollSpy).toHaveBeenCalled()
-    todayEl.remove()
+    content.remove()
   })
 
   it('scrollToDay scrolls to nearest upcoming list-day when today not present', async () => {
+    const content = document.createElement('div')
+    content.classList.add('content')
+    const scrollSpy = vi.spyOn(content, 'scrollTo').mockImplementation(() => {})
     // Create list-day elements: one past, one upcoming
     const pastDay = document.createElement('div')
     pastDay.classList.add('sx__list-day')
     pastDay.setAttribute('data-date', '2025-01-10')
-    document.body.appendChild(pastDay)
+    content.appendChild(pastDay)
 
     const upcomingDay = document.createElement('div')
     upcomingDay.classList.add('sx__list-day')
     upcomingDay.setAttribute('data-date', '2025-01-16')
-    document.body.appendChild(upcomingDay)
+    content.appendChild(upcomingDay)
 
-    const scrollSpy = vi.spyOn(upcomingDay, 'scrollIntoView').mockImplementation(() => {})
-    vi.spyOn(pastDay, 'scrollIntoView').mockImplementation(() => {})
+    document.body.appendChild(content)
     await mount()
     const navButtons = (await mount()).findAll('.cv-header-nav button')
-    await navButtons[1]!.trigger('click') // today button
+    await navButtons[2]!.trigger('click') // today button (view-toggle, ‹, today, ›)
     vi.advanceTimersByTime(400)
     expect(scrollSpy).toHaveBeenCalled()
-    pastDay.remove()
-    upcomingDay.remove()
+    content.remove()
   })
 
   it('scrollToDay falls through to first-of-month when all list-days are past', async () => {
+    const content = document.createElement('div')
+    content.classList.add('content')
+    const scrollSpy = vi.spyOn(content, 'scrollTo').mockImplementation(() => {})
     // Only past list-day elements — no match for "nearest upcoming"
     const pastDay = document.createElement('div')
     pastDay.classList.add('sx__list-day')
     pastDay.setAttribute('data-date', '2025-01-10')
-    document.body.appendChild(pastDay)
+    content.appendChild(pastDay)
 
     const firstEl = document.createElement('div')
     firstEl.classList.add('sx__month-grid-day')
     firstEl.setAttribute('data-date', '2025-01-01')
-    document.body.appendChild(firstEl)
+    content.appendChild(firstEl)
 
-    const scrollSpy = vi.spyOn(firstEl, 'scrollIntoView').mockImplementation(() => {})
-    vi.spyOn(pastDay, 'scrollIntoView').mockImplementation(() => {})
+    document.body.appendChild(content)
     await mount()
     const navButtons = (await mount()).findAll('.cv-header-nav button')
-    await navButtons[1]!.trigger('click') // today button
+    await navButtons[2]!.trigger('click') // today button (view-toggle, ‹, today, ›)
     vi.advanceTimersByTime(400)
     expect(scrollSpy).toHaveBeenCalled()
-    pastDay.remove()
-    firstEl.remove()
+    content.remove()
   })
 
   it('scrollToDay scrolls to first of month when today not present', async () => {
+    const content = document.createElement('div')
+    content.classList.add('content')
+    const scrollSpy = vi.spyOn(content, 'scrollTo').mockImplementation(() => {})
     // Create a first-of-month element (no today)
     const firstEl = document.createElement('div')
     firstEl.classList.add('sx__month-grid-day')
     firstEl.setAttribute('data-date', '2025-01-01')
-    document.body.appendChild(firstEl)
-    const scrollSpy = vi.spyOn(firstEl, 'scrollIntoView').mockImplementation(() => {})
+    content.appendChild(firstEl)
+    document.body.appendChild(content)
     await mount()
     const wrapper = await mount()
     const navButtons = wrapper.findAll('.cv-header-nav button')
-    await navButtons[1]!.trigger('click') // today button
+    await navButtons[2]!.trigger('click') // today button (view-toggle, ‹, today, ›)
     vi.advanceTimersByTime(400)
     expect(scrollSpy).toHaveBeenCalled()
-    firstEl.remove()
+    content.remove()
+  })
+
+  it('toggleView switches between list and month-grid', async () => {
+    const wrapper = await mount()
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    const viewToggle = navButtons[0]! // view-toggle is first button
+    // Toggle to list view
+    await viewToggle.trigger('click')
+    expect(mockCalendarControlsSetView).toHaveBeenCalledWith('list')
+    mockCalendarControlsSetView.mockClear()
+    // Toggle back to month-grid
+    await viewToggle.trigger('click')
+    expect(mockCalendarControlsSetView).toHaveBeenCalledWith('month-grid')
+  })
+
+  it('onResize respects isListView on desktop', async () => {
+    const wrapper = await mount()
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    // Toggle to list view while on desktop
+    await navButtons[0]!.trigger('click')
+    mockCalendarControlsSetView.mockClear()
+    // Simulate resize to small then back to large to trigger desktop branch with isListView=true
+    Object.defineProperty(window, 'innerWidth', { value: 500, configurable: true })
+    window.dispatchEvent(new Event('resize'))
+    mockCalendarControlsSetView.mockClear()
+    Object.defineProperty(window, 'innerWidth', { value: 800, configurable: true })
+    window.dispatchEvent(new Event('resize'))
+    expect(mockCalendarControlsSetView).toHaveBeenCalledWith('list')
+    // Reset
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
   })
 
   it('stagger animation runs on month-grid events', async () => {
@@ -1376,7 +1419,7 @@ describe('Page: Index', () => {
     const wrapper = await mount()
     pushStateSpy.mockClear()
     const navButtons = wrapper.findAll('.cv-header-nav button')
-    await navButtons[2]!.trigger('click') // next month
+    await navButtons[3]!.trigger('click') // next month (view-toggle, ‹, today, ›)
     expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/02')
   })
 
@@ -1384,9 +1427,9 @@ describe('Page: Index', () => {
     const wrapper = await mount()
     // Navigate away first
     const navButtons = wrapper.findAll('.cv-header-nav button')
-    await navButtons[2]!.trigger('click') // next month
+    await navButtons[3]!.trigger('click') // next month (view-toggle, ‹, today, ›)
     pushStateSpy.mockClear()
-    await navButtons[1]!.trigger('click') // today
+    await navButtons[2]!.trigger('click') // today
     expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
   })
 

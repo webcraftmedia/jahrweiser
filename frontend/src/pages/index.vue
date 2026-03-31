@@ -11,6 +11,17 @@
           <div class="cv-header" :style="headerZoomStyle">
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
+              <button
+                class="view-toggle"
+                :aria-label="isListView ? $t('pages.index.monthView') : $t('pages.index.listView')"
+                @click="toggleView"
+              >
+                <IconGrid v-if="isListView" class="view-toggle-icon" />
+                <IconList v-else class="view-toggle-icon" />
+                <span class="view-toggle-label">{{
+                  isListView ? $t('pages.index.monthView') : $t('pages.index.listView')
+                }}</span>
+              </button>
               <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
               <button
                 v-show="!isPastLimit"
@@ -152,6 +163,7 @@
   import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls'
   import { createEventsServicePlugin } from '@schedule-x/events-service'
   import { ScheduleXCalendar } from '@schedule-x/vue'
+
   import '@schedule-x/theme-default/dist/index.css'
 
   import Modal from '../components/Modal.vue'
@@ -160,6 +172,9 @@
   import { useZoom } from '../composables/useZoom'
 
   import type { CalendarEventExternal } from '@schedule-x/calendar'
+
+  import IconGrid from '~/assets/icon-grid.svg'
+  import IconList from '~/assets/icon-list.svg'
 
   interface RawCalendarEvent {
     calendar: string
@@ -403,6 +418,21 @@
           onEventClick(calendarEvent) {
             void clickItem(calendarEvent as JahrweiserEvent)
           },
+          onClickPlusEvents(date: string) {
+            isListView.value = true
+            calendarControls.setView('list')
+            applyFutureClassRepeatedly()
+            setTimeout(() => {
+              const el = document.querySelector(`.sx__list-day[data-date="${date}"]`)
+              if (el) {
+                scrollToEl(el)
+                el.classList.add('highlight-day')
+                setTimeout(() => {
+                  el.classList.remove('highlight-day')
+                }, 2000)
+              }
+            }, 350)
+          },
           async fetchEvents(range) {
             await fetchDataForRange(range.start, range.end)
             return mapToScheduleXEvents()
@@ -478,6 +508,20 @@
     applyFutureClassRepeatedly()
   }
 
+  /* v8 ignore start -- DOM scroll helper, tested via integration */
+  function scrollToEl(el: Element) {
+    const container = el.closest('.content')
+    if (!container) return
+    const headerHeight = document.querySelector('.cv-header')?.getBoundingClientRect().height ?? 0
+    const top =
+      el.getBoundingClientRect().top -
+      container.getBoundingClientRect().top +
+      container.scrollTop -
+      headerHeight
+    container.scrollTo({ top, behavior: 'smooth' })
+  }
+  /* v8 ignore stop */
+
   function scrollToDay() {
     setTimeout(() => {
       // Re-apply future classes after Schedule-X re-render
@@ -491,7 +535,7 @@
         document.querySelector('.sx__is-today')?.closest('.sx__month-grid-day') ??
         document.querySelector(`.sx__list-day[data-date="${todayStr}"]`)
       if (todayEl) {
-        todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        scrollToEl(todayEl)
         return
       }
 
@@ -502,7 +546,7 @@
           (el) => el.dataset.date! >= todayStr,
         )
       if (nearestDay) {
-        nearestDay.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        scrollToEl(nearestDay)
         return
       }
 
@@ -511,7 +555,7 @@
         document.querySelector(`.sx__month-grid-day[data-date="${firstOfMonth}"]`) ??
         document.querySelector(`.sx__list-day[data-date="${firstOfMonth}"]`)
       if (firstDayEl) {
-        firstDayEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        scrollToEl(firstDayEl)
         return
       }
 
@@ -591,17 +635,43 @@
 
   const SX_BREAKPOINT = 700
   const lastWasSmall = ref(false)
+  const isListView = ref(false)
+
+  function toggleView() {
+    isListView.value = !isListView.value
+    calendarControls.setView(isListView.value ? 'list' : 'month-grid')
+    applyFutureClassRepeatedly()
+    scrollToDay()
+  }
+
+  function updateHeaderHeight() {
+    const header = document.querySelector('.cv-header')
+    if (header) {
+      document.documentElement.style.setProperty(
+        '--header-height',
+        `${header.getBoundingClientRect().height}px`,
+      )
+    }
+  }
 
   function onResize() {
+    updateHeaderHeight()
     const isSmall = window.innerWidth < SX_BREAKPOINT
     if (isSmall === lastWasSmall.value) return
     lastWasSmall.value = isSmall
-    calendarControls.setView(isSmall ? 'list' : 'month-grid')
+    if (isSmall) {
+      calendarControls.setView('list')
+    } else {
+      calendarControls.setView(isListView.value ? 'list' : 'month-grid')
+    }
     applyFutureClassRepeatedly()
   }
 
   onMounted(() => {
-    lastWasSmall.value = window.innerWidth < SX_BREAKPOINT
+    const isSmall = window.innerWidth < SX_BREAKPOINT
+    lastWasSmall.value = isSmall
+    if (isSmall) isListView.value = true
+    updateHeaderHeight()
     window.addEventListener('keydown', handleKeyboard)
     window.addEventListener('resize', onResize)
     window.addEventListener('popstate', onPopState)
@@ -1078,6 +1148,9 @@
     padding: 0.25em 0;
     background-color: #faf5eb;
     border-bottom: 1px solid rgba(194, 65, 12, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
 
   @media (max-width: 1536px) {
@@ -1087,17 +1160,8 @@
     }
   }
 
-  @media (max-width: 767px) {
-    .cv-header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .sx__month-grid-day,
-    .sx__list-day {
-      scroll-margin-top: 48.2px;
-    }
+  .sx__list-day {
+    scroll-margin-top: var(--header-height, 50px);
   }
 
   .cv-header .periodLabel {
@@ -1154,6 +1218,29 @@
     background-color: transparent;
     border-color: rgba(30, 41, 59, 0.1);
     cursor: default;
+  }
+
+  .cv-header button.view-toggle {
+    display: inline-flex;
+  }
+
+  .view-toggle-label {
+    display: none;
+  }
+
+  @media (min-width: 700px) {
+    .cv-header button.view-toggle {
+      margin-right: 1em;
+    }
+
+    .view-toggle-label {
+      display: inline;
+    }
+  }
+
+  .view-toggle-icon {
+    width: 1em;
+    height: 1em;
   }
 
   /* --- Schedule-X: Weekday name strip (banner) --- */
@@ -1280,6 +1367,10 @@
 
   /* --- Schedule-X: Events --- */
 
+  .sx__month-grid-day__events-more {
+    width: 100% !important;
+  }
+
   .sx__month-grid-day__events {
     grid-gap: 2px !important;
   }
@@ -1384,6 +1475,34 @@
 
   .sx__list-day-margin {
     height: 0 !important;
+  }
+
+  /* --- Schedule-X: List view — highlight day (from +x click) --- */
+
+  .sx__list-day.highlight-day {
+    animation: highlightPulse 2s ease-out;
+  }
+
+  @keyframes highlightPulse {
+    0% {
+      background-color: rgba(194, 65, 12, 0.2);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  .dark .sx__list-day.highlight-day {
+    animation: highlightPulseDark 2s ease-out;
+  }
+
+  @keyframes highlightPulseDark {
+    0% {
+      background-color: rgba(194, 65, 12, 0.3);
+    }
+    100% {
+      background-color: transparent;
+    }
   }
 
   /* --- Schedule-X: List view — today triangle --- */

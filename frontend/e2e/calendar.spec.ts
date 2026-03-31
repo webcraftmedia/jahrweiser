@@ -48,8 +48,8 @@ test.describe('Calendar', () => {
     const periodLabel = page.locator('.periodLabel')
     const initialLabel = await periodLabel.textContent()
 
-    // Click previous month button (first nav button with ‹)
-    await page.locator('.cv-header-nav button').first().click()
+    // Click previous month button (second nav button — first is view-toggle)
+    await page.locator('.cv-header-nav button').nth(1).click()
     await expect(periodLabel).not.toHaveText(initialLabel!)
   })
 
@@ -64,9 +64,27 @@ test.describe('Calendar', () => {
     await page.locator('.cv-header-nav button').last().click()
     await expect(periodLabel).not.toHaveText(initialLabel!)
 
-    // Click today button (middle nav button)
-    await page.locator('.cv-header-nav button').nth(1).click()
+    // Click today button (third nav button — after view-toggle and ‹)
+    await page.locator('.cv-header-nav button').nth(2).click()
     await expect(periodLabel).toHaveText(initialLabel!)
+  })
+
+  test('toggle view switches between month-grid and list', async ({ page }) => {
+    await expect(page.locator('.sx__month-grid-event, .sx__list-event').first()).toBeVisible({
+      timeout: 10_000,
+    })
+    // Month-grid should be visible initially on desktop
+    await expect(page.locator('.sx__month-grid-day').first()).toBeVisible()
+
+    // Click view-toggle button
+    await page.locator('.cv-header-nav button.view-toggle').click()
+    await expect(page.locator('.sx__list-day').first()).toBeVisible()
+    await expect(page.locator('.sx__month-grid-day')).not.toBeVisible()
+
+    // Toggle back to month-grid
+    await page.locator('.cv-header-nav button.view-toggle').click()
+    await expect(page.locator('.sx__month-grid-day').first()).toBeVisible()
+    await expect(page.locator('.sx__list-day')).not.toBeVisible()
   })
 
   test('keyboard navigation changes month', async ({ page }) => {

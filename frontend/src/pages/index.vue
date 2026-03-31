@@ -1120,6 +1120,9 @@
     padding: 0.25em 0;
     background-color: #faf5eb;
     border-bottom: 1px solid rgba(194, 65, 12, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
 
   @media (max-width: 1536px) {
@@ -1129,17 +1132,9 @@
     }
   }
 
-  @media (max-width: 767px) {
-    .cv-header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .sx__month-grid-day,
-    .sx__list-day {
-      scroll-margin-top: 48.2px;
-    }
+  .sx__month-grid-day,
+  .sx__list-day {
+    scroll-margin-top: 48.2px;
   }
 
   .cv-header .periodLabel {

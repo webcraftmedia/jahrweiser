@@ -1523,7 +1523,9 @@
     color: #e8ddd0 !important;
   }
 
-  .dark .sx__month-grid-day.is-leading-or-trailing .sx__month-grid-day__header-date:not(.sx__is-today) {
+  .dark
+    .sx__month-grid-day.is-leading-or-trailing
+    .sx__month-grid-day__header-date:not(.sx__is-today) {
     color: #5c524a !important;
   }
 

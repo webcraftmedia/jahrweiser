@@ -632,6 +632,7 @@
     isListView.value = !isListView.value
     calendarControls.setView(isListView.value ? 'list' : 'month-grid')
     applyFutureClassRepeatedly()
+    scrollToDay()
   }
 
   function updateHeaderHeight() {

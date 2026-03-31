@@ -48,8 +48,8 @@ test.describe('Calendar', () => {
     const periodLabel = page.locator('.periodLabel')
     const initialLabel = await periodLabel.textContent()
 
-    // Click previous month button (first nav button with ‹)
-    await page.locator('.cv-header-nav button').first().click()
+    // Click previous month button (second nav button — first is view-toggle)
+    await page.locator('.cv-header-nav button').nth(1).click()
     await expect(periodLabel).not.toHaveText(initialLabel!)
   })
 
@@ -64,8 +64,8 @@ test.describe('Calendar', () => {
     await page.locator('.cv-header-nav button').last().click()
     await expect(periodLabel).not.toHaveText(initialLabel!)
 
-    // Click today button (middle nav button)
-    await page.locator('.cv-header-nav button').nth(1).click()
+    // Click today button (third nav button — after view-toggle and ‹)
+    await page.locator('.cv-header-nav button').nth(2).click()
     await expect(periodLabel).toHaveText(initialLabel!)
   })
 

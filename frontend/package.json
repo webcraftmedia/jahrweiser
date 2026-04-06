@@ -57,7 +57,7 @@
     "@types/node": "^25.5.0",
     "@types/nodemailer": "^7.0.11",
     "@vitest/coverage-v8": "^4.1.0",
-    "eslint": "^10.0.3",
+    "eslint": "^10.2.0",
     "eslint-config-it4c": "^0.12.0",
     "happy-dom": "^20.8.4",
     "prettier": "^3.8.1",

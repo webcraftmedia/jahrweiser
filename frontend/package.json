@@ -30,7 +30,7 @@
     "@schedule-x/calendar": "4.3.1",
     "@schedule-x/calendar-controls": "4.3.1",
     "@schedule-x/events-service": "4.3.1",
-    "@schedule-x/theme-default": "4.3.1",
+    "@schedule-x/theme-default": "4.5.0",
     "@schedule-x/vue": "4.1.0",
     "cross-env": "^10.1.0",
     "email-templates": "^13.0.1",

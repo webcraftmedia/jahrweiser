@@ -44,7 +44,7 @@
     "tsdav": "^2.1.8",
     "vue": "^3.5.30",
     "vue-router": "^5.0.4",
-    "zod": "^4.3.6"
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "@intlify/eslint-plugin-vue-i18n": "^4.3.0",

@@ -30,8 +30,13 @@ pm2 delete $FRONTEND_SERVICE
 ### Config
 export TZ=UTC
 
-### Build
+### Install
 npm ci --omit=dev
+
+### Migrate DB (must run before build/start so the new app sees up-to-date schema)
+npm run db:migrate
+
+### Build
 npm run build
 
 ### Start service

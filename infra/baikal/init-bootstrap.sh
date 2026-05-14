@@ -27,7 +27,7 @@ parameters:
     timezone: 'Europe/Berlin'
     base_uri: ''
     invite_from: 'noreply@example.com'
-    dav_auth_type: 'Digest'
+    dav_auth_type: 'Basic'
     admin_passwordhash: '$ADMIN_HASH'
     auth_realm: 'BaikalDAV'
     failed_access_message: 'user %u authentication failure for Baikal'

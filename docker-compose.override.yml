@@ -11,7 +11,7 @@ services:
       - NODE_ENV="development"
       - PORT=3000
       # - DEBUG=true
-      - DAV_URL=http://baikal/dav.php
+      - DAV_URL=http://baikal
       - DAV_USERNAME=admin
       - DAV_PASSWORD=admin
     ports:
@@ -40,6 +40,7 @@ services:
     volumes:
       - baikal_config:/var/www/baikal/config
       - baikal_data:/var/www/baikal/Specific
+      - ./infra/baikal/init-bootstrap.sh:/docker-entrypoint.d/99-bootstrap.sh:ro
     healthcheck:
       test: ['CMD-SHELL', 'test -e /var/run/nginx.pid']
       interval: 5s

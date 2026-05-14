@@ -43,10 +43,11 @@ the app writes automatically.
    npm run db:migrate
    ```
 
-4. First-time Baikal setup (one-time only): open
-   <http://localhost:8088/admin/install/>, set the admin password to `admin`
-   (matches `DAV_PASSWORD` in the override), accept SQLite defaults. The
-   `baikal_data` volume persists this — subsequent startups skip the wizard.
+4. Baikal is auto-provisioned by `infra/baikal/init-bootstrap.sh` on first
+   start: the install wizard is skipped, the SQLite schema is initialized,
+   and a DAV principal `admin` (password `admin`) with a default addressbook
+   is created. The `baikal_data` named volume persists this — to start over,
+   `docker compose down -v` and `docker compose up -d`.
 
 5. Seed test data:
 

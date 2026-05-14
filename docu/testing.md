@@ -44,7 +44,8 @@ docker compose up -d
 cd frontend
 npm run db:migrate
 
-# 3. One-time Baikal install (see docu/database.md, step 4)
+# 3. Baikal is auto-provisioned at first container start (see docu/database.md, step 4).
+#    To force a clean re-provision: docker compose down -v && docker compose up -d
 
 # 4. Run the frontend in dev with env vars pointing at the local stack
 DAV_URL=http://localhost:8088/dav.php \

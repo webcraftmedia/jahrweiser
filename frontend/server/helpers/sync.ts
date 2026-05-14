@@ -185,10 +185,13 @@ export async function syncDavToSidecar(davConfig: DAV_CONFIG): Promise<SyncResul
   const account = createCardDAVAccount(davConfig)
   const fetchHeaders = headers(account)
 
-  const addressbooks = await fetchAddressBooks({ account, headers: fetchHeaders })
-  const addressbook = addressbooks[0]
-  if (!addressbook) {
-    throw new Error('No addressbook found on the DAV server.')
+  const discovered = await fetchAddressBooks({ account, headers: fetchHeaders })
+  // Some DAV servers (notably fresh Baikal installs) don't expose principal
+  // discovery cleanly. Fall back to the configured homeUrl, which by
+  // convention points at the default addressbook.
+  const addressbook = discovered[0] ?? { url: account.homeUrl ?? '' }
+  if (!addressbook.url) {
+    throw new Error('No addressbook found on the DAV server and no homeUrl configured.')
   }
   const collectionUrl = addressbook.url
 

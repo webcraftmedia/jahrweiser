@@ -93,7 +93,7 @@ export default defineNuxtConfig({
     // DAV
     DAV_USERNAME: process.env.DAV_USERNAME || 'admin',
     DAV_PASSWORD: process.env.DAV_PASSWORD || 'admin',
-    DAV_URL: process.env.DAV_URL || 'http://localhost:8088/dav.php',
+    DAV_URL: process.env.DAV_URL || 'http://localhost:8088',
     DAV_URL_CARD: process.env.DAV_URL_CARD || '',
     // Database (auth sidecar)
     DB_HOST: process.env.DB_HOST || 'localhost',

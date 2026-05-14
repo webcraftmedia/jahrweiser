@@ -41,7 +41,6 @@ services:
       - baikal_config:/var/www/baikal/config
       - baikal_data:/var/www/baikal/Specific
       - ./infra/baikal/init-bootstrap.sh:/docker-entrypoint.d/99-bootstrap.sh:ro
-      - ./infra/baikal/provision-dav-user.php:/tmp/provision-dav-user.php:ro
     healthcheck:
       test: ['CMD-SHELL', 'test -e /var/run/nginx.pid']
       interval: 5s

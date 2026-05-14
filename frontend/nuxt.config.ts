@@ -98,6 +98,8 @@ export default defineNuxtConfig({
     DB_USER: process.env.DB_USER || 'jahrweiser',
     DB_PASSWORD: process.env.DB_PASSWORD || 'jahrweiser',
     DB_NAME: process.env.DB_NAME || 'jahrweiser',
+    // Bearer secret for POST /api/admin/sync-now (crontab trigger)
+    SYNC_SECRET: process.env.SYNC_SECRET || '',
     // SMTP
     SMTP_HOST: process.env.SMTP_HOST || 'localhost',
     SMTP_PORT: (process.env.SMTP_PORT && parseInt(process.env.SMTP_PORT)) || 1025,

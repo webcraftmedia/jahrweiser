@@ -1,0 +1,51 @@
+import { randomUUID } from 'node:crypto'
+
+import { deleteVCard, fetchAddressBooks, fetchVCards } from 'tsdav'
+
+import { useDb } from '../server/db'
+import { loginTokens, sessions, syncState, userTags, users } from '../server/db/schema'
+import { createCardDAVAccount, headers } from '../server/helpers/dav'
+
+import { config } from './tools/config'
+import { assertLocalEnv } from './tools/production-guard'
+
+assertLocalEnv({ davUrl: config.DAV_URL, dbHost: config.DB_HOST })
+
+const account = createCardDAVAccount({
+  DAV_USERNAME: config.DAV_USERNAME,
+  DAV_PASSWORD: config.DAV_PASSWORD,
+  DAV_URL: config.DAV_URL,
+  DAV_URL_CARD: config.DAV_URL_CARD,
+})
+const fetchHeaders = headers(account)
+
+console.warn(
+  `[seed-reset] wiping DAV addressbook + MariaDB sidecar (correlationId=${randomUUID()})`,
+)
+
+const addressbooks = await fetchAddressBooks({ account, headers: fetchHeaders })
+let davDeleted = 0
+for (const ab of addressbooks) {
+  const vcards = await fetchVCards({ addressBook: ab, headers: fetchHeaders })
+  for (const vc of vcards) {
+    await deleteVCard({
+      vCard: { url: vc.url, etag: vc.etag },
+      headers: fetchHeaders,
+    })
+    davDeleted += 1
+  }
+}
+console.warn(`[seed-reset] DAV: deleted ${davDeleted} VCard(s).`)
+
+const db = useDb()
+// FK CASCADE handles dependents, but explicit order makes intent clear
+await db.delete(sessions)
+await db.delete(loginTokens)
+await db.delete(userTags)
+await db.delete(users)
+await db.delete(syncState)
+console.warn(
+  '[seed-reset] MariaDB: truncated sessions, login_tokens, user_tags, users, sync_state.',
+)
+
+process.exit(0)

@@ -17,13 +17,12 @@ interface DbConfig {
 }
 
 function readConfig(): DbConfig {
-  const cfg = useRuntimeConfig()
   return {
-    host: cfg.DB_HOST,
-    port: Number(cfg.DB_PORT),
-    user: cfg.DB_USER,
-    password: cfg.DB_PASSWORD,
-    database: cfg.DB_NAME,
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
+    user: process.env.DB_USER || 'jahrweiser',
+    password: process.env.DB_PASSWORD || 'jahrweiser',
+    database: process.env.DB_NAME || 'jahrweiser',
   }
 }
 

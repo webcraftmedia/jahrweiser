@@ -33,7 +33,7 @@ services:
   # Isolated local DAV server for development and E2E tests.
   # NEVER exposed in production docker-compose.yml.
   baikal:
-    image: ckulka/baikal:0.10-nginx
+    image: ckulka/baikal:0.10.1-nginx
     restart: unless-stopped
     ports:
       - 8088:80

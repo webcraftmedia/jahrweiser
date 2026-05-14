@@ -27,6 +27,7 @@
     "cli:sync:run": "npx tsx cli/sync-run.ts",
     "cli:seed:reset": "npx tsx cli/seed-reset.ts",
     "cli:seed:demo": "npx tsx cli/seed-demo.ts",
+    "cli:baikal:bootstrap": "npx tsx cli/baikal-bootstrap.ts",
     "cli:dav:purge-auth-xprops": "npx tsx cli/dav-purge-auth-xprops.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "npx tsx scripts/db-migrate.ts",

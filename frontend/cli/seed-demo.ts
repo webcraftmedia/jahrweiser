@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 
 import ICAL from 'ical.js'
@@ -9,6 +10,11 @@ import { config } from './tools/config'
 import { assertLocalEnv } from './tools/production-guard'
 
 assertLocalEnv({ davUrl: config.DAV_URL, dbHost: config.DB_HOST })
+
+// Make sure Baikal has a DAV principal + addressbook before we try to PUT VCards.
+// This is a no-op if already provisioned.
+console.warn('[seed-demo] ensuring Baikal DAV user is provisioned')
+execSync('npm run --silent cli:baikal:bootstrap', { stdio: 'inherit' })
 
 interface SeedUser {
   fullname: string

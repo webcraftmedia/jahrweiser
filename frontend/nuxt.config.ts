@@ -86,12 +86,15 @@ export default defineNuxtConfig({
     }, */
   },
   runtimeConfig: {
-    // The private keys which are only available within server-side
+    // The private keys which are only available within server-side.
+    // Defaults are tuned for the local docker-compose stack so `npm run dev`
+    // and the CLIs work out-of-the-box without a .env file. Production
+    // deployments MUST override these (see the ready-hook below).
     // DAV
-    DAV_USERNAME: process.env.DAV_USERNAME,
-    DAV_PASSWORD: process.env.DAV_PASSWORD,
-    DAV_URL: process.env.DAV_URL,
-    DAV_URL_CARD: process.env.DAV_URL_CARD,
+    DAV_USERNAME: process.env.DAV_USERNAME || 'admin',
+    DAV_PASSWORD: process.env.DAV_PASSWORD || 'admin',
+    DAV_URL: process.env.DAV_URL || 'http://localhost:8088/dav.php',
+    DAV_URL_CARD: process.env.DAV_URL_CARD || '',
     // Database (auth sidecar)
     DB_HOST: process.env.DB_HOST || 'localhost',
     DB_PORT: (process.env.DB_PORT && parseInt(process.env.DB_PORT)) || 3306,
@@ -99,7 +102,7 @@ export default defineNuxtConfig({
     DB_PASSWORD: process.env.DB_PASSWORD || 'jahrweiser',
     DB_NAME: process.env.DB_NAME || 'jahrweiser',
     // Bearer secret for POST /api/admin/sync-now (crontab trigger)
-    SYNC_SECRET: process.env.SYNC_SECRET || '',
+    SYNC_SECRET: process.env.SYNC_SECRET || 'dev-sync-secret',
     // SMTP
     SMTP_HOST: process.env.SMTP_HOST || 'localhost',
     SMTP_PORT: (process.env.SMTP_PORT && parseInt(process.env.SMTP_PORT)) || 1025,
@@ -121,11 +124,19 @@ export default defineNuxtConfig({
   },
   hooks: {
     ready() {
+      // Production must explicitly set DAV credentials — the dev defaults
+      // point at localhost and would never work in prod anyway. In dev/test
+      // the defaults from runtimeConfig kick in.
       if (
-        process.env.NODE_ENV !== 'test' &&
-        (!process.env.DAV_USERNAME || !process.env.DAV_PASSWORD || !process.env.DAV_URL)
+        process.env.NODE_ENV === 'production' &&
+        (!process.env.DAV_USERNAME ||
+          !process.env.DAV_PASSWORD ||
+          !process.env.DAV_URL ||
+          !process.env.SYNC_SECRET)
       ) {
-        throw new Error('Not all required .env values are defined!')
+        throw new Error(
+          'Production requires DAV_USERNAME, DAV_PASSWORD, DAV_URL, SYNC_SECRET to be set.',
+        )
       }
     },
   },

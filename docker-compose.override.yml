@@ -25,7 +25,7 @@ services:
       - ./frontend:/app
     depends_on:
       baikal:
-        condition: service_healthy
+        condition: service_started
 
   # ######################################################
   # BAIKAL (dev/test DAV server) #########################
@@ -41,7 +41,7 @@ services:
       - baikal_config:/var/www/baikal/config
       - baikal_data:/var/www/baikal/Specific
     healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost/']
+      test: ['CMD-SHELL', 'test -e /var/run/nginx.pid']
       interval: 5s
       timeout: 3s
       retries: 20

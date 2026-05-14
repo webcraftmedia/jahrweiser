@@ -92,6 +92,12 @@ export default defineNuxtConfig({
     DAV_PASSWORD: process.env.DAV_PASSWORD,
     DAV_URL: process.env.DAV_URL,
     DAV_URL_CARD: process.env.DAV_URL_CARD,
+    // Database (auth sidecar)
+    DB_HOST: process.env.DB_HOST || 'localhost',
+    DB_PORT: (process.env.DB_PORT && parseInt(process.env.DB_PORT)) || 3306,
+    DB_USER: process.env.DB_USER || 'jahrweiser',
+    DB_PASSWORD: process.env.DB_PASSWORD || 'jahrweiser',
+    DB_NAME: process.env.DB_NAME || 'jahrweiser',
     // SMTP
     SMTP_HOST: process.env.SMTP_HOST || 'localhost',
     SMTP_PORT: (process.env.SMTP_PORT && parseInt(process.env.SMTP_PORT)) || 1025,

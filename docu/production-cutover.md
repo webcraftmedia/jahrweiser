@@ -9,12 +9,26 @@ final purge step. The intermediate steps are zero-downtime.
 
 ### Phase 1 — Stand up the sidecar (no behavior change)
 
-1. Provision MariaDB next to the app. Set `DB_HOST/PORT/USER/PASSWORD/NAME` in
-   the deployment environment.
-2. Set `SYNC_SECRET` to a freshly generated random string. Pin it in the
-   crontab environment too.
+1. Provision MariaDB next to the app. Create the application database and
+   user (one-time, idempotent):
+
+   ```sh
+   DB_PASSWORD='strong-prod-secret' \
+   DB_HOST=db.internal \
+   DB_ADMIN_USER=root \
+     ./infra/db/setup.sh
+   ```
+
+   This creates database `jahrweiser` (or `$DB_NAME`) and user
+   `jahrweiser@'%'` (or `$DB_USER`) with full privileges on it. See
+   `infra/db/setup.sql` for the canonical SQL.
+
+2. Set `DB_HOST/PORT/USER/PASSWORD/NAME` and `SYNC_SECRET` in the deployment
+   environment (e.g., `frontend/.env` on the prod box). `SYNC_SECRET` should
+   be a freshly generated random string; pin it in the crontab environment too.
 3. Deploy the new app version. **Do not** schedule the crontab yet.
-4. Run migrations: `npm run db:migrate`.
+4. Migrations run automatically on deploy via `.github/webhooks/deploy.sh`.
+   For a manual run: `cd frontend && npm run db:migrate`.
 
 At this point the new code runs but the sidecar is empty. Login still falls
 through to DAV via the lazy-fallback path; it works exactly like before, just

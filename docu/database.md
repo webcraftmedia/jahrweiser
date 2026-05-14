@@ -70,6 +70,23 @@ the app writes automatically.
 Production deployments must override `DB_PASSWORD`, `DB_ROOT_PASSWORD`, and
 `SYNC_SECRET`.
 
+## One-time DB bootstrap (production / fresh server)
+
+For local dev the docker-compose `mariadb` service auto-creates the database
+and user from env vars. On a managed MariaDB / a fresh server, run the
+bootstrap script once:
+
+```sh
+DB_PASSWORD='strong-prod-secret' \
+DB_ADMIN_USER=root \
+  ./infra/db/setup.sh
+```
+
+This creates `jahrweiser` database and `jahrweiser@'%'` user (overridable via
+`$DB_NAME`/`$DB_USER`). See `infra/db/setup.sql` for the canonical SQL — you
+can also apply it manually with `envsubst` + `mysql` (or hand-edit the
+placeholders).
+
 ## Schema and migrations
 
 Schema lives in `frontend/server/db/schema/`. Each table is in its own file;

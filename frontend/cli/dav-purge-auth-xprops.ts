@@ -17,7 +17,13 @@ import { assertLocalEnv } from './tools/production-guard'
 
 const TARGET_PROPS = [X_LOGIN_TOKEN, X_LOGIN_REQUEST_TIME, X_LOGIN_TIME, X_LOGIN_DISABLED, X_ROLE]
 
-assertLocalEnv({ davUrl: config.DAV_URL, dbHost: config.DB_HOST })
+// One-way migration: removes auth-related X-properties from every VCard.
+// Stay paranoid even when explicitly running against prod.
+assertLocalEnv({
+  davUrl: config.DAV_URL,
+  dbHost: config.DB_HOST,
+  extraConfirmEnvVar: 'I_HAVE_BACKED_UP_DAV',
+})
 
 const account = createCardDAVAccount(config)
 const fetchHeaders = headers(account)

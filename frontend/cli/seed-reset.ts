@@ -9,7 +9,13 @@ import { createCardDAVAccount, headers } from '../server/helpers/dav'
 import { config } from './tools/config'
 import { assertLocalEnv } from './tools/production-guard'
 
-assertLocalEnv({ davUrl: config.DAV_URL, dbHost: config.DB_HOST })
+// This CLI deletes every VCard and every calendar event in the addressbook
+// + truncates the sidecar — single-layer prod-guard isn't enough.
+assertLocalEnv({
+  davUrl: config.DAV_URL,
+  dbHost: config.DB_HOST,
+  extraConfirmEnvVar: 'I_REALLY_WANT_TO_WIPE_PRODUCTION_DAV',
+})
 
 const account = createCardDAVAccount({
   DAV_USERNAME: config.DAV_USERNAME,

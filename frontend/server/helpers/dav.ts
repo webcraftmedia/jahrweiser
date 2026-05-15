@@ -6,7 +6,6 @@ import ICAL from 'ical.js'
 import {
   addressBookQuery,
   calendarQuery,
-  createVCard,
   DAVNamespaceShort,
   fetchCalendarObjects,
   fetchCalendars,
@@ -158,9 +157,14 @@ async function findUserByProperty(
     return false
   }
 
+  const data = users[0]!.props?.addressData
+  if (typeof data !== 'string' || data.length === 0) {
+    return false
+  }
+
   return {
     user: users[0]!,
-    vcard: new ICAL.Component(ICAL.parse(users[0]!.props?.addressData)),
+    vcard: new ICAL.Component(ICAL.parse(data)),
   }
 }
 
@@ -181,16 +185,23 @@ export const saveUser = async (account: DAVAccount, user: DAVResponse, vcard: IC
     fetchOptions: getFetchOptions(),
   })
 
-export const createUser = async (account: DAVAccount, vcard: ICAL.Component) =>
-  createVCard({
-    addressBook: {
-      url: account.homeUrl!,
+export const createUser = async (account: DAVAccount, vcard: ICAL.Component) => {
+  const filename =
+    createHash('sha256')
+      .update(vcard.toString() + String(new Date().getTime()))
+      .digest('hex') + '.vcf'
+  const url = account.homeUrl! + filename
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      ...headers(account),
+      'Content-Type': 'text/vcard; charset=utf-8',
     },
-    filename:
-      createHash('sha256')
-        .update(vcard.toString() + String(new Date().getTime()))
-        .digest('hex') + '.vcf',
-    vCardString: vcard.toString(),
-    headers: headers(account),
-    fetchOptions: getFetchOptions(),
+    body: vcard.toString(),
+    signal: AbortSignal.timeout(DAV_TIMEOUT_MS),
   })
+  if (!response.ok) {
+    throw new Error(`PUT ${url} failed with HTTP ${response.status} ${response.statusText}`)
+  }
+  return response
+}

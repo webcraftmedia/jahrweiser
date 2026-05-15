@@ -12,6 +12,24 @@ services:
       - 1080:1080
       - 1025:1025
 
+  mariadb:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-jahrweiser}
+      MARIADB_USER: ${DB_USER:-jahrweiser}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-jahrweiser}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpw}
+    ports:
+      - 3306:3306
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   frontend:
     # name the image so that it cannot be found in a DockerHub repository, otherwise it will not be built locally from the 'dockerfile' but pulled from there
     image: webcraftmedia/jahrweiser:local-production
@@ -22,3 +40,14 @@ services:
       - 3000:3000
     environment:
       - NODE_ENV="production"
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-jahrweiser}
+      - DB_USER=${DB_USER:-jahrweiser}
+      - DB_PASSWORD=${DB_PASSWORD:-jahrweiser}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+volumes:
+  mariadb_data:

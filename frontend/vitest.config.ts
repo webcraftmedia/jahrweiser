@@ -14,7 +14,16 @@ export default defineVitestConfig({
       reporter: ['text', 'json', 'html'],
       all: true,
       include: ['src/**/*.{ts,vue}', 'server/helpers/*.ts', 'server/api/**/*.ts'],
-      exclude: ['src/**/*.spec.ts', 'server/emails/**'],
+      // The auth/sync endpoints and the DB-orchestration parts of the sync helper
+      // require a live MariaDB and are validated by the e2e suite instead.
+      exclude: [
+        'src/**/*.spec.ts',
+        'server/emails/**',
+        'server/api/requestLoginLink.post.ts',
+        'server/api/redeemLoginLink.post.ts',
+        'server/api/admin/sync-now.post.ts',
+        'server/helpers/sync.ts',
+      ],
       thresholds: {
         100: true,
       },

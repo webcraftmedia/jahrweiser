@@ -1,0 +1,96 @@
+name: "frontend:test:e2e full-stack against real backend"
+
+on: push
+
+jobs:
+  files-changed:
+    name: Detect File Changes - frontend-test-e2e-full-stack
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.changes.outputs.filter }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.1.7
+      - name: Check for relevant file changes
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        id: changes
+        with:
+          token: ${{ github.token }}
+          filters: |
+            filter:
+              - 'frontend/**/*'
+              - 'infra/**/*'
+              - 'docker-compose.yml'
+              - 'docker-compose.override.yml'
+              - '.github/workflows/*'
+          list-files: shell
+
+  e2e-full-stack:
+    if: needs.files-changed.outputs.changes == 'true'
+    name: E2E Full-Stack - Frontend + Backend Stack
+    needs: files-changed
+    runs-on: ubuntu-latest
+    env:
+      WORKING_DIRECTORY: ./frontend
+      SYNC_SECRET: dev-sync-secret
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.1.7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: frontend/.tool-versions
+
+      - name: Env File
+        run: cp .env.example .env
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      # Bring up only the backend services. The frontend is started by
+      # Playwright's webServer (npm run dev) so we don't need to build the
+      # frontend docker image in CI.
+      - name: Start backend stack (mariadb + baikal + maildev)
+        run: docker compose up -d mariadb baikal mailserver
+
+      - name: Wait for MariaDB and Baikal to be ready
+        run: |
+          for i in $(seq 1 60); do
+            mariadb_ok=$(docker compose ps mariadb --format '{{.Health}}' || true)
+            baikal_ok=$(docker compose ps baikal --format '{{.Health}}' || true)
+            if [ "$mariadb_ok" = "healthy" ] && [ "$baikal_ok" = "healthy" ]; then
+              echo "stack ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Stack did not become healthy in time"
+          docker compose ps
+          docker compose logs --tail 200
+          exit 1
+
+      - name: Apply DB migrations
+        run: npm run db:migrate
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: Run full-stack E2E tests
+        run: npm run test:e2e:full-stack
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report-full-stack
+          path: frontend/playwright-report/
+          retention-days: 30
+
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose logs --tail 300

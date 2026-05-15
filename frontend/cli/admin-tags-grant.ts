@@ -8,9 +8,11 @@ import {
 
 import { config } from './tools/config'
 import { check as checkEmail } from './tools/email'
+import { assertLocalEnv } from './tools/production-guard'
 
 const email = process.argv[2]
 checkEmail(email)
+assertLocalEnv({ davUrl: config.DAV_URL, dbHost: config.DB_HOST })
 
 // allows for arguments to be space and comma separated
 const tags = process.argv.slice(3).join(',').split(',')

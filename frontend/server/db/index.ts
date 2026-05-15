@@ -39,9 +39,7 @@ export function useDb() {
   if (db) return db
   const cfg = readConfig()
   pool = mysql.createPool({
-    ...(cfg.socket
-      ? { socketPath: cfg.socket }
-      : { host: cfg.host, port: cfg.port }),
+    ...(cfg.socket ? { socketPath: cfg.socket } : { host: cfg.host, port: cfg.port }),
     user: cfg.user,
     password: cfg.password,
     database: cfg.database,

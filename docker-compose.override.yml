@@ -11,6 +11,11 @@ services:
       - NODE_ENV="development"
       - PORT=3000
       # - DEBUG=true
+      - DAV_URL=http://baikal
+      - DAV_USERNAME=admin
+      - DAV_PASSWORD=admin
+      - SMTP_HOST=mailserver
+      - SMTP_PORT=1025
     ports:
       - 3000:3000
     volumes:
@@ -20,7 +25,32 @@ services:
       #- frontend_dot_nuxt:/app/.nuxt
       # bind the local folder to the docker to allow live reload
       - ./frontend:/app
+    depends_on:
+      baikal:
+        condition: service_started
 
-#volumes:
+  # ######################################################
+  # BAIKAL (dev/test DAV server) #########################
+  # ######################################################
+  # Isolated local DAV server for development and E2E tests.
+  # NEVER exposed in production docker-compose.yml.
+  baikal:
+    image: ckulka/baikal:0.10.1-nginx
+    restart: unless-stopped
+    ports:
+      - 8088:80
+    volumes:
+      - baikal_config:/var/www/baikal/config
+      - baikal_data:/var/www/baikal/Specific
+      - ./infra/baikal/init-bootstrap.sh:/docker-entrypoint.d/99-bootstrap.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'test -e /var/run/nginx.pid']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  baikal_config:
+  baikal_data:
 #  frontend_node_modules:
 #  frontend_dot_nuxt:

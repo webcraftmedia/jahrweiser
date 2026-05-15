@@ -7,7 +7,6 @@ import {
   fetchCalendarObjects,
   fetchCalendars as tsdavFetchCalendars,
   updateVCard,
-  createVCard as tsdavCreateVCard,
 } from 'tsdav'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -215,6 +214,37 @@ describe('dav helpers', () => {
       const result = await findUserByEmail(account, 'notfound@example.com')
       expect(result).toBe(false)
     })
+
+    it('returns false when result has missing or empty addressData', async () => {
+      // Hits the defensive `if (typeof data !== 'string' || data.length === 0)`
+      // branch — Baikal can return a single hit but with no `address-data`
+      // property in the propstat, which would crash ICAL.parse otherwise.
+      const account = createCardDAVAccount(config)
+
+      // Case 1: addressData missing entirely
+      vi.mocked(addressBookQuery).mockResolvedValueOnce([
+        {
+          href: '/x.vcf',
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          props: { getetag: '"etag123"' },
+        },
+      ])
+      await expect(findUserByEmail(account, 'broken@example.com')).resolves.toBe(false)
+
+      // Case 2: addressData is an empty string
+      vi.mocked(addressBookQuery).mockResolvedValueOnce([
+        {
+          href: '/x.vcf',
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          props: { addressData: '', getetag: '"etag123"' },
+        },
+      ])
+      await expect(findUserByEmail(account, 'empty@example.com')).resolves.toBe(false)
+    })
   })
 
   describe('findUserByToken', () => {
@@ -272,21 +302,33 @@ describe('dav helpers', () => {
   })
 
   describe('createUser', () => {
-    it('calls createVCard with hash filename', async () => {
-      vi.mocked(tsdavCreateVCard).mockResolvedValue({} as never)
+    it('PUTs the vcard to a hash-named .vcf in the addressbook', async () => {
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(new Response(null, { status: 201 }))
       const account = createCardDAVAccount(config)
       const vcard = createMockVCard({ email: 'new@example.com' })
       await createUser(account, vcard)
-      expect(tsdavCreateVCard).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^https:\/\/dav\.example\.com\/dav\.php\/addressbooks\/testuser\/default\/[a-f0-9]{64}\.vcf$/,
+        ),
         expect.objectContaining({
-          addressBook: {
-            url: 'https://dav.example.com/dav.php/addressbooks/testuser/default/',
-          },
-          filename: expect.stringMatching(/^[a-f0-9]{64}\.vcf$/),
-          vCardString: vcard.toString(),
-          headers: headers(account),
+          method: 'PUT',
+          body: vcard.toString(),
         }),
       )
+      fetchSpy.mockRestore()
+    })
+
+    it('throws when the PUT response is non-2xx', async () => {
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(new Response('forbidden', { status: 403, statusText: 'Forbidden' }))
+      const account = createCardDAVAccount(config)
+      const vcard = createMockVCard({ email: 'new@example.com' })
+      await expect(createUser(account, vcard)).rejects.toThrow(/HTTP 403/)
+      fetchSpy.mockRestore()
     })
   })
 })

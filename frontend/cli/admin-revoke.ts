@@ -1,25 +1,26 @@
-import { createCardDAVAccount, findUserByEmail, saveUser, X_ROLE } from '../server/helpers/dav'
+import { eq } from 'drizzle-orm'
+
+import { useDb } from '../server/db'
+import { users } from '../server/db/schema'
 
 import { config } from './tools/config'
 import { check as checkEmail } from './tools/email'
+import { assertLocalEnv } from './tools/production-guard'
 
 const email = process.argv[2]
 
 checkEmail(email)
+assertLocalEnv({ davUrl: config.DAV_URL, dbHost: config.DB_HOST })
 
-console.log(`Revoking admin priviledge for ${email}.`)
+const normalizedEmail = email.toLowerCase()
+const db = useDb()
 
-const cardDavAccount = createCardDAVAccount(config)
-const query = await findUserByEmail(cardDavAccount, email)
-
-if (!query) {
-  console.error('User with given email not found in dav endpoint')
+const row = (await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1))[0]
+if (!row) {
+  console.error(`User with email ${normalizedEmail} not found in sidecar.`)
   process.exit(1)
 }
 
-const { user, vcard } = query
-vcard.removeProperty(X_ROLE)
-
-await saveUser(cardDavAccount, user, vcard)
-
+await db.update(users).set({ role: 'user' }).where(eq(users.uid, row.uid))
+console.warn(`Revoked admin role from ${normalizedEmail}.`)
 process.exit(0)

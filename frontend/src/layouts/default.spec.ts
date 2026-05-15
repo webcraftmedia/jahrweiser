@@ -1,6 +1,8 @@
 import { renderSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import Layout from './default.vue'
+
 const mockZoom = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ref, computed } = require('vue')
@@ -17,8 +19,6 @@ const mockZoom = vi.hoisted(() => {
 // for #imports / runtime composables; for files in src/composables we go
 // straight at the module.
 vi.mock('~/composables/useZoom', () => ({ useZoom: () => mockZoom }))
-
-import Layout from './default.vue'
 
 describe('Layout: Default', () => {
   beforeEach(() => {

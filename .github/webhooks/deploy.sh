@@ -1,4 +1,7 @@
 #!/bin/sh
+# Abort on any failure — we don't want to start a new app version with a
+# half-applied DB migration or an aborted build.
+set -e
 
 # Find current directory & configure paths
 SCRIPT_PATH=$(realpath $0)

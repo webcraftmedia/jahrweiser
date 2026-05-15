@@ -9,20 +9,29 @@ let pool: mysql.Pool | null = null
 let db: MySql2Database<typeof schema> | null = null
 
 interface DbConfig {
-  host: string
-  port: number
   user: string
   password: string
   database: string
+  socket?: string
+  host?: string
+  port?: number
 }
 
 function readConfig(): DbConfig {
-  return {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
+  const common = {
     user: process.env.DB_USER || 'jahrweiser',
     password: process.env.DB_PASSWORD || 'jahrweiser',
     database: process.env.DB_NAME || 'jahrweiser',
+  }
+  // DB_SOCKET takes priority — Alpine MariaDB defaults to unix-socket-only,
+  // and an app user GRANTed for '@localhost' can only authenticate via socket.
+  if (process.env.DB_SOCKET) {
+    return { ...common, socket: process.env.DB_SOCKET }
+  }
+  return {
+    ...common,
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
   }
 }
 
@@ -30,8 +39,7 @@ export function useDb() {
   if (db) return db
   const cfg = readConfig()
   pool = mysql.createPool({
-    host: cfg.host,
-    port: cfg.port,
+    ...(cfg.socket ? { socketPath: cfg.socket } : { host: cfg.host, port: cfg.port }),
     user: cfg.user,
     password: cfg.password,
     database: cfg.database,

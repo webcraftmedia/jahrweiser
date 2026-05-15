@@ -87,6 +87,9 @@
             >
               {{ $t('components.Header.admin') }}
             </NuxtLink>
+            <NuxtLink to="/settings" class="nav-link hover:text-sienna transition-colors">
+              {{ $t('components.Header.settings') }}
+            </NuxtLink>
             <button class="nav-link hover:text-sienna transition-colors" @click="logout">
               {{ $t('components.Header.logout') }}
             </button>
@@ -120,6 +123,13 @@
               @click="toggleMobileMenu"
             >
               {{ $t('components.Header.admin') }}
+            </NuxtLink>
+            <NuxtLink
+              to="/settings"
+              class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
+              @click="toggleMobileMenu"
+            >
+              {{ $t('components.Header.settings') }}
             </NuxtLink>
             <button
               class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"

@@ -65,3 +65,15 @@ curl -X POST -H "Authorization: Bearer $SYNC_SECRET" \
 ```sh
 openssl rand -hex 32
 ```
+
+## Related: Weekly newsletter cron
+
+The weekly newsletter (see `docu/newsletter.md`) is dispatched by a separate
+cron entry on Sundays at 18:00, using the same `SYNC_SECRET`:
+
+```cron
+0 18 * * 0 . /etc/jahrweiser-sync.env && curl -sS -X POST \
+  -H "Authorization: Bearer $SYNC_SECRET" \
+  https://app.example.com/api/admin/send-newsletter \
+  >> /var/log/jahrweiser-newsletter.log 2>&1
+```

@@ -142,6 +142,35 @@ crontab -l
 Letzte Zeile bestätigt dass der Eintrag drin ist.
 
 
+## 8b) Crontab für wöchentlichen Newsletter (Sonntag 18:00)
+
+`/etc/jahrweiser-sync.env` aus Schritt 8 wird wiederverwendet (`SYNC_SECRET`
+ist derselbe). Eintrag anhängen:
+
+```
+crontab -l 2>/dev/null > /tmp/cron.bak
+echo '0 18 * * 0 . /etc/jahrweiser-sync.env && curl -sS -X POST -H "Authorization: Bearer $SYNC_SECRET" https://gg-g.info/api/admin/send-newsletter >> /var/log/jahrweiser-newsletter.log 2>&1' >> /tmp/cron.bak
+crontab /tmp/cron.bak
+crontab -l
+```
+
+Phase 1 (Opt-in): in `.env` NICHTS extra setzen — nur Nutzer, die sich aktiv
+in `/settings` anmelden, bekommen Mails. Für Phase 2 (Opt-out für alle)
+später ergänzen:
+
+```
+NEWSLETTER_DEFAULT_OPT_IN=true
+```
+
+Manueller Probe-Versand zur Verifikation:
+
+```
+curl -X POST -H "Authorization: Bearer ERSETZE_MICH_MIT_DEM_SYNC_SECRET" https://gg-g.info/api/admin/send-newsletter
+```
+
+Antwort sollte `{"sent": N, "skipped": 0, "errors": 0, ...}` sein.
+
+
 ## 9) Login testen (eingeloggter Browser)
 
 Ein bestehender User loggt sich ein → Mail kommt → Token funktioniert → eingeloggt.

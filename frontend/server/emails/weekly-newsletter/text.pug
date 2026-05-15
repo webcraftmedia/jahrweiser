@@ -1,0 +1,29 @@
+!= t('emails.weeklyNewsletter.intro')
+
+if days.length === 0
+  != t('emails.weeklyNewsletter.noEvents')
+else
+  each day in days
+    |
+    = day.heading
+    | ────────────────────────
+    each ev in day.events
+      |
+      | [#{ev.calendar}] #{ev.title}
+      if !ev.allDay
+        |   #{ev.timeLabel}
+      if ev.location
+        |   #{ev.location}
+      |   #{ev.detailUrl}
+
+|
+
+!= t('emails.weeklyNewsletter.openCalendar') + ": " + ORGANIZATION_URL
+
+|
+
+!= "—"
+
+!= t('emails.weeklyNewsletter.footerHint')
+!= t('emails.weeklyNewsletter.settingsLink') + ": " + settingsUrl
+!= t('emails.weeklyNewsletter.unsubscribe') + ": " + unsubscribeUrl

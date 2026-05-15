@@ -63,7 +63,7 @@ exports[`Layout: Default > renders with default zoom (no inline style) 1`] = `
           <div data-v-c970699f="" id="navbar-desktop" class="hidden md:block text-right text-navy dark:text-ivory font-body">
             <p data-v-c970699f="">components.Header.welcome <b data-v-c970699f=""></b></p>
             <div data-v-c970699f="" class="space-x-4">
-              <!--v-if--><button data-v-c970699f="" class="nav-link hover:text-sienna transition-colors">components.Header.logout</button>
+              <!--v-if--><a data-v-c970699f="" href="/settings" class="nav-link hover:text-sienna transition-colors">components.Header.settings</a><button data-v-c970699f="" class="nav-link hover:text-sienna transition-colors">components.Header.logout</button>
             </div>
           </div><!-- Mobile menu overlay -->
           <div data-v-c970699f="" id="navbar-mobile" class="mobile-menu md:hidden">
@@ -73,7 +73,7 @@ exports[`Layout: Default > renders with default zoom (no inline style) 1`] = `
               <p data-v-c970699f="" class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate"></p>
             </div><!-- Menu Items -->
             <nav data-v-c970699f="" class="py-2">
-              <!--v-if--><button data-v-c970699f="" class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.logout-label</button>
+              <!--v-if--><a data-v-c970699f="" href="/settings" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.settings</a><button data-v-c970699f="" class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.logout-label</button>
             </nav><!-- Calendar Filter (mobile) -->
             <!--v-if-->
             <!-- Legal Links & Version -->

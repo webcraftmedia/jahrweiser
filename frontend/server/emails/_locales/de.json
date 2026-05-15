@@ -15,6 +15,16 @@
       "loginInstructions": "Um den Kalender zu sehen, musst du dich dort mit deiner E-Mail-Adresse einloggen.",
       "loginLink": "Wenn die E-Mail nicht korrekt angezeigt wird kannst du auch diesem Link folgend:",
       "button": "Kalender besuchen"
+    },
+    "weeklyNewsletter": {
+      "subject": "Deine Termine für die kommende Woche",
+      "intro": "hier ist deine Übersicht der Termine für die kommende Woche.",
+      "noEvents": "Diese Woche stehen keine Termine im Kalender. Bis bald!",
+      "openEvent": "Details ansehen",
+      "openCalendar": "Alle Termine im Kalender",
+      "footerHint": "Du erhältst diese E-Mail, weil du in deinen Einstellungen den wöchentlichen Newsletter aktiviert hast.",
+      "settingsLink": "Einstellungen ändern",
+      "unsubscribe": "Newsletter abbestellen"
     }
   },
   "general": {

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.7.0...v1.7.1) (2026-05-15)
+
+
+### Bug Fixes
+
+* **workflow:** dependabot dependency resolution ([#206](https://github.com/webcraftmedia/jahrweiser/issues/206)) ([db0e3f2](https://github.com/webcraftmedia/jahrweiser/commit/db0e3f2cbc90d2bdabe193352d8393dbb12adbc7))
+
 ## [1.7.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.6.1...v1.7.0) (2026-03-31)
 
 

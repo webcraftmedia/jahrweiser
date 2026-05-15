@@ -229,9 +229,9 @@ describe('dav helpers', () => {
           status: 200,
           statusText: 'OK',
           props: { getetag: '"etag123"' },
-        } as DAVResponse,
+        },
       ])
-      expect(await findUserByEmail(account, 'broken@example.com')).toBe(false)
+      await expect(findUserByEmail(account, 'broken@example.com')).resolves.toBe(false)
 
       // Case 2: addressData is an empty string
       vi.mocked(addressBookQuery).mockResolvedValueOnce([
@@ -241,9 +241,9 @@ describe('dav helpers', () => {
           status: 200,
           statusText: 'OK',
           props: { addressData: '', getetag: '"etag123"' },
-        } as DAVResponse,
+        },
       ])
-      expect(await findUserByEmail(account, 'empty@example.com')).toBe(false)
+      await expect(findUserByEmail(account, 'empty@example.com')).resolves.toBe(false)
     })
   })
 
@@ -327,7 +327,7 @@ describe('dav helpers', () => {
         .mockResolvedValue(new Response('forbidden', { status: 403, statusText: 'Forbidden' }))
       const account = createCardDAVAccount(config)
       const vcard = createMockVCard({ email: 'new@example.com' })
-      await expect(createUser(account, vcard)).rejects.toThrowError(/HTTP 403/)
+      await expect(createUser(account, vcard)).rejects.toThrow(/HTTP 403/)
       fetchSpy.mockRestore()
     })
   })

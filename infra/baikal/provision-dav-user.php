@@ -177,4 +177,16 @@ $db->prepare('INSERT OR IGNORE INTO users (username, digesta1) VALUES (?, ?)')
 $db->prepare('INSERT OR IGNORE INTO addressbooks (principaluri, displayname, uri, description, synctoken) VALUES (?, ?, ?, ?, 1)')
    ->execute(["principals/$username", 'Default Address Book', 'default', 'Default Address Book']);
 
-echo "[provision] DAV user '$username' + default addressbook ready (password: '$password')\n";
+// Default calendar: synctoken starts at 1, components must be present (NOT NULL).
+$existing = (int) $db->query("SELECT id FROM calendars LIMIT 1")->fetchColumn();
+if ($existing === 0) {
+    $db->prepare("INSERT INTO calendars (synctoken, components) VALUES (1, 'VEVENT,VTODO')")
+       ->execute();
+    $cid = (int) $db->lastInsertId();
+    $db->prepare(
+        "INSERT INTO calendarinstances (calendarid, principaluri, displayname, uri, description, calendarorder, calendarcolor, transparent) " .
+        "VALUES (?, ?, ?, ?, ?, 0, '#3b82f6', 0)"
+    )->execute([$cid, "principals/$username", 'Vereinskalender', 'default', 'Default Calendar']);
+}
+
+echo "[provision] DAV user '$username' + default addressbook + calendar ready (password: '$password')\n";

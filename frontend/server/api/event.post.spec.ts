@@ -29,7 +29,7 @@ describe('event.post', () => {
     vi.clearAllMocks()
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
-    } as never)
+    })
     vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
@@ -113,17 +113,17 @@ describe('event.post', () => {
 
   it('throws 502 when DAV connection fails', async () => {
     mockFindCalendars.mockRejectedValue(new Error('ECONNREFUSED'))
-    await expect(handlerFn({})).rejects.toThrowError('CalDAV server unreachable')
+    await expect(handlerFn({})).rejects.toThrow('CalDAV server unreachable')
   })
 
   it('throws when calendar not found', async () => {
     mockFindCalendars.mockResolvedValue([])
-    await expect(handlerFn({})).rejects.toThrowError('Calendar not found')
+    await expect(handlerFn({})).rejects.toThrow('Calendar not found')
   })
 
   it('throws when event not found', async () => {
     mockFindEvent.mockResolvedValue([])
-    await expect(handlerFn({})).rejects.toThrowError('Event not found')
+    await expect(handlerFn({})).rejects.toThrow('Event not found')
   })
 
   it('throws when no vevent in calendar data', async () => {
@@ -132,6 +132,6 @@ VERSION:2.0
 PRODID:-//Test//Test//EN
 END:VCALENDAR`
     mockFindEvent.mockResolvedValue([{ data: noVevent }])
-    await expect(handlerFn({})).rejects.toThrowError('Event not found')
+    await expect(handlerFn({})).rejects.toThrow('Event not found')
   })
 })

@@ -38,7 +38,7 @@ describe('calendar.post', () => {
     vi.clearAllMocks()
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
-    } as never)
+    })
     vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
@@ -92,13 +92,13 @@ describe('calendar.post', () => {
 
   it('throws when calendar not found', async () => {
     mockFindCalendars.mockResolvedValue([])
-    await expect(handlerFn({})).rejects.toThrowError('Calendar "Work" not found')
+    await expect(handlerFn({})).rejects.toThrow('Calendar "Work" not found')
   })
 
   it('throws 502 when DAV connection fails', async () => {
     mockFindCalendars.mockRejectedValue(new Error('ECONNREFUSED'))
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    await expect(handlerFn({})).rejects.toThrowError('CalDAV server unreachable')
+    await expect(handlerFn({})).rejects.toThrow('CalDAV server unreachable')
     expect(consoleSpy).toHaveBeenCalled()
     consoleSpy.mockRestore()
   })
@@ -106,7 +106,7 @@ describe('calendar.post', () => {
   it('re-throws errors with statusCode from DAV helpers', async () => {
     const httpError = Object.assign(new Error('Not Found'), { statusCode: 404 })
     mockFindCalendars.mockRejectedValue(httpError)
-    await expect(handlerFn({})).rejects.toThrowError(httpError.message)
+    await expect(handlerFn({})).rejects.toThrow(httpError.message)
   })
 
   it('returns event array for simple event', async () => {

@@ -28,22 +28,22 @@ describe('getUserTags.post', () => {
   it('throws when not admin', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
-    } as never)
-    await expect(handlerFn({})).rejects.toThrowError('Not Authorized')
+    })
+    await expect(handlerFn({})).rejects.toThrow('Not Authorized')
   })
 
   it('throws when admin not found in DAV', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
-    } as never)
+    })
     mockFindUserByEmail.mockResolvedValue(false)
-    await expect(handlerFn({})).rejects.toThrowError('Admin account not found')
+    await expect(handlerFn({})).rejects.toThrow('Admin account not found')
   })
 
   it('returns empty array when admin has no adminTags', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
-    } as never)
+    })
     const adminVcard = createMockVCard({ email: 'admin@example.com' })
 
     mockFindUserByEmail
@@ -60,7 +60,7 @@ describe('getUserTags.post', () => {
   it('returns all tags with state:false when user not found', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
-    } as never)
+    })
     const adminVcard = createMockVCard({ email: 'admin@example.com', adminTags: 'Tag1,Tag2' })
 
     // First call: admin lookup; Second call: user lookup
@@ -81,7 +81,7 @@ describe('getUserTags.post', () => {
   it('returns tags with correct state when user found', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
-    } as never)
+    })
     const adminVcard = createMockVCard({ email: 'admin@example.com', adminTags: 'Tag1,Tag2,Tag3' })
     const userVcard = createMockVCard({
       email: 'user@example.com',

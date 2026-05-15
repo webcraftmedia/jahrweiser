@@ -19,7 +19,7 @@ describe('calendars.get', () => {
     vi.clearAllMocks()
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
-    } as never)
+    })
   })
 
   it('returns calendars with color', async () => {

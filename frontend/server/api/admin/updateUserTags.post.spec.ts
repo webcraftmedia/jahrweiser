@@ -35,7 +35,7 @@ describe('updateUserTags.post', () => {
   function setupAdmin() {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Admin User', email: 'admin@example.com', role: 'admin' },
-    } as never)
+    })
     const adminVcard = createMockVCard({ email: 'admin@example.com', adminTags: 'Tag1,Tag2,Tag3' })
     mockFindUserByEmail.mockResolvedValueOnce({
       user: { href: '/admin.vcf' },
@@ -46,7 +46,7 @@ describe('updateUserTags.post', () => {
   it('throws when not admin', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
-    } as never)
+    })
     vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
@@ -54,13 +54,13 @@ describe('updateUserTags.post', () => {
         sendMail: false,
       })
     })
-    await expect(handlerFn({})).rejects.toThrowError('Not Authorized')
+    await expect(handlerFn({})).rejects.toThrow('Not Authorized')
   })
 
   it('throws when admin not found in DAV', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
-    } as never)
+    })
     vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
@@ -69,13 +69,13 @@ describe('updateUserTags.post', () => {
       })
     })
     mockFindUserByEmail.mockResolvedValue(false)
-    await expect(handlerFn({})).rejects.toThrowError('Admin account not found')
+    await expect(handlerFn({})).rejects.toThrow('Admin account not found')
   })
 
   it('handles admin with no adminTags (empty fallback)', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
-    } as never)
+    })
     const adminVcard = createMockVCard({ email: 'admin@example.com' }) // no adminTags
     mockFindUserByEmail.mockResolvedValueOnce({
       user: { href: '/admin.vcf' },
@@ -245,7 +245,7 @@ describe('updateUserTags.post', () => {
   it('uses email as adminName when session has no name', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { name: '', email: 'admin@example.com', role: 'admin' },
-    } as never)
+    })
     const adminVcard = createMockVCard({ email: 'admin@example.com', adminTags: 'Tag1,Tag2,Tag3' })
     mockFindUserByEmail.mockResolvedValueOnce({
       user: { href: '/admin.vcf' },
@@ -294,6 +294,6 @@ describe('updateUserTags.post', () => {
     mockSaveUser.mockResolvedValue(undefined)
     mockEmailSend.mockRejectedValue('SMTP error')
 
-    await expect(handlerFn({})).rejects.toThrowError('Failed to send email')
+    await expect(handlerFn({})).rejects.toThrow('Failed to send email')
   })
 })

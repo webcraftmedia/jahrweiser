@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 interface MaildevMessage {
   id: string
   to: { address: string; name?: string }[]
@@ -5,6 +7,21 @@ interface MaildevMessage {
   date: string
   text: string
   html: string
+}
+
+/**
+ * Quiets animations so Playwright's stability checks pass, then waits for
+ * Nuxt/Vue hydration. Mirrors the helper from the mock e2e suite.
+ */
+export async function preparePage(page: Page): Promise<void> {
+  await page.addStyleTag({ content: '*, *::before, *::after { animation: none !important; }' })
+  await page.waitForFunction(() => {
+    const nuxt = document.getElementById('__nuxt')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(nuxt as any)?.__vue_app__) return false
+    return !document.querySelector('[data-server-rendered]')
+  })
+  await page.waitForTimeout(200)
 }
 
 const MAILDEV_URL = process.env.MAILDEV_URL ?? 'http://localhost:1080'

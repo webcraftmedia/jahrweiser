@@ -58,7 +58,10 @@ export default defineEventHandler(async (event) => {
     newTags = filteredTags.filter((t) => t.state).map((t) => t.name)
   } else {
     const { user, vcard: userVcard } = userQuery
-    let userTags = userVcard.getFirstProperty('categories')?.getValues() as string[]
+    if (!userVcard.getFirstProperty('categories')) {
+      userVcard.addPropertyWithValue('categories', '')
+    }
+    let userTags = (userVcard.getFirstProperty('categories')?.getValues() ?? []) as string[]
     for (const t of filteredTags) {
       if (t.state) {
         if (!userTags.includes(t.name)) {

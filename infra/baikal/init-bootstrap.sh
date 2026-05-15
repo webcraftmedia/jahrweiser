@@ -23,14 +23,17 @@ ADMIN_HASH=$(printf 'admin:BaikalDAV:%s' "$ADMIN_PASSWORD" | md5sum | awk '{prin
 mkdir -p "$BAIKAL_DIR/config" "$BAIKAL_DIR/Specific/db" 2>/dev/null
 
 cat > "$CONFIG_FILE" << EOF
-parameters:
+system:
+    configured_version: '0.10.1'
     timezone: 'Europe/Berlin'
-    base_uri: ''
-    invite_from: 'noreply@example.com'
+    card_enabled: true
+    cal_enabled: true
     dav_auth_type: 'Basic'
     admin_passwordhash: '$ADMIN_HASH'
-    auth_realm: 'BaikalDAV'
     failed_access_message: 'user %u authentication failure for Baikal'
+    auth_realm: 'BaikalDAV'
+    base_uri: ''
+    invite_from: 'noreply@example.com'
 
 database:
     backend: 'sqlite'
@@ -39,9 +42,6 @@ database:
     mysql_dbname: ''
     mysql_username: ''
     mysql_password: ''
-
-system:
-    cipher: ''
 EOF
 
 touch "$INSTALL_MARKER" 2>/dev/null

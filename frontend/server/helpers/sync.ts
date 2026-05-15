@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
 import ICAL from 'ical.js'
 import { fetchAddressBooks, fetchVCards } from 'tsdav'
 
@@ -59,26 +59,26 @@ async function acquireLock(
   const now = new Date()
   const staleThreshold = new Date(now.getTime() - LOCK_STALE_MINUTES * 60_000)
 
+  // Ensure the row exists. No-op update on conflict.
   await db
     .insert(syncState)
-    .values({ collectionUrl, runningSince: now })
-    .onDuplicateKeyUpdate({
-      set: {
-        runningSince: sql`CASE
-          WHEN ${syncState.runningSince} IS NULL OR ${syncState.runningSince} < ${staleThreshold}
-          THEN ${now}
-          ELSE ${syncState.runningSince}
-        END`,
-      },
-    })
+    .values({ collectionUrl })
+    .onDuplicateKeyUpdate({ set: { collectionUrl: sql`${syncState.collectionUrl}` } })
 
-  const rows = await db
-    .select({ runningSince: syncState.runningSince })
-    .from(syncState)
-    .where(eq(syncState.collectionUrl, collectionUrl))
-    .limit(1)
+  // Conditional acquire: only set running_since if currently null or stale.
+  // Drizzle returns the mysql2 ResultSetHeader which has affectedRows. Use
+  // changedRows to know whether the row actually transitioned.
+  const result = (await db
+    .update(syncState)
+    .set({ runningSince: now })
+    .where(
+      and(
+        eq(syncState.collectionUrl, collectionUrl),
+        or(isNull(syncState.runningSince), lt(syncState.runningSince, staleThreshold)),
+      ),
+    )) as unknown as [{ affectedRows: number }]
 
-  return rows[0]?.runningSince?.getTime() === now.getTime()
+  return result[0].affectedRows > 0
 }
 
 async function releaseLock(

@@ -1,5 +1,3 @@
-import { randomBytes } from 'node:crypto'
-
 import { and, eq, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -36,16 +34,13 @@ export default defineEventHandler(async (event) => {
 
   await db.update(loginTokens).set({ consumedAt: new Date() }).where(eq(loginTokens.token, token))
 
-  const sessionId = randomBytes(32).toString('hex')
-  const expiresAt = new Date(Date.now() + MAX_AGE * 1000)
-  await db
-    .insert(sessions)
-    .values({ id: sessionId, userUid: user.uid, expiresAt, lastSeenAt: new Date() })
-
+  // nuxt-auth-utils auto-generates a top-level `id` for the session and
+  // ignores any `id` we pass in. So: write the cookie first, then read back
+  // the generated id and use it as the PK of our sessions table — that way
+  // the middleware can look the row up from the cookie alone.
   await setUserSession(
     event,
     {
-      sessionId,
       user: {
         uid: user.uid,
         name: user.displayName,
@@ -55,6 +50,15 @@ export default defineEventHandler(async (event) => {
     },
     { maxAge: MAX_AGE },
   )
+
+  const sess = (await getUserSession(event)) as { id?: string }
+  if (!sess.id) {
+    throw createError({ statusCode: 500, message: 'Failed to establish session id' })
+  }
+  const expiresAt = new Date(Date.now() + MAX_AGE * 1000)
+  await db
+    .insert(sessions)
+    .values({ id: sess.id, userUid: user.uid, expiresAt, lastSeenAt: new Date() })
 
   return {}
 })

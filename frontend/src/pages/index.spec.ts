@@ -886,6 +886,36 @@ describe('Page: Index', () => {
     expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
   })
 
+  it('debounces rapid mousemoves via requestAnimationFrame', async () => {
+    // Hits the `if (mouseMoveFrame) return` early-return branch in
+    // onMouseMove (line 615) — two events fire before the rAF callback
+    // resolves, so the second one short-circuits.
+    const wrapper = await mount()
+    const calWrapperEl = wrapper.find('.cal-wrapper')
+    vi.spyOn(calWrapperEl.element, 'getBoundingClientRect').mockReturnValue({
+      bottom: 500,
+      top: 0,
+      left: 0,
+      right: 800,
+      width: 800,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    })
+    // Spy on rAF to count actual scheduling vs. early-returns.
+    const rafSpy = vi.spyOn(globalThis, 'requestAnimationFrame')
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 470 }))
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 471 }))
+    document.dispatchEvent(new MouseEvent('mousemove', { clientY: 472 }))
+    // Only the first mousemove should have scheduled an rAF; the next two
+    // fall into the early-return.
+    expect(rafSpy).toHaveBeenCalledTimes(1)
+    vi.advanceTimersByTime(20)
+    await nextTick()
+    rafSpy.mockRestore()
+  })
+
   it('ignores mousemove when legend is closed and mouse is outside trigger zone', async () => {
     const wrapper = await mount()
     const calWrapperEl = wrapper.find('.cal-wrapper')

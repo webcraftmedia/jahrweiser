@@ -1,11 +1,34 @@
-import { renderSuspended, mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { mockNuxtImport, mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Page from './admin.vue'
+
+// Patch useRoute so isActive() / currentPageTitle can be exercised for both
+// branches. Includes the minimum fields Nuxt's <NuxtPage> diffing needs.
+const mockRoutePath = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref } = require('vue')
+  return ref('/admin')
+})
+
+mockNuxtImport('useRoute', () => () => ({
+  get path() {
+    return mockRoutePath.value
+  },
+  params: {},
+  query: {},
+  matched: [],
+  meta: {},
+  name: 'admin',
+  fullPath: mockRoutePath.value,
+  hash: '',
+  redirectedFrom: undefined,
+}))
 
 describe('Page: Admin', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockRoutePath.value = '/admin'
   })
 
   it('renders', async () => {
@@ -25,6 +48,28 @@ describe('Page: Admin', () => {
     const aside = wrapper.find('aside')
     expect(aside.text()).toContain('pages.admin.menu.members-add')
     expect(aside.text()).toContain('pages.admin.menu.calendar')
+  })
+
+  it('shows active state classes when route matches a menu item', async () => {
+    // Hits the truthy branch of `isActive(item.path) ? '...' : '...'` in both
+    // desktop (line 57) and mobile (line 121) sidebars, and the truthy branch
+    // of `current ? current.label : ''` (line 27).
+    mockRoutePath.value = '/admin/members/add'
+    const wrapper = await mountSuspended(Page)
+    await wrapper.find('main button').trigger('click')
+    const html = wrapper.html()
+    expect(html).toContain('bg-sienna/10 text-sienna')
+    const drawer = wrapper.find('.fixed.inset-y-0')
+    expect(drawer.text()).toContain('pages.admin.menu.members-add')
+  })
+
+  it('shows no active state classes when route does not match any menu item', async () => {
+    // Falsy branch of isActive() for every NuxtLink (lines 57 + 121) and
+    // falsy branch of `currentPageTitle` (line 27 → returns '').
+    mockRoutePath.value = '/admin'
+    const wrapper = await mountSuspended(Page)
+    const nav = wrapper.find('aside nav')
+    expect(nav.html()).not.toContain('bg-sienna/10 text-sienna')
   })
 
   it('toggles mobile menu', async () => {

@@ -31,13 +31,23 @@ parameters:
     admin_passwordhash: '$ADMIN_HASH'
     auth_realm: 'BaikalDAV'
     failed_access_message: 'user %u authentication failure for Baikal'
-    database:
-        backend: 'sqlite'
-        sqlite_file: 'Specific/db/db.sqlite'
+
+database:
+    backend: 'sqlite'
+    sqlite_file: '/var/www/baikal/Specific/db/db.sqlite'
+    mysql_host: ''
+    mysql_dbname: ''
+    mysql_username: ''
+    mysql_password: ''
+
+system:
+    cipher: ''
 EOF
 
 touch "$INSTALL_MARKER" 2>/dev/null
-chown -R www-data:www-data "$BAIKAL_DIR/Specific" "$BAIKAL_DIR/config" 2>/dev/null
+# php-fpm in this image runs as the 'nginx' user (not www-data), confirmed
+# via `ps aux`. Chown accordingly so Baikal can write to the SQLite file.
+chown -R nginx:nginx "$BAIKAL_DIR/Specific" "$BAIKAL_DIR/config" 2>/dev/null
 
 echo "[baikal-init] wizard skipped (admin password: '$ADMIN_PASSWORD')"
 echo "[baikal-init] next: from host, run 'npm run cli:baikal:bootstrap' to create the DAV user"

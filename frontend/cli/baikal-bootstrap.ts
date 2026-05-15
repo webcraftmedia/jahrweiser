@@ -40,8 +40,12 @@ try {
     'docker compose cp infra/baikal/provision-dav-user.php baikal:/tmp/provision-dav-user.php',
     { stdio: 'inherit', cwd: composeCwd, shell: '/bin/sh' },
   )
+  // Run AS nginx — that's the user php-fpm pool runs as in ckulka/baikal.
+  // If we run this as root or any other user, the SQLite file ends up with
+  // wrong ownership and Baikal silently no-ops PUTs (returns 200 OK with
+  // a "FOLDER not writable" HTML body).
   execSync(
-    'docker compose exec -T baikal php /tmp/provision-dav-user.php admin admin admin@example.com Admin',
+    'docker compose exec -T --user nginx baikal php /tmp/provision-dav-user.php admin admin admin@example.com Admin',
     { stdio: 'inherit', cwd: composeCwd, shell: '/bin/sh' },
   )
 } catch (err) {

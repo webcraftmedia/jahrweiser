@@ -157,9 +157,14 @@ async function findUserByProperty(
     return false
   }
 
+  const data = users[0]!.props?.addressData
+  if (typeof data !== 'string' || data.length === 0) {
+    return false
+  }
+
   return {
     user: users[0]!,
-    vcard: new ICAL.Component(ICAL.parse(users[0]!.props?.addressData)),
+    vcard: new ICAL.Component(ICAL.parse(data)),
   }
 }
 

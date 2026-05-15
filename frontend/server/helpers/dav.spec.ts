@@ -214,6 +214,37 @@ describe('dav helpers', () => {
       const result = await findUserByEmail(account, 'notfound@example.com')
       expect(result).toBe(false)
     })
+
+    it('returns false when result has missing or empty addressData', async () => {
+      // Hits the defensive `if (typeof data !== 'string' || data.length === 0)`
+      // branch — Baikal can return a single hit but with no `address-data`
+      // property in the propstat, which would crash ICAL.parse otherwise.
+      const account = createCardDAVAccount(config)
+
+      // Case 1: addressData missing entirely
+      vi.mocked(addressBookQuery).mockResolvedValueOnce([
+        {
+          href: '/x.vcf',
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          props: { getetag: '"etag123"' },
+        } as DAVResponse,
+      ])
+      expect(await findUserByEmail(account, 'broken@example.com')).toBe(false)
+
+      // Case 2: addressData is an empty string
+      vi.mocked(addressBookQuery).mockResolvedValueOnce([
+        {
+          href: '/x.vcf',
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          props: { addressData: '', getetag: '"etag123"' },
+        } as DAVResponse,
+      ])
+      expect(await findUserByEmail(account, 'empty@example.com')).toBe(false)
+    })
   })
 
   describe('findUserByToken', () => {

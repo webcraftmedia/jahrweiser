@@ -58,10 +58,14 @@ export default defineEventHandler(async (event) => {
     newTags = filteredTags.filter((t) => t.state).map((t) => t.name)
   } else {
     const { user, vcard: userVcard } = userQuery
-    if (!userVcard.getFirstProperty('categories')) {
+    let categoriesProp = userVcard.getFirstProperty('categories')
+    if (!categoriesProp) {
       userVcard.addPropertyWithValue('categories', '')
+      categoriesProp = userVcard.getFirstProperty('categories')!
     }
-    let userTags = (userVcard.getFirstProperty('categories')?.getValues() ?? []) as string[]
+    // ICAL.Property#getValues() always returns an array — no nullish fallback
+    // needed, and adding one creates an unreachable branch.
+    let userTags = categoriesProp.getValues() as string[]
     for (const t of filteredTags) {
       if (t.state) {
         if (!userTags.includes(t.name)) {

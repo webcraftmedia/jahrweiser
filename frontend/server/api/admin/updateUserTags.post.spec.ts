@@ -117,6 +117,35 @@ describe('updateUserTags.post', () => {
     expect(mockCreateUser).toHaveBeenCalled()
   })
 
+  it('adds categories property when existing user has none, then adds tag', async () => {
+    // Hits the truthy branch of `if (!userVcard.getFirstProperty('categories'))`
+    // — older accounts created via DAV-clients have no categories field yet.
+    setupAdmin()
+    // No `categories` argument → fixture doesn't add the property
+    const userVcard = createMockVCard({ email: 'user@example.com' })
+    expect(userVcard.getFirstProperty('categories')).toBeNull()
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+      return (validator as (data: unknown) => unknown)({
+        email: 'user@example.com',
+        tags: [{ name: 'Tag1', state: true }],
+        sendMail: false,
+      })
+    })
+    mockFindUserByEmail.mockResolvedValueOnce({
+      user: { href: '/user.vcf', props: { getetag: '"etag"' } },
+      vcard: userVcard,
+    })
+    mockSaveUser.mockResolvedValue(undefined)
+
+    const result = await handlerFn({})
+    expect(result).toBe(false)
+    expect(mockSaveUser).toHaveBeenCalled()
+    const categoriesProp = userVcard.getFirstProperty('categories')
+    expect(categoriesProp).not.toBeNull()
+    const categories = categoriesProp?.getValues() as string[]
+    expect(categories).toContain('Tag1')
+  })
+
   it('adds tag to existing user', async () => {
     setupAdmin()
     const userVcard = createMockVCard({ email: 'user@example.com', categories: ['Tag1'] })

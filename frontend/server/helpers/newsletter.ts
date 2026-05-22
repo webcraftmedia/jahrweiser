@@ -1,5 +1,7 @@
 import ICAL from 'ical.js'
 
+import { paletteBorderForIndex } from '../../shared/calendar-palette'
+
 import {
   createCalDAVAccount,
   createCardDAVAccount,
@@ -80,11 +82,13 @@ export async function collectEventsForUser(
 
   const results: NewsletterEvent[] = []
 
-  for (const cal of calendars) {
+  for (const [calIndex, cal] of calendars.entries()) {
     const calName = cal.displayName as string | undefined
     if (!calName) continue
     const showPrivate = userCategories.includes(calName)
-    const color = typeof cal.calendarColor === 'string' ? cal.calendarColor : '#e7e7ff'
+    // Color is assigned by the calendar's position in the list, matching the
+    // in-app rendering (see src/pages/index.vue + shared/calendar-palette.ts).
+    const color = paletteBorderForIndex(calIndex)
 
     const caldata = await findEvents(calDavAccount, cal.url, range.from, range.to)
 

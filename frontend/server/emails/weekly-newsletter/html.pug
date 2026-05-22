@@ -16,11 +16,11 @@ block content
               if !ev.allDay
                 |  ·
                 = ev.timeLabel
-              if ev.location
-                |  ·
-                = ev.location
-            a(href=ev.detailUrl style="display:inline-block;margin-top:0.2em;font-size:1.08em;font-weight:600;color:#1e293b;text-decoration:none")
+            div(style="margin-top:0.2em;font-size:1.08em;font-weight:600;color:#1e293b")
               = ev.title
+            div(style="margin-top:0.3em;font-size:0.85em;color:#64748b")
+              a(href=ev.detailUrl style="color:#64748b;text-decoration:underline")
+                != t('emails.weeklyNewsletter.openEvent')
 
   p(style="margin-top:2em")
     a.button(href=ORGANIZATION_URL)!= t('emails.weeklyNewsletter.openCalendar')

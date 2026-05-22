@@ -1,1 +1,4 @@
-h2!= `${t('general.greeting')} ${name},`
+if name
+  h2!= `${t('general.greeting')} ${name},`
+else
+  h2!= `${t('general.greeting')},`

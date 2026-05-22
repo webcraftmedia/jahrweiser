@@ -18,7 +18,7 @@ html(lang=locale)
   body
     div.container
       include _includes/header.pug
-      if name
+      if name || alwaysSalutation
         include _includes/salutation.pug
       else
         include _includes/welcome.pug
@@ -29,7 +29,6 @@ html(lang=locale)
 
       - var supportEmail = SUPPORT_EMAIL
       if supportEmail
-        br
         .support
           include _includes/support.pug
 

@@ -120,7 +120,8 @@ export default defineEventHandler(async (event) => {
         locals: {
           ...defaultParams,
           locale: 'de',
-          name: user.displayName ?? user.email,
+          name: user.displayName,
+          alwaysSalutation: true,
           days,
           weekLabel,
           unsubscribeUrl,

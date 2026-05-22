@@ -10,6 +10,7 @@ import {
   formatDayHeadingDE,
   formatTimeDE,
   groupEventsByDay,
+  isoWeekNumber,
   nextWeekRange,
 } from '~~/server/helpers/newsletter'
 
@@ -42,9 +43,14 @@ function audienceFilter() {
   )
 }
 
-function formatRangeLabel(from: Date, to: Date): string {
-  const f = (d: Date) => `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}.`
-  return `${f(from)}–${f(to)}`
+/**
+ * Subject says "(KWxx)" for the *upcoming* calendar week. The cron fires on
+ * Sunday 18:00 — ISO-wise that Sunday closes the running week, so we advance
+ * one day to land on the following Monday and read the week number from there.
+ */
+function upcomingWeekLabel(from: Date): string {
+  const nextDay = new Date(from.getTime() + 24 * 60 * 60 * 1000)
+  return `KW${String(isoWeekNumber(nextDay)).padStart(2, '0')}`
 }
 
 export default defineEventHandler(async (event) => {
@@ -69,7 +75,7 @@ export default defineEventHandler(async (event) => {
     .where(audienceFilter())
 
   const range = nextWeekRange()
-  const weekRangeLabel = formatRangeLabel(range.from, range.to)
+  const weekLabel = upcomingWeekLabel(range.from)
   const davConfig = {
     DAV_USERNAME: config.DAV_USERNAME,
     DAV_PASSWORD: config.DAV_PASSWORD,
@@ -116,7 +122,7 @@ export default defineEventHandler(async (event) => {
           locale: 'de',
           name: user.displayName ?? user.email,
           days,
-          weekRangeLabel,
+          weekLabel,
           unsubscribeUrl,
           settingsUrl,
         },

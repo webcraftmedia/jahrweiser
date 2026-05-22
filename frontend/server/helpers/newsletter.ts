@@ -205,3 +205,18 @@ export function formatDayHeadingDE(d: Date): string {
 export function formatTimeDE(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
+
+/**
+ * ISO-8601 week number. Weeks start on Monday; week 1 is the one that
+ * contains the year's first Thursday.
+ */
+export function isoWeekNumber(d: Date): number {
+  const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  // Shift to Thursday of the same ISO week so the year boundary is unambiguous.
+  const dayNr = (target.getUTCDay() + 6) % 7
+  target.setUTCDate(target.getUTCDate() - dayNr + 3)
+  const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4))
+  const firstThursdayDayNr = (firstThursday.getUTCDay() + 6) % 7
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstThursdayDayNr + 3)
+  return 1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 24 * 60 * 60 * 1000))
+}

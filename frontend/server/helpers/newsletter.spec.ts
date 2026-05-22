@@ -17,6 +17,7 @@ import {
   formatDayHeadingDE,
   formatTimeDE,
   groupEventsByDay,
+  isoWeekNumber,
   nextWeekRange,
 } from './newsletter'
 
@@ -70,6 +71,31 @@ describe('formatDayHeadingDE', () => {
   it('formats a weekday with two-digit day in German', () => {
     // 2026-12-15 is a Tuesday
     expect(formatDayHeadingDE(new Date(2026, 11, 15))).toBe('Dienstag, 15. Dezember')
+  })
+})
+
+describe('isoWeekNumber', () => {
+  it('returns the ISO week for a mid-week date', () => {
+    // Wed 2026-05-27 → ISO week 22
+    expect(isoWeekNumber(new Date(Date.UTC(2026, 4, 27)))).toBe(22)
+  })
+
+  it('treats Sunday as the last day of the same ISO week', () => {
+    // Sun 2026-05-24 closes ISO week 21
+    expect(isoWeekNumber(new Date(Date.UTC(2026, 4, 24)))).toBe(21)
+  })
+
+  it('treats Monday as the first day of a new ISO week', () => {
+    // Mon 2026-05-25 opens ISO week 22
+    expect(isoWeekNumber(new Date(Date.UTC(2026, 4, 25)))).toBe(22)
+  })
+
+  it('handles year boundaries: 2025-12-29 (Mon) belongs to ISO week 1 of 2026', () => {
+    expect(isoWeekNumber(new Date(Date.UTC(2025, 11, 29)))).toBe(1)
+  })
+
+  it('handles year boundaries: 2027-01-01 (Fri) belongs to ISO week 53 of 2026', () => {
+    expect(isoWeekNumber(new Date(Date.UTC(2027, 0, 1)))).toBe(53)
   })
 })
 

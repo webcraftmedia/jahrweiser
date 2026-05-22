@@ -19,6 +19,7 @@ import {
   groupEventsByDay,
   isoWeekNumber,
   nextWeekRange,
+  renderNewsletterText,
 } from './newsletter'
 
 import type { NewsletterEvent } from './newsletter'
@@ -144,6 +145,145 @@ describe('groupEventsByDay', () => {
     const earlier = new Date(2026, 2, 3, 9, 0)
     const groups = groupEventsByDay([ev(later, 'L'), ev(earlier, 'E')])
     expect(groups.map((g) => g.events[0]!.title)).toStrictEqual(['E', 'L'])
+  })
+})
+
+describe('renderNewsletterText', () => {
+  const baseArgs = {
+    greetingName: 'Alice',
+    organizationUrl: 'http://app.example.com',
+    settingsUrl: 'http://app.example.com/settings',
+    unsubscribeUrl: 'http://app.example.com/api/newsletter/unsubscribe?token=abc',
+  }
+
+  it('includes a named greeting and intro on their own lines', () => {
+    const out = renderNewsletterText({ ...baseArgs, days: [] })
+    const [g, blank, intro] = out.split('\n')
+    expect(g).toBe('Hallo Alice,')
+    expect(blank).toBe('')
+    expect(intro).toContain('Übersicht')
+  })
+
+  it('drops the name from the greeting when null', () => {
+    const out = renderNewsletterText({ ...baseArgs, greetingName: null, days: [] })
+    expect(out.split('\n')[0]).toBe('Hallo,')
+  })
+
+  it('shows the noEvents message when days is empty', () => {
+    const out = renderNewsletterText({ ...baseArgs, days: [] })
+    expect(out).toContain('keine Termine')
+  })
+
+  it('renders each event as a single line: time [calendar] title url', () => {
+    const out = renderNewsletterText({
+      ...baseArgs,
+      days: [
+        {
+          heading: 'Freitag, 22. Mai',
+          events: [
+            {
+              title: 'Probe Theater AG',
+              calendar: 'Theater AG',
+              allDay: false,
+              timeLabel: '16:00',
+              detailUrl: 'http://app.example.com/2026/05/event/e1',
+            },
+          ],
+        },
+      ],
+    })
+    expect(out).toContain('FREITAG, 22. MAI')
+    expect(out).toContain('────────────────────────')
+    expect(out).toContain(
+      '16:00 [Theater AG] Probe Theater AG http://app.example.com/2026/05/event/e1',
+    )
+    expect(out).not.toContain('Details ansehen')
+  })
+
+  it('omits the time prefix entirely for all-day events (no leading indent)', () => {
+    const out = renderNewsletterText({
+      ...baseArgs,
+      days: [
+        {
+          heading: 'Montag, 25. Mai',
+          events: [
+            {
+              title: 'Vereinsausflug',
+              calendar: 'Vereinskalender',
+              allDay: true,
+              timeLabel: '',
+              detailUrl: 'http://app.example.com/2026/05/event/e2',
+            },
+            {
+              title: 'Filmabend',
+              calendar: 'Theater AG',
+              allDay: false,
+              timeLabel: '20:00',
+              detailUrl: 'http://app.example.com/2026/05/event/e3',
+            },
+          ],
+        },
+      ],
+    })
+    // All-day line starts at column 0, no padding.
+    expect(out).toContain(
+      '\n[Vereinskalender] Vereinsausflug http://app.example.com/2026/05/event/e2',
+    )
+    expect(out).toContain('20:00 [Theater AG] Filmabend http://app.example.com/2026/05/event/e3')
+    expect(out).not.toMatch(/^ +\[/m)
+  })
+
+  it('ends with calendar / settings / unsubscribe links on single lines (no wrap)', () => {
+    const out = renderNewsletterText({ ...baseArgs, days: [] })
+    expect(out).toContain('Alle Termine im Kalender: http://app.example.com')
+    expect(out).toContain('Einstellungen ändern: http://app.example.com/settings')
+    expect(out).toContain(
+      'Newsletter abbestellen: http://app.example.com/api/newsletter/unsubscribe?token=abc',
+    )
+  })
+
+  it('wraps long event lines and indents the continuation by two spaces', () => {
+    const out = renderNewsletterText({
+      ...baseArgs,
+      days: [
+        {
+          heading: 'Freitag, 22. Mai',
+          events: [
+            {
+              title: 'Probe Theater AG',
+              calendar: 'Theater AG',
+              allDay: false,
+              timeLabel: '16:00',
+              detailUrl:
+                'http://app.example.com/2026/05/event/seed-event-today-with-a-really-long-id',
+            },
+          ],
+        },
+      ],
+    })
+    expect(out).toContain('16:00 [Theater AG] Probe Theater AG\n  http://')
+  })
+
+  it('does not HTML-encode quotes in titles', () => {
+    const out = renderNewsletterText({
+      ...baseArgs,
+      days: [
+        {
+          heading: 'Montag, 25. Mai',
+          events: [
+            {
+              title: 'Premiere "Drei Schwestern"',
+              calendar: 'Theater AG',
+              allDay: false,
+              timeLabel: '19:00',
+              detailUrl: 'http://app.example.com/2026/05/event/e3',
+            },
+          ],
+        },
+      ],
+    })
+    expect(out).toContain('Premiere "Drei Schwestern"')
+    expect(out).not.toContain('&quot;')
   })
 })
 

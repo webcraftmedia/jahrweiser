@@ -12,6 +12,7 @@ import {
   groupEventsByDay,
   isoWeekNumber,
   nextWeekRange,
+  renderNewsletterText,
 } from '~~/server/helpers/newsletter'
 
 interface SendResult {
@@ -107,10 +108,21 @@ export default defineEventHandler(async (event) => {
       const unsubscribeUrl = `${config.CLIENT_URI.replace(/\/+$/, '')}/api/newsletter/unsubscribe?token=${encodeURIComponent(user.unsubscribeToken)}`
       const settingsUrl = `${config.CLIENT_URI.replace(/\/+$/, '')}/settings`
 
+      // Plain-text body is built in TS so we control the line breaks; pug's
+      // `|`-based text mode was unreliable and produced run-together output.
+      const text = renderNewsletterText({
+        greetingName: user.displayName,
+        days,
+        organizationUrl: config.CLIENT_URI,
+        settingsUrl,
+        unsubscribeUrl,
+      })
+
       await emailRenderer.send({
         template: path.join(process.cwd(), 'server/emails/weekly-newsletter'),
         message: {
           to: { address: user.email, name: user.displayName ?? '' },
+          text,
           // RFC 8058 one-click + a clickable URL for legacy clients.
           headers: {
             'List-Unsubscribe': `<${unsubscribeUrl}>`,

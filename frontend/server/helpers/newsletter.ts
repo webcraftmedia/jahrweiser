@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
 import ICAL from 'ical.js'
 
 import { paletteMailColorForIndex } from '../../shared/calendar-palette'
@@ -209,6 +212,120 @@ export function formatDayHeadingDE(d: Date): string {
 
 export function formatTimeDE(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+interface NewsletterLocale {
+  emails: {
+    weeklyNewsletter: {
+      intro: string
+      noEvents: string
+      openEvent: string
+      openCalendar: string
+      footerHint: string
+      settingsLink: string
+      unsubscribe: string
+    }
+  }
+  general: { greeting: string }
+}
+
+let cachedLocale: NewsletterLocale | null = null
+function loadNewsletterLocale(): NewsletterLocale {
+  if (!cachedLocale) {
+    const file = path.join(process.cwd(), 'server/emails/_locales/de.json')
+    cachedLocale = JSON.parse(readFileSync(file, 'utf-8')) as NewsletterLocale
+  }
+  return cachedLocale
+}
+
+/**
+ * Soft-wrap a single line at `width` columns, breaking on spaces and
+ * indenting continuation lines so the reader can tell they belong to the
+ * previous line.
+ */
+function wrapPlainLine(line: string, width = 78, indent = '  '): string {
+  if (line.length <= width) return line
+  const words = line.split(' ')
+  const out: string[] = []
+  let current = ''
+  for (const w of words) {
+    if (current === '') {
+      current = w
+      continue
+    }
+    const prefix = out.length === 0 ? '' : indent
+    const candidate = `${current} ${w}`
+    if (prefix.length + candidate.length > width) {
+      out.push(prefix + current)
+      current = w
+    } else {
+      current = candidate
+    }
+  }
+  if (current !== '') {
+    out.push((out.length === 0 ? '' : indent) + current)
+  }
+  return out.join('\n')
+}
+
+export interface NewsletterTextDay {
+  heading: string
+  events: {
+    title: string
+    calendar: string
+    allDay: boolean
+    timeLabel: string
+    detailUrl: string
+  }[]
+}
+
+/**
+ * Renders the plain-text body of the weekly newsletter with deterministic
+ * line breaks. Replaces `text.pug`, whose `|`-based whitespace handling was
+ * not reliable enough for a section/event/day-grouped layout.
+ */
+export function renderNewsletterText(args: {
+  greetingName: string | null
+  days: NewsletterTextDay[]
+  organizationUrl: string
+  settingsUrl: string
+  unsubscribeUrl: string
+}): string {
+  const L = loadNewsletterLocale()
+  const lines: string[] = []
+
+  lines.push(
+    args.greetingName ? `${L.general.greeting} ${args.greetingName},` : `${L.general.greeting},`,
+  )
+  lines.push('')
+  lines.push(L.emails.weeklyNewsletter.intro)
+  lines.push('')
+
+  if (args.days.length === 0) {
+    lines.push(L.emails.weeklyNewsletter.noEvents)
+    lines.push('')
+  } else {
+    for (const day of args.days) {
+      lines.push(day.heading.toUpperCase())
+      lines.push('────────────────────────')
+      for (const ev of day.events) {
+        const prefix = ev.allDay ? '' : `${ev.timeLabel} `
+        // Wrap only event lines — the rest stays a single line each.
+        lines.push(wrapPlainLine(`${prefix}[${ev.calendar}] ${ev.title} ${ev.detailUrl}`))
+      }
+      lines.push('')
+    }
+  }
+
+  lines.push(`${L.emails.weeklyNewsletter.openCalendar}: ${args.organizationUrl}`)
+  lines.push('')
+  lines.push('—')
+  lines.push('')
+  lines.push(L.emails.weeklyNewsletter.footerHint)
+  lines.push(`${L.emails.weeklyNewsletter.settingsLink}: ${args.settingsUrl}`)
+  lines.push(`${L.emails.weeklyNewsletter.unsubscribe}: ${args.unsubscribeUrl}`)
+
+  return lines.join('\n')
 }
 
 /**

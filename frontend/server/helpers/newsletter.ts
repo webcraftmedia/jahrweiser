@@ -1,6 +1,6 @@
 import ICAL from 'ical.js'
 
-import { paletteBorderForIndex } from '../../shared/calendar-palette'
+import { paletteMailColorForIndex } from '../../shared/calendar-palette'
 
 import {
   createCalDAVAccount,
@@ -86,9 +86,10 @@ export async function collectEventsForUser(
     const calName = cal.displayName as string | undefined
     if (!calName) continue
     const showPrivate = userCategories.includes(calName)
-    // Color is assigned by the calendar's position in the list, matching the
-    // in-app rendering (see src/pages/index.vue + shared/calendar-palette.ts).
-    const color = paletteBorderForIndex(calIndex)
+    // Color is assigned by the calendar's position in the list. Newsletter
+    // uses the higher-contrast `mail` variant; the in-app calendar view uses
+    // the muted `light.border` for the same index (see shared/calendar-palette.ts).
+    const color = paletteMailColorForIndex(calIndex)
 
     const caldata = await findEvents(calDavAccount, cal.url, range.from, range.to)
 

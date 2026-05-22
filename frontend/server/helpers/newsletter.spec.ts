@@ -189,9 +189,12 @@ describe('collectEventsForUser', () => {
       range,
     )
     expect(result).toHaveLength(1)
+    // Color is assigned by calendar index — first calendar gets
+    // designPalette[0].mail (vivid orange). The `calendarColor` from DAV is
+    // intentionally ignored.
     expect(result[0]).toMatchObject({
       calendar: 'Work',
-      color: '#ff0000',
+      color: '#ea580c',
       id: 'simple-event-1',
       title: 'Test Event',
       allDay: false,
@@ -353,23 +356,40 @@ describe('collectEventsForUser', () => {
     expect(mockFindEvents).not.toHaveBeenCalled()
   })
 
-  it('uses default color when calendarColor is missing', async () => {
+  it('assigns colors by calendar index, ignoring DAV calendarColor', async () => {
     mockFindCalendars.mockResolvedValue([
-      { displayName: 'Work', url: 'https://dav.example.com/cal/work', calendarColor: undefined },
-    ])
-    mockFindEvents.mockResolvedValue([
+      { displayName: 'Work', url: 'https://dav.example.com/cal/work', calendarColor: '#ff0000' },
       {
-        href: '/cal/work/simple-event-1.ics',
-        props: { calendarData: SIMPLE_EVENT },
+        displayName: 'Personal',
+        url: 'https://dav.example.com/cal/personal',
+        calendarColor: '#00ff00',
       },
     ])
+    mockFindUserByEmail.mockResolvedValue({
+      user: { href: '/abc.vcf' },
+      vcard: createMockVCard({ email: 'test@example.com', categories: ['Work', 'Personal'] }),
+    })
+    const LATER_EVENT = SIMPLE_EVENT.replace('20250301', '20250305').replace(
+      'simple-event-1',
+      'simple-event-2',
+    )
+    mockFindEvents.mockImplementation(async (_account: unknown, url: string) => {
+      if (url.endsWith('/work')) {
+        return [{ href: '/cal/work/a.ics', props: { calendarData: SIMPLE_EVENT } }]
+      }
+      return [{ href: '/cal/personal/b.ics', props: { calendarData: LATER_EVENT } }]
+    })
     const result = await collectEventsForUser(
       DAV_CONFIG,
       'http://app.example.com',
       'test@example.com',
       range,
     )
-    expect(result[0]!.color).toBe('#e7e7ff')
+    // First calendar → designPalette[0].mail (orange), second → designPalette[1].mail (violet).
+    const workEvent = result.find((e) => e.calendar === 'Work')
+    const personalEvent = result.find((e) => e.calendar === 'Personal')
+    expect(workEvent?.color).toBe('#ea580c')
+    expect(personalEvent?.color).toBe('#9333ea')
   })
 
   it('skips VCALENDARs without a VEVENT', async () => {

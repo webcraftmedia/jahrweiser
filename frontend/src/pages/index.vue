@@ -173,6 +173,8 @@
 
   import type { CalendarEventExternal } from '@schedule-x/calendar'
 
+  import { designPalette } from '~~/shared/calendar-palette'
+
   import IconGrid from '~/assets/icon-grid.svg'
   import IconList from '~/assets/icon-list.svg'
 
@@ -276,58 +278,9 @@
     }
   })
 
-  /* ── Design palette — one unique color per calendar ── */
-
-  const designPalette = [
-    {
-      light: { bg: '#dfc8b4', border: '#9a3412', text: '#1e293b' },
-      dark: { bg: '#583020', border: '#c2410c', text: '#e8ddd0' },
-    }, // sienna
-    {
-      light: { bg: '#c8bdd6', border: '#6b21a8', text: '#1e293b' },
-      dark: { bg: '#3e2260', border: '#7e22ce', text: '#e8ddd0' },
-    }, // plum
-    {
-      light: { bg: '#d4b4b4', border: '#9f1239', text: '#1e293b' },
-      dark: { bg: '#5c1a2a', border: '#e11d48', text: '#e8ddd0' },
-    }, // rose
-    {
-      light: { bg: '#b4c8d8', border: '#1e5a8a', text: '#1e293b' },
-      dark: { bg: '#1c3a54', border: '#3b82f6', text: '#e8ddd0' },
-    }, // steel
-    {
-      light: { bg: '#c4c8cc', border: '#475569', text: '#1e293b' },
-      dark: { bg: '#2e3440', border: '#94a3b8', text: '#e8ddd0' },
-    }, // slate
-    {
-      light: { bg: '#b8d0b4', border: '#2d6a30', text: '#1e293b' },
-      dark: { bg: '#1e3e20', border: '#4ade80', text: '#e8ddd0' },
-    }, // forest
-    {
-      light: { bg: '#c5d0a6', border: '#4d7c0f', text: '#1e293b' },
-      dark: { bg: '#344818', border: '#65a30d', text: '#e8ddd0' },
-    }, // olive
-    {
-      light: { bg: '#ddd0a6', border: '#b45309', text: '#1e293b' },
-      dark: { bg: '#5c4418', border: '#d97706', text: '#e8ddd0' },
-    }, // mustard
-    {
-      light: { bg: '#adc8c4', border: '#0f766e', text: '#1e293b' },
-      dark: { bg: '#184844', border: '#0d9488', text: '#e8ddd0' },
-    }, // craft
-    {
-      light: { bg: '#d8c4a4', border: '#78591a', text: '#1e293b' },
-      dark: { bg: '#4a3818', border: '#a57c2a', text: '#e8ddd0' },
-    }, // bronze
-    {
-      light: { bg: '#d0bcc8', border: '#8a2060', text: '#1e293b' },
-      dark: { bg: '#502040', border: '#c026a0', text: '#e8ddd0' },
-    }, // magenta
-    {
-      light: { bg: '#d8c0c0', border: '#7a3030', text: '#1e293b' },
-      dark: { bg: '#4a2020', border: '#b44040', text: '#e8ddd0' },
-    }, // brick
-  ]
+  // designPalette imported from shared/calendar-palette so the weekly
+  // newsletter (server/helpers/newsletter.ts) renders the same color per
+  // calendar as the calendar view here.
 
   const calendarLegend = computed(() =>
     calendars.value.map((cal, i) => {

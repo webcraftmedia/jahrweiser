@@ -74,7 +74,7 @@ Antwort:
 | Feld | Bedeutung |
 |---|---|
 | `sent` | Mails erfolgreich versandt |
-| `skipped` | Übersprungen (User ohne `unsubscribe_token` — sollte nach erstem Subscribe nicht mehr auftreten) |
+| `skipped` | Reserviert (aktuell immer 0 — Token werden im Send-Endpoint on-the-fly erzeugt) |
 | `errors` | Versand-Fehlschläge |
 | `errorEmails` | Adressen, bei denen der Versand scheiterte |
 

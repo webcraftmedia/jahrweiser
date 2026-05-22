@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 
 import { and, eq, isNull, or } from 'drizzle-orm'
@@ -87,13 +88,16 @@ export default defineEventHandler(async (event) => {
   const result: SendResult = { sent: 0, skipped: 0, errors: 0, errorEmails: [] }
 
   for (const user of recipients) {
-    if (!user.unsubscribeToken) {
-      // No token yet — generate via a fake subscribe call would mutate state
-      // mid-send. Skip and let the user's next /api/me/newsletter POST mint
-      // one. (Realistically all subscribed users have a token because the
-      // POST endpoint mints it on subscribe.)
-      result.skipped += 1
-      continue
+    // Phase-2 (default-opt-in) sweeps in legacy users who never visited the
+    // settings page — they have no unsubscribe token yet. Mint one on the
+    // first send so the List-Unsubscribe header has something to point at.
+    let unsubscribeToken = user.unsubscribeToken
+    if (!unsubscribeToken) {
+      unsubscribeToken = randomBytes(32).toString('hex')
+      await db
+        .update(users)
+        .set({ unsubscribeToken })
+        .where(eq(users.uid, user.uid))
     }
     try {
       const events = await collectEventsForUser(davConfig, config.CLIENT_URI, user.email, range)
@@ -105,7 +109,7 @@ export default defineEventHandler(async (event) => {
         })),
       }))
 
-      const unsubscribeUrl = `${config.CLIENT_URI.replace(/\/+$/, '')}/api/newsletter/unsubscribe?token=${encodeURIComponent(user.unsubscribeToken)}`
+      const unsubscribeUrl = `${config.CLIENT_URI.replace(/\/+$/, '')}/api/newsletter/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
       const settingsUrl = `${config.CLIENT_URI.replace(/\/+$/, '')}/settings`
 
       // Plain-text body is built in TS so we control the line breaks; pug's

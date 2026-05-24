@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 
+import { closeDb, setLoginDisabled, softDeleteUser } from './helpers/db'
 import {
   deleteAllMail,
   extractLoginTokenFromMail,
@@ -14,12 +15,19 @@ import type { APIRequestContext, Page } from '@playwright/test'
 // Dedicated seed user so the in-process rate limit on requestLoginLink
 // (60s/user) does not collide with other full-stack suites.
 const ALICE = 'alice@example.com'
+const BOB = 'bob@example.com'
+const CAROL = 'carol@example.com'
+const ADMIN = 'admin@example.com'
 
 const SYNC_SECRET = process.env.SYNC_SECRET ?? 'dev-sync-secret'
 
 test.beforeAll(async () => {
   runSeedReset()
   runSeedDemo()
+})
+
+test.afterAll(async () => {
+  await closeDb()
 })
 
 test.beforeEach(async () => {
@@ -90,6 +98,17 @@ test.describe('full-stack newsletter', () => {
     const mail = await waitForMailFor(ALICE)
     const unsubscribeUrl = extractUnsubscribeUrl(mail.text || mail.html)
 
+    // 4a. Subject must carry the upcoming ISO week label (e.g. "KW22") — the
+    // pug subject template is otherwise easy to break silently.
+    expect(mail.subject).toMatch(/KW\d{2}/)
+
+    // 4b. Plain-text body must include a German day heading (uppercased month
+    // name) so the renderNewsletterText template stays wired up to the events
+    // we seeded for the upcoming week.
+    expect(mail.text).toMatch(
+      /(MONTAG|DIENSTAG|MITTWOCH|DONNERSTAG|FREITAG|SAMSTAG|SONNTAG),\s+\d{1,2}\.\s+(JANUAR|FEBRUAR|MÄRZ|APRIL|MAI|JUNI|JULI|AUGUST|SEPTEMBER|OKTOBER|NOVEMBER|DEZEMBER)/,
+    )
+
     // 5. Hit the unsubscribe link (one-click POST per RFC 8058).
     const unsubRes = await request.post(unsubscribeUrl)
     expect(unsubRes.status()).toBe(200)
@@ -145,5 +164,39 @@ test.describe('full-stack newsletter', () => {
       headers: { Authorization: 'Bearer wrong-secret' },
     })
     expect(res.status()).toBe(401)
+  })
+
+  test('audience excludes login-disabled and soft-deleted users', async ({
+    page,
+    context,
+    request,
+  }) => {
+    // Three subscribed users: Bob (control, must receive), Carol (will be
+    // login_disabled), Admin (will be soft-deleted). Subscribing requires a
+    // session, so each logs in once via magic link first.
+    for (const email of [BOB, CAROL, ADMIN]) {
+      await loginViaMagicLink(page, email)
+      const res = await context.request.post('/api/me/newsletter', {
+        data: { subscribed: true },
+      })
+      expect(res.status()).toBe(200)
+    }
+
+    // Flip the exclusion bits directly in the sidecar DB — there is no admin
+    // endpoint for either field, and the audienceFilter() is what we want to
+    // exercise here.
+    await setLoginDisabled(CAROL, true)
+    await softDeleteUser(ADMIN)
+
+    await deleteAllMail()
+    const result = await triggerSendNewsletter(request)
+    expect(result.errors).toBe(0)
+
+    // Maildev queue is eventually consistent — short grace before asserting
+    // absences.
+    await waitForMailFor(BOB)
+    await page.waitForTimeout(500)
+    expect(await getLatestMailFor(CAROL)).toBeNull()
+    expect(await getLatestMailFor(ADMIN)).toBeNull()
   })
 })

@@ -132,7 +132,7 @@ describe('formatTimeDE', () => {
     expect(formatTimeDE(new Date('2026-05-24T16:00:00Z'), 'Europe/Berlin')).toBe('18:00')
   })
 
-  it('normalizes the "24" midnight that some Intl runtimes emit', () => {
+  it('renders midnight as 00:00 (hourCycle h23)', () => {
     // 00:00 Berlin (CET, UTC+1) = 23:00 UTC of the previous day.
     expect(formatTimeDE(new Date('2025-12-31T23:00:00Z'), 'Europe/Berlin')).toBe('00:00')
   })

@@ -191,6 +191,7 @@ interface ZonedParts {
  * Pull calendar parts of `d` as observed in IANA timezone `tz`.
  * The Nuxt process runs with TZ=UTC, so all human-facing formatting must
  * convert through Intl rather than relying on Date's local getters.
+ * `hourCycle: 'h23'` pins midnight to "00" across Node/ICU versions.
  */
 function partsInTimezone(d: Date, tz: string): ZonedParts {
   const fmt = new Intl.DateTimeFormat('en-US', {
@@ -201,19 +202,17 @@ function partsInTimezone(d: Date, tz: string): ZonedParts {
     hour: '2-digit',
     minute: '2-digit',
     weekday: 'short',
-    hour12: false,
+    hourCycle: 'h23',
   })
-  const parts = fmt.formatToParts(d)
-  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
-  // Intl can emit "24" for midnight under hour12: false — normalize to 0.
-  const hourRaw = parseInt(get('hour'), 10)
+  const lookup: Record<string, string> = {}
+  for (const p of fmt.formatToParts(d)) lookup[p.type] = p.value
   return {
-    year: parseInt(get('year'), 10),
-    month: parseInt(get('month'), 10),
-    day: parseInt(get('day'), 10),
-    weekday: WEEKDAY_INDEX[get('weekday')] ?? 0,
-    hour: hourRaw === 24 ? 0 : hourRaw,
-    minute: parseInt(get('minute'), 10),
+    year: parseInt(lookup.year!, 10),
+    month: parseInt(lookup.month!, 10),
+    day: parseInt(lookup.day!, 10),
+    weekday: WEEKDAY_INDEX[lookup.weekday!]!,
+    hour: parseInt(lookup.hour!, 10),
+    minute: parseInt(lookup.minute!, 10),
   }
 }
 

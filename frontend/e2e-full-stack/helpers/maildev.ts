@@ -45,8 +45,14 @@ export async function getLatestMailFor(address: string): Promise<MaildevMessage 
 export async function waitForMailFor(address: string, timeoutMs = 10_000): Promise<MaildevMessage> {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    const msg = await getLatestMailFor(address)
-    if (msg) return msg
+    try {
+      const msg = await getLatestMailFor(address)
+      if (msg) return msg
+    } catch {
+      // Transient socket errors (Maildev closing keep-alive connections,
+      // momentary DNS hiccup) shouldn't fail the wait — keep polling until
+      // the deadline.
+    }
     await new Promise((r) => setTimeout(r, 250))
   }
   throw new Error(`Timed out waiting for mail to ${address}`)

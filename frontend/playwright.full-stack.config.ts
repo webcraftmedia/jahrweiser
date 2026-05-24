@@ -24,7 +24,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      'cross-env TZ=UTC SYNC_SECRET=${SYNC_SECRET:-dev-sync-secret} NODE_ENV=test npm run dev',
+      'cross-env TZ=UTC SYNC_SECRET=${SYNC_SECRET:-dev-sync-secret} LOGIN_RATE_LIMIT_MS=0 NODE_ENV=test npm run dev',
     url: 'http://localhost:3000',
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,

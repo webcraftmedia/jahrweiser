@@ -103,6 +103,13 @@ export default defineNuxtConfig({
     DB_NAME: process.env.DB_NAME || 'jahrweiser',
     // Bearer secret for POST /api/admin/sync-now (crontab trigger)
     SYNC_SECRET: process.env.SYNC_SECRET || 'dev-sync-secret',
+    // Per-user cooldown (ms) for /api/requestLoginLink. Defaults to 60s in
+    // production; e2e overrides to 0 so back-to-back logins for the same
+    // user (different tests in the same suite) don't get rate-limited.
+    LOGIN_RATE_LIMIT_MS:
+      process.env.LOGIN_RATE_LIMIT_MS !== undefined
+        ? parseInt(process.env.LOGIN_RATE_LIMIT_MS)
+        : 60_000,
     // SMTP
     SMTP_HOST: process.env.SMTP_HOST || 'localhost',
     SMTP_PORT: (process.env.SMTP_PORT && parseInt(process.env.SMTP_PORT)) || 1025,

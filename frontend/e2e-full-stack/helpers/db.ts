@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto'
+
 import mysql from 'mysql2/promise'
 
 let pool: mysql.Pool | null = null
@@ -23,6 +25,24 @@ function getPool(): mysql.Pool {
 
 export async function setLoginDisabled(email: string, disabled: boolean): Promise<void> {
   await getPool().query('UPDATE users SET login_disabled = ? WHERE email = ?', [disabled, email])
+}
+
+/**
+ * Subscribes a user to the newsletter without going through the UI / API.
+ * Also resets login_disabled and deleted_at so callers can safely re-use the
+ * same seed across retries without state bleed.
+ */
+export async function subscribeUserDirectly(email: string): Promise<void> {
+  const token = randomBytes(32).toString('hex')
+  await getPool().query(
+    `UPDATE users
+        SET newsletter_subscribed = 'subscribed',
+            unsubscribe_token = ?,
+            login_disabled = FALSE,
+            deleted_at = NULL
+      WHERE email = ?`,
+    [token, email],
+  )
 }
 
 export async function softDeleteUser(email: string): Promise<void> {

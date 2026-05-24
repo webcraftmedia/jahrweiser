@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { closeDb, setLoginDisabled, softDeleteUser } from './helpers/db'
+import { closeDb, setLoginDisabled, softDeleteUser, subscribeUserDirectly } from './helpers/db'
 import {
   deleteAllMail,
   extractLoginTokenFromMail,
@@ -166,25 +166,17 @@ test.describe('full-stack newsletter', () => {
     expect(res.status()).toBe(401)
   })
 
-  test('audience excludes login-disabled and soft-deleted users', async ({
-    page,
-    context,
-    request,
-  }) => {
-    // Three subscribed users: Bob (control, must receive), Carol (will be
-    // login_disabled), Admin (will be soft-deleted). Subscribing requires a
-    // session, so each logs in once via magic link first.
-    for (const email of [BOB, CAROL, ADMIN]) {
-      await loginViaMagicLink(page, email)
-      const res = await context.request.post('/api/me/newsletter', {
-        data: { subscribed: true },
-      })
-      expect(res.status()).toBe(200)
-    }
+  test('audience excludes login-disabled and soft-deleted users', async ({ page, request }) => {
+    // Subscribe three users directly in the sidecar. Going through the UI
+    // would mean three sequential magic-link logins in one context — but
+    // /login redirects to home once authenticated, and the per-user
+    // requestLoginLink rate limit (60s) makes back-to-back logins flaky.
+    // The recipient query in send-newsletter is what we want to exercise,
+    // not the subscribe path.
+    await subscribeUserDirectly(BOB)
+    await subscribeUserDirectly(CAROL)
+    await subscribeUserDirectly(ADMIN)
 
-    // Flip the exclusion bits directly in the sidecar DB — there is no admin
-    // endpoint for either field, and the recipient query in send-newsletter
-    // is what we want to exercise here.
     await setLoginDisabled(CAROL, true)
     await softDeleteUser(ADMIN)
 

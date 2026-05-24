@@ -173,10 +173,9 @@
 
   import type { CalendarEventExternal } from '@schedule-x/calendar'
 
-  import { designPalette } from '~~/shared/calendar-palette'
-
   import IconGrid from '~/assets/icon-grid.svg'
   import IconList from '~/assets/icon-list.svg'
+  import { designPalette } from '~~/shared/calendar-palette'
 
   interface RawCalendarEvent {
     calendar: string

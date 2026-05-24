@@ -94,10 +94,7 @@ export default defineEventHandler(async (event) => {
     let unsubscribeToken = user.unsubscribeToken
     if (!unsubscribeToken) {
       unsubscribeToken = randomBytes(32).toString('hex')
-      await db
-        .update(users)
-        .set({ unsubscribeToken })
-        .where(eq(users.uid, user.uid))
+      await db.update(users).set({ unsubscribeToken }).where(eq(users.uid, user.uid))
     }
     try {
       const events = await collectEventsForUser(davConfig, config.CLIENT_URI, user.email, range)

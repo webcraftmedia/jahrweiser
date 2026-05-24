@@ -64,14 +64,28 @@ describe('nextWeekRange', () => {
 })
 
 describe('formatDayHeadingDE', () => {
-  it('formats Sunday March 1 2026 in German', () => {
-    // 2026-03-01 is a Sunday
-    expect(formatDayHeadingDE(new Date(2026, 2, 1))).toBe('Sonntag, 1. März')
+  it('formats Sunday March 1 2026 in German for Europe/Berlin', () => {
+    // Noon UTC of 2026-03-01 falls on Sun in Berlin (CET) — independent of the
+    // server's own TZ.
+    expect(formatDayHeadingDE(new Date(Date.UTC(2026, 2, 1, 12)), 'Europe/Berlin')).toBe(
+      'Sonntag, 1. März',
+    )
   })
 
   it('formats a weekday with two-digit day in German', () => {
-    // 2026-12-15 is a Tuesday
-    expect(formatDayHeadingDE(new Date(2026, 11, 15))).toBe('Dienstag, 15. Dezember')
+    // Tue 2026-12-15 noon UTC
+    expect(formatDayHeadingDE(new Date(Date.UTC(2026, 11, 15, 12)), 'Europe/Berlin')).toBe(
+      'Dienstag, 15. Dezember',
+    )
+  })
+
+  it('uses the target timezone, not the server clock (DST regression)', () => {
+    // 22:30 UTC on Sun 2026-05-24 = 00:30 Berlin on Mon 2026-05-25 (CEST = UTC+2).
+    // Formatting in UTC would print "Sonntag, 24. Mai"; the correct heading is
+    // the Berlin calendar day.
+    expect(formatDayHeadingDE(new Date('2026-05-24T22:30:00Z'), 'Europe/Berlin')).toBe(
+      'Montag, 25. Mai',
+    )
   })
 })
 
@@ -102,11 +116,25 @@ describe('isoWeekNumber', () => {
 
 describe('formatTimeDE', () => {
   it('pads hours and minutes with leading zeros', () => {
-    expect(formatTimeDE(new Date(2026, 0, 1, 7, 5))).toBe('07:05')
+    // 07:05 Berlin (CET, UTC+1) = 06:05 UTC
+    expect(formatTimeDE(new Date('2026-01-01T06:05:00Z'), 'Europe/Berlin')).toBe('07:05')
   })
 
   it('formats 23:59 without truncating', () => {
-    expect(formatTimeDE(new Date(2026, 0, 1, 23, 59))).toBe('23:59')
+    // 23:59 Berlin (CET, UTC+1) = 22:59 UTC
+    expect(formatTimeDE(new Date('2026-01-01T22:59:00Z'), 'Europe/Berlin')).toBe('23:59')
+  })
+
+  it('respects CEST (UTC+2): 18:00 Berlin formats as 18:00, not 16:00', () => {
+    // Reported bug: server in UTC printed "16:00" for an event meant to read
+    // "18:00 Berlin". `Intl.DateTimeFormat` with `timeZone: 'Europe/Berlin'`
+    // handles the summer-time offset correctly.
+    expect(formatTimeDE(new Date('2026-05-24T16:00:00Z'), 'Europe/Berlin')).toBe('18:00')
+  })
+
+  it('renders midnight as 00:00 (hourCycle h23)', () => {
+    // 00:00 Berlin (CET, UTC+1) = 23:00 UTC of the previous day.
+    expect(formatTimeDE(new Date('2025-12-31T23:00:00Z'), 'Europe/Berlin')).toBe('00:00')
   })
 })
 
@@ -125,25 +153,39 @@ describe('groupEventsByDay', () => {
   }
 
   it('returns empty array for empty input', () => {
-    expect(groupEventsByDay([])).toStrictEqual([])
+    expect(groupEventsByDay([], 'Europe/Berlin')).toStrictEqual([])
   })
 
-  it('groups events by local calendar date', () => {
-    const monMorning = new Date(2026, 2, 2, 9, 0)
-    const monEvening = new Date(2026, 2, 2, 19, 0)
-    const tue = new Date(2026, 2, 3, 12, 0)
-    const groups = groupEventsByDay([ev(monMorning, 'A'), ev(tue, 'B'), ev(monEvening, 'C')])
+  it('groups events by calendar date in the target timezone', () => {
+    // Mon 2026-03-02: 09:00 Berlin (CET, UTC+1) = 08:00 UTC; 19:00 Berlin = 18:00 UTC.
+    // Tue 2026-03-03: 12:00 Berlin = 11:00 UTC.
+    const monMorning = new Date('2026-03-02T08:00:00Z')
+    const monEvening = new Date('2026-03-02T18:00:00Z')
+    const tue = new Date('2026-03-03T11:00:00Z')
+    const groups = groupEventsByDay(
+      [ev(monMorning, 'A'), ev(tue, 'B'), ev(monEvening, 'C')],
+      'Europe/Berlin',
+    )
     expect(groups).toHaveLength(2)
-    expect(groups[0]!.date.getDate()).toBe(2)
+    expect(formatDayHeadingDE(groups[0]!.date, 'Europe/Berlin')).toBe('Montag, 2. März')
     expect(groups[0]!.events.map((e) => e.title)).toStrictEqual(['A', 'C'])
-    expect(groups[1]!.date.getDate()).toBe(3)
+    expect(formatDayHeadingDE(groups[1]!.date, 'Europe/Berlin')).toBe('Dienstag, 3. März')
     expect(groups[1]!.events.map((e) => e.title)).toStrictEqual(['B'])
   })
 
+  it('buckets late-night events by the Berlin calendar day, not by UTC date', () => {
+    // 22:30 UTC Sun 2026-05-24 = 00:30 CEST Mon 2026-05-25.
+    // Without zone-aware bucketing the event would land under Sunday.
+    const lateNight = new Date('2026-05-24T22:30:00Z')
+    const groups = groupEventsByDay([ev(lateNight, 'A')], 'Europe/Berlin')
+    expect(groups).toHaveLength(1)
+    expect(formatDayHeadingDE(groups[0]!.date, 'Europe/Berlin')).toBe('Montag, 25. Mai')
+  })
+
   it('sorts buckets chronologically', () => {
-    const later = new Date(2026, 2, 10, 9, 0)
-    const earlier = new Date(2026, 2, 3, 9, 0)
-    const groups = groupEventsByDay([ev(later, 'L'), ev(earlier, 'E')])
+    const later = new Date('2026-03-10T08:00:00Z')
+    const earlier = new Date('2026-03-03T08:00:00Z')
+    const groups = groupEventsByDay([ev(later, 'L'), ev(earlier, 'E')], 'Europe/Berlin')
     expect(groups.map((g) => g.events[0]!.title)).toStrictEqual(['E', 'L'])
   })
 })

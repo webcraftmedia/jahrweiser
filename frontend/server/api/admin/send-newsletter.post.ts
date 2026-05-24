@@ -83,11 +83,11 @@ export default defineEventHandler(async (event) => {
     }
     try {
       const events = await collectEventsForUser(davConfig, config.CLIENT_URI, user.email, range)
-      const days = groupEventsByDay(events).map((g) => ({
-        heading: formatDayHeadingDE(g.date),
+      const days = groupEventsByDay(events, config.APP_TIMEZONE).map((g) => ({
+        heading: formatDayHeadingDE(g.date, config.APP_TIMEZONE),
         events: g.events.map((ev) => ({
           ...ev,
-          timeLabel: ev.allDay ? '' : formatTimeDE(ev.startDate),
+          timeLabel: ev.allDay ? '' : formatTimeDE(ev.startDate, config.APP_TIMEZONE),
         })),
       }))
 

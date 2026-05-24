@@ -123,6 +123,10 @@ export default defineNuxtConfig({
       (process.env.SMTP_MAX_MESSAGES && parseInt(process.env.SMTP_MAX_MESSAGES)) || 100,
     // DOMAIN
     CLIENT_URI: process.env.CLIENT_URI || 'http://localhost:3000',
+    // IANA timezone used to format dates/times in server-rendered output
+    // (e.g. the weekly newsletter). The Nuxt process itself runs with TZ=UTC,
+    // so any human-facing formatting must explicitly opt into this zone.
+    APP_TIMEZONE: process.env.APP_TIMEZONE || 'Europe/Berlin',
 
     // Keys within public, will be also exposed to the client-side
     public: {

@@ -168,21 +168,72 @@ export async function collectEventsForUser(
   return results
 }
 
+const WEEKDAY_INDEX: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+}
+
+interface ZonedParts {
+  year: number
+  month: number
+  day: number
+  weekday: number
+  hour: number
+  minute: number
+}
+
 /**
- * Group events by ISO date string (yyyy-mm-dd, local time) so the email
- * template can render one section per day. Days with no events are
- * omitted — keeps the mail compact.
+ * Pull calendar parts of `d` as observed in IANA timezone `tz`.
+ * The Nuxt process runs with TZ=UTC, so all human-facing formatting must
+ * convert through Intl rather than relying on Date's local getters.
+ * `hourCycle: 'h23'` pins midnight to "00" across Node/ICU versions.
+ */
+function partsInTimezone(d: Date, tz: string): ZonedParts {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    weekday: 'short',
+    hourCycle: 'h23',
+  })
+  const lookup: Record<string, string> = {}
+  for (const p of fmt.formatToParts(d)) lookup[p.type] = p.value
+  return {
+    year: parseInt(lookup.year!, 10),
+    month: parseInt(lookup.month!, 10),
+    day: parseInt(lookup.day!, 10),
+    weekday: WEEKDAY_INDEX[lookup.weekday!]!,
+    hour: parseInt(lookup.hour!, 10),
+    minute: parseInt(lookup.minute!, 10),
+  }
+}
+
+/**
+ * Group events by calendar date in timezone `tz` so the email template can
+ * render one section per day. Days with no events are omitted — keeps the
+ * mail compact. The bucket's `date` is noon UTC of the bucket's calendar
+ * date in `tz`: stable as a sort key and as input to `formatDayHeadingDE`,
+ * which re-resolves the calendar day in the same zone.
  */
 export function groupEventsByDay(
   events: NewsletterEvent[],
+  tz: string,
 ): { date: Date; events: NewsletterEvent[] }[] {
   const buckets = new Map<string, { date: Date; events: NewsletterEvent[] }>()
   for (const ev of events) {
-    const d = ev.startDate
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const p = partsInTimezone(ev.startDate, tz)
+    const key = `${p.year}-${String(p.month).padStart(2, '0')}-${String(p.day).padStart(2, '0')}`
     let bucket = buckets.get(key)
     if (!bucket) {
-      bucket = { date: new Date(d.getFullYear(), d.getMonth(), d.getDate()), events: [] }
+      bucket = { date: new Date(Date.UTC(p.year, p.month - 1, p.day, 12)), events: [] }
       buckets.set(key, bucket)
     }
     bucket.events.push(ev)
@@ -206,12 +257,14 @@ const MONTH_DE = [
   'Dezember',
 ]
 
-export function formatDayHeadingDE(d: Date): string {
-  return `${WEEKDAY_DE[d.getDay()]}, ${d.getDate()}. ${MONTH_DE[d.getMonth()]}`
+export function formatDayHeadingDE(d: Date, tz: string): string {
+  const p = partsInTimezone(d, tz)
+  return `${WEEKDAY_DE[p.weekday]}, ${p.day}. ${MONTH_DE[p.month - 1]}`
 }
 
-export function formatTimeDE(d: Date): string {
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+export function formatTimeDE(d: Date, tz: string): string {
+  const p = partsInTimezone(d, tz)
+  return `${String(p.hour).padStart(2, '0')}:${String(p.minute).padStart(2, '0')}`
 }
 
 interface NewsletterLocale {

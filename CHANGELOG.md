@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.8.0...v1.8.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* **frontend:** fix timezone problem for weekly newsletter ([#215](https://github.com/webcraftmedia/jahrweiser/issues/215)) ([0f533ea](https://github.com/webcraftmedia/jahrweiser/commit/0f533ea376fba91ee6783afcb876ee1627659eb2))
+
 ## [1.8.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.7.2...v1.8.0) (2026-05-24)
 
 

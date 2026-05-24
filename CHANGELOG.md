@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.7.2...v1.8.0) (2026-05-24)
+
+
+### Features
+
+* **frontend:** weekly newsletter ([#213](https://github.com/webcraftmedia/jahrweiser/issues/213)) ([950fd5c](https://github.com/webcraftmedia/jahrweiser/commit/950fd5c5fc2b325eda164bcb7767cba8f1de5e05))
+
 ## [1.7.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.7.1...v1.7.2) (2026-05-15)
 
 

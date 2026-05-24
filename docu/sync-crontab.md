@@ -1,8 +1,8 @@
-# Daily DAV → Sidecar Sync (Crontab)
+# DAV → Sidecar Sync (Crontab)
 
 DAV remains the source of truth for contact data. The MariaDB sidecar holds
 auth state and a mirror of relevant DAV fields (email, display name, admin
-tags). They are reconciled once per day by an HTTP POST to:
+tags). They are reconciled every 10 minutes by an HTTP POST to:
 
 ```
 POST /api/admin/sync-now
@@ -21,7 +21,7 @@ The endpoint:
 
 ```cron
 # /etc/crontabs/root  — apply with `crontab /etc/crontabs/root` or via openrc
-0 3 * * * curl -sS -X POST -H "Authorization: Bearer $SYNC_SECRET" \
+*/10 * * * * curl -sS -X POST -H "Authorization: Bearer $SYNC_SECRET" \
   https://app.example.com/api/admin/sync-now >> /var/log/jahrweiser-sync.log 2>&1
 ```
 
@@ -34,7 +34,7 @@ SYNC_SECRET=<long-random-token>
 ```
 
 ```cron
-0 3 * * * . /etc/jahrweiser-sync.env && curl -sS -X POST \
+*/10 * * * * . /etc/jahrweiser-sync.env && curl -sS -X POST \
   -H "Authorization: Bearer $SYNC_SECRET" \
   https://app.example.com/api/admin/sync-now \
   >> /var/log/jahrweiser-sync.log 2>&1

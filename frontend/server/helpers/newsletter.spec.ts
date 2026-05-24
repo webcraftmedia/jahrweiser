@@ -264,6 +264,34 @@ describe('renderNewsletterText', () => {
     expect(out).toContain('16:00 [Theater AG] Probe Theater AG\n  http://')
   })
 
+  it('indents every continuation chunk when an event line wraps multiple times', () => {
+    const out = renderNewsletterText({
+      ...baseArgs,
+      days: [
+        {
+          heading: 'Freitag, 22. Mai',
+          events: [
+            {
+              title: 'Sehr ausführlicher Titel der Veranstaltung mit vielen Wörtern',
+              calendar: 'Veranstaltungskalender',
+              allDay: false,
+              timeLabel: '16:00',
+              detailUrl:
+                'http://app.example.com/2026/05/event/seed-event-today-with-a-really-long-id',
+            },
+          ],
+        },
+      ],
+    })
+    // The line is long enough to wrap twice: once mid-title, once before the
+    // URL. Every continuation chunk gets the two-space indent.
+    expect(out).toContain(
+      '16:00 [Veranstaltungskalender] Sehr ausführlicher Titel der Veranstaltung mit\n' +
+        '  vielen Wörtern\n' +
+        '  http://app.example.com/2026/05/event/seed-event-today-with-a-really-long-id',
+    )
+  })
+
   it('does not HTML-encode quotes in titles', () => {
     const out = renderNewsletterText({
       ...baseArgs,

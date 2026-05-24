@@ -246,13 +246,14 @@ function loadNewsletterLocale(): NewsletterLocale {
 function wrapPlainLine(line: string, width = 78, indent = '  '): string {
   if (line.length <= width) return line
   const words = line.split(' ')
+  // Callers construct lines as `${prefix}[${cal}] ${title} ${url}`, so there
+  // is always at least one space. Combined with line.length > width above,
+  // the loop is guaranteed to push at least once and `current` is never
+  // empty at the end — no fall-back branches needed.
   const out: string[] = []
-  let current = ''
-  for (const w of words) {
-    if (current === '') {
-      current = w
-      continue
-    }
+  let current = words[0]!
+  for (let i = 1; i < words.length; i++) {
+    const w = words[i]!
     const prefix = out.length === 0 ? '' : indent
     const candidate = `${current} ${w}`
     if (prefix.length + candidate.length > width) {
@@ -262,9 +263,7 @@ function wrapPlainLine(line: string, width = 78, indent = '  '): string {
       current = candidate
     }
   }
-  if (current !== '') {
-    out.push((out.length === 0 ? '' : indent) + current)
-  }
+  out.push(indent + current)
   return out.join('\n')
 }
 

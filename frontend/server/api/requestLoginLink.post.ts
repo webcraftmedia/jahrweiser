@@ -10,7 +10,6 @@ import { createCardDAVAccount, findUserByEmail } from '../helpers/dav'
 import { defaultParams, emailRenderer } from '../helpers/email'
 import { extractUserFromVCardData } from '../helpers/sync'
 
-const REQUEST_RATE_LIMIT_MS = 60_000
 const TOKEN_TTL_MS = 30 * 60 * 1000
 const NEGATIVE_CACHE_TTL_MS = 60 * 60 * 1000
 
@@ -95,7 +94,11 @@ export default defineEventHandler(async (event) => {
       .limit(1)
   )[0]
 
-  if (recentToken && Date.now() - recentToken.requestedAt.getTime() < REQUEST_RATE_LIMIT_MS) {
+  if (
+    config.LOGIN_RATE_LIMIT_MS > 0 &&
+    recentToken &&
+    Date.now() - recentToken.requestedAt.getTime() < config.LOGIN_RATE_LIMIT_MS
+  ) {
     return {}
   }
 
@@ -104,23 +107,31 @@ export default defineEventHandler(async (event) => {
   await db.insert(loginTokens).values({ token, userUid: userRow.uid, expiresAt })
 
   const to = { address: userRow.email, name: userRow.displayName ?? '' }
+  const sendArgs = {
+    template: path.join(process.cwd(), 'server/emails/requestLoginLink'),
+    message: { to },
+    locals: {
+      ...defaultParams,
+      locale: 'de',
+      name: userRow.displayName,
+      authURL: (() => {
+        const url = new URL(`/login/${token}`, config.CLIENT_URI)
+        if (redirect) url.searchParams.set('redirect', redirect)
+        return url
+      })(),
+    },
+  }
   try {
-    await emailRenderer.send({
-      template: path.join(process.cwd(), 'server/emails/requestLoginLink'),
-      message: { to },
-      locals: {
-        ...defaultParams,
-        locale: 'de',
-        name: userRow.displayName,
-        authURL: (() => {
-          const url = new URL(`/login/${token}`, config.CLIENT_URI)
-          if (redirect) url.searchParams.set('redirect', redirect)
-          return url
-        })(),
-      },
-    })
+    await emailRenderer.send(sendArgs)
   } catch {
-    throw createError({ statusCode: 500, statusMessage: 'Failed to send login email' })
+    // Nodemailer pool connections can drop silently (SMTP server idle-timeout,
+    // brief network blip). One immediate retry establishes a fresh connection
+    // and is cheap enough to be worth the latency cost on the first failure.
+    try {
+      await emailRenderer.send(sendArgs)
+    } catch {
+      throw createError({ statusCode: 500, statusMessage: 'Failed to send login email' })
+    }
   }
 
   return {}

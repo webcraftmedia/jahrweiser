@@ -23,6 +23,8 @@
     "cli:admin:revoke": "npx tsx cli/admin-revoke.ts",
     "cli:admin:tags:grant": "npx tsx cli/admin-tags-grant.ts",
     "cli:admin:tags:revoke": "npx tsx cli/admin-tags-revoke.ts",
+    "cli:newsletter:subscribe": "npx tsx cli/newsletter-subscribe.ts",
+    "cli:newsletter:unsubscribe": "npx tsx cli/newsletter-unsubscribe.ts",
     "cli:ics:import": "npx tsx cli/ics-import.ts",
     "cli:sync:run": "npx tsx cli/sync-run.ts",
     "cli:seed:reset": "npx tsx cli/seed-reset.ts",

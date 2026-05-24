@@ -22,6 +22,12 @@ export default defineVitestConfig({
         'server/api/requestLoginLink.post.ts',
         'server/api/redeemLoginLink.post.ts',
         'server/api/admin/sync-now.post.ts',
+        'server/api/admin/send-newsletter.post.ts',
+        'server/api/me/newsletter.get.ts',
+        'server/api/me/newsletter.post.ts',
+        'server/api/newsletter/unsubscribe.ts',
+        'server/api/newsletter/unsubscribe.get.ts',
+        'server/api/newsletter/unsubscribe.post.ts',
         'server/helpers/sync.ts',
       ],
       thresholds: {

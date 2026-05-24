@@ -71,6 +71,61 @@ console.warn(
 )
 
 // ---------------------------------------------------------------------------
+// Extra calendars — beyond the default 'Vereinskalender' that the Baikal
+// bootstrap creates. Idempotent via MKCALENDAR; Baikal answers 201 on create
+// and 405 if the URI already exists.
+// ---------------------------------------------------------------------------
+
+interface SeedCalendar {
+  uri: string
+  displayName: string
+  color: string
+}
+
+const extraCalendars: SeedCalendar[] = [
+  { uri: 'theater-ag', displayName: 'Theater AG', color: '#a855f7' },
+  { uri: 'sportgruppe', displayName: 'Sportgruppe', color: '#22c55e' },
+  { uri: 'familie', displayName: 'Familie', color: '#f59e0b' },
+]
+
+const calendarsBase = `${config.DAV_URL.replace(/\/+$/, '')}/dav.php/calendars/admin`
+const davAuth = `Basic ${Buffer.from(`${config.DAV_USERNAME}:${config.DAV_PASSWORD}`).toString('base64')}`
+
+async function ensureCalendar(cal: SeedCalendar): Promise<void> {
+  const url = `${calendarsBase}/${cal.uri}/`
+  const body =
+    '<?xml version="1.0" encoding="utf-8" ?>' +
+    '<C:mkcalendar xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:I="http://apple.com/ns/ical/">' +
+    '  <D:set>' +
+    '    <D:prop>' +
+    `      <D:displayname>${cal.displayName}</D:displayname>` +
+    `      <I:calendar-color>${cal.color}</I:calendar-color>` +
+    '      <C:supported-calendar-component-set>' +
+    '        <C:comp name="VEVENT"/>' +
+    '      </C:supported-calendar-component-set>' +
+    '    </D:prop>' +
+    '  </D:set>' +
+    '</C:mkcalendar>'
+  const res = await fetch(url, {
+    method: 'MKCALENDAR',
+    headers: { Authorization: davAuth, 'Content-Type': 'application/xml; charset=utf-8' },
+    body,
+  })
+  if (res.status === 201) {
+    console.warn(`  + calendar ${cal.displayName} (${cal.uri})`)
+  } else if (res.status === 405) {
+    console.warn(`  = calendar ${cal.displayName} (${cal.uri}) already exists`)
+  } else {
+    throw new Error(`MKCALENDAR ${url} failed: HTTP ${res.status} ${res.statusText}`)
+  }
+}
+
+console.warn(`[seed-demo] Ensuring ${extraCalendars.length} extra calendar(s) in DAV.`)
+for (const cal of extraCalendars) {
+  await ensureCalendar(cal)
+}
+
+// ---------------------------------------------------------------------------
 // Calendar events — PUT iCalendar files into Baikal's default calendar so the
 // app's calendar UI has something to render right after `npm run cli:seed:demo`.
 // ---------------------------------------------------------------------------
@@ -82,9 +137,15 @@ interface SeedEvent {
   location?: string
   /** offset in days from "today" (negative = past) */
   startOffsetDays: number
+  /** start hour in UTC; defaults to 18 if omitted. Ignored if allDay=true */
+  startHourUTC?: number
+  /** start minute in UTC; defaults to 0. Ignored if allDay=true */
+  startMinuteUTC?: number
   /** total duration in hours; ignored if allDay=true */
   durationHours?: number
   allDay?: boolean
+  /** Calendar URI (e.g. 'default', 'theater-ag'). Defaults to 'default'. */
+  calendar?: string
 }
 
 function pad(n: number): string {
@@ -103,7 +164,7 @@ function formatIcsDate(d: Date, allDay: boolean): string {
 
 function buildIcs(event: SeedEvent): string {
   const base = new Date()
-  base.setUTCHours(18, 0, 0, 0)
+  base.setUTCHours(event.startHourUTC ?? 18, event.startMinuteUTC ?? 0, 0, 0)
   const start = new Date(base)
   start.setUTCDate(base.getUTCDate() + event.startOffsetDays)
   const end = new Date(start)
@@ -142,20 +203,105 @@ const seedEvents: SeedEvent[] = [
     location: 'Vereinsheim',
     startOffsetDays: -1,
     durationHours: 2,
+    calendar: 'default',
+  },
+  // Today — three events on three different calendars
+  {
+    uid: 'seed-event-today-morning',
+    summary: 'Yoga im Park',
+    location: 'Stadtpark Wiese 3',
+    startOffsetDays: 0,
+    startHourUTC: 7,
+    durationHours: 1,
+    calendar: 'sportgruppe',
   },
   {
     uid: 'seed-event-today',
     summary: 'Probe Theater AG',
     location: 'Saal',
     startOffsetDays: 0,
+    startHourUTC: 16,
     durationHours: 3,
+    calendar: 'theater-ag',
+  },
+  {
+    uid: 'seed-event-today-evening',
+    summary: 'Chorprobe',
+    location: 'Kirche St. Marien',
+    startOffsetDays: 0,
+    startHourUTC: 19,
+    startMinuteUTC: 30,
+    durationHours: 2,
+    calendar: 'default',
+  },
+  // Tomorrow — events from different calendars on the same day
+  {
+    uid: 'seed-event-tomorrow-morning',
+    summary: 'Frühschoppen der Blaskapelle',
+    location: 'Marktplatz',
+    startOffsetDays: 1,
+    startHourUTC: 9,
+    durationHours: 2,
+    calendar: 'default',
+  },
+  {
+    uid: 'seed-event-tomorrow-family',
+    summary: 'Kinderflohmarkt',
+    location: 'Pfarrgarten',
+    startOffsetDays: 1,
+    startHourUTC: 14,
+    durationHours: 3,
+    calendar: 'familie',
   },
   {
     uid: 'seed-event-tomorrow',
     summary: 'Stammtisch',
     location: 'Gasthof zur Linde',
     startOffsetDays: 1,
+    startHourUTC: 18,
     durationHours: 3,
+    calendar: 'default',
+  },
+  // +2 days — sport
+  {
+    uid: 'seed-event-plus2-sport',
+    summary: 'Lauftreff',
+    location: 'Treffpunkt Sportplatz',
+    startOffsetDays: 2,
+    startHourUTC: 17,
+    durationHours: 1,
+    calendar: 'sportgruppe',
+  },
+  // +3 days — two events on different calendars
+  {
+    uid: 'seed-event-plus3-allday',
+    summary: 'Vereinsausflug',
+    description: 'Busfahrt ins Umland mit Mittagessen',
+    location: 'Abfahrt: Vereinsheim',
+    startOffsetDays: 3,
+    allDay: true,
+    calendar: 'default',
+  },
+  {
+    uid: 'seed-event-plus3-evening',
+    summary: 'Premiere "Drei Schwestern"',
+    description: 'Theaterstück mit anschließender Diskussion',
+    location: 'Bürgersaal',
+    startOffsetDays: 3,
+    startHourUTC: 19,
+    durationHours: 2,
+    calendar: 'theater-ag',
+  },
+  // +5 days — family
+  {
+    uid: 'seed-event-plus5-family',
+    summary: 'Familienwanderung',
+    description: 'Kinderfreundliche Strecke zum Spielplatz',
+    location: 'Waldparkplatz',
+    startOffsetDays: 5,
+    startHourUTC: 10,
+    durationHours: 3,
+    calendar: 'familie',
   },
   {
     uid: 'seed-event-next-week',
@@ -164,6 +310,7 @@ const seedEvents: SeedEvent[] = [
     location: 'Treffpunkt Marktplatz',
     startOffsetDays: 7,
     allDay: true,
+    calendar: 'default',
   },
   {
     uid: 'seed-event-next-month',
@@ -172,15 +319,14 @@ const seedEvents: SeedEvent[] = [
     location: 'Vereinsheim',
     startOffsetDays: 35,
     durationHours: 4,
+    calendar: 'default',
   },
 ]
 
-const calendarUrlBase = `${config.DAV_URL.replace(/\/+$/, '')}/dav.php/calendars/admin/default/`
-const davAuth = `Basic ${Buffer.from(`${config.DAV_USERNAME}:${config.DAV_PASSWORD}`).toString('base64')}`
-
 console.warn(`[seed-demo] Creating ${seedEvents.length} calendar event(s) in DAV.`)
 for (const event of seedEvents) {
-  const url = `${calendarUrlBase}${event.uid}.ics`
+  const calendarUri = event.calendar ?? 'default'
+  const url = `${calendarsBase}/${calendarUri}/${event.uid}.ics`
   const body = buildIcs(event)
   const res = await fetch(url, {
     method: 'PUT',
@@ -190,7 +336,7 @@ for (const event of seedEvents) {
   if (!res.ok) {
     throw new Error(`Failed to PUT ${url}: HTTP ${res.status} ${res.statusText}`)
   }
-  console.warn(`  + ${event.summary}`)
+  console.warn(`  + [${calendarUri}] ${event.summary}`)
 }
 
 process.exit(0)

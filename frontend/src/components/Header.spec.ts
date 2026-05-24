@@ -169,9 +169,11 @@ describe('Header', () => {
     // Open mobile menu
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
     expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
-    // Admin link should not be in mobile menu
+    // Admin link should not be present; Settings link should be the only nav link.
+    expect(wrapper.find('#navbar-mobile a[href="/admin/members/add"]').exists()).toBe(false)
     const mobileLinks = wrapper.findAll('#navbar-mobile nav a')
-    expect(mobileLinks).toHaveLength(0)
+    expect(mobileLinks).toHaveLength(1)
+    expect(mobileLinks[0]!.attributes('href')).toBe('/settings')
     // Logout button should still be present
     expect(wrapper.find('#navbar-mobile nav button').exists()).toBe(true)
   })

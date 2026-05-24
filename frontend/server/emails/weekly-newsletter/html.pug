@@ -1,0 +1,36 @@
+extend ../layout.pug
+
+block content
+  p!= t('emails.weeklyNewsletter.intro')
+
+  if days.length === 0
+    p!= t('emails.weeklyNewsletter.noEvents')
+  else
+    each day in days
+      h3(style="margin-top:1.5em;margin-bottom:0.5em;font-size:1.05em;color:#1e293b")= day.heading
+      ul(style="list-style:none;padding-left:0;margin:0")
+        each ev in day.events
+          li(style="margin:0 0 1em 0;padding:0.6em 0.75em;border-left:4px solid " + ev.color + ";background:#f8fafc")
+            div(style="font-size:0.85em;color:#475569;text-transform:uppercase;letter-spacing:0.04em")
+              = ev.calendar
+              if !ev.allDay
+                |  ·
+                = ev.timeLabel
+            div(style="margin-top:0.2em;font-size:1.08em;font-weight:600;color:#1e293b")
+              = ev.title
+            div(style="margin-top:0.3em;font-size:0.85em;color:#64748b")
+              a(href=ev.detailUrl style="color:#64748b;text-decoration:underline")
+                != t('emails.weeklyNewsletter.openEvent')
+
+  p(style="margin-top:2em")
+    a.button(href=ORGANIZATION_URL)!= t('emails.weeklyNewsletter.openCalendar')
+
+  hr(style="margin-top:2.5em;border:0;border-top:1px solid #e2e8f0")
+  p(style="font-size:0.85em;color:#64748b;margin-top:1em")
+    != t('emails.weeklyNewsletter.footerHint')
+    br
+    a(href=settingsUrl style="color:#64748b;text-decoration:underline")
+      != t('emails.weeklyNewsletter.settingsLink')
+    |  ·
+    a(href=unsubscribeUrl style="color:#64748b;text-decoration:underline")
+      != t('emails.weeklyNewsletter.unsubscribe')

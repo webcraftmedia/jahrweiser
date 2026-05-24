@@ -20,6 +20,7 @@
       "logout": "↪ Ausloggen",
       "logout-label": "Ausloggen",
       "open-menu": "Menü öffnen",
+      "settings": "Einstellungen",
       "welcome": "Willkommen"
     },
     "Modal": {
@@ -107,6 +108,21 @@
       "token": {
         "loading": "Laden..."
       }
+    },
+    "settings": {
+      "loading": "Wird geladen...",
+      "newsletter": {
+        "description": "Bekomme jeden Sonntag um 18:00 eine E-Mail mit allen Terminen der kommenden Woche.",
+        "disabled": "Inaktiv — du bekommst keinen Newsletter.",
+        "enabled": "Aktiv — du bekommst den wöchentlichen Newsletter.",
+        "error": "Konnte nicht speichern. Bitte später erneut versuchen.",
+        "heading": "Wöchentlicher Newsletter",
+        "saved": "Gespeichert.",
+        "saving": "Wird gespeichert...",
+        "toggleOff": "Newsletter abbestellen",
+        "toggleOn": "Newsletter aktivieren"
+      },
+      "title": "Einstellungen"
     }
   }
 }

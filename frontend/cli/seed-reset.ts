@@ -43,22 +43,38 @@ for (const ab of addressbooks) {
 }
 console.warn(`[seed-reset] DAV: deleted ${davDeleted} VCard(s).`)
 
-// Wipe calendar events too. We list them via PROPFIND on the default
-// calendar URL and DELETE each .ics resource individually.
-const calendarUrl = `${config.DAV_URL.replace(/\/+$/, '')}/dav.php/calendars/admin/default/`
-const propfind = await fetch(calendarUrl, {
+// Wipe calendar events too. We enumerate calendars under the admin principal
+// via PROPFIND depth=1, then PROPFIND each calendar for its .ics resources
+// and DELETE them individually. This way the reset works regardless of how
+// many demo calendars the seed has provisioned.
+const davRoot = config.DAV_URL.replace(/\/+$/, '')
+const calendarsBase = `${davRoot}/dav.php/calendars/admin/`
+const calendarList = await fetch(calendarsBase, {
   method: 'PROPFIND',
   headers: { ...fetchHeaders, Depth: '1' },
 })
 let icsDeleted = 0
-if (propfind.ok || propfind.status === 207) {
-  const xml = await propfind.text()
-  const hrefs = [...xml.matchAll(/<d:href>([^<]+\.ics)<\/d:href>/g)].map((m) => m[1]!)
-  for (const href of hrefs) {
-    const url = href.startsWith('http') ? href : `${config.DAV_URL.replace(/\/+$/, '')}${href}`
-    const del = await fetch(url, { method: 'DELETE', headers: fetchHeaders })
-    if (del.status === 204 || del.status === 200 || del.status === 404) {
-      icsDeleted += 1
+if (calendarList.ok || calendarList.status === 207) {
+  const listXml = await calendarList.text()
+  // Each calendar appears as a <d:href> ending in / (its own collection URI).
+  const calendarHrefs = [...listXml.matchAll(/<d:href>([^<]+)<\/d:href>/g)]
+    .map((m) => m[1]!)
+    .filter((href) => href.endsWith('/') && href !== '/dav.php/calendars/admin/')
+  for (const calHref of calendarHrefs) {
+    const calUrl = calHref.startsWith('http') ? calHref : `${davRoot}${calHref}`
+    const inside = await fetch(calUrl, {
+      method: 'PROPFIND',
+      headers: { ...fetchHeaders, Depth: '1' },
+    })
+    if (!inside.ok && inside.status !== 207) continue
+    const xml = await inside.text()
+    const hrefs = [...xml.matchAll(/<d:href>([^<]+\.ics)<\/d:href>/g)].map((m) => m[1]!)
+    for (const href of hrefs) {
+      const url = href.startsWith('http') ? href : `${davRoot}${href}`
+      const del = await fetch(url, { method: 'DELETE', headers: fetchHeaders })
+      if (del.status === 204 || del.status === 200 || del.status === 404) {
+        icsDeleted += 1
+      }
     }
   }
 }

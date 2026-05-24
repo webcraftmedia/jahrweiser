@@ -119,7 +119,7 @@ mariadb --socket=/run/mysqld/mysqld.sock -u jahrweiser -pERSETZE_MICH_MIT_DEM_PA
 Sollte die gleiche Zahl wie `added` aus Schritt 6 zeigen.
 
 
-## 8) Crontab für täglichen Sync einrichten
+## 8) Crontab für DAV-Sync einrichten (alle 10 Minuten)
 
 `.env`-File für die Cron-Umgebung anlegen:
 
@@ -130,16 +130,24 @@ EOF
 chmod 600 /etc/jahrweiser-sync.env
 ```
 
-Crontab-Eintrag (z.B. 3 Uhr morgens):
+Crontab-Eintrag:
 
 ```
 crontab -l 2>/dev/null > /tmp/cron.bak
-echo '0 3 * * * . /etc/jahrweiser-sync.env && curl -sS -X POST -H "Authorization: Bearer $SYNC_SECRET" https://gg-g.info/api/admin/sync-now >> /var/log/jahrweiser-sync.log 2>&1' >> /tmp/cron.bak
+echo '*/10 * * * * . /etc/jahrweiser-sync.env && curl -sS -X POST -H "Authorization: Bearer $SYNC_SECRET" https://gg-g.info/api/admin/sync-now >> /var/log/jahrweiser-sync.log 2>&1' >> /tmp/cron.bak
 crontab /tmp/cron.bak
 crontab -l
 ```
 
 Letzte Zeile bestätigt dass der Eintrag drin ist.
+
+Der Sync ist idempotenz-gesichert (10-min-Lock in `sync_state`); parallele
+Läufe sind unschädlich. Letzten erfolgreichen Sync abfragen:
+
+```
+mariadb --socket=/run/mysqld/mysqld.sock -u jahrweiser -pERSETZE_MICH_MIT_DEM_PASSWORT jahrweiser \
+  -e "SELECT collection_url, last_synced_at, running_since FROM sync_state;"
+```
 
 
 ## 8b) Crontab für wöchentlichen Newsletter (Sonntag 18:00)
@@ -154,13 +162,10 @@ crontab /tmp/cron.bak
 crontab -l
 ```
 
-Phase 1 (Opt-in): in `.env` NICHTS extra setzen — nur Nutzer, die sich aktiv
-in `/settings` anmelden, bekommen Mails. Für Phase 2 (Opt-out für alle)
-später ergänzen:
-
-```
-NEWSLETTER_DEFAULT_OPT_IN=true
-```
+Empfänger sind ausschließlich Nutzer mit `newsletter_subscribed = 'subscribed'`
+— also alle, die sich aktiv über `/settings` eingetragen haben oder per CLI
+freigeschaltet wurden (siehe Schritt 8c). Frischer Deploy = leerer Verteiler =
+No-Op-Versand.
 
 Manueller Probe-Versand zur Verifikation:
 
@@ -168,7 +173,29 @@ Manueller Probe-Versand zur Verifikation:
 curl -X POST -H "Authorization: Bearer ERSETZE_MICH_MIT_DEM_SYNC_SECRET" https://gg-g.info/api/admin/send-newsletter
 ```
 
-Antwort sollte `{"sent": N, "skipped": 0, "errors": 0, ...}` sein.
+Antwort sollte `{"sent": N, "skipped": 0, "errors": 0, "errorEmails": []}` sein
+— `N=0` direkt nach dem Cutover.
+
+
+## 8c) Einzelne Nutzer per CLI freischalten / abmelden
+
+Wenn ein Nutzer den Newsletter haben soll, ohne sich selbst über `/settings`
+einzutragen:
+
+```
+cd /var/www/localhost/htdocs/frontend
+npm run cli:newsletter:subscribe -- nutzer@example.com
+# bzw.
+npm run cli:newsletter:unsubscribe -- nutzer@example.com
+```
+
+Voraussetzung: der Nutzer muss bereits in der Sidecar-DB vorhanden sein
+(durch einen früheren Login oder durch einen Sync-Lauf nach Schritt 6).
+Andernfalls bricht das Script mit `User with email ... not found in sidecar`
+ab — dann erst Sync triggern oder den Nutzer sich einmal einloggen lassen.
+
+Beim Subscribe wird automatisch ein `unsubscribe_token` für den
+`List-Unsubscribe`-Header generiert (RFC 8058).
 
 
 ## 9) Login testen (eingeloggter Browser)

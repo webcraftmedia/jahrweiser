@@ -183,8 +183,8 @@ test.describe('full-stack newsletter', () => {
     }
 
     // Flip the exclusion bits directly in the sidecar DB — there is no admin
-    // endpoint for either field, and the audienceFilter() is what we want to
-    // exercise here.
+    // endpoint for either field, and the recipient query in send-newsletter
+    // is what we want to exercise here.
     await setLoginDisabled(CAROL, true)
     await softDeleteUser(ADMIN)
 

@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 
-import { and, eq, isNull, or } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 
 import { useDb } from '~~/server/db'
 import { users } from '~~/server/db/schema'
@@ -21,28 +21,6 @@ interface SendResult {
   skipped: number
   errors: number
   errorEmails: string[]
-}
-
-/**
- * Audience policy:
- *   - phase 1 (opt-in):  WHERE newsletter_subscribed = 'subscribed'
- *   - phase 2 (opt-out): WHERE newsletter_subscribed IS NULL OR = 'subscribed'
- * Flip via env `NEWSLETTER_DEFAULT_OPT_IN=true`.
- */
-function audienceFilter() {
-  const defaultOptIn = process.env.NEWSLETTER_DEFAULT_OPT_IN === 'true'
-  if (defaultOptIn) {
-    return and(
-      isNull(users.deletedAt),
-      eq(users.loginDisabled, false),
-      or(eq(users.newsletterSubscribed, 'subscribed'), isNull(users.newsletterSubscribed)),
-    )
-  }
-  return and(
-    isNull(users.deletedAt),
-    eq(users.loginDisabled, false),
-    eq(users.newsletterSubscribed, 'subscribed'),
-  )
 }
 
 /**
@@ -74,7 +52,13 @@ export default defineEventHandler(async (event) => {
       unsubscribeToken: users.unsubscribeToken,
     })
     .from(users)
-    .where(audienceFilter())
+    .where(
+      and(
+        isNull(users.deletedAt),
+        eq(users.loginDisabled, false),
+        eq(users.newsletterSubscribed, 'subscribed'),
+      ),
+    )
 
   const range = nextWeekRange()
   const weekLabel = upcomingWeekLabel(range.from)
@@ -88,9 +72,10 @@ export default defineEventHandler(async (event) => {
   const result: SendResult = { sent: 0, skipped: 0, errors: 0, errorEmails: [] }
 
   for (const user of recipients) {
-    // Phase-2 (default-opt-in) sweeps in legacy users who never visited the
-    // settings page — they have no unsubscribe token yet. Mint one on the
-    // first send so the List-Unsubscribe header has something to point at.
+    // Safety net: every subscribe path (UI + CLI) already mints a token, so
+    // this branch should not fire in practice. Kept as a defensive fallback
+    // so a future subscribe path that forgets to mint can't ship mails with
+    // a broken List-Unsubscribe URL.
     let unsubscribeToken = user.unsubscribeToken
     if (!unsubscribeToken) {
       unsubscribeToken = randomBytes(32).toString('hex')

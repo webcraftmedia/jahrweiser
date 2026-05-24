@@ -24,9 +24,6 @@ export default defineEventHandler(async (event) => {
   }
 
   return {
-    // Three states mapped to a simple bool for the UI.
-    // Phase 1 (opt-in): only `subscribed` returns true.
-    // Phase 2 (opt-out): everything except `unsubscribed` returns true.
     subscribed: row.newsletterSubscribed === 'subscribed',
     explicit: row.newsletterSubscribed !== null,
   }

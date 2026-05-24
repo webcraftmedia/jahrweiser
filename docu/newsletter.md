@@ -4,18 +4,13 @@ Jeden Sonntag um 18:00 Uhr versendet ein Cron-Job eine Übersicht aller Termine
 der kommenden Woche an alle berechtigten Nutzer. Jeder Termin verlinkt direkt
 auf die Detailansicht in der App.
 
-## Opt-in / Opt-out Phasen
+## Empfänger
 
-Der Newsletter kennt zwei Phasen, gesteuert über die Env-Var
-`NEWSLETTER_DEFAULT_OPT_IN`:
-
-| Phase | `NEWSLETTER_DEFAULT_OPT_IN` | Empfänger |
-|---|---|---|
-| 1 (initial) | leer / `false` | Nur Nutzer mit `newsletter_subscribed = 'subscribed'` |
-| 2 (später)  | `true`         | Alle aktiven Nutzer, AUSSER `newsletter_subscribed = 'unsubscribed'` |
-
-Beim Umstellen auf Phase 2 wird *kein* Datenbank-Migrationsschritt nötig — das
-Audience-Filter im Send-Endpoint wertet die Env-Var bei jedem Lauf neu aus.
+Versandt wird ausschließlich an Nutzer mit `newsletter_subscribed =
+'subscribed'`, sofern nicht soft-deleted (`deleted_at IS NULL`) und nicht
+deaktiviert (`login_disabled = false`). Wer den Newsletter haben möchte, muss
+sich also explizit unter `/settings` eintragen (oder von einem Admin per CLI
+eingetragen werden).
 
 ## Datenmodell
 
@@ -23,7 +18,7 @@ Drei Spalten auf `users` (siehe `frontend/server/db/schema/users.ts`):
 
 | Spalte | Typ | Zweck |
 |---|---|---|
-| `newsletter_subscribed` | `ENUM('subscribed', 'unsubscribed')` nullable | Tri-state: `NULL` = nie explizit gesetzt |
+| `newsletter_subscribed` | `ENUM('subscribed', 'unsubscribed')` nullable | `NULL` = nie eingetragen (kein Versand) |
 | `unsubscribe_token` | `VARCHAR(64) UNIQUE` nullable | RFC-8058-Token für One-Click-Abmeldung; wird beim ersten Subscribe generiert |
 | `newsletter_last_sent_at` | `DATETIME` nullable | Timestamp des letzten erfolgreichen Versands an diesen User |
 

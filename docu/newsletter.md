@@ -33,6 +33,26 @@ Eingeloggte Nutzer können den Newsletter unter `/settings` an- oder abschalten.
 Die Seite ist über das Hauptmenü erreichbar und ruft intern
 `GET /api/me/newsletter` und `POST /api/me/newsletter` auf.
 
+## CLI (manuelles Markieren)
+
+Während Phase 1 (Opt-in) lassen sich einzelne Nutzer per CLI eintragen, ohne
+dass sie selbst die Settings-Seite aufrufen müssen:
+
+```sh
+cd frontend
+npm run cli:newsletter:subscribe -- user@example.com
+npm run cli:newsletter:unsubscribe -- user@example.com
+```
+
+Der Lookup erfolgt über die E-Mail-Adresse. Der Nutzer muss bereits in der
+Sidecar-DB existieren (also mindestens einmal eingeloggt gewesen sein) —
+ansonsten bricht das Script mit Fehler ab. Beim Subscribe wird der
+`unsubscribe_token` für den `List-Unsubscribe`-Header automatisch erzeugt,
+sofern noch keiner gesetzt ist.
+
+Die `production-guard`-Regel der übrigen CLIs gilt auch hier (siehe
+`cli/tools/production-guard.ts`).
+
 ## Abbestellen aus der Mail (RFC 8058)
 
 Jede Mail enthält:

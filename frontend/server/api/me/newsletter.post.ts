@@ -45,5 +45,5 @@ export default defineEventHandler(async (event) => {
     })
     .where(eq(users.uid, uid))
 
-  return { subscribed, explicit: true }
+  return { subscribed }
 })

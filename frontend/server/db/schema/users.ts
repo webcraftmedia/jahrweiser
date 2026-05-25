@@ -9,9 +9,11 @@ export const users = mysqlTable(
     displayName: varchar('display_name', { length: 255 }),
     role: mysqlEnum('role', ['user', 'admin']).notNull().default('user'),
     loginDisabled: boolean('login_disabled').notNull().default(false),
-    // explicit newsletter subscription state. NULL = never opted in (treated
-    // as not subscribed). Only 'subscribed' users receive the weekly mail.
-    newsletterSubscribed: mysqlEnum('newsletter_subscribed', ['subscribed', 'unsubscribed']),
+    // explicit newsletter subscription state. Defaults to 'subscribed' so new
+    // users are auto-opted-in; users can opt out via the settings page.
+    newsletterSubscribed: mysqlEnum('newsletter_subscribed', ['subscribed', 'unsubscribed'])
+      .notNull()
+      .default('subscribed'),
     // random one-click unsubscribe token, generated on first subscribe.
     // UNIQUE so the unsubscribe endpoint can look up by token alone.
     unsubscribeToken: varchar('unsubscribe_token', { length: 64 }).unique(),

@@ -15,6 +15,13 @@
       "when": 1778877997009,
       "tag": "0001_loving_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1779745025347,
+      "tag": "0002_small_forge",
+      "breakpoints": true
     }
   ]
 }

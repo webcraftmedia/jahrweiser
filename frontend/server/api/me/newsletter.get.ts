@@ -25,6 +25,5 @@ export default defineEventHandler(async (event) => {
 
   return {
     subscribed: row.newsletterSubscribed === 'subscribed',
-    explicit: row.newsletterSubscribed !== null,
   }
 })

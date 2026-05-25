@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.8.1...v1.9.0) (2026-05-25)
+
+
+### Features
+
+* **frontend:** newsletter enabled by default ([#223](https://github.com/webcraftmedia/jahrweiser/issues/223)) ([f3e3cd3](https://github.com/webcraftmedia/jahrweiser/commit/f3e3cd38be613569f0abb307f415bae76a992673))
+
 ## [1.8.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.8.0...v1.8.1) (2026-05-24)
 
 

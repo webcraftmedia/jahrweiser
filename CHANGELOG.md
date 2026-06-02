@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.9.0...v1.9.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* **frontend:** fix wording of email settings ([#233](https://github.com/webcraftmedia/jahrweiser/issues/233)) ([d9113af](https://github.com/webcraftmedia/jahrweiser/commit/d9113afdebee8f67bac4ce07bec85f0c2605069a))
+
 ## [1.9.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.8.1...v1.9.0) (2026-05-25)
 
 

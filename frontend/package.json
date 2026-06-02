@@ -62,7 +62,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@intlify/eslint-plugin-vue-i18n": "^4.3.0",
+    "@intlify/eslint-plugin-vue-i18n": "^4.5.0",
     "@nuxt/eslint": "^1.15.2",
     "@nuxt/test-utils": "^4.0.0",
     "@playwright/test": "^1.58.2",

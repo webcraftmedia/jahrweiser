@@ -112,7 +112,7 @@
     "settings": {
       "loading": "Wird geladen...",
       "newsletter": {
-        "description": "Bekomme jeden Sonntag um 18:00 eine E-Mail mit allen Terminen der kommenden Woche.",
+        "description": "Bekomme jeden Sonntagabend eine E-Mail mit allen Terminen der kommenden Woche.",
         "disabled": "Inaktiv — du bekommst keinen Newsletter.",
         "enabled": "Aktiv — du bekommst den wöchentlichen Newsletter.",
         "error": "Konnte nicht speichern. Bitte später erneut versuchen.",

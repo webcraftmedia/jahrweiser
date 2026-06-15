@@ -69,7 +69,7 @@
     "@size-limit/file": "^12.0.1",
     "@testing-library/vue": "^8.1.0",
     "@types/email-templates": "^10.0.4",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.3",
     "@types/nodemailer": "^8.0.0",
     "@vitest/coverage-v8": "^4.1.7",
     "dotenv": "^17.4.2",

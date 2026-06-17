@@ -8,28 +8,15 @@ import { useDb } from '../db'
 import { loginTokens, userTags, users } from '../db/schema'
 import { createCardDAVAccount, findUserByEmail } from '../helpers/dav'
 import { defaultParams, emailRenderer } from '../helpers/email'
+import { isEmailNotFound, markEmailNotFound } from '../helpers/negativeCache'
 import { extractUserFromVCardData } from '../helpers/sync'
 
 const TOKEN_TTL_MS = 30 * 60 * 1000
-const NEGATIVE_CACHE_TTL_MS = 60 * 60 * 1000
 
 const bodySchema = z.object({
   email: z.email(),
   redirect: z.string().startsWith('/').optional(),
 })
-
-// In-process negative cache for non-existent emails. Cleared on restart.
-const negativeCache = new Map<string, number>()
-
-function negativeCacheHit(email: string): boolean {
-  const ts = negativeCache.get(email)
-  if (!ts) return false
-  if (Date.now() - ts > NEGATIVE_CACHE_TTL_MS) {
-    negativeCache.delete(email)
-    return false
-  }
-  return true
-}
 
 export default defineEventHandler(async (event) => {
   const { email, redirect } = await readValidatedBody(event, bodySchema.parse)
@@ -37,7 +24,7 @@ export default defineEventHandler(async (event) => {
   const db = useDb()
   const normalizedEmail = email.toLowerCase()
 
-  if (negativeCacheHit(normalizedEmail)) {
+  if (isEmailNotFound(normalizedEmail)) {
     return {}
   }
 
@@ -48,12 +35,12 @@ export default defineEventHandler(async (event) => {
     const davAccount = createCardDAVAccount(config)
     const davMatch = await findUserByEmail(davAccount, normalizedEmail)
     if (!davMatch) {
-      negativeCache.set(normalizedEmail, Date.now())
+      markEmailNotFound(normalizedEmail)
       return {}
     }
     const snap = extractUserFromVCardData(davMatch.vcard.toString())
     if (snap?.email !== normalizedEmail) {
-      negativeCache.set(normalizedEmail, Date.now())
+      markEmailNotFound(normalizedEmail)
       return {}
     }
     await db

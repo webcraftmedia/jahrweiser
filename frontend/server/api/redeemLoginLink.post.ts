@@ -3,12 +3,11 @@ import { z } from 'zod'
 
 import { useDb } from '../db'
 import { loginTokens, sessions, users } from '../db/schema'
+import { ABSOLUTE_TTL_SECONDS, IDLE_TTL_MS } from '../helpers/sessionTtl'
 
 const bodySchema = z.object({
   token: z.string(),
 })
-
-export const MAX_AGE = 60 * 60 * 24 * 7
 
 export default defineEventHandler(async (event) => {
   const { token } = await readValidatedBody(event, bodySchema.parse)
@@ -48,14 +47,16 @@ export default defineEventHandler(async (event) => {
         role: user.role,
       },
     },
-    { maxAge: MAX_AGE },
+    // Cookie/seal lives up to the absolute cap; the real validity gate is the
+    // DB `expiresAt`, which the session-check middleware slides on activity.
+    { maxAge: ABSOLUTE_TTL_SECONDS },
   )
 
   const sess = (await getUserSession(event)) as { id?: string }
   if (!sess.id) {
     throw createError({ statusCode: 500, message: 'Failed to establish session id' })
   }
-  const expiresAt = new Date(Date.now() + MAX_AGE * 1000)
+  const expiresAt = new Date(Date.now() + IDLE_TTL_MS)
   await db
     .insert(sessions)
     .values({ id: sess.id, userUid: user.uid, expiresAt, lastSeenAt: new Date() })

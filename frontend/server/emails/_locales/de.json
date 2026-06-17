@@ -2,10 +2,10 @@
   "emails": {
     "requestLoginLink": {
       "subject": "Login-Freigabe angefordert",
-      "authenticate": "Um dich einzuloggen drücke den nachfolgenden Knopf.",
+      "authenticate": "Tippe auf „Anmelden“, um dich einzuloggen. Dieser Link ist aus Sicherheitsgründen nur kurze Zeit und nur einmal gültig.",
       "authenticateLink": "Wenn die E-Mail nicht korrekt angezeigt wird kannst du auch diesem Link folgend:",
       "button": "Anmelden",
-      "hints": "Die Anmeldung ist auf dem jeweiligen Gerät für {loginDays} Tage gültig."
+      "hints": "Funktioniert der Knopf nicht mehr, ist der Link abgelaufen — fordere dann auf der Login-Seite einfach einen neuen an. Solange du den Kalender nutzt, bleibst du auf diesem Gerät angemeldet — erst nach längerer Pause (ca. {loginDays} Tage) ist ein neuer Login nötig."
     },
     "welcome": {
       "subject": "hat dir Kalender-Zugang gewährt",

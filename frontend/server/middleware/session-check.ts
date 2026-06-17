@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 
 import { useDb } from '../db'
 import { sessions } from '../db/schema'
+import { nextExpiry } from '../helpers/sessionTtl'
 
 const LAST_SEEN_THROTTLE_MS = 60_000
 
@@ -33,9 +34,15 @@ export default defineEventHandler(async (event) => {
 
   const lastSeen = row.lastSeenAt?.getTime() ?? 0
   if (now - lastSeen > LAST_SEEN_THROTTLE_MS) {
+    // Sliding session: push the idle window forward on activity, capped at the
+    // absolute maximum from creation. Throttled to once per minute alongside
+    // lastSeenAt, so this stays cheap.
     await db
       .update(sessions)
-      .set({ lastSeenAt: new Date(now) })
+      .set({
+        lastSeenAt: new Date(now),
+        expiresAt: new Date(nextExpiry(now, row.createdAt.getTime())),
+      })
       .where(eq(sessions.id, sessionId))
   }
 })

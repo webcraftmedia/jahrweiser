@@ -3,7 +3,7 @@ import path from 'node:path'
 import Email from 'email-templates'
 import { createTransport } from 'nodemailer'
 
-import { MAX_AGE } from '../api/redeemLoginLink.post'
+import { IDLE_TTL_SECONDS } from './sessionTtl'
 
 import type * as SMTPTransport from 'nodemailer/lib/smtp-pool'
 
@@ -62,5 +62,5 @@ export const defaultParams = {
   ORGANIZATION_URL: config.CLIENT_URI,
   ORGANIZATION_NAME: 'GG&G',
   welcomeImageUrl: new URL('/logo.png', config.CLIENT_URI).toString(),
-  loginDays: MAX_AGE / 60 / 60 / 24,
+  loginDays: IDLE_TTL_SECONDS / 60 / 60 / 24,
 }

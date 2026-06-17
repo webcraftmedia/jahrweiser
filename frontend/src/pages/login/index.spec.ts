@@ -69,17 +69,30 @@ describe('Page: Login', () => {
     expect(wrapper.find('label').text()).toContain('pages.login.form.email.invalid')
   })
 
-  it('handles $fetch error gracefully', async () => {
+  it('shows error feedback when $fetch fails', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.mocked(globalThis.$fetch).mockRejectedValueOnce(new Error('Network error'))
     const wrapper = await mountSuspended(Page, { route: '/login' })
     const input = wrapper.find('input')
     await input.setValue('test@example.com')
     await wrapper.find('form').trigger('submit')
-    // Should still show success (requestedLogin = true even on error)
-    expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+    // Form stays, error hint is shown, success message is NOT shown
+    expect(wrapper.find('form').exists()).toBe(true)
+    expect(wrapper.text()).toContain('pages.login.form.error')
+    expect(wrapper.text()).not.toContain('pages.login.message.title')
     expect(consoleSpy).toHaveBeenCalledWith('Failed to request login link:', expect.any(Error))
     consoleSpy.mockRestore()
+  })
+
+  it('trims whitespace from email before submitting', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/login' })
+    const input = wrapper.find('input')
+    await input.setValue('  test@example.com  ')
+    await wrapper.find('form').trigger('submit')
+    expect(globalThis.$fetch).toHaveBeenCalledWith('/api/requestLoginLink', {
+      method: 'POST',
+      body: { email: 'test@example.com' },
+    })
   })
 
   it('redirects to home when already logged in', async () => {

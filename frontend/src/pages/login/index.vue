@@ -88,7 +88,7 @@
                 </div>
                 <input
                   id="email-address-icon"
-                  v-model="credentials.email"
+                  v-model.trim="credentials.email"
                   type="email"
                   name="email"
                   autocomplete="email"
@@ -99,16 +99,24 @@
                       : 'border-navy/20 dark:border-poster-darkBorder'
                   "
                   :placeholder="$t('pages.login.form.email.placeholder')"
-                  @input="emailError = false"
+                  @input="clearErrors"
                 />
               </div>
             </div>
             <button
               type="submit"
-              class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center"
+              :disabled="loading"
+              class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:brightness-100"
             >
-              {{ $t('pages.login.form.button') }}
+              {{ loading ? $t('pages.login.form.loading') : $t('pages.login.form.button') }}
             </button>
+            <p
+              v-if="sendError"
+              role="alert"
+              class="text-sm font-body text-sienna dark:text-sienna-light text-center"
+            >
+              {{ $t('pages.login.form.error') }}
+            </p>
           </form>
         </div>
       </div>
@@ -140,6 +148,8 @@
 
   const requestedLogin = ref(false)
   const emailError = ref(false)
+  const sendError = ref(false)
+  const loading = ref(false)
 
   const credentials = reactive({
     email: '',
@@ -148,19 +158,32 @@
   const emailSchema = z.email()
 
   async function requestLoginLink() {
-    if (!emailSchema.safeParse(credentials.email).success) {
+    // Trim first: autofill/copy-paste often append whitespace, which makes the
+    // request silently fail client-side validation and never reach the backend.
+    const email = credentials.email.trim()
+    if (!emailSchema.safeParse(email).success) {
       emailError.value = true
       return
     }
+    sendError.value = false
+    loading.value = true
     try {
       await $fetch('/api/requestLoginLink', {
         method: 'POST',
-        body: { ...credentials, ...(redirect ? { redirect } : {}) },
+        body: { email, ...(redirect ? { redirect } : {}) },
       })
+      requestedLogin.value = true
     } catch (error) {
       console.error('Failed to request login link:', error)
+      sendError.value = true
+    } finally {
+      loading.value = false
     }
-    requestedLogin.value = true
+  }
+
+  function clearErrors() {
+    emailError.value = false
+    sendError.value = false
   }
 
   function showLogin() {

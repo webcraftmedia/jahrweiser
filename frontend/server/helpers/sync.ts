@@ -6,6 +6,7 @@ import { useDb } from '../db'
 import { loginTokens, sessions, syncState, userTags, users } from '../db/schema'
 
 import { createCardDAVAccount, headers, X_ADMIN_TAGS, X_ROLE } from './dav'
+import { clearEmailNotFound } from './negativeCache'
 
 import type { DAV_CONFIG } from './dav'
 import type * as schema from '../db/schema'
@@ -117,6 +118,9 @@ async function applyUserDiff(
       if (dav.tags.length > 0) {
         await db.insert(userTags).values(dav.tags.map((tag) => ({ userUid: dav.uid, tag })))
       }
+      // A login attempt before this user existed may have negative-cached the
+      // address; clear it so they can log in immediately.
+      clearEmailNotFound(dav.email)
       added += 1
       continue
     }
@@ -132,6 +136,9 @@ async function applyUserDiff(
         .update(users)
         .set({ email: dav.email, displayName: dav.displayName, deletedAt: null })
         .where(eq(users.uid, dav.uid))
+      // New address (on email change) or a reactivated user may sit in the
+      // negative cache; clear it so login works without waiting out the TTL.
+      clearEmailNotFound(dav.email)
       updated += 1
       if (emailChanged) {
         emailChanges += 1

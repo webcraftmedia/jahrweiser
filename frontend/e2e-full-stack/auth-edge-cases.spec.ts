@@ -208,6 +208,41 @@ test.describe('lazy-fallback', () => {
   })
 })
 
+test.describe('negative cache invalidation', () => {
+  test('a pre-add login attempt does not block login after the user is synced', async () => {
+    const uid = 'edge-negcache-1'
+    const email = 'negcache@example.com'
+
+    // 1) Attempt login BEFORE the user exists -> negative-caches the address.
+    let resp = await fetch('http://localhost:3000/api/requestLoginLink', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    expect(resp.status).toBe(200)
+    await new Promise((r) => setTimeout(r, 500))
+    let mail = await fetch('http://localhost:1080/email').then((r) => r.json())
+    const matching = (mail as { to: { address: string }[] }[]).filter((m) =>
+      m.to.some((t) => t.address.toLowerCase() === email),
+    )
+    expect(matching).toHaveLength(0) // no mail: address is unknown (and now cached)
+
+    // 2) Add the user in DAV and sync -> sync must invalidate the cached entry.
+    await createDavUser({ uid, email, displayName: 'Neg Cache' })
+    await triggerSync()
+
+    // 3) Retry immediately (well within the cache TTL): mail must now be sent.
+    resp = await fetch('http://localhost:3000/api/requestLoginLink', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    expect(resp.status).toBe(200)
+    mail = await waitForMailFor(email)
+    expect(mail.subject).toContain('Login')
+  })
+})
+
 test.describe('admin tag management', () => {
   test('admin can set a tag on an existing user via API', async ({ page, context }) => {
     const adminEmail = 'admin@example.com'

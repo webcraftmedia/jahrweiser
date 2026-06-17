@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.9.1...v1.9.2) (2026-06-17)
+
+
+### Bug Fixes
+
+* **frontend:** improve login to be less fragile ([#251](https://github.com/webcraftmedia/jahrweiser/issues/251)) ([e11b4fc](https://github.com/webcraftmedia/jahrweiser/commit/e11b4fc71481186e430a6a8a167ecc9b2e11b913))
+
 ## [1.9.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.9.0...v1.9.1) (2026-06-02)
 
 

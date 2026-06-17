@@ -21,10 +21,6 @@ vi.mock('nodemailer', () => ({
   createTransport: mockCreateTransport,
 }))
 
-vi.mock('../api/redeemLoginLink.post', () => ({
-  MAX_AGE: 604800,
-}))
-
 describe('email helper', () => {
   it('emailRenderer has send method', () => {
     expect(emailRenderer).toBeDefined()

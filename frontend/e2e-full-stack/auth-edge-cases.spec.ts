@@ -117,6 +117,74 @@ test.describe('token expiry', () => {
   })
 })
 
+test.describe('sliding session', () => {
+  // Logs in via the real magic-link flow, then manipulates the session row's
+  // timestamps directly to assert the middleware's sliding/cap behaviour on the
+  // next authenticated request.
+  async function loginAndGetUid(
+    page: import('@playwright/test').Page,
+    uid: string,
+    email: string,
+  ): Promise<void> {
+    await createDavUser({ uid, email, displayName: 'Sliding User' })
+    await triggerSync()
+    await page.goto('/login')
+    await preparePage(page)
+    await page.locator('#email-address-icon').fill(email)
+    await page.getByRole('button', { name: 'Einloggen' }).click()
+    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
+    const mail = await waitForMailFor(email)
+    const token = extractLoginTokenFromMail(mail)
+    await page.goto(`/login/${token}`)
+    await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
+  }
+
+  const remainingSeconds = (uid: string): number =>
+    Number(
+      mariadb(
+        `SELECT UNIX_TIMESTAMP(expires_at) - UNIX_TIMESTAMP(NOW()) FROM sessions WHERE user_uid = '${uid}'`,
+      ),
+    )
+
+  test('activity slides expires_at forward', async ({ page, context }) => {
+    const uid = 'edge-sliding-1'
+    await loginAndGetUid(page, uid, 'sliding-extend@example.com')
+
+    // Shrink the window and age last_seen past the 60s throttle so the next
+    // request triggers a slide.
+    mariadb(
+      `UPDATE sessions SET expires_at = DATE_ADD(NOW(), INTERVAL 1 HOUR), ` +
+        `last_seen_at = DATE_SUB(NOW(), INTERVAL 2 MINUTE) WHERE user_uid = '${uid}'`,
+    )
+
+    const resp = await context.request.get('/api/calendars')
+    expect(resp.status()).toBe(200)
+
+    // Slid back up to ~7 days (the idle window), well beyond the 1h we set.
+    expect(remainingSeconds(uid)).toBeGreaterThan(6 * 24 * 60 * 60)
+  })
+
+  test('absolute cap limits how far a session can slide', async ({ page, context }) => {
+    const uid = 'edge-sliding-cap-1'
+    await loginAndGetUid(page, uid, 'sliding-cap@example.com')
+
+    // Age the session to ~1h before the 90-day hard cap. A slide should clamp to
+    // the cap (~now+1h), NOT the full 7-day idle window.
+    mariadb(
+      `UPDATE sessions SET created_at = DATE_SUB(NOW(), INTERVAL ${90 * 24 - 1} HOUR), ` +
+        `expires_at = DATE_ADD(NOW(), INTERVAL 1 HOUR), ` +
+        `last_seen_at = DATE_SUB(NOW(), INTERVAL 2 MINUTE) WHERE user_uid = '${uid}'`,
+    )
+
+    const resp = await context.request.get('/api/calendars')
+    expect(resp.status()).toBe(200)
+
+    const remaining = remainingSeconds(uid)
+    expect(remaining).toBeGreaterThan(0)
+    expect(remaining).toBeLessThan(2 * 60 * 60) // capped near +1h, far below 7 days
+  })
+})
+
 test.describe('lazy-fallback', () => {
   test('user added directly in DAV (no sync) can log in via lazy fallback', async () => {
     const uid = 'edge-lazy-1'

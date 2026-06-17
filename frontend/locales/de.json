@@ -95,6 +95,8 @@
           "label": "Deine E-Mail:",
           "placeholder": "name{'@'}mustermail.de"
         },
+        "error": "Senden fehlgeschlagen. Bitte prüfe deine Verbindung und versuche es erneut.",
+        "loading": "Wird gesendet…",
         "title": "Willkommen bei GG&G"
       },
       "message": {

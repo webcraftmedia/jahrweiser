@@ -21,6 +21,52 @@ test.describe('Login Page', () => {
     await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
   })
 
+  test('trims whitespace from email before sending the request', async ({ page }) => {
+    // Autofill/copy-paste often append whitespace. Capture the actual request body
+    // to prove the email is trimmed before it reaches the backend.
+    let sentEmail: string | undefined
+    await page.route('**/api/requestLoginLink', async (route) => {
+      sentEmail = route.request().postDataJSON()?.email
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({}),
+      })
+    })
+    await page.goto('/login')
+    await page.addStyleTag({ content: '*, *::before, *::after { animation: none !important; }' })
+    await waitForHydration(page)
+
+    await page.locator('#email-address-icon').fill('  test@example.com  ')
+    await page.getByRole('button', { name: 'Einloggen' }).click()
+
+    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
+    expect(sentEmail).toBe('test@example.com')
+  })
+
+  test('shows error feedback when the request fails', async ({ page }) => {
+    await page.route('**/api/requestLoginLink', async (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, message: 'Failed to send login email' }),
+      }),
+    )
+    await page.goto('/login')
+    await page.addStyleTag({ content: '*, *::before, *::after { animation: none !important; }' })
+    await waitForHydration(page)
+
+    await page.locator('#email-address-icon').fill('test@example.com')
+    await page.getByRole('button', { name: 'Einloggen' }).click()
+
+    // Error hint shown, success message NOT shown, form stays usable
+    await expect(page.getByText('Senden fehlgeschlagen.', { exact: false })).toBeVisible({
+      timeout: 10_000,
+    })
+    await expect(page.getByText('Prüfe dein Postfach')).toBeHidden()
+    await expect(page.locator('#email-address-icon')).toBeVisible()
+  })
+
   test('dismiss button returns to login form', async ({ page }) => {
     await mockRequestLoginLink(page)
     await page.goto('/login')

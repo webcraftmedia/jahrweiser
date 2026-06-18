@@ -215,6 +215,25 @@ describe('dav helpers', () => {
       expect(result).toBe(false)
     })
 
+    it('lowercases the email and requests a case-insensitive collation', async () => {
+      // The stored vCard EMAIL may be mixed-case and admin paths hand through raw
+      // input, so the filter must normalize the query and pin the collation rather
+      // than relying on the DAV server default (see findUserByEmail).
+      vi.mocked(addressBookQuery).mockResolvedValue([])
+      const account = createCardDAVAccount(config)
+      await findUserByEmail(account, 'Max@Example.COM')
+      const callArgs = vi.mocked(addressBookQuery).mock.calls[0]![0] as Record<string, unknown>
+      const filters = callArgs.filters as {
+        'prop-filter': {
+          _attributes: { name: string }
+          'text-match': { _attributes: { collation: string }; _text: string }
+        }
+      }
+      expect(filters['prop-filter']._attributes.name).toBe('EMAIL')
+      expect(filters['prop-filter']['text-match']._text).toBe('max@example.com')
+      expect(filters['prop-filter']['text-match']._attributes.collation).toBe('i;unicode-casemap')
+    })
+
     it('returns false when result has missing or empty addressData', async () => {
       // Hits the defensive `if (typeof data !== 'string' || data.length === 0)`
       // branch — Baikal can return a single hit but with no `address-data`
@@ -272,6 +291,21 @@ describe('dav helpers', () => {
       const account = createCardDAVAccount(config)
       const result = await findUserByToken(account, 'bad-token')
       expect(result).toBe(false)
+    })
+
+    it('matches the token exactly without a collation', async () => {
+      // Login tokens are high-entropy and case-sensitive: the filter must NOT relax
+      // matching with a collation the way the EMAIL lookup does.
+      vi.mocked(addressBookQuery).mockResolvedValue([])
+      const account = createCardDAVAccount(config)
+      await findUserByToken(account, 'AbC-ToKeN')
+      const callArgs = vi.mocked(addressBookQuery).mock.calls[0]![0] as Record<string, unknown>
+      const filters = callArgs.filters as {
+        'prop-filter': { _attributes: { name: string }; 'text-match': unknown }
+      }
+      expect(filters['prop-filter']._attributes.name).toBe(X_LOGIN_TOKEN)
+      // Plain string payload => no `collation` attribute, value passed verbatim.
+      expect(filters['prop-filter']['text-match']).toBe('AbC-ToKeN')
     })
   })
 

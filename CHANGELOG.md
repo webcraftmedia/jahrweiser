@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.9.2...v1.9.3) (2026-06-18)
+
+
+### Bug Fixes
+
+* **frontend:** fix string encoding with login credentials ([#253](https://github.com/webcraftmedia/jahrweiser/issues/253)) ([1309e0f](https://github.com/webcraftmedia/jahrweiser/commit/1309e0f0834b1804911c63a5a123cab0021ebcad))
+
 ## [1.9.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.9.1...v1.9.2) (2026-06-17)
 
 

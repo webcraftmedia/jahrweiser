@@ -133,6 +133,12 @@ async function findUserByProperty(
   account: DAVAccount,
   propertyName: string,
   propertyValue: string,
+  // CardDAV text-match without an explicit collation falls back to the server
+  // default. RFC 6352 says that default is `i;unicode-casemap` (case-insensitive),
+  // but relying on the server to honor it is fragile. Pass a collation explicitly
+  // where case-insensitivity matters (e.g. EMAIL) and leave it undefined for
+  // high-entropy values (e.g. login tokens) that must match exactly.
+  collation?: string,
 ) {
   const users = await addressBookQuery({
     url: account.homeUrl!,
@@ -147,7 +153,9 @@ async function findUserByProperty(
         _attributes: {
           name: propertyName,
         },
-        ['text-match']: propertyValue,
+        ['text-match']: collation
+          ? { _attributes: { collation }, _text: propertyValue }
+          : propertyValue,
       },
     },
     fetchOptions: getFetchOptions(),
@@ -171,8 +179,11 @@ async function findUserByProperty(
 export const findUserByToken = async (account: DAVAccount, token: string) =>
   findUserByProperty(account, X_LOGIN_TOKEN, token)
 
+// Single choke-point for email normalization: callers may pass any casing
+// (admin endpoints/CLIs hand through raw input), so lowercase here and request a
+// case-insensitive match against the (possibly mixed-case) stored vCard EMAIL.
 export const findUserByEmail = async (account: DAVAccount, email: string) =>
-  findUserByProperty(account, 'EMAIL', email)
+  findUserByProperty(account, 'EMAIL', email.toLowerCase(), 'i;unicode-casemap')
 
 export const saveUser = async (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>
   updateVCard({

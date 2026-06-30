@@ -28,6 +28,17 @@ export function readVCardName(vcard: ICAL.Component): { firstName: string; lastN
   return splitDisplayName(vcard.getFirstPropertyValue('fn')?.toString() ?? '')
 }
 
+/**
+ * The display name to store/show ("Given Family"). Derived from the structured
+ * `N` when present — this is robust against clients (e.g. InfCloud) that write
+ * `FN` in "Family Given" order. Falls back to `FN` when there is no `N`. Returns
+ * null when neither carries a name.
+ */
+export function displayNameFromVCard(vcard: ICAL.Component): string | null {
+  const { firstName, lastName } = readVCardName(vcard)
+  return `${firstName} ${lastName}`.trim() || null
+}
+
 // Postal code lives in the structured `ADR` property, component index 5
 // (PO-box;extended;street;locality;region;postal-code;country). We only ever
 // touch that one component and leave any other address parts untouched.

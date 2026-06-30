@@ -43,6 +43,7 @@ exports[`Page: Admin Links > renders the loaded list 1`] = `
             <td data-v-a07354c3="" class="py-2 pl-3">
               <div data-v-a07354c3="" class="flex items-center justify-end gap-3"><button data-v-a07354c3="" type="button" class="text-sienna dark:text-sienna-light hover:underline font-medium">pages.admin.links.table.copy</button><button data-v-a07354c3="" type="button" class="text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light font-medium">pages.admin.links.table.edit</button><button data-v-a07354c3="" type="button" class="text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light font-medium">pages.admin.links.table.revoke</button>
                 <!--v-if-->
+                <!--v-if-->
               </div>
             </td>
           </tr>
@@ -54,7 +55,7 @@ exports[`Page: Admin Links > renders the loaded list 1`] = `
             <td data-v-a07354c3="" class="py-2 px-3"><span data-v-a07354c3="" class="inline-block rounded px-2 py-0.5 text-xs font-medium bg-sienna/15 text-sienna-dark dark:text-sienna-light">pages.admin.links.status.revoked</span></td>
             <td data-v-a07354c3="" class="py-2 pl-3">
               <div data-v-a07354c3="" class="flex items-center justify-end gap-3"><button data-v-a07354c3="" type="button" class="text-sienna dark:text-sienna-light hover:underline font-medium">pages.admin.links.table.copy</button><button data-v-a07354c3="" type="button" class="text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light font-medium">pages.admin.links.table.edit</button>
-                <!--v-if--><button data-v-a07354c3="" type="button" class="text-sienna dark:text-sienna-light hover:underline font-medium">pages.admin.links.table.delete</button>
+                <!--v-if--><button data-v-a07354c3="" type="button" class="text-olive dark:text-olive-light hover:underline font-medium">pages.admin.links.table.reactivate</button><button data-v-a07354c3="" type="button" class="text-sienna dark:text-sienna-light hover:underline font-medium">pages.admin.links.table.delete</button>
               </div>
             </td>
           </tr>

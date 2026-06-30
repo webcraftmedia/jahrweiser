@@ -45,14 +45,17 @@ genuinely new account (step 3); the email-dedup check prevents double counting.
 (`used / max`), status, a copy-to-clipboard button for the share URL, and
 per-row actions:
 
-- **Edit** — inline-edit the label and/or re-base the validity to a preset
-  (or leave it unchanged).
-- **Revoke** — soft-disable: the row and its join history are kept, but the
-  link can no longer be used.
-- **Delete** — only offered for links that were *never redeemed* (`useCount`
-  is 0); it removes the row entirely. Links with redemptions can only be
-  revoked, never deleted (preserves the join history). The zero-redemption rule
-  is enforced server-side too.
+- **Edit** — inline-edit the label and/or re-base the validity. Picking a
+  duration preset re-bases the expiry from *now* (e.g. "30 days" = 30 days from
+  the edit), or pick "keep validity" to leave it unchanged.
+- **Revoke / Reactivate** — revoke soft-disables (the row and its join history
+  are kept, but the link can't be used); reactivate clears the revoke. A
+  reactivated link is subject to its expiry/use-cap again, so it may still be
+  expired/exhausted.
+- **Delete** — only offered for a link that is **both deactivated and never
+  redeemed**; it removes the row entirely. Deactivate first, then delete. Links
+  with redemptions can only be revoked (preserves the join history). Both rules
+  are enforced server-side (404 if missing, 409 if active or redeemed).
 
 ## Data model
 
@@ -81,7 +84,8 @@ page and again on submit.
 | `GET  /api/admin/registration-links/list`   | admin       | List links + counts + status     |
 | `POST /api/admin/registration-links/update` | admin       | Edit label and/or validity       |
 | `POST /api/admin/registration-links/revoke` | admin       | Soft-disable a link              |
-| `POST /api/admin/registration-links/delete` | admin       | Delete a never-redeemed link (409 otherwise) |
+| `POST /api/admin/registration-links/reactivate` | admin   | Clear the revoke (re-enable)     |
+| `POST /api/admin/registration-links/delete` | admin       | Delete a deactivated, never-redeemed link (404/409 otherwise) |
 | `GET  /api/register/{token}`                | public      | Validate a link (coarse status)  |
 | `POST /api/register`                        | public      | Register + send verification mail |
 

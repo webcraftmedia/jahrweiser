@@ -70,6 +70,7 @@
           "keepValidity": "Gültigkeit beibehalten",
           "label": "Bezeichnung",
           "never": "Unbegrenzt",
+          "reactivate": "Aktivieren",
           "revoke": "Deaktivieren",
           "save": "Speichern",
           "status": "Status",

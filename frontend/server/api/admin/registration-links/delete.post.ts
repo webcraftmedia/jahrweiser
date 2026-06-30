@@ -17,8 +17,22 @@ export default defineEventHandler(async (event) => {
   const { token } = await readValidatedBody(event, bodySchema.parse)
   const db = useDb()
 
-  // Only links that were never redeemed may be deleted — this preserves the
-  // join history (revoke is the path for links that already have redemptions).
+  // Only deactivated links may be deleted — deactivate first, then delete.
+  const link = (
+    await db
+      .select({ revokedAt: registrationLinks.revokedAt })
+      .from(registrationLinks)
+      .where(eq(registrationLinks.token, token))
+      .limit(1)
+  )[0]
+  if (!link) {
+    throw createError({ statusCode: 404, statusMessage: 'Link not found' })
+  }
+  if (link.revokedAt === null) {
+    throw createError({ statusCode: 409, statusMessage: 'Link is active' })
+  }
+
+  // ...and only if it was never redeemed — this preserves the join history.
   const useCount = Number(
     (
       await db

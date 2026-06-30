@@ -132,7 +132,19 @@
     }
   }
 
-  // Only links that were never redeemed can be deleted (enforced server-side too).
+  async function reactivateLink(token: string) {
+    try {
+      await $fetch('/api/admin/registration-links/reactivate', {
+        method: 'POST',
+        body: { token },
+      })
+      await loadLinks()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  // Deletable only once deactivated and never redeemed (enforced server-side too).
   async function deleteLink(token: string) {
     try {
       await $fetch('/api/admin/registration-links/delete', {
@@ -387,7 +399,7 @@
                       {{ $t('pages.admin.links.table.edit') }}
                     </button>
                     <button
-                      v-if="row.status === 'valid'"
+                      v-if="row.status !== 'revoked'"
                       type="button"
                       class="text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light font-medium"
                       @click="revokeLink(row.token)"
@@ -395,7 +407,15 @@
                       {{ $t('pages.admin.links.table.revoke') }}
                     </button>
                     <button
-                      v-if="row.useCount === 0"
+                      v-if="row.status === 'revoked'"
+                      type="button"
+                      class="text-olive dark:text-olive-light hover:underline font-medium"
+                      @click="reactivateLink(row.token)"
+                    >
+                      {{ $t('pages.admin.links.table.reactivate') }}
+                    </button>
+                    <button
+                      v-if="row.status === 'revoked' && row.useCount === 0"
                       type="button"
                       class="text-sienna dark:text-sienna-light hover:underline font-medium"
                       @click="deleteLink(row.token)"

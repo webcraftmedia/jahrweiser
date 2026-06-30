@@ -376,4 +376,42 @@ describe('Page: Admin Links', () => {
     })
     consoleSpy.mockRestore()
   })
+
+  it('only offers delete for a deactivated link that was never redeemed', async () => {
+    // A revoked link with redemptions can be reactivated but not deleted.
+    const wrapper = await mountLoaded([{ ...REVOKED_ROW, useCount: 2 }])
+    expect(findButton(wrapper, 'pages.admin.links.table.delete')).toBeUndefined()
+    expect(findButton(wrapper, 'pages.admin.links.table.reactivate')).toBeDefined()
+  })
+
+  it('reactivates a deactivated link', async () => {
+    const wrapper = await mountLoaded()
+    await findButton(wrapper, 'pages.admin.links.table.reactivate')!.trigger('click')
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/admin/registration-links/reactivate',
+        expect.objectContaining({ method: 'POST', body: { token: 'tok-revoked' } }),
+      )
+    })
+  })
+
+  it('handles a reactivate failure gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/admin/registration-links/list')
+        return Promise.resolve([VALID_ROW, REVOKED_ROW])
+      if (url === '/api/admin/registration-links/reactivate')
+        return Promise.reject(new Error('boom'))
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/admin/links' })
+    await vi.waitFor(() => {
+      expect(wrapper.find('table').exists()).toBe(true)
+    })
+    await findButton(wrapper, 'pages.admin.links.table.reactivate')!.trigger('click')
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalled()
+    })
+    consoleSpy.mockRestore()
+  })
 })

@@ -1,4 +1,4 @@
-import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport, mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 import Page from './links.vue'
@@ -8,6 +8,17 @@ vi.stubGlobal('$fetch', mock$fetch)
 
 const mockWriteText = vi.fn()
 
+// The logged-in admin. Owner-only actions (copy/edit/reactivate/delete) render
+// only when this uid matches a row's createdByUid; the fixtures are owned by
+// OWNER_UID, so the default session sees all of them.
+const OWNER_UID = 'admin-1'
+const mockUser = ref<{ uid?: string; role?: string } | null>({ uid: OWNER_UID, role: 'admin' })
+mockNuxtImport('useUserSession', () => () => ({
+  user: mockUser,
+  loggedIn: ref(true),
+  fetch: vi.fn(),
+}))
+
 interface Row {
   token: string
   label: string | null
@@ -15,6 +26,7 @@ interface Row {
   expiresAt: string | null
   revokedAt: string | null
   createdAt: string
+  createdByUid: string
   createdByName: string | null
   createdByEmail: string | null
   useCount: number
@@ -29,6 +41,7 @@ const VALID_ROW: Row = {
   expiresAt: '2026-12-31T00:00:00.000Z',
   revokedAt: null,
   createdAt: '2026-06-01T00:00:00.000Z',
+  createdByUid: OWNER_UID,
   createdByName: 'Admin Adam',
   createdByEmail: 'admin@example.com',
   useCount: 3,
@@ -43,6 +56,7 @@ const REVOKED_ROW: Row = {
   expiresAt: null,
   revokedAt: '2026-06-10T00:00:00.000Z',
   createdAt: '2026-05-01T00:00:00.000Z',
+  createdByUid: OWNER_UID,
   createdByName: null,
   createdByEmail: 'creator@example.com',
   useCount: 0,
@@ -69,6 +83,7 @@ async function mountLoaded(rows: Row[] = [VALID_ROW, REVOKED_ROW]) {
 describe('Page: Admin Links', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockUser.value = { uid: OWNER_UID, role: 'admin' }
     mock$fetch.mockImplementation(listFetch([VALID_ROW, REVOKED_ROW]))
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: mockWriteText },
@@ -413,5 +428,30 @@ describe('Page: Admin Links', () => {
       expect(consoleSpy).toHaveBeenCalled()
     })
     consoleSpy.mockRestore()
+  })
+
+  describe('owner-only actions', () => {
+    // An admin who didn't create the links sees them, can deactivate them, but
+    // gets no copy/edit/reactivate/delete buttons (server enforces this too).
+    beforeEach(() => {
+      mockUser.value = { uid: 'admin-2', role: 'admin' }
+    })
+
+    it('hides copy and edit for a non-owner on an active link', async () => {
+      const wrapper = await mountLoaded()
+      expect(findButton(wrapper, 'pages.admin.links.table.copy')).toBeUndefined()
+      expect(findButton(wrapper, 'pages.admin.links.table.edit')).toBeUndefined()
+    })
+
+    it('still offers deactivate to a non-owner', async () => {
+      const wrapper = await mountLoaded()
+      expect(findButton(wrapper, 'pages.admin.links.table.revoke')).toBeDefined()
+    })
+
+    it('hides reactivate and delete for a non-owner on a deactivated link', async () => {
+      const wrapper = await mountLoaded([REVOKED_ROW])
+      expect(findButton(wrapper, 'pages.admin.links.table.reactivate')).toBeUndefined()
+      expect(findButton(wrapper, 'pages.admin.links.table.delete')).toBeUndefined()
+    })
   })
 })

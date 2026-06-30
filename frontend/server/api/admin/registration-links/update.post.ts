@@ -5,7 +5,11 @@ import type { LinkDuration } from '~~/server/helpers/registrationLinks'
 
 import { useDb } from '~~/server/db'
 import { registrationLinks } from '~~/server/db/schema'
-import { computeExpiresAt, LINK_DURATION_KEYS } from '~~/server/helpers/registrationLinks'
+import {
+  assertLinkOwner,
+  computeExpiresAt,
+  LINK_DURATION_KEYS,
+} from '~~/server/helpers/registrationLinks'
 
 // Edit an existing link's label and/or validity. `label` is always applied
 // (empty clears it); `duration`, when present, re-bases the expiry to that
@@ -24,6 +28,17 @@ export default defineEventHandler(async (event) => {
 
   const { token, label, duration } = await readValidatedBody(event, bodySchema.parse)
   const db = useDb()
+
+  // Editing is owner-only — every admin may view and deactivate, but only the
+  // creator may change a link's label or validity.
+  const link = (
+    await db
+      .select({ createdByUid: registrationLinks.createdByUid })
+      .from(registrationLinks)
+      .where(eq(registrationLinks.token, token))
+      .limit(1)
+  )[0]
+  assertLinkOwner(link?.createdByUid, session.user.uid)
 
   const updates: { label: string | null; expiresAt?: Date | null } = { label: label || null }
   if (duration !== undefined) {

@@ -20,6 +20,21 @@ export function computeExpiresAt(duration: LinkDuration, now: number): Date | nu
   return new Date(now + days * 24 * 60 * 60 * 1000)
 }
 
+/**
+ * Owner gate for the mutating link actions. Viewing and deactivating a link stay
+ * open to every admin, but editing, deleting and reactivating are reserved for
+ * the admin who created it. Throws 404 when the link is gone (so a stale token
+ * can't probe other rows) and 403 when a different admin owns it.
+ */
+export function assertLinkOwner(createdByUid: string | undefined, uid: string): void {
+  if (createdByUid === undefined) {
+    throw createError({ statusCode: 404, statusMessage: 'Link not found' })
+  }
+  if (createdByUid !== uid) {
+    throw createError({ statusCode: 403, statusMessage: 'Not Authorized' })
+  }
+}
+
 export type LinkStatus = 'valid' | 'revoked' | 'expired' | 'exhausted'
 
 /**

@@ -36,7 +36,7 @@
       <div
         class="login-card p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded"
       >
-        <form class="space-y-5" novalidate @submit.prevent="submit">
+        <form class="space-y-6" novalidate @submit.prevent="submit">
           <div>
             <h5 class="text-lg font-display text-navy dark:text-ivory">
               {{ $t('pages.register.form.title') }}
@@ -50,11 +50,11 @@
             </p>
           </div>
 
-          <div class="space-y-5">
+          <div class="space-y-4">
             <div>
               <label
                 for="firstName"
-                class="block mb-2 text-base font-medium font-body text-navy dark:text-ivory"
+                class="block mb-1.5 text-base font-medium font-body text-navy dark:text-ivory"
               >
                 {{ $t('pages.register.form.firstName.label') }}
               </label>
@@ -71,7 +71,7 @@
             <div>
               <label
                 for="lastName"
-                class="block mb-2 text-base font-medium font-body text-navy dark:text-ivory"
+                class="block mb-1.5 text-base font-medium font-body text-navy dark:text-ivory"
               >
                 {{ $t('pages.register.form.lastName.label') }}
               </label>
@@ -85,52 +85,53 @@
                 @input="clearErrors"
               />
             </div>
+            <div>
+              <label
+                for="email"
+                class="block mb-1.5 text-base font-medium font-body"
+                :class="
+                  emailError ? 'text-sienna dark:text-sienna-light' : 'text-navy dark:text-ivory'
+                "
+              >
+                {{
+                  emailError
+                    ? $t('pages.register.form.email.invalid')
+                    : $t('pages.register.form.email.label')
+                }}
+              </label>
+              <input
+                id="email"
+                v-model.trim="email"
+                type="email"
+                autocomplete="email"
+                class="bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-3"
+                :class="
+                  emailError
+                    ? 'border-sienna dark:border-sienna-light'
+                    : 'border-navy/20 dark:border-poster-darkBorder'
+                "
+                :placeholder="$t('pages.register.form.email.placeholder')"
+                @input="clearErrors"
+              />
+            </div>
           </div>
 
           <div>
-            <label
-              for="email"
-              class="block mb-2 text-base font-medium font-body"
-              :class="
-                emailError ? 'text-sienna dark:text-sienna-light' : 'text-navy dark:text-ivory'
-              "
+            <button
+              type="submit"
+              :disabled="loading || !canSubmit"
+              class="w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {{
-                emailError
-                  ? $t('pages.register.form.email.invalid')
-                  : $t('pages.register.form.email.label')
-              }}
-            </label>
-            <input
-              id="email"
-              v-model.trim="email"
-              type="email"
-              autocomplete="email"
-              class="bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-3"
-              :class="
-                emailError
-                  ? 'border-sienna dark:border-sienna-light'
-                  : 'border-navy/20 dark:border-poster-darkBorder'
-              "
-              :placeholder="$t('pages.register.form.email.placeholder')"
-              @input="clearErrors"
-            />
+              {{ loading ? $t('pages.register.form.loading') : $t('pages.register.form.button') }}
+            </button>
+            <p
+              v-if="sendError"
+              role="alert"
+              class="mt-2 text-sm font-body text-sienna dark:text-sienna-light text-center"
+            >
+              {{ $t('pages.register.form.error') }}
+            </p>
           </div>
-
-          <button
-            type="submit"
-            :disabled="loading || !canSubmit"
-            class="w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {{ loading ? $t('pages.register.form.loading') : $t('pages.register.form.button') }}
-          </button>
-          <p
-            v-if="sendError"
-            role="alert"
-            class="text-sm font-body text-sienna dark:text-sienna-light text-center"
-          >
-            {{ $t('pages.register.form.error') }}
-          </p>
         </form>
       </div>
     </div>

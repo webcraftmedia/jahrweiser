@@ -22,6 +22,13 @@
       "when": 1779745025347,
       "tag": "0002_small_forge",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1782811702694,
+      "tag": "0003_lazy_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

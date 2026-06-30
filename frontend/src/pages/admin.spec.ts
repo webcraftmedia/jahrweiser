@@ -129,9 +129,10 @@ describe('Page: Admin', () => {
     await wrapper.find('main button').trigger('click')
     expect(drawer.classes()).toContain('translate-x-0')
     const mobileNav = drawer.find('nav')
-    const links = mobileNav.findAll('a')
-    // Second link is external (/admin/cal/)
-    await links[1]!.trigger('click')
+    // Select the external link by href so the assertion doesn't depend on the
+    // position of other (NuxtLink) menu items.
+    const externalLink = mobileNav.findAll('a').find((a) => a.attributes('href') === '/admin/cal/')
+    await externalLink!.trigger('click')
     expect(drawer.classes()).toContain('-translate-x-full')
   })
 })

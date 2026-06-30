@@ -10,17 +10,17 @@ test.describe('Admin', () => {
 
   test('admin link is visible for admin users', async ({ page }) => {
     const navbar = page.locator('#navbar-desktop')
-    await expect(navbar.getByText('Admin')).toBeVisible()
+    await expect(navbar.getByRole('link', { name: 'Admin' })).toBeVisible()
   })
 
   test('navigates to admin members add page', async ({ page }) => {
-    await page.locator('#navbar-desktop').getByText('Admin').click()
+    await page.locator('#navbar-desktop').getByRole('link', { name: 'Admin' }).click()
     await expect(page).toHaveURL(/\/admin\/members\/add/)
     await expect(page.getByText('Schritt 1')).toBeVisible()
   })
 
   test('completes full wizard flow', async ({ page }) => {
-    await page.locator('#navbar-desktop').getByText('Admin').click()
+    await page.locator('#navbar-desktop').getByRole('link', { name: 'Admin' }).click()
     await page.waitForURL(/\/admin\/members\/add/)
 
     // Step 1: Enter email
@@ -49,7 +49,7 @@ test.describe('Admin', () => {
       }),
     )
 
-    await page.locator('#navbar-desktop').getByText('Admin').click()
+    await page.locator('#navbar-desktop').getByRole('link', { name: 'Admin' }).click()
     await page.waitForURL(/\/admin\/members\/add/)
 
     // Step 1
@@ -66,7 +66,7 @@ test.describe('Admin', () => {
   })
 
   test('step navigation back works', async ({ page }) => {
-    await page.locator('#navbar-desktop').getByText('Admin').click()
+    await page.locator('#navbar-desktop').getByRole('link', { name: 'Admin' }).click()
     await page.waitForURL(/\/admin\/members\/add/)
 
     // Step 1
@@ -96,7 +96,7 @@ test.describe('Admin Mobile Menu', () => {
     await page.locator('[aria-controls="navbar-mobile"]').click()
     const mobileMenu = page.locator('#navbar-mobile')
     await expect(mobileMenu).toHaveClass(/menu-open/)
-    await mobileMenu.getByText('Admin').click()
+    await mobileMenu.getByRole('link', { name: 'Admin' }).click()
     await page.waitForURL(/\/admin\/members\/add/)
   })
 

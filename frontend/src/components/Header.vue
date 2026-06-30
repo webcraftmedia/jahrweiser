@@ -211,6 +211,7 @@
 
 <script setup lang="ts">
   import LogoSmall from '~/../assets/logo-small.svg'
+  import { firstNameOf } from '~~/shared/userName'
 
   withDefaults(defineProps<{ variant?: 'bar' | 'hero' }>(), { variant: 'bar' })
 
@@ -222,9 +223,8 @@
   const mobileMenuOpen = ref(false)
   const { openChangelog: triggerChangelog } = useChangelog()
 
-  const welcomeName = computed(() =>
-    user.value?.name ? user.value.name.split(' ').slice(-1).pop() : user.value?.email,
-  )
+  // Address the user by first name; fall back to the email when no name is set.
+  const welcomeName = computed(() => firstNameOf(user.value?.name) || user.value?.email)
 
   function toggleMobileMenu() {
     mobileMenuOpen.value = !mobileMenuOpen.value

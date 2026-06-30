@@ -49,8 +49,8 @@ test.describe('full-stack profile', () => {
     await page.getByRole('button', { name: 'Speichern' }).click()
     await expect(page.getByText('Gespeichert.')).toBeVisible({ timeout: 10_000 })
 
-    // The header greeting reflects the new (last) name without a re-login.
-    await expect(page.getByText('Wonder').first()).toBeVisible({ timeout: 10_000 })
+    // The header greeting reflects the new first name without a re-login.
+    await expect(page.getByText('Alicia').first()).toBeVisible({ timeout: 10_000 })
 
     // Persisted: a fresh load reads the new name back from DAV.
     await page.reload()

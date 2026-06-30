@@ -146,8 +146,7 @@
                 >
                   <pre
                     class="text-left whitespace-pre-wrap text-navy/80 dark:text-ivory/80 font-body leading-relaxed"
-                    >{{ eventDescription }}</pre
-                  >
+                    >{{ eventDescription }}</pre>
                 </div>
               </div>
             </div>

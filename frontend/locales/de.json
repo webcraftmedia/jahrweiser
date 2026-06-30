@@ -205,6 +205,16 @@
         "toggleOff": "Newsletter abbestellen",
         "toggleOn": "Newsletter aktivieren"
       },
+      "profile": {
+        "description": "Passe deinen angezeigten Namen an.",
+        "error": "Konnte nicht speichern. Bitte später erneut versuchen.",
+        "firstName": "Vorname",
+        "heading": "Name",
+        "lastName": "Nachname",
+        "save": "Speichern",
+        "saved": "Gespeichert.",
+        "saving": "Wird gespeichert..."
+      },
       "title": "Einstellungen"
     }
   }

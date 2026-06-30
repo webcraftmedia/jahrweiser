@@ -30,6 +30,8 @@ export default defineVitestConfig({
         'server/api/admin/registration-links/revoke.post.ts',
         'server/api/me/newsletter.get.ts',
         'server/api/me/newsletter.post.ts',
+        'server/api/me/profile.get.ts',
+        'server/api/me/profile.post.ts',
         'server/api/newsletter/unsubscribe.ts',
         'server/api/newsletter/unsubscribe.get.ts',
         'server/api/newsletter/unsubscribe.post.ts',

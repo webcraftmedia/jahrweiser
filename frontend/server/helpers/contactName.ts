@@ -28,6 +28,31 @@ export function readVCardName(vcard: ICAL.Component): { firstName: string; lastN
   return splitDisplayName(vcard.getFirstPropertyValue('fn')?.toString() ?? '')
 }
 
+// Postal code lives in the structured `ADR` property, component index 5
+// (PO-box;extended;street;locality;region;postal-code;country). We only ever
+// touch that one component and leave any other address parts untouched.
+
+/** Read the postal code from the vCard's `ADR`, or '' when absent. */
+export function readPostalCode(vcard: ICAL.Component): string {
+  const value = vcard.getFirstProperty('adr')?.getValues()[0]
+  const comps = Array.isArray(value) ? value : []
+  return (comps[5] ?? '').toString().trim()
+}
+
+/** Set the postal code on the vCard's `ADR`, preserving the other components. */
+export function setPostalCode(vcard: ICAL.Component, postalCode: string): void {
+  const existing = vcard.getFirstProperty('adr')
+  if (!existing) {
+    const adr = new ICAL.Property('adr', vcard)
+    adr.setValue(['', '', '', '', '', postalCode, ''])
+    vcard.addProperty(adr)
+    return
+  }
+  const comps = [...(existing.getValues()[0] as string[])]
+  comps[5] = postalCode
+  existing.setValue(comps)
+}
+
 /** Overwrite the vCard's display name (`FN`) and structured name (`N`). */
 export function setVCardName(vcard: ICAL.Component, firstName: string, lastName: string): void {
   vcard.updatePropertyWithValue('fn', `${firstName} ${lastName}`.trim())

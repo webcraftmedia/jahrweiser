@@ -27,12 +27,20 @@ describe('profile.get', () => {
       user: {},
       vcard: createMockVCard({ fn: 'Anna Mustermann' }),
     })
-    await expect(fn({})).resolves.toStrictEqual({ firstName: 'Anna', lastName: 'Mustermann' })
+    await expect(fn({})).resolves.toStrictEqual({
+      firstName: 'Anna',
+      lastName: 'Mustermann',
+      postalCode: '',
+    })
   })
 
   it('falls back to splitting the session name when not in DAV', async () => {
     mockFindUserByEmail.mockResolvedValue(false)
-    await expect(fn({})).resolves.toStrictEqual({ firstName: 'Anna', lastName: 'Mustermann' })
+    await expect(fn({})).resolves.toStrictEqual({
+      firstName: 'Anna',
+      lastName: 'Mustermann',
+      postalCode: '',
+    })
   })
 
   it('handles a session without a name', async () => {
@@ -40,6 +48,6 @@ describe('profile.get', () => {
       user: { uid: 'u1', name: null, email: 'x@x.de', role: 'user' },
     })
     mockFindUserByEmail.mockResolvedValue(false)
-    await expect(fn({})).resolves.toStrictEqual({ firstName: '', lastName: '' })
+    await expect(fn({})).resolves.toStrictEqual({ firstName: '', lastName: '', postalCode: '' })
   })
 })

@@ -34,7 +34,11 @@ describe('profile.post', () => {
       user: { uid: 'u1', name: 'Anna Mustermann', email: 'anna@example.com', role: 'user' },
     })
     vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
-      (v as (d: unknown) => unknown)({ firstName: 'Alicia', lastName: 'Wonder' }),
+      (v as (d: unknown) => unknown)({
+        firstName: 'Alicia',
+        lastName: 'Wonder',
+        postalCode: '64653',
+      }),
     )
     mockSaveUser.mockResolvedValue({ ok: true })
   })
@@ -51,18 +55,21 @@ describe('profile.post', () => {
     await expect(fn({})).rejects.toThrow('Contact not found')
   })
 
-  it('writes the name to a vcard that already has a uid', async () => {
+  it('writes the name and postal code to a vcard that already has a uid', async () => {
+    const card = vcard(['UID:u1', 'FN:Old Name', 'N:Name;Old;;;', 'EMAIL:anna@example.com'])
     mockFindUserByEmail.mockResolvedValue({
       user: { href: '/a.vcf', props: { getetag: 'x' } },
-      vcard: vcard(['UID:u1', 'FN:Old Name', 'N:Name;Old;;;', 'EMAIL:anna@example.com']),
+      vcard: card,
     })
     queueDbResults({}) // db.update
     const res = await fn({})
     expect(res).toStrictEqual({
       firstName: 'Alicia',
       lastName: 'Wonder',
+      postalCode: '64653',
       displayName: 'Alicia Wonder',
     })
+    expect(card.toString()).toContain('ADR:;;;;;64653;')
     expect(mockSaveUser).toHaveBeenCalledTimes(1)
   })
 

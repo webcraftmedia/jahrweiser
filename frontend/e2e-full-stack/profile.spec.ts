@@ -46,17 +46,19 @@ test.describe('full-stack profile', () => {
 
     await page.locator('#settings-firstName').fill('Alicia')
     await page.locator('#settings-lastName').fill('Wonder')
+    await page.locator('#settings-postalCode').fill('64653')
     await page.getByRole('button', { name: 'Speichern' }).click()
     await expect(page.getByText('Gespeichert.')).toBeVisible({ timeout: 10_000 })
 
     // The header greeting reflects the new first name without a re-login.
     await expect(page.getByText('Alicia').first()).toBeVisible({ timeout: 10_000 })
 
-    // Persisted: a fresh load reads the new name back from DAV.
+    // Persisted: a fresh load reads the new name and postal code back from DAV.
     await page.reload()
     await preparePage(page)
     await expect(page.locator('#settings-firstName')).toHaveValue('Alicia', { timeout: 10_000 })
     await expect(page.locator('#settings-lastName')).toHaveValue('Wonder')
+    await expect(page.locator('#settings-postalCode')).toHaveValue('64653')
   })
 
   test('saving a blank name clears the stored name', async ({ page }) => {

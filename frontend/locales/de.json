@@ -214,6 +214,9 @@
         "error": "Konnte nicht speichern. Bitte später erneut versuchen.",
         "firstName": "Vorname",
         "lastName": "Nachname",
+        "postalCode": "Postleitzahl",
+        "postalCode-hint": "Optional. Wir möchten die Postleitzahlen künftig anonym und aggregiert — also ohne Namen — auf einer Karte darstellen, um zu zeigen, woher unsere Gemeinschaft kommt.",
+        "postalCode-placeholder": "z. B. 64653",
         "save": "Speichern",
         "saved": "Gespeichert.",
         "saving": "Wird gespeichert..."

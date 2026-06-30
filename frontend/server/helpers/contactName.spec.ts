@@ -2,7 +2,13 @@
 import ICAL from 'ical.js'
 import { describe, expect, it } from 'vitest'
 
-import { readVCardName, setVCardName, splitDisplayName } from './contactName'
+import {
+  readPostalCode,
+  readVCardName,
+  setPostalCode,
+  setVCardName,
+  splitDisplayName,
+} from './contactName'
 
 function parseVCard(lines: string[]): ICAL.Component {
   return new ICAL.Component(
@@ -73,5 +79,43 @@ describe('setVCardName', () => {
     const vcard = parseVCard(['EMAIL:x@y.de'])
     setVCardName(vcard, 'Solo', '')
     expect(vcard.getFirstPropertyValue('fn')).toBe('Solo')
+  })
+})
+
+describe('readPostalCode', () => {
+  it('reads the postal-code component from ADR', () => {
+    const vcard = parseVCard(['EMAIL:x@y.de', 'ADR:;;;;;64653;'])
+    expect(readPostalCode(vcard)).toBe('64653')
+  })
+
+  it('returns an empty string when there is no ADR', () => {
+    const vcard = parseVCard(['EMAIL:x@y.de'])
+    expect(readPostalCode(vcard)).toBe('')
+  })
+})
+
+describe('setPostalCode', () => {
+  it('adds an ADR with only the postal code when none exists', () => {
+    const vcard = parseVCard(['EMAIL:x@y.de'])
+    setPostalCode(vcard, '64653')
+    expect(readPostalCode(vcard)).toBe('64653')
+    // Round-trips and only the postal-code component is set.
+    expect(vcard.toString()).toContain('ADR:;;;;;64653;')
+  })
+
+  it('updates the postal code on an existing ADR, keeping other parts', () => {
+    const vcard = parseVCard(['EMAIL:x@y.de', 'ADR:;;Hauptstr. 1;Bensheim;;64625;DE'])
+    setPostalCode(vcard, '64653')
+    const comps = vcard.getFirstProperty('adr')?.getValues()[0] as string[]
+    expect(comps[2]).toBe('Hauptstr. 1')
+    expect(comps[3]).toBe('Bensheim')
+    expect(comps[5]).toBe('64653')
+    expect(comps[6]).toBe('DE')
+  })
+
+  it('clears the postal code when given an empty string', () => {
+    const vcard = parseVCard(['EMAIL:x@y.de', 'ADR:;;;;;64653;'])
+    setPostalCode(vcard, '')
+    expect(readPostalCode(vcard)).toBe('')
   })
 })

@@ -134,6 +134,53 @@ test.describe('registration via link', () => {
     await guestContext.close()
   })
 
+  test('an admin can rename, deactivate, reactivate and delete a link', async ({ page }) => {
+    await loginViaMagicLink(page, ADMIN)
+    const { token } = await createLink(page, { label: 'Before', duration: '30d' })
+    const req = page.context().request
+
+    const row = async () => {
+      const links = (await (await req.get('/api/admin/registration-links/list')).json()) as {
+        token: string
+        label: string | null
+        status: string
+      }[]
+      return links.find((l) => l.token === token)
+    }
+
+    // Rename.
+    expect(
+      (
+        await req.post('/api/admin/registration-links/update', { data: { token, label: 'After' } })
+      ).ok(),
+    ).toBeTruthy()
+    expect((await row())?.label).toBe('After')
+
+    // An active link cannot be deleted — deactivate first.
+    expect(
+      (await req.post('/api/admin/registration-links/delete', { data: { token } })).status(),
+    ).toBe(409)
+
+    // Deactivate → reactivate (back to valid) → deactivate again.
+    expect(
+      (await req.post('/api/admin/registration-links/revoke', { data: { token } })).ok(),
+    ).toBeTruthy()
+    expect((await row())?.status).toBe('revoked')
+    expect(
+      (await req.post('/api/admin/registration-links/reactivate', { data: { token } })).ok(),
+    ).toBeTruthy()
+    expect((await row())?.status).toBe('valid')
+    expect(
+      (await req.post('/api/admin/registration-links/revoke', { data: { token } })).ok(),
+    ).toBeTruthy()
+
+    // Now deletable.
+    expect(
+      (await req.post('/api/admin/registration-links/delete', { data: { token } })).ok(),
+    ).toBeTruthy()
+    expect(await row()).toBeUndefined()
+  })
+
   test('registration endpoints reject anonymous admin access', async ({ request }) => {
     const create = await request.post('/api/admin/registration-links/create', {
       data: { duration: '30d' },

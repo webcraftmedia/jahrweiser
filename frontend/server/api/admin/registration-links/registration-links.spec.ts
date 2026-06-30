@@ -5,14 +5,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mockDb, queueDbResults, resetDb } from '../../../../test/helpers/mock-db'
 
 import createHandler from './create.post'
+import deleteHandler from './delete.post'
 import listHandler from './list.get'
+import reactivateHandler from './reactivate.post'
 import revokeHandler from './revoke.post'
+import updateHandler from './update.post'
 
 vi.mock('~~/server/db', () => ({ useDb: () => mockDb }))
 
 const createFn = createHandler as unknown as (e: unknown) => Promise<Record<string, unknown>>
 const listFn = listHandler as unknown as (e: unknown) => Promise<Record<string, unknown>[]>
 const revokeFn = revokeHandler as unknown as (e: unknown) => Promise<unknown>
+const updateFn = updateHandler as unknown as (e: unknown) => Promise<unknown>
+const deleteFn = deleteHandler as unknown as (e: unknown) => Promise<unknown>
+const reactivateFn = reactivateHandler as unknown as (e: unknown) => Promise<unknown>
 
 function asAdmin() {
   vi.mocked(globalThis.requireUserSession).mockResolvedValue({
@@ -127,5 +133,100 @@ describe('registration-links/revoke', () => {
     body({ token: 't1' })
     queueDbResults({})
     await expect(revokeFn({})).resolves.toStrictEqual({})
+  })
+})
+
+describe('registration-links/update', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetDb()
+  })
+
+  it('rejects non-admins', async () => {
+    asUser()
+    body({ token: 't1', label: 'X' })
+    await expect(updateFn({})).rejects.toThrow('Not Authorized')
+  })
+
+  it('updates only the label when no duration is given', async () => {
+    asAdmin()
+    body({ token: 't1', label: 'Renamed' })
+    queueDbResults({})
+    await expect(updateFn({})).resolves.toStrictEqual({})
+  })
+
+  it('clears the label and re-bases validity when a duration is given', async () => {
+    asAdmin()
+    body({ token: 't1', label: '', duration: '7d' })
+    queueDbResults({})
+    await expect(updateFn({})).resolves.toStrictEqual({})
+  })
+})
+
+describe('registration-links/delete', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetDb()
+  })
+
+  it('rejects non-admins', async () => {
+    asUser()
+    body({ token: 't1' })
+    await expect(deleteFn({})).rejects.toThrow('Not Authorized')
+  })
+
+  it('returns 404 when the link does not exist', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults([])
+    await expect(deleteFn({})).rejects.toThrow('Link not found')
+  })
+
+  it('refuses to delete a link that is still active', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults([{ revokedAt: null }])
+    await expect(deleteFn({})).rejects.toThrow('Link is active')
+  })
+
+  it('refuses to delete a deactivated link that has redemptions', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults([{ revokedAt: new Date() }], [{ count: '2' }])
+    await expect(deleteFn({})).rejects.toThrow('Link has redemptions')
+  })
+
+  it('deletes a deactivated link that was never redeemed', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults([{ revokedAt: new Date() }], [{ count: '0' }], {})
+    await expect(deleteFn({})).resolves.toStrictEqual({})
+  })
+
+  it('treats a missing count row as zero and deletes', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults([{ revokedAt: new Date() }], [], {})
+    await expect(deleteFn({})).resolves.toStrictEqual({})
+  })
+})
+
+describe('registration-links/reactivate', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetDb()
+  })
+
+  it('rejects non-admins', async () => {
+    asUser()
+    body({ token: 't1' })
+    await expect(reactivateFn({})).rejects.toThrow('Not Authorized')
+  })
+
+  it('clears the revoked state', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults({})
+    await expect(reactivateFn({})).resolves.toStrictEqual({})
   })
 })

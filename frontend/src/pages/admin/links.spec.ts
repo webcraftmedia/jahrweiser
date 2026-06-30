@@ -263,4 +263,155 @@ describe('Page: Admin Links', () => {
     })
     consoleSpy.mockRestore()
   })
+
+  function findButton(wrapper: Awaited<ReturnType<typeof mountLoaded>>, key: string) {
+    return wrapper.findAll('button[type="button"]').find((b) => b.text().includes(key))
+  }
+
+  it('enters edit mode for a row', async () => {
+    const wrapper = await mountLoaded()
+    await findButton(wrapper, 'pages.admin.links.table.edit')!.trigger('click')
+    expect(wrapper.find('table input[type="text"]').exists()).toBe(true)
+    expect(wrapper.find('table select').exists()).toBe(true)
+    expect(findButton(wrapper, 'pages.admin.links.table.save')).toBeDefined()
+  })
+
+  it('pre-fills an empty label when editing an unnamed link', async () => {
+    const wrapper = await mountLoaded()
+    const editButtons = wrapper
+      .findAll('button[type="button"]')
+      .filter((b) => b.text().includes('pages.admin.links.table.edit'))
+    // Second row (REVOKED_ROW) has a null label.
+    await editButtons[1]!.trigger('click')
+    expect((wrapper.find('table input[type="text"]').element as HTMLInputElement).value).toBe('')
+  })
+
+  it('saves an edited label without changing validity', async () => {
+    const wrapper = await mountLoaded()
+    await findButton(wrapper, 'pages.admin.links.table.edit')!.trigger('click')
+    await wrapper.find('table input[type="text"]').setValue('Renamed')
+    await findButton(wrapper, 'pages.admin.links.table.save')!.trigger('click')
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/admin/registration-links/update',
+        expect.objectContaining({
+          method: 'POST',
+          body: { token: 'tok-valid', label: 'Renamed' },
+        }),
+      )
+    })
+  })
+
+  it('saves an edited validity', async () => {
+    const wrapper = await mountLoaded()
+    await findButton(wrapper, 'pages.admin.links.table.edit')!.trigger('click')
+    await wrapper.find('table select').setValue('7d')
+    await findButton(wrapper, 'pages.admin.links.table.save')!.trigger('click')
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/admin/registration-links/update',
+        expect.objectContaining({
+          method: 'POST',
+          body: { token: 'tok-valid', label: 'Flyer Herbstfest', duration: '7d' },
+        }),
+      )
+    })
+  })
+
+  it('cancels editing', async () => {
+    const wrapper = await mountLoaded()
+    await findButton(wrapper, 'pages.admin.links.table.edit')!.trigger('click')
+    expect(findButton(wrapper, 'pages.admin.links.table.save')).toBeDefined()
+    await findButton(wrapper, 'pages.admin.links.table.cancel')!.trigger('click')
+    expect(findButton(wrapper, 'pages.admin.links.table.save')).toBeUndefined()
+    expect(wrapper.find('table input[type="text"]').exists()).toBe(false)
+  })
+
+  it('handles an update failure gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/admin/registration-links/list')
+        return Promise.resolve([VALID_ROW, REVOKED_ROW])
+      if (url === '/api/admin/registration-links/update') return Promise.reject(new Error('boom'))
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/admin/links' })
+    await vi.waitFor(() => {
+      expect(wrapper.find('table').exists()).toBe(true)
+    })
+    await findButton(wrapper, 'pages.admin.links.table.edit')!.trigger('click')
+    await findButton(wrapper, 'pages.admin.links.table.save')!.trigger('click')
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalled()
+    })
+    consoleSpy.mockRestore()
+  })
+
+  it('deletes an unused link', async () => {
+    const wrapper = await mountLoaded()
+    await findButton(wrapper, 'pages.admin.links.table.delete')!.trigger('click')
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/admin/registration-links/delete',
+        expect.objectContaining({ method: 'POST', body: { token: 'tok-revoked' } }),
+      )
+    })
+  })
+
+  it('handles a delete failure gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/admin/registration-links/list')
+        return Promise.resolve([VALID_ROW, REVOKED_ROW])
+      if (url === '/api/admin/registration-links/delete') return Promise.reject(new Error('boom'))
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/admin/links' })
+    await vi.waitFor(() => {
+      expect(wrapper.find('table').exists()).toBe(true)
+    })
+    await findButton(wrapper, 'pages.admin.links.table.delete')!.trigger('click')
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalled()
+    })
+    consoleSpy.mockRestore()
+  })
+
+  it('only offers delete for a deactivated link that was never redeemed', async () => {
+    // A revoked link with redemptions can be reactivated but not deleted.
+    const wrapper = await mountLoaded([{ ...REVOKED_ROW, useCount: 2 }])
+    expect(findButton(wrapper, 'pages.admin.links.table.delete')).toBeUndefined()
+    expect(findButton(wrapper, 'pages.admin.links.table.reactivate')).toBeDefined()
+  })
+
+  it('reactivates a deactivated link', async () => {
+    const wrapper = await mountLoaded()
+    await findButton(wrapper, 'pages.admin.links.table.reactivate')!.trigger('click')
+    await vi.waitFor(() => {
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/admin/registration-links/reactivate',
+        expect.objectContaining({ method: 'POST', body: { token: 'tok-revoked' } }),
+      )
+    })
+  })
+
+  it('handles a reactivate failure gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/admin/registration-links/list')
+        return Promise.resolve([VALID_ROW, REVOKED_ROW])
+      if (url === '/api/admin/registration-links/reactivate')
+        return Promise.reject(new Error('boom'))
+      return Promise.resolve({})
+    })
+    const wrapper = await mountSuspended(Page, { route: '/admin/links' })
+    await vi.waitFor(() => {
+      expect(wrapper.find('table').exists()).toBe(true)
+    })
+    await findButton(wrapper, 'pages.admin.links.table.reactivate')!.trigger('click')
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalled()
+    })
+    consoleSpy.mockRestore()
+  })
 })

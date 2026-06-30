@@ -20,6 +20,8 @@ const runtimeConfig = vi.hoisted(() => ({
   SMTP_MAX_CONNECTIONS: 5,
   SMTP_MAX_MESSAGES: 100,
   CLIENT_URI: 'http://localhost:3000',
+  LOGIN_RATE_LIMIT_MS: 60000,
+  SYNC_SECRET: 'test-sync-secret',
 }))
 
 vi.mock('#app/nuxt', async (importOriginal) => {
@@ -42,3 +44,13 @@ globalThis.useRuntimeConfig = () => runtimeConfig as unknown as ReturnType<typeo
 
 globalThis.requireUserSession = vi.fn()
 globalThis.setUserSession = vi.fn()
+globalThis.getUserSession = vi.fn()
+globalThis.clearUserSession = vi.fn()
+
+// h3 request/response helpers used by the endpoints. Tests control the request
+// ones (getQuery/getRouterParam/getHeader) and ignore the response side-effects.
+globalThis.getQuery = vi.fn()
+globalThis.getRouterParam = vi.fn()
+globalThis.getHeader = vi.fn()
+globalThis.setHeader = vi.fn()
+globalThis.setResponseStatus = vi.fn()

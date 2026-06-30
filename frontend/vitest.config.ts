@@ -14,29 +14,19 @@ export default defineVitestConfig({
       reporter: ['text', 'json', 'html'],
       all: true,
       include: ['src/**/*.{ts,vue}', 'server/helpers/*.ts', 'server/api/**/*.ts'],
-      // The auth/sync endpoints and the DB-orchestration parts of the sync helper
-      // require a live MariaDB and are validated by the e2e suite instead.
       exclude: [
         'src/**/*.spec.ts',
         'server/emails/**',
+        // These four carry branchy / defensive DB-and-DAV orchestration (bulk
+        // newsletter send, the full DAV→sidecar diff, the rate-limited login
+        // request, the multi-path register flow). Their behaviour is validated
+        // by the full-stack e2e suite, and the `_smoke.spec.ts` import test
+        // guards them against load-time errors. Everything else that touches the
+        // DB is now unit-tested with a mocked DB/DAV layer (see test/helpers/mock-db.ts).
         'server/api/requestLoginLink.post.ts',
-        'server/api/redeemLoginLink.post.ts',
         'server/api/register.post.ts',
-        'server/api/register/[token].get.ts',
-        'server/api/admin/sync-now.post.ts',
         'server/api/admin/send-newsletter.post.ts',
-        'server/api/admin/registration-links/create.post.ts',
-        'server/api/admin/registration-links/list.get.ts',
-        'server/api/admin/registration-links/revoke.post.ts',
-        'server/api/me/newsletter.get.ts',
-        'server/api/me/newsletter.post.ts',
-        'server/api/me/profile.get.ts',
-        'server/api/me/profile.post.ts',
-        'server/api/newsletter/unsubscribe.ts',
-        'server/api/newsletter/unsubscribe.get.ts',
-        'server/api/newsletter/unsubscribe.post.ts',
         'server/helpers/sync.ts',
-        'server/helpers/loginLink.ts',
       ],
       thresholds: {
         100: true,

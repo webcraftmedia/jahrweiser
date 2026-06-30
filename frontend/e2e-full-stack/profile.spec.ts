@@ -64,7 +64,7 @@ test.describe('full-stack profile', () => {
   test('saving a blank name clears the stored name', async ({ page }) => {
     await loginViaMagicLink(page, ALICE)
     const res = await page.context().request.post('/api/me/profile', {
-      data: { firstName: '', lastName: '' },
+      data: { firstName: '', lastName: '', postalCode: '' },
     })
     expect(res.status()).toBe(200)
 

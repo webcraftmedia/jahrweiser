@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.0...v1.10.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* **frontend:** improve invite link handling ([#273](https://github.com/webcraftmedia/jahrweiser/issues/273)) ([df414e6](https://github.com/webcraftmedia/jahrweiser/commit/df414e670df39a8c3c2242b78393e1476a664d97))
+
 ## [1.10.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.9.3...v1.10.0) (2026-06-30)
 
 

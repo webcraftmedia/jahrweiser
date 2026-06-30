@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { useDb } from '../../db'
 import { users } from '../../db/schema'
-import { setVCardName } from '../../helpers/contactName'
+import { setPostalCode, setVCardName } from '../../helpers/contactName'
 import { createCardDAVAccount, findUserByEmail, saveUser } from '../../helpers/dav'
 import { ABSOLUTE_TTL_SECONDS } from '../../helpers/sessionTtl'
 
@@ -11,6 +11,8 @@ const bodySchema = z.object({
   // Both may be empty: saving a blank name clears the stored display name.
   firstName: z.string().trim().max(100),
   lastName: z.string().trim().max(100),
+  // Postal code is optional; empty clears it. Lenient max for intl. formats.
+  postalCode: z.string().trim().max(16),
 })
 
 export default defineEventHandler(async (event) => {
@@ -19,7 +21,7 @@ export default defineEventHandler(async (event) => {
   if (!uid) {
     throw createError({ statusCode: 401, statusMessage: 'No user context' })
   }
-  const { firstName, lastName } = await readValidatedBody(event, bodySchema.parse)
+  const { firstName, lastName, postalCode } = await readValidatedBody(event, bodySchema.parse)
   const config = useRuntimeConfig()
   const db = useDb()
 
@@ -30,6 +32,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Contact not found' })
   }
   setVCardName(match.vcard, firstName, lastName)
+  setPostalCode(match.vcard, postalCode)
   // Legacy contacts may lack a UID — make sure the sidecar key is present.
   if (!match.vcard.getFirstPropertyValue('uid')?.toString().trim()) {
     match.vcard.updatePropertyWithValue('uid', uid)
@@ -46,5 +49,5 @@ export default defineEventHandler(async (event) => {
   // the DB-backed session row valid.
   await setUserSession(event, { user: { name: displayName } }, { maxAge: ABSOLUTE_TTL_SECONDS })
 
-  return { firstName, lastName, displayName }
+  return { firstName, lastName, postalCode, displayName }
 })

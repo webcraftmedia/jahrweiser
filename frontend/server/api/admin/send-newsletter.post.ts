@@ -93,7 +93,9 @@ export default defineEventHandler(async (event) => {
       }))
 
       const unsubscribeUrl = `${config.CLIENT_URI.replace(/\/+$/, '')}/api/newsletter/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
-      const settingsUrl = `${config.CLIENT_URI.replace(/\/+$/, '')}/settings`
+      // Deep-link straight to the newsletter tab so "manage your subscription"
+      // lands where the user expects.
+      const settingsUrl = `${config.CLIENT_URI.replace(/\/+$/, '')}/settings/newsletter`
 
       // Plain-text body is built in TS so we control the line breaks; pug's
       // `|`-based text mode was unreliable and produced run-together output.

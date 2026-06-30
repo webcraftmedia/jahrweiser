@@ -39,7 +39,7 @@ test.describe('full-stack profile', () => {
   test('a user can edit their name in settings and it persists', async ({ page }) => {
     await loginViaMagicLink(page, ALICE)
 
-    await page.goto('/settings')
+    await page.goto('/settings/profile')
     await preparePage(page)
     // The form is pre-filled from DAV (source of truth).
     await expect(page.locator('#settings-firstName')).toHaveValue(/.+/, { timeout: 10_000 })

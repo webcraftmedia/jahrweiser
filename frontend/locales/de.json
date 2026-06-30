@@ -194,6 +194,10 @@
     },
     "settings": {
       "loading": "Wird geladen...",
+      "menu": {
+        "newsletter": "Newsletter",
+        "profile": "Meine Daten"
+      },
       "newsletter": {
         "description": "Bekomme jeden Sonntagabend eine E-Mail mit allen Terminen der kommenden Woche.",
         "disabled": "Inaktiv — du bekommst keinen Newsletter.",
@@ -209,7 +213,6 @@
         "description": "Mit deinem Namen sprechen wir dich an — in der Begrüßung oben im Menü und in der Anrede unserer E-Mails (Anmelde-Link, Newsletter). Er wird nicht an Dritte weitergegeben und ausschließlich zur internen Kommunikation mit dir selbst verwendet.",
         "error": "Konnte nicht speichern. Bitte später erneut versuchen.",
         "firstName": "Vorname",
-        "heading": "Name",
         "lastName": "Nachname",
         "save": "Speichern",
         "saved": "Gespeichert.",

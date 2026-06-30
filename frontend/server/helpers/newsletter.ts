@@ -109,11 +109,9 @@ export async function collectEventsForUser(
       const calEvent = new ICAL.Event(vevent)
       const id = hrefToId(data.href as string)
       const description = (vevent.getFirstProperty('description')?.getFirstValue() ?? undefined) as
-        | string
-        | undefined
+        string | undefined
       const location = (vevent.getFirstProperty('location')?.getFirstValue() ?? undefined) as
-        | string
-        | undefined
+        string | undefined
       const isAllDay = calEvent.startDate.isDate
 
       if (calEvent.isRecurring()) {

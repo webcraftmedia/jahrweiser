@@ -26,15 +26,18 @@ create link  ───────────────▶ open /register/{to
    and an optional maximum number of uses.
 2. **Visitor opens `/register/{token}`.** The page validates the link first and
    shows a friendly message if it is revoked, expired, used up or unknown.
-3. **Visitor submits** email + first/last name. If the email already has an
-   account, the page tells them to log in instead — no duplicate is created.
-   Otherwise a VCard is written to DAV, mirrored into the sidecar, the join is
-   recorded, and a magic login link is emailed.
+3. **Visitor submits** email + first/last name.
+   - **New email:** a VCard is written to DAV, mirrored into the sidecar, the
+     join is recorded, and a magic login link is emailed.
+   - **Existing email:** no duplicate and no join is recorded, but any *missing*
+     name is filled in (DAV VCard + sidecar — existing data is never
+     overwritten) and a magic login link is emailed anyway, so the person can
+     get in. This covers e.g. members an admin added by email only.
 4. **Visitor clicks the email link** → existing `/login/{token}` redeem flow →
    logged in. Clicking the link is what confirms the email address.
 
-A join is counted at account creation (step 3); the email-dedup check prevents
-double counting.
+Either way the page ends on "check your inbox". A join is counted only for a
+genuinely new account (step 3); the email-dedup check prevents double counting.
 
 ## Admin UI
 

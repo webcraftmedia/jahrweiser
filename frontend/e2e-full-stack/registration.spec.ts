@@ -12,6 +12,9 @@ const ADMIN = 'admin@example.com'
 // A fresh address that the demo seed does not create, so registration always
 // hits the "new account" path.
 const NEWCOMER = 'newcomer@example.com'
+// A seeded user that already exists — re-registering with it must hit the
+// "existing account" path (login link, no new join).
+const ALICE = 'alice@example.com'
 
 test.beforeAll(() => {
   runSeedReset()
@@ -98,6 +101,35 @@ test.describe('registration via link', () => {
     await preparePage(guest)
     await expect(guest.getByText('Link nicht nutzbar')).toBeVisible({ timeout: 10_000 })
     expect(await guest.locator('#email').count()).toBe(0)
+
+    await guestContext.close()
+  })
+
+  test('re-registering an existing email sends a login link without counting a join', async ({
+    page,
+    browser,
+  }) => {
+    await loginViaMagicLink(page, ADMIN)
+    const { token } = await createLink(page, { label: 'E2E Existing', duration: '30d' })
+
+    const guestContext = await browser.newContext()
+    const guest = await guestContext.newPage()
+    await guest.goto(`/register/${token}`)
+    await preparePage(guest)
+    await guest.locator('#firstName').fill('Alice')
+    await guest.locator('#lastName').fill('Example')
+    await guest.locator('#email').fill(ALICE)
+    await guest.getByRole('button', { name: 'Konto anlegen' }).click()
+    await expect(guest.getByText('Fast geschafft!')).toBeVisible({ timeout: 10_000 })
+
+    // The existing user still receives a login link...
+    const mail = await waitForMailFor(ALICE)
+    expect(mail).toBeTruthy()
+
+    // ...but re-registering is not counted as a join.
+    const listResp = await page.context().request.get('/api/admin/registration-links/list')
+    const links = (await listResp.json()) as { token: string; useCount: number }[]
+    expect(links.find((l) => l.token === token)?.useCount).toBe(0)
 
     await guestContext.close()
   })

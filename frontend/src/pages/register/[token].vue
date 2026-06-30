@@ -31,23 +31,6 @@
       </div>
     </div>
 
-    <!-- Already has an account -->
-    <div v-else-if="result === 'already-registered'" class="animate-fade-slide-up">
-      <div
-        class="p-5 border-2 border-olive/50 dark:border-olive/30 rounded bg-olive/10 dark:bg-olive/5 text-navy dark:text-ivory"
-        role="alert"
-      >
-        <h3 class="text-lg font-display mb-2">{{ $t('pages.register.exists.title') }}</h3>
-        <p class="text-base font-body mb-4">{{ $t('pages.register.exists.text') }}</p>
-        <NuxtLink
-          to="/login"
-          class="inline-block px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
-        >
-          {{ $t('pages.register.exists.button') }}
-        </NuxtLink>
-      </div>
-    </div>
-
     <!-- Registration form -->
     <div v-else class="login-card-float">
       <div
@@ -172,7 +155,7 @@
   const validating = ref(true)
   const linkStatus = ref<'valid' | 'revoked' | 'expired' | 'exhausted' | 'notfound'>('valid')
   const invitedBy = ref<string | null>(null)
-  const result = ref<'created' | 'already-registered' | null>(null)
+  const result = ref<'created' | null>(null)
 
   // Static-key lookup (no dynamic i18n keys) for the "link unusable" reason.
   const invalidMessage = computed(
@@ -228,7 +211,7 @@
     sendError.value = false
     loading.value = true
     try {
-      const res = await $fetch<{ status: 'created' | 'already-registered' }>('/api/register', {
+      const res = await $fetch<{ status: 'created' }>('/api/register', {
         method: 'POST',
         body: {
           token,

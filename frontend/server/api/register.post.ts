@@ -5,10 +5,15 @@ import { z } from 'zod'
 
 import { useDb } from '../db'
 import { registrationLinkRedemptions, registrationLinks, users } from '../db/schema'
-import { createCardDAVAccount, createUser, findUserByEmail } from '../helpers/dav'
+import { createCardDAVAccount, createUser, findUserByEmail, saveUser } from '../helpers/dav'
 import { sendLoginLink } from '../helpers/loginLink'
 import { clearEmailNotFound } from '../helpers/negativeCache'
-import { buildRegistrantVCard, linkStatus } from '../helpers/registrationLinks'
+import {
+  buildRegistrantVCard,
+  fillMissingRegistrantData,
+  linkStatus,
+} from '../helpers/registrationLinks'
+import { extractUserFromVCardData } from '../helpers/sync'
 
 const bodySchema = z.object({
   token: z.string(),
@@ -43,18 +48,51 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 410, statusMessage: `Link ${status}` })
   }
 
-  // 2. Don't create a duplicate. DAV is the source of truth for contact data,
-  // so an existing address there (or already mirrored into the sidecar) means
-  // the person already has an account and should just log in.
+  // 2. Existing account? DAV is the source of truth for contact data, so an
+  // address already there (or mirrored into the sidecar) belongs to someone who
+  // already has an account. We don't create a duplicate or count a join, but we
+  // DO fill in any missing name (never overwriting existing data) and email them
+  // a magic login link so they can get in.
   const davAccount = createCardDAVAccount(config)
-  const existingInSidecar = (
-    await db.select({ uid: users.uid }).from(users).where(eq(users.email, normalizedEmail)).limit(1)
+  const davMatch = await findUserByEmail(davAccount, normalizedEmail)
+  const sidecarRow = (
+    await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1)
   )[0]
-  const existingInDav = existingInSidecar
-    ? true
-    : Boolean(await findUserByEmail(davAccount, normalizedEmail))
-  if (existingInSidecar || existingInDav) {
-    return { status: 'already-registered' as const }
+
+  if (davMatch || sidecarRow) {
+    let uid: string
+    let displayName: string | null
+    let role: 'user' | 'admin'
+
+    if (davMatch) {
+      // Fill missing UID/name on the DAV VCard (source of truth) and persist
+      // only if something actually changed.
+      const mutated = fillMissingRegistrantData(davMatch.vcard, {
+        uid: randomUUID(),
+        firstName,
+        lastName,
+      })
+      if (mutated) await saveUser(davAccount, davMatch.user, davMatch.vcard)
+      const snap = extractUserFromVCardData(davMatch.vcard.toString())
+      uid = snap?.uid ?? sidecarRow?.uid ?? randomUUID()
+      displayName = snap?.displayName ?? sidecarRow?.displayName ?? null
+      role = snap?.role ?? sidecarRow?.role ?? 'user'
+    } else {
+      uid = sidecarRow!.uid
+      displayName = sidecarRow!.displayName ?? `${firstName} ${lastName}`.trim()
+      role = sidecarRow!.role
+    }
+
+    // Mirror into the sidecar (insert if missing, reactivate + fill name).
+    // role is left untouched on UPDATE — it is MariaDB-authoritative.
+    await db
+      .insert(users)
+      .values({ uid, email: normalizedEmail, displayName, role })
+      .onDuplicateKeyUpdate({ set: { displayName, deletedAt: null } })
+    clearEmailNotFound(normalizedEmail)
+
+    await sendLoginLink(config, { uid, email: normalizedEmail, displayName }, undefined)
+    return { status: 'created' as const }
   }
 
   // 3. Write the contact to DAV (source of truth), then mirror into the sidecar

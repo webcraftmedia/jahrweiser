@@ -138,17 +138,6 @@ describe('Page: Register Token', () => {
     })
   })
 
-  it('shows the already-registered message with a login link', async () => {
-    mock$fetch.mockImplementation(defaultFetch('valid', 'already-registered'))
-    const wrapper = await mountValid()
-    await fillValid(wrapper)
-    await wrapper.find('form').trigger('submit')
-    await vi.waitFor(() => {
-      expect(wrapper.text()).toContain('pages.register.exists.title')
-    })
-    expect(wrapper.find('a[href="/login"]').exists()).toBe(true)
-  })
-
   it('shows an error when submitting fails', async () => {
     mock$fetch.mockImplementation((url: string, opts?: { method?: string }) => {
       if (url.startsWith('/api/register/')) return Promise.resolve({ status: 'valid' })

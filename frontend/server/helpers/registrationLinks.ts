@@ -61,3 +61,30 @@ export function buildRegistrantVCard(input: {
   vcard.addPropertyWithValue('email', input.email)
   return vcard
 }
+
+/**
+ * Fill in missing identity fields on an existing vCard when someone re-registers:
+ * a UID (so the sidecar can key it) and the name (FN + structured N). Only fills
+ * what is absent — never overwrites a name the user already has. Returns whether
+ * the vCard was mutated, so the caller can skip a DAV write when nothing changed.
+ */
+export function fillMissingRegistrantData(
+  vcard: ICAL.Component,
+  input: { uid: string; firstName: string; lastName: string },
+): boolean {
+  let mutated = false
+  if (!vcard.getFirstPropertyValue('uid')?.toString().trim()) {
+    vcard.updatePropertyWithValue('uid', input.uid)
+    mutated = true
+  }
+  if (!vcard.getFirstPropertyValue('fn')?.toString().trim()) {
+    vcard.updatePropertyWithValue('fn', `${input.firstName} ${input.lastName}`.trim())
+    if (!vcard.getFirstProperty('n')) {
+      const n = new ICAL.Property('n', vcard)
+      n.setValue([input.lastName, input.firstName, '', '', ''])
+      vcard.addProperty(n)
+    }
+    mutated = true
+  }
+  return mutated
+}

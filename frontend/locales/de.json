@@ -162,11 +162,6 @@
         "text2": "Bitte bestätige darüber deine Adresse — schau auch im Spam-Ordner.",
         "title": "Fast geschafft!"
       },
-      "exists": {
-        "button": "Zur Anmeldung",
-        "text": "Für diese E-Mail gibt es bereits ein Konto. Melde dich einfach an.",
-        "title": "Konto vorhanden"
-      },
       "form": {
         "button": "Konto anlegen",
         "description": "Lege dir einen Zugang zum Jahrweiser an.",

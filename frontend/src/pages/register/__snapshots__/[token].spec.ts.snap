@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Page: Register Token > renders the form once the link validates 1`] = `
+"<div data-v-4007b26b="" class="w-full max-w-sm mt-8">
+  <!-- Validating the link -->
+  <!-- Registration form -->
+  <div data-v-4007b26b="" class="login-card-float">
+    <div data-v-4007b26b="" class="login-card p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded">
+      <form data-v-4007b26b="" class="space-y-5" novalidate="">
+        <div data-v-4007b26b="">
+          <h5 data-v-4007b26b="" class="text-xl font-display text-navy dark:text-ivory">pages.register.form.title</h5>
+          <p data-v-4007b26b="" class="mt-1 text-sm font-body text-navy/70 dark:text-poster-darkMuted">pages.register.form.description</p>
+        </div>
+        <div data-v-4007b26b="" class="grid grid-cols-2 gap-3">
+          <div data-v-4007b26b=""><label data-v-4007b26b="" for="firstName" class="block mb-2 text-base font-medium font-body text-navy dark:text-ivory">pages.register.form.firstName.label</label><input data-v-4007b26b="" id="firstName" type="text" autocomplete="given-name" class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-3" placeholder="pages.register.form.firstName.placeholder"></div>
+          <div data-v-4007b26b=""><label data-v-4007b26b="" for="lastName" class="block mb-2 text-base font-medium font-body text-navy dark:text-ivory">pages.register.form.lastName.label</label><input data-v-4007b26b="" id="lastName" type="text" autocomplete="family-name" class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-3" placeholder="pages.register.form.lastName.placeholder"></div>
+        </div>
+        <div data-v-4007b26b=""><label data-v-4007b26b="" for="email" class="block mb-2 text-base font-medium font-body text-navy dark:text-ivory">pages.register.form.email.label</label><input data-v-4007b26b="" id="email" type="email" autocomplete="email" class="bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-3 border-navy/20 dark:border-poster-darkBorder" placeholder="pages.register.form.email.placeholder"></div><button data-v-4007b26b="" type="submit" disabled="" class="w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center disabled:opacity-60 disabled:cursor-not-allowed">pages.register.form.button</button>
+        <!--v-if-->
+      </form>
+    </div>
+  </div>
+</div>"
+`;

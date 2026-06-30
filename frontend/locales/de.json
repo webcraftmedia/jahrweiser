@@ -29,6 +29,50 @@
   },
   "pages": {
     "admin": {
+      "links": {
+        "create": {
+          "button": "Link erzeugen",
+          "creating": "Wird erzeugt...",
+          "duration": "Gültigkeit",
+          "error": "Link konnte nicht erstellt werden.",
+          "label": "Bezeichnung",
+          "label-placeholder": "z. B. Flyer Herbstfest",
+          "maxUses": "Max. Nutzungen",
+          "maxUses-placeholder": "unbegrenzt",
+          "title": "Neuen Registrierungslink erstellen"
+        },
+        "duration": {
+          "1d": "1 Tag",
+          "30d": "30 Tage",
+          "7d": "7 Tage",
+          "unlimited": "Unbegrenzt"
+        },
+        "list": {
+          "empty": "Noch keine Registrierungslinks vorhanden.",
+          "error": "Links konnten nicht geladen werden.",
+          "title": "Vorhandene Links"
+        },
+        "status": {
+          "exhausted": "Limit erreicht",
+          "expired": "Abgelaufen",
+          "revoked": "Deaktiviert",
+          "valid": "Aktiv"
+        },
+        "table": {
+          "actions": "Aktionen",
+          "copied": "Kopiert!",
+          "copy": "Link kopieren",
+          "createdBy": "Erstellt von",
+          "expires": "Läuft ab",
+          "label": "Bezeichnung",
+          "never": "Unbegrenzt",
+          "revoke": "Deaktivieren",
+          "status": "Status",
+          "unnamed": "(ohne Bezeichnung)",
+          "uses": "Beitritte"
+        },
+        "title": "Registrierungs-Links"
+      },
       "members": {
         "add": {
           "result": {
@@ -65,6 +109,7 @@
       },
       "menu": {
         "calendar": "Kalender verwalten",
+        "links": "Registrierungs-Links",
         "members-add": "Mitglieder hinzufügen"
       },
       "title": "Admin"
@@ -110,6 +155,46 @@
       "token": {
         "loading": "Laden..."
       }
+    },
+    "register": {
+      "created": {
+        "text1": "Wir haben dir eine E-Mail mit einem Anmeldelink gesendet.",
+        "text2": "Bitte bestätige darüber deine Adresse — schau auch im Spam-Ordner.",
+        "title": "Fast geschafft!"
+      },
+      "exists": {
+        "button": "Zur Anmeldung",
+        "text": "Für diese E-Mail gibt es bereits ein Konto. Melde dich einfach an.",
+        "title": "Konto vorhanden"
+      },
+      "form": {
+        "button": "Konto anlegen",
+        "description": "Lege dir einen Zugang zum Jahrweiser an.",
+        "email": {
+          "invalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
+          "label": "E-Mail-Adresse",
+          "placeholder": "name{'@'}mustermail.de"
+        },
+        "error": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+        "firstName": {
+          "label": "Vorname",
+          "placeholder": "Anna"
+        },
+        "lastName": {
+          "label": "Nachname",
+          "placeholder": "Mustermann"
+        },
+        "loading": "Wird gesendet…",
+        "title": "Konto anlegen"
+      },
+      "invalid": {
+        "exhausted": "Dieser Registrierungslink hat sein Nutzungslimit erreicht.",
+        "expired": "Dieser Registrierungslink ist abgelaufen.",
+        "notfound": "Dieser Registrierungslink ist ungültig.",
+        "revoked": "Dieser Registrierungslink wurde deaktiviert.",
+        "title": "Link nicht nutzbar"
+      },
+      "validating": "Link wird geprüft..."
     },
     "settings": {
       "loading": "Wird geladen...",

@@ -1,0 +1,64 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Page: Admin Links > renders the loaded list 1`] = `
+"<div data-v-a07354c3="" class="space-y-6">
+  <h1 data-v-a07354c3="" class="hidden md:block text-2xl font-display text-navy dark:text-ivory">pages.admin.links.title</h1><!-- Create form -->
+  <div data-v-a07354c3="" class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder">
+    <h2 data-v-a07354c3="" class="text-lg font-display text-navy dark:text-ivory mb-4">pages.admin.links.create.title</h2>
+    <form data-v-a07354c3="" class="space-y-4">
+      <div data-v-a07354c3="" class="grid gap-4 sm:grid-cols-3">
+        <div data-v-a07354c3="" class="sm:col-span-1"><label data-v-a07354c3="" for="link-label" class="block mb-2 text-sm font-medium font-body text-navy dark:text-ivory">pages.admin.links.create.label</label><input data-v-a07354c3="" id="link-label" type="text" class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-2.5" placeholder="pages.admin.links.create.label-placeholder"></div>
+        <div data-v-a07354c3="" class="sm:col-span-1"><label data-v-a07354c3="" for="link-duration" class="block mb-2 text-sm font-medium font-body text-navy dark:text-ivory">pages.admin.links.create.duration</label><select data-v-a07354c3="" id="link-duration" class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-2.5">
+            <option data-v-a07354c3="" value="1d">pages.admin.links.duration.1d</option>
+            <option data-v-a07354c3="" value="7d">pages.admin.links.duration.7d</option>
+            <option data-v-a07354c3="" value="30d">pages.admin.links.duration.30d</option>
+            <option data-v-a07354c3="" value="unlimited">pages.admin.links.duration.unlimited</option>
+          </select></div>
+        <div data-v-a07354c3="" class="sm:col-span-1"><label data-v-a07354c3="" for="link-max-uses" class="block mb-2 text-sm font-medium font-body text-navy dark:text-ivory">pages.admin.links.create.maxUses</label><input data-v-a07354c3="" id="link-max-uses" type="number" min="1" class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-2.5" placeholder="pages.admin.links.create.maxUses-placeholder"></div>
+      </div><button data-v-a07354c3="" type="submit" class="text-ivory bg-olive hover:brightness-110 dark:bg-olive-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-olive/30 font-semibold font-body rounded text-base px-5 py-2.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">pages.admin.links.create.button</button>
+      <!--v-if-->
+    </form>
+  </div><!-- List -->
+  <div data-v-a07354c3="" class="animate-fade-slide-up stagger-1 bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder">
+    <h2 data-v-a07354c3="" class="text-lg font-display text-navy dark:text-ivory mb-4">pages.admin.links.list.title</h2>
+    <div data-v-a07354c3="" class="overflow-x-auto">
+      <table data-v-a07354c3="" class="w-full text-sm font-body text-left text-navy dark:text-ivory">
+        <thead data-v-a07354c3="" class="text-xs uppercase text-navy/60 dark:text-poster-darkMuted">
+          <tr data-v-a07354c3="" class="border-b border-navy/10 dark:border-poster-darkBorder">
+            <th data-v-a07354c3="" class="py-2 pr-3">pages.admin.links.table.label</th>
+            <th data-v-a07354c3="" class="py-2 px-3">pages.admin.links.table.createdBy</th>
+            <th data-v-a07354c3="" class="py-2 px-3">pages.admin.links.table.expires</th>
+            <th data-v-a07354c3="" class="py-2 px-3">pages.admin.links.table.uses</th>
+            <th data-v-a07354c3="" class="py-2 px-3">pages.admin.links.table.status</th>
+            <th data-v-a07354c3="" class="py-2 pl-3 text-right">pages.admin.links.table.actions</th>
+          </tr>
+        </thead>
+        <tbody data-v-a07354c3="">
+          <tr data-v-a07354c3="" class="border-b border-navy/5 dark:border-poster-darkBorder/50">
+            <td data-v-a07354c3="" class="py-2 pr-3 font-medium">Flyer Herbstfest</td>
+            <td data-v-a07354c3="" class="py-2 px-3 text-navy/70 dark:text-ivory/70">Admin Adam</td>
+            <td data-v-a07354c3="" class="py-2 px-3 text-navy/70 dark:text-ivory/70">31.12.2026</td>
+            <td data-v-a07354c3="" class="py-2 px-3">3 / 10</td>
+            <td data-v-a07354c3="" class="py-2 px-3"><span data-v-a07354c3="" class="inline-block rounded px-2 py-0.5 text-xs font-medium bg-olive/15 text-olive-dark dark:text-olive-light">pages.admin.links.status.valid</span></td>
+            <td data-v-a07354c3="" class="py-2 pl-3">
+              <div data-v-a07354c3="" class="flex items-center justify-end gap-3"><button data-v-a07354c3="" type="button" class="text-sienna dark:text-sienna-light hover:underline font-medium">pages.admin.links.table.copy</button><button data-v-a07354c3="" type="button" class="text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light font-medium">pages.admin.links.table.revoke</button></div>
+            </td>
+          </tr>
+          <tr data-v-a07354c3="" class="border-b border-navy/5 dark:border-poster-darkBorder/50">
+            <td data-v-a07354c3="" class="py-2 pr-3 font-medium">pages.admin.links.table.unnamed</td>
+            <td data-v-a07354c3="" class="py-2 px-3 text-navy/70 dark:text-ivory/70">creator@example.com</td>
+            <td data-v-a07354c3="" class="py-2 px-3 text-navy/70 dark:text-ivory/70">pages.admin.links.table.never</td>
+            <td data-v-a07354c3="" class="py-2 px-3">0</td>
+            <td data-v-a07354c3="" class="py-2 px-3"><span data-v-a07354c3="" class="inline-block rounded px-2 py-0.5 text-xs font-medium bg-sienna/15 text-sienna-dark dark:text-sienna-light">pages.admin.links.status.revoked</span></td>
+            <td data-v-a07354c3="" class="py-2 pl-3">
+              <div data-v-a07354c3="" class="flex items-center justify-end gap-3"><button data-v-a07354c3="" type="button" class="text-sienna dark:text-sienna-light hover:underline font-medium">pages.admin.links.table.copy</button>
+                <!--v-if-->
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>"
+`;

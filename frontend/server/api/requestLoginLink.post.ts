@@ -1,17 +1,12 @@
-import { randomBytes } from 'node:crypto'
-import path from 'node:path'
-
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { useDb } from '../db'
 import { loginTokens, userTags, users } from '../db/schema'
 import { createCardDAVAccount, findUserByEmail } from '../helpers/dav'
-import { defaultParams, emailRenderer } from '../helpers/email'
+import { sendLoginLink } from '../helpers/loginLink'
 import { isEmailNotFound, markEmailNotFound } from '../helpers/negativeCache'
 import { extractUserFromVCardData } from '../helpers/sync'
-
-const TOKEN_TTL_MS = 30 * 60 * 1000
 
 const bodySchema = z.object({
   email: z.email(),
@@ -89,37 +84,7 @@ export default defineEventHandler(async (event) => {
     return {}
   }
 
-  const token = randomBytes(32).toString('hex')
-  const expiresAt = new Date(Date.now() + TOKEN_TTL_MS)
-  await db.insert(loginTokens).values({ token, userUid: userRow.uid, expiresAt })
-
-  const to = { address: userRow.email, name: userRow.displayName ?? '' }
-  const sendArgs = {
-    template: path.join(process.cwd(), 'server/emails/requestLoginLink'),
-    message: { to },
-    locals: {
-      ...defaultParams,
-      locale: 'de',
-      name: userRow.displayName,
-      authURL: (() => {
-        const url = new URL(`/login/${token}`, config.CLIENT_URI)
-        if (redirect) url.searchParams.set('redirect', redirect)
-        return url
-      })(),
-    },
-  }
-  try {
-    await emailRenderer.send(sendArgs)
-  } catch {
-    // Nodemailer pool connections can drop silently (SMTP server idle-timeout,
-    // brief network blip). One immediate retry establishes a fresh connection
-    // and is cheap enough to be worth the latency cost on the first failure.
-    try {
-      await emailRenderer.send(sendArgs)
-    } catch {
-      throw createError({ statusCode: 500, statusMessage: 'Failed to send login email' })
-    }
-  }
+  await sendLoginLink(config, userRow, redirect)
 
   return {}
 })

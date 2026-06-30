@@ -17,6 +17,12 @@ the app writes automatically.
 | login tokens             | MariaDB         | One-time magic links                      |
 | sessions                 | MariaDB         | DB-backed, revocable                      |
 | sync state               | MariaDB         | Per-collection sync token + lock          |
+| registration links       | MariaDB         | Admin-minted self-signup links            |
+| link redemptions         | MariaDB         | Who joined via which link (+ count)       |
+
+Self-registration still funnels contact data into DAV: a successful signup
+writes the new VCard to DAV (source of truth) and mirrors it into the sidecar so
+login works before the next sync. See `docu/registration-links.md`.
 
 ## Local development
 

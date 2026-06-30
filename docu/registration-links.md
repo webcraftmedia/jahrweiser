@@ -57,6 +57,18 @@ per-row actions:
   with redemptions can only be revoked (preserves the join history). Both rules
   are enforced server-side (404 if missing, 409 if active or redeemed).
 
+### Who may do what
+
+Every admin can **see** all links and **deactivate** (revoke) any of them — so
+an abused link can be stopped by whoever notices it. **Copy, edit, reactivate
+and delete are reserved for the link's creator** (`created_by_uid`). The
+frontend only renders the owner-only buttons for the creator, and the
+`update` / `reactivate` / `delete` endpoints re-check ownership server-side
+(403 for a different admin, 404 if the link is gone), so the UI gating is a
+convenience, not the security boundary. Copy is gated in the UI only — the
+share URL still travels in the `list` payload because the token doubles as the
+row id every admin needs for revoke; admins are trusted, so this is acceptable.
+
 ## Data model
 
 Two MariaDB tables (sidecar):
@@ -82,10 +94,10 @@ page and again on submit.
 |---------------------------------------------|-------------|----------------------------------|
 | `POST /api/admin/registration-links/create` | admin       | Mint a link                      |
 | `GET  /api/admin/registration-links/list`   | admin       | List links + counts + status     |
-| `POST /api/admin/registration-links/update` | admin       | Edit label and/or validity       |
+| `POST /api/admin/registration-links/update` | creator     | Edit label and/or validity (403 if not the creator) |
 | `POST /api/admin/registration-links/revoke` | admin       | Soft-disable a link              |
-| `POST /api/admin/registration-links/reactivate` | admin   | Clear the revoke (re-enable)     |
-| `POST /api/admin/registration-links/delete` | admin       | Delete a deactivated, never-redeemed link (404/409 otherwise) |
+| `POST /api/admin/registration-links/reactivate` | creator | Clear the revoke (re-enable; 403 if not the creator) |
+| `POST /api/admin/registration-links/delete` | creator     | Delete a deactivated, never-redeemed link (403 if not the creator, 404/409 otherwise) |
 | `GET  /api/register/{token}`                | public      | Validate a link (coarse status)  |
 | `POST /api/register`                        | public      | Register + send verification mail |
 

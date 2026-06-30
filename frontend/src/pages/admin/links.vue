@@ -4,6 +4,7 @@
   })
 
   const { t } = useI18n()
+  const { user } = useUserSession()
 
   type LinkStatus = 'valid' | 'revoked' | 'expired' | 'exhausted'
 
@@ -14,11 +15,19 @@
     expiresAt: string | null
     revokedAt: string | null
     createdAt: string
+    createdByUid: string
     createdByName: string | null
     createdByEmail: string | null
     useCount: number
     status: LinkStatus
     url: string
+  }
+
+  // Copying, editing, reactivating and deleting are reserved for the link's
+  // creator (enforced server-side too); viewing and deactivating stay open to
+  // every admin.
+  function isOwner(row: LinkRow): boolean {
+    return row.createdByUid === user.value?.uid
   }
 
   const links = ref<LinkRow[]>([])
@@ -381,6 +390,7 @@
                   </template>
                   <template v-else>
                     <button
+                      v-if="isOwner(row)"
                       type="button"
                       class="text-sienna dark:text-sienna-light hover:underline font-medium"
                       @click="copyUrl(row)"
@@ -392,6 +402,7 @@
                       }}
                     </button>
                     <button
+                      v-if="isOwner(row)"
                       type="button"
                       class="text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light font-medium"
                       @click="startEdit(row)"
@@ -407,7 +418,7 @@
                       {{ $t('pages.admin.links.table.revoke') }}
                     </button>
                     <button
-                      v-if="row.status === 'revoked'"
+                      v-if="row.status === 'revoked' && isOwner(row)"
                       type="button"
                       class="text-olive dark:text-olive-light hover:underline font-medium"
                       @click="reactivateLink(row.token)"
@@ -415,7 +426,7 @@
                       {{ $t('pages.admin.links.table.reactivate') }}
                     </button>
                     <button
-                      v-if="row.status === 'revoked' && row.useCount === 0"
+                      v-if="row.status === 'revoked' && row.useCount === 0 && isOwner(row)"
                       type="button"
                       class="text-sienna dark:text-sienna-light hover:underline font-medium"
                       @click="deleteLink(row.token)"

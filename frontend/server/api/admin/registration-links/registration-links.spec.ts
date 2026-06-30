@@ -30,6 +30,11 @@ function asUser() {
     user: { uid: 'u1', name: 'User', email: 'user@example.com', role: 'user' },
   })
 }
+function asOtherAdmin() {
+  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    user: { uid: 'admin-2', name: 'Other', email: 'other@example.com', role: 'admin' },
+  })
+}
 function body(value: Record<string, unknown>) {
   vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
     (v as (d: unknown) => unknown)(value),
@@ -151,15 +156,29 @@ describe('registration-links/update', () => {
   it('updates only the label when no duration is given', async () => {
     asAdmin()
     body({ token: 't1', label: 'Renamed' })
-    queueDbResults({})
+    queueDbResults([{ createdByUid: 'admin-1' }], {})
     await expect(updateFn({})).resolves.toStrictEqual({})
   })
 
   it('clears the label and re-bases validity when a duration is given', async () => {
     asAdmin()
     body({ token: 't1', label: '', duration: '7d' })
-    queueDbResults({})
+    queueDbResults([{ createdByUid: 'admin-1' }], {})
     await expect(updateFn({})).resolves.toStrictEqual({})
+  })
+
+  it('returns 404 when the link does not exist', async () => {
+    asAdmin()
+    body({ token: 't1', label: 'X' })
+    queueDbResults([])
+    await expect(updateFn({})).rejects.toThrow('Link not found')
+  })
+
+  it('rejects an admin who does not own the link', async () => {
+    asOtherAdmin()
+    body({ token: 't1', label: 'X' })
+    queueDbResults([{ createdByUid: 'admin-1' }])
+    await expect(updateFn({})).rejects.toThrow('Not Authorized')
   })
 })
 
@@ -182,31 +201,38 @@ describe('registration-links/delete', () => {
     await expect(deleteFn({})).rejects.toThrow('Link not found')
   })
 
+  it('rejects an admin who does not own the link', async () => {
+    asOtherAdmin()
+    body({ token: 't1' })
+    queueDbResults([{ revokedAt: new Date(), createdByUid: 'admin-1' }])
+    await expect(deleteFn({})).rejects.toThrow('Not Authorized')
+  })
+
   it('refuses to delete a link that is still active', async () => {
     asAdmin()
     body({ token: 't1' })
-    queueDbResults([{ revokedAt: null }])
+    queueDbResults([{ revokedAt: null, createdByUid: 'admin-1' }])
     await expect(deleteFn({})).rejects.toThrow('Link is active')
   })
 
   it('refuses to delete a deactivated link that has redemptions', async () => {
     asAdmin()
     body({ token: 't1' })
-    queueDbResults([{ revokedAt: new Date() }], [{ count: '2' }])
+    queueDbResults([{ revokedAt: new Date(), createdByUid: 'admin-1' }], [{ count: '2' }])
     await expect(deleteFn({})).rejects.toThrow('Link has redemptions')
   })
 
   it('deletes a deactivated link that was never redeemed', async () => {
     asAdmin()
     body({ token: 't1' })
-    queueDbResults([{ revokedAt: new Date() }], [{ count: '0' }], {})
+    queueDbResults([{ revokedAt: new Date(), createdByUid: 'admin-1' }], [{ count: '0' }], {})
     await expect(deleteFn({})).resolves.toStrictEqual({})
   })
 
   it('treats a missing count row as zero and deletes', async () => {
     asAdmin()
     body({ token: 't1' })
-    queueDbResults([{ revokedAt: new Date() }], [], {})
+    queueDbResults([{ revokedAt: new Date(), createdByUid: 'admin-1' }], [], {})
     await expect(deleteFn({})).resolves.toStrictEqual({})
   })
 })
@@ -226,7 +252,21 @@ describe('registration-links/reactivate', () => {
   it('clears the revoked state', async () => {
     asAdmin()
     body({ token: 't1' })
-    queueDbResults({})
+    queueDbResults([{ createdByUid: 'admin-1' }], {})
     await expect(reactivateFn({})).resolves.toStrictEqual({})
+  })
+
+  it('returns 404 when the link does not exist', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults([])
+    await expect(reactivateFn({})).rejects.toThrow('Link not found')
+  })
+
+  it('rejects an admin who does not own the link', async () => {
+    asOtherAdmin()
+    body({ token: 't1' })
+    queueDbResults([{ createdByUid: 'admin-1' }])
+    await expect(reactivateFn({})).rejects.toThrow('Not Authorized')
   })
 })

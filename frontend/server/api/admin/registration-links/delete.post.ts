@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { useDb } from '~~/server/db'
 import { registrationLinkRedemptions, registrationLinks } from '~~/server/db/schema'
+import { assertLinkOwner } from '~~/server/helpers/registrationLinks'
 
 const bodySchema = z.object({
   token: z.string(),
@@ -20,7 +21,10 @@ export default defineEventHandler(async (event) => {
   // Only deactivated links may be deleted — deactivate first, then delete.
   const link = (
     await db
-      .select({ revokedAt: registrationLinks.revokedAt })
+      .select({
+        revokedAt: registrationLinks.revokedAt,
+        createdByUid: registrationLinks.createdByUid,
+      })
       .from(registrationLinks)
       .where(eq(registrationLinks.token, token))
       .limit(1)
@@ -28,6 +32,9 @@ export default defineEventHandler(async (event) => {
   if (!link) {
     throw createError({ statusCode: 404, statusMessage: 'Link not found' })
   }
+  // Deleting is owner-only — every admin may view and deactivate, but only the
+  // creator may remove a link for good.
+  assertLinkOwner(link.createdByUid, session.user.uid)
   if (link.revokedAt === null) {
     throw createError({ statusCode: 409, statusMessage: 'Link is active' })
   }

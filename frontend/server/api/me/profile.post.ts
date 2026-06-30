@@ -8,7 +8,8 @@ import { createCardDAVAccount, findUserByEmail, saveUser } from '../../helpers/d
 import { ABSOLUTE_TTL_SECONDS } from '../../helpers/sessionTtl'
 
 const bodySchema = z.object({
-  firstName: z.string().trim().min(1).max(100),
+  // Both may be empty: saving a blank name clears the stored display name.
+  firstName: z.string().trim().max(100),
   lastName: z.string().trim().max(100),
 })
 

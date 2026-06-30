@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 
+import { firstNameOf } from '../../shared/userName'
 import { useDb } from '../db'
 import { loginTokens } from '../db/schema'
 
@@ -35,7 +36,8 @@ export async function sendLoginLink(
     locals: {
       ...defaultParams,
       locale: 'de',
-      name: user.displayName,
+      // Greet by first name in the salutation; the "To" header keeps the full name.
+      name: firstNameOf(user.displayName),
       authURL: (() => {
         const url = new URL(`/login/${token}`, config.CLIENT_URI)
         if (redirect) url.searchParams.set('redirect', redirect)

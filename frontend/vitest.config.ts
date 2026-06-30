@@ -7,7 +7,7 @@ export default defineVitestConfig({
   test: {
     setupFiles: ['./test/setup.ts'],
     environment: 'nuxt',
-    include: ['src/**/*.spec.ts', 'server/**/*.spec.ts'],
+    include: ['src/**/*.spec.ts', 'server/**/*.spec.ts', 'shared/**/*.spec.ts'],
     exclude: ['e2e/**'],
     execArgv: ['--import', path.resolve(__dirname, 'test/preload.mjs')],
     coverage: {

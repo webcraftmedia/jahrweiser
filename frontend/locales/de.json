@@ -206,7 +206,7 @@
         "toggleOn": "Newsletter aktivieren"
       },
       "profile": {
-        "description": "Passe deinen angezeigten Namen an.",
+        "description": "Mit deinem Namen sprechen wir dich an — in der Begrüßung oben im Menü und in der Anrede unserer E-Mails (Anmelde-Link, Newsletter). Lass beide Felder leer, um ihn wieder zu entfernen.",
         "error": "Konnte nicht speichern. Bitte später erneut versuchen.",
         "firstName": "Vorname",
         "heading": "Name",

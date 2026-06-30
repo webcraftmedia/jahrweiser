@@ -59,12 +59,17 @@ test.describe('full-stack profile', () => {
     await expect(page.locator('#settings-lastName')).toHaveValue('Wonder')
   })
 
-  test('the name endpoint rejects an empty first name', async ({ page }) => {
+  test('saving a blank name clears the stored name', async ({ page }) => {
     await loginViaMagicLink(page, ALICE)
     const res = await page.context().request.post('/api/me/profile', {
-      data: { firstName: '', lastName: 'Wonder' },
+      data: { firstName: '', lastName: '' },
     })
-    expect(res.status()).toBe(400)
+    expect(res.status()).toBe(200)
+
+    const get = await page.context().request.get('/api/me/profile')
+    const body = (await get.json()) as { firstName: string; lastName: string }
+    expect(body.firstName).toBe('')
+    expect(body.lastName).toBe('')
   })
 
   test('the name endpoints require authentication', async ({ request }) => {

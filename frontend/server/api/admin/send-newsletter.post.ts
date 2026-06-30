@@ -15,6 +15,7 @@ import {
   nextWeekRange,
   renderNewsletterText,
 } from '~~/server/helpers/newsletter'
+import { firstNameOf } from '~~/shared/userName'
 
 interface SendResult {
   sent: number
@@ -97,7 +98,7 @@ export default defineEventHandler(async (event) => {
       // Plain-text body is built in TS so we control the line breaks; pug's
       // `|`-based text mode was unreliable and produced run-together output.
       const text = renderNewsletterText({
-        greetingName: user.displayName,
+        greetingName: firstNameOf(user.displayName),
         days,
         organizationUrl: config.CLIENT_URI,
         settingsUrl,
@@ -118,7 +119,7 @@ export default defineEventHandler(async (event) => {
         locals: {
           ...defaultParams,
           locale: 'de',
-          name: user.displayName,
+          name: firstNameOf(user.displayName),
           alwaysSalutation: true,
           days,
           weekLabel,

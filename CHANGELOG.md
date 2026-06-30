@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.10.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.9.3...v1.10.0) (2026-06-30)
+
+
+### Features
+
+* **frontend:** postal code in settings ([#271](https://github.com/webcraftmedia/jahrweiser/issues/271)) ([067ab45](https://github.com/webcraftmedia/jahrweiser/commit/067ab45584c94f3ea26cf7ac7b2de5170b8edf10))
+* **frontend:** register via link & settings for first- and lastname ([#267](https://github.com/webcraftmedia/jahrweiser/issues/267)) ([9020def](https://github.com/webcraftmedia/jahrweiser/commit/9020defab7ed801db3a2b89245af0cc5cd42273b))
+
+
+### Bug Fixes
+
+* **frontend:** improve settings layout ([#270](https://github.com/webcraftmedia/jahrweiser/issues/270)) ([b470f20](https://github.com/webcraftmedia/jahrweiser/commit/b470f20fab739099401c355de6f966466b09f2a7))
+
 ## [1.9.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.9.2...v1.9.3) (2026-06-18)
 
 

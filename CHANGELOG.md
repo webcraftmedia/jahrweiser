@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.2...v1.10.3) (2026-06-30)
+
+
+### Bug Fixes
+
+* **frontend:** allow only owners to do some actions on invite-links ([#277](https://github.com/webcraftmedia/jahrweiser/issues/277)) ([3e0e504](https://github.com/webcraftmedia/jahrweiser/commit/3e0e504da331958295962bf8bbc6af6d7a53c769))
+
 ## [1.10.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.1...v1.10.2) (2026-06-30)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.1...v1.10.2) (2026-06-30)
+
+
+### Bug Fixes
+
+* **frontend:** fix name to respect custom order ([#275](https://github.com/webcraftmedia/jahrweiser/issues/275)) ([fa4521b](https://github.com/webcraftmedia/jahrweiser/commit/fa4521ba2d9cefbd04980e64cfa294ffe4d5e3e1))
+
 ## [1.10.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.0...v1.10.1) (2026-06-30)
 
 

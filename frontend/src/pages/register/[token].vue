@@ -63,7 +63,7 @@
             </p>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-5">
             <div>
               <label
                 for="firstName"

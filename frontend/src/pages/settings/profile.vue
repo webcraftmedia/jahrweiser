@@ -98,44 +98,49 @@
       class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <p class="text-sm text-navy/80 dark:text-ivory/80 mb-4">
-        {{ t('pages.settings.profile.description') }}
+        {{ t('pages.settings.profile.intro') }}
       </p>
 
       <div v-if="!profileLoaded" class="text-navy/60 dark:text-ivory/60">
         {{ t('pages.settings.loading') }}
       </div>
       <form v-else class="space-y-4" @submit.prevent="saveName">
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              for="settings-firstName"
-              class="block mb-1.5 text-sm font-medium text-navy dark:text-ivory"
-            >
-              {{ t('pages.settings.profile.firstName') }}
-            </label>
-            <input
-              id="settings-firstName"
-              v-model.trim="firstName"
-              type="text"
-              autocomplete="given-name"
-              class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-2.5"
-            />
+        <div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label
+                for="settings-firstName"
+                class="block mb-1.5 text-sm font-medium text-navy dark:text-ivory"
+              >
+                {{ t('pages.settings.profile.firstName') }}
+              </label>
+              <input
+                id="settings-firstName"
+                v-model.trim="firstName"
+                type="text"
+                autocomplete="given-name"
+                class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-2.5"
+              />
+            </div>
+            <div>
+              <label
+                for="settings-lastName"
+                class="block mb-1.5 text-sm font-medium text-navy dark:text-ivory"
+              >
+                {{ t('pages.settings.profile.lastName') }}
+              </label>
+              <input
+                id="settings-lastName"
+                v-model.trim="lastName"
+                type="text"
+                autocomplete="family-name"
+                class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-2.5"
+              />
+            </div>
           </div>
-          <div>
-            <label
-              for="settings-lastName"
-              class="block mb-1.5 text-sm font-medium text-navy dark:text-ivory"
-            >
-              {{ t('pages.settings.profile.lastName') }}
-            </label>
-            <input
-              id="settings-lastName"
-              v-model.trim="lastName"
-              type="text"
-              autocomplete="family-name"
-              class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-2.5"
-            />
-          </div>
+          <p class="mt-2 text-xs text-navy/60 dark:text-poster-darkMuted">
+            {{ t('pages.settings.profile.description') }}
+          </p>
         </div>
 
         <div>

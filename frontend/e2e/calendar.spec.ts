@@ -36,8 +36,8 @@ test.describe('Calendar', () => {
   test('header shows welcome message and logout', async ({ page }) => {
     const navbar = page.locator('#navbar-desktop')
     await expect(navbar.getByText('Willkommen')).toBeVisible()
-    // Header shows last name
-    await expect(navbar.getByText('User')).toBeVisible()
+    // Header greets the user by first name
+    await expect(navbar.getByText('Test')).toBeVisible()
     await expect(navbar.getByText('Ausloggen')).toBeVisible()
   })
 

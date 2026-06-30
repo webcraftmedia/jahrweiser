@@ -134,6 +134,32 @@ test.describe('registration via link', () => {
     await guestContext.close()
   })
 
+  test('an admin can rename, then delete an unused link', async ({ page }) => {
+    await loginViaMagicLink(page, ADMIN)
+    const { token } = await createLink(page, { label: 'Before', duration: '30d' })
+    const req = page.context().request
+
+    // Rename the label.
+    const upd = await req.post('/api/admin/registration-links/update', {
+      data: { token, label: 'After' },
+    })
+    expect(upd.ok()).toBeTruthy()
+    let links = (await (await req.get('/api/admin/registration-links/list')).json()) as {
+      token: string
+      label: string | null
+    }[]
+    expect(links.find((l) => l.token === token)?.label).toBe('After')
+
+    // Delete the never-redeemed link.
+    const del = await req.post('/api/admin/registration-links/delete', { data: { token } })
+    expect(del.ok()).toBeTruthy()
+    links = (await (await req.get('/api/admin/registration-links/list')).json()) as {
+      token: string
+      label: string | null
+    }[]
+    expect(links.find((l) => l.token === token)).toBeUndefined()
+  })
+
   test('registration endpoints reject anonymous admin access', async ({ request }) => {
     const create = await request.post('/api/admin/registration-links/create', {
       data: { duration: '30d' },

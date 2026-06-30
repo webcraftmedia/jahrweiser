@@ -42,9 +42,17 @@ genuinely new account (step 3); the email-dedup check prevents double counting.
 ## Admin UI
 
 `/admin/links` lists every link with its label, creator, expiry, join count
-(`used / max`), status, a copy-to-clipboard button for the share URL, and a
-revoke action. Revoking is a soft-disable: the row and its join history are
-kept, but the link can no longer be used.
+(`used / max`), status, a copy-to-clipboard button for the share URL, and
+per-row actions:
+
+- **Edit** — inline-edit the label and/or re-base the validity to a preset
+  (or leave it unchanged).
+- **Revoke** — soft-disable: the row and its join history are kept, but the
+  link can no longer be used.
+- **Delete** — only offered for links that were *never redeemed* (`useCount`
+  is 0); it removes the row entirely. Links with redemptions can only be
+  revoked, never deleted (preserves the join history). The zero-redemption rule
+  is enforced server-side too.
 
 ## Data model
 
@@ -71,7 +79,9 @@ page and again on submit.
 |---------------------------------------------|-------------|----------------------------------|
 | `POST /api/admin/registration-links/create` | admin       | Mint a link                      |
 | `GET  /api/admin/registration-links/list`   | admin       | List links + counts + status     |
+| `POST /api/admin/registration-links/update` | admin       | Edit label and/or validity       |
 | `POST /api/admin/registration-links/revoke` | admin       | Soft-disable a link              |
+| `POST /api/admin/registration-links/delete` | admin       | Delete a never-redeemed link (409 otherwise) |
 | `GET  /api/register/{token}`                | public      | Validate a link (coarse status)  |
 | `POST /api/register`                        | public      | Register + send verification mail |
 

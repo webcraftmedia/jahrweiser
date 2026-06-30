@@ -5,14 +5,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mockDb, queueDbResults, resetDb } from '../../../../test/helpers/mock-db'
 
 import createHandler from './create.post'
+import deleteHandler from './delete.post'
 import listHandler from './list.get'
 import revokeHandler from './revoke.post'
+import updateHandler from './update.post'
 
 vi.mock('~~/server/db', () => ({ useDb: () => mockDb }))
 
 const createFn = createHandler as unknown as (e: unknown) => Promise<Record<string, unknown>>
 const listFn = listHandler as unknown as (e: unknown) => Promise<Record<string, unknown>[]>
 const revokeFn = revokeHandler as unknown as (e: unknown) => Promise<unknown>
+const updateFn = updateHandler as unknown as (e: unknown) => Promise<unknown>
+const deleteFn = deleteHandler as unknown as (e: unknown) => Promise<unknown>
 
 function asAdmin() {
   vi.mocked(globalThis.requireUserSession).mockResolvedValue({
@@ -127,5 +131,66 @@ describe('registration-links/revoke', () => {
     body({ token: 't1' })
     queueDbResults({})
     await expect(revokeFn({})).resolves.toStrictEqual({})
+  })
+})
+
+describe('registration-links/update', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetDb()
+  })
+
+  it('rejects non-admins', async () => {
+    asUser()
+    body({ token: 't1', label: 'X' })
+    await expect(updateFn({})).rejects.toThrow('Not Authorized')
+  })
+
+  it('updates only the label when no duration is given', async () => {
+    asAdmin()
+    body({ token: 't1', label: 'Renamed' })
+    queueDbResults({})
+    await expect(updateFn({})).resolves.toStrictEqual({})
+  })
+
+  it('clears the label and re-bases validity when a duration is given', async () => {
+    asAdmin()
+    body({ token: 't1', label: '', duration: '7d' })
+    queueDbResults({})
+    await expect(updateFn({})).resolves.toStrictEqual({})
+  })
+})
+
+describe('registration-links/delete', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetDb()
+  })
+
+  it('rejects non-admins', async () => {
+    asUser()
+    body({ token: 't1' })
+    await expect(deleteFn({})).rejects.toThrow('Not Authorized')
+  })
+
+  it('refuses to delete a link that has redemptions', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults([{ count: '2' }])
+    await expect(deleteFn({})).rejects.toThrow('Link has redemptions')
+  })
+
+  it('deletes a link that was never redeemed', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults([{ count: '0' }], {})
+    await expect(deleteFn({})).resolves.toStrictEqual({})
+  })
+
+  it('treats a missing count row as zero and deletes', async () => {
+    asAdmin()
+    body({ token: 't1' })
+    queueDbResults([], {})
+    await expect(deleteFn({})).resolves.toStrictEqual({})
   })
 })

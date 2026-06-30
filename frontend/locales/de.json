@@ -60,13 +60,18 @@
         },
         "table": {
           "actions": "Aktionen",
+          "cancel": "Abbrechen",
           "copied": "Kopiert!",
           "copy": "Link kopieren",
           "createdBy": "Erstellt von",
+          "delete": "Löschen",
+          "edit": "Bearbeiten",
           "expires": "Läuft ab",
+          "keepValidity": "Gültigkeit beibehalten",
           "label": "Bezeichnung",
           "never": "Unbegrenzt",
           "revoke": "Deaktivieren",
+          "save": "Speichern",
           "status": "Status",
           "unnamed": "(ohne Bezeichnung)",
           "uses": "Beitritte"

@@ -32,7 +32,21 @@
   const createError = ref(false)
   const copiedToken = ref<string | null>(null)
 
+  // Inline row editing (label + validity).
+  const editingToken = ref<string | null>(null)
+  const editLabel = ref('')
+  const editDuration = ref<'keep' | '1d' | '7d' | '30d' | 'unlimited'>('keep')
+  const isSavingEdit = ref(false)
+
   const durationOptions: { value: typeof duration.value; label: string }[] = [
+    { value: '1d', label: t('pages.admin.links.duration.1d') },
+    { value: '7d', label: t('pages.admin.links.duration.7d') },
+    { value: '30d', label: t('pages.admin.links.duration.30d') },
+    { value: 'unlimited', label: t('pages.admin.links.duration.unlimited') },
+  ]
+
+  const editDurationOptions: { value: typeof editDuration.value; label: string }[] = [
+    { value: 'keep', label: t('pages.admin.links.table.keepValidity') },
     { value: '1d', label: t('pages.admin.links.duration.1d') },
     { value: '7d', label: t('pages.admin.links.duration.7d') },
     { value: '30d', label: t('pages.admin.links.duration.30d') },
@@ -79,6 +93,49 @@
   async function revokeLink(token: string) {
     try {
       await $fetch('/api/admin/registration-links/revoke', {
+        method: 'POST',
+        body: { token },
+      })
+      await loadLinks()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  function startEdit(row: LinkRow) {
+    editingToken.value = row.token
+    editLabel.value = row.label ?? ''
+    editDuration.value = 'keep'
+  }
+
+  function cancelEdit() {
+    editingToken.value = null
+  }
+
+  async function saveEdit(token: string) {
+    isSavingEdit.value = true
+    try {
+      await $fetch('/api/admin/registration-links/update', {
+        method: 'POST',
+        body: {
+          token,
+          label: editLabel.value.trim(),
+          ...(editDuration.value !== 'keep' ? { duration: editDuration.value } : {}),
+        },
+      })
+      editingToken.value = null
+      await loadLinks()
+    } catch (error) {
+      console.error(error)
+    } finally {
+      isSavingEdit.value = false
+    }
+  }
+
+  // Only links that were never redeemed can be deleted (enforced server-side too).
+  async function deleteLink(token: string) {
+    try {
+      await $fetch('/api/admin/registration-links/delete', {
         method: 'POST',
         body: { token },
       })
@@ -256,13 +313,29 @@
               class="border-b border-navy/5 dark:border-poster-darkBorder/50"
             >
               <td class="py-2 pr-3 font-medium">
-                {{ row.label || $t('pages.admin.links.table.unnamed') }}
+                <input
+                  v-if="editingToken === row.token"
+                  v-model="editLabel"
+                  type="text"
+                  class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-sm rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-1.5"
+                  :placeholder="$t('pages.admin.links.create.label-placeholder')"
+                />
+                <template v-else>{{ row.label || $t('pages.admin.links.table.unnamed') }}</template>
               </td>
               <td class="py-2 px-3 text-navy/70 dark:text-ivory/70">
                 {{ row.createdByName || row.createdByEmail }}
               </td>
               <td class="py-2 px-3 text-navy/70 dark:text-ivory/70">
-                {{ formatDate(row.expiresAt) }}
+                <select
+                  v-if="editingToken === row.token"
+                  v-model="editDuration"
+                  class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-sm rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-1.5"
+                >
+                  <option v-for="opt in editDurationOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+                <template v-else>{{ formatDate(row.expiresAt) }}</template>
               </td>
               <td class="py-2 px-3">
                 {{ row.useCount }}{{ row.maxUses ? ' / ' + row.maxUses : '' }}
@@ -277,25 +350,59 @@
               </td>
               <td class="py-2 pl-3">
                 <div class="flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    class="text-sienna dark:text-sienna-light hover:underline font-medium"
-                    @click="copyUrl(row)"
-                  >
-                    {{
-                      copiedToken === row.token
-                        ? $t('pages.admin.links.table.copied')
-                        : $t('pages.admin.links.table.copy')
-                    }}
-                  </button>
-                  <button
-                    v-if="row.status === 'valid'"
-                    type="button"
-                    class="text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light font-medium"
-                    @click="revokeLink(row.token)"
-                  >
-                    {{ $t('pages.admin.links.table.revoke') }}
-                  </button>
+                  <template v-if="editingToken === row.token">
+                    <button
+                      type="button"
+                      class="text-olive dark:text-olive-light hover:underline font-medium disabled:opacity-50"
+                      :disabled="isSavingEdit"
+                      @click="saveEdit(row.token)"
+                    >
+                      {{ $t('pages.admin.links.table.save') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="text-navy/60 dark:text-ivory/60 hover:underline font-medium"
+                      @click="cancelEdit"
+                    >
+                      {{ $t('pages.admin.links.table.cancel') }}
+                    </button>
+                  </template>
+                  <template v-else>
+                    <button
+                      type="button"
+                      class="text-sienna dark:text-sienna-light hover:underline font-medium"
+                      @click="copyUrl(row)"
+                    >
+                      {{
+                        copiedToken === row.token
+                          ? $t('pages.admin.links.table.copied')
+                          : $t('pages.admin.links.table.copy')
+                      }}
+                    </button>
+                    <button
+                      type="button"
+                      class="text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light font-medium"
+                      @click="startEdit(row)"
+                    >
+                      {{ $t('pages.admin.links.table.edit') }}
+                    </button>
+                    <button
+                      v-if="row.status === 'valid'"
+                      type="button"
+                      class="text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light font-medium"
+                      @click="revokeLink(row.token)"
+                    >
+                      {{ $t('pages.admin.links.table.revoke') }}
+                    </button>
+                    <button
+                      v-if="row.useCount === 0"
+                      type="button"
+                      class="text-sienna dark:text-sienna-light hover:underline font-medium"
+                      @click="deleteLink(row.token)"
+                    >
+                      {{ $t('pages.admin.links.table.delete') }}
+                    </button>
+                  </template>
                 </div>
               </td>
             </tr>

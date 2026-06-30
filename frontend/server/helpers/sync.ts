@@ -5,6 +5,7 @@ import { fetchAddressBooks, fetchVCards } from 'tsdav'
 import { useDb } from '../db'
 import { loginTokens, sessions, syncState, userTags, users } from '../db/schema'
 
+import { displayNameFromVCard } from './contactName'
 import { createCardDAVAccount, headers, X_ADMIN_TAGS, X_ROLE } from './dav'
 import { clearEmailNotFound } from './negativeCache'
 
@@ -42,7 +43,10 @@ export function extractUserFromVCardData(vcardData: string): DavUserSnapshot | n
   if (!uid) return null
   const email = component.getFirstPropertyValue('email')?.toString().toLowerCase()
   if (!email) return null
-  const displayName = component.getFirstPropertyValue('fn')?.toString() ?? null
+  // Prefer the structured N ("Given Family") over FN — some DAV clients
+  // (InfCloud) store FN in "Family Given" order, which would otherwise surface
+  // reversed everywhere (greeting, invitation, emails).
+  const displayName = displayNameFromVCard(component)
   const roleValue = component.getFirstPropertyValue(X_ROLE)?.toString()
   const role: 'admin' | 'user' = roleValue === 'admin' ? 'admin' : 'user'
   const tagsValue = component.getFirstPropertyValue(X_ADMIN_TAGS)?.toString() ?? ''

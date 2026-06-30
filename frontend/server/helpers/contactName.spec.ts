@@ -3,6 +3,7 @@ import ICAL from 'ical.js'
 import { describe, expect, it } from 'vitest'
 
 import {
+  displayNameFromVCard,
   readPostalCode,
   readVCardName,
   setPostalCode,
@@ -79,6 +80,24 @@ describe('setVCardName', () => {
     const vcard = parseVCard(['EMAIL:x@y.de'])
     setVCardName(vcard, 'Solo', '')
     expect(vcard.getFirstPropertyValue('fn')).toBe('Solo')
+  })
+})
+
+describe('displayNameFromVCard', () => {
+  it('derives "Given Family" from the structured N, ignoring FN order', () => {
+    // InfCloud-style reversed FN — N is the reliable source.
+    const vcard = parseVCard(['FN:Gebhardt Ulf', 'N:Gebhardt;Ulf;;;'])
+    expect(displayNameFromVCard(vcard)).toBe('Ulf Gebhardt')
+  })
+
+  it('falls back to FN when there is no N', () => {
+    const vcard = parseVCard(['FN:Anna Mustermann'])
+    expect(displayNameFromVCard(vcard)).toBe('Anna Mustermann')
+  })
+
+  it('returns null when neither N nor FN carry a name', () => {
+    const vcard = parseVCard(['EMAIL:x@y.de'])
+    expect(displayNameFromVCard(vcard)).toBeNull()
   })
 })
 

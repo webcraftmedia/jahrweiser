@@ -78,4 +78,14 @@ describe('extractUserFromVCardData', () => {
     const data = vcard({ uid: '123', fn: 'Alice Example', email: 'a@example.com' })
     expect(extractUserFromVCardData(data)?.displayName).toBe('Alice Example')
   })
+
+  it('prefers the structured N over a reversed FN (InfCloud) for the display name', () => {
+    const data = vcard({
+      uid: '123',
+      email: 'u@example.com',
+      fn: 'Gebhardt Ulf',
+      n: 'Gebhardt;Ulf;;;',
+    })
+    expect(extractUserFromVCardData(data)?.displayName).toBe('Ulf Gebhardt')
+  })
 })

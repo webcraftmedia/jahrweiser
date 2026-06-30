@@ -8,8 +8,8 @@ exports[`Page: Register Token > renders the form once the link validates 1`] = `
     <div data-v-4007b26b="" class="login-card p-6 sm:p-8 bg-white/80 dark:bg-poster-darkCard border-2 border-navy/15 dark:border-poster-darkBorder rounded">
       <form data-v-4007b26b="" class="space-y-5" novalidate="">
         <div data-v-4007b26b="">
-          <h5 data-v-4007b26b="" class="text-xl font-display text-navy dark:text-ivory">pages.register.form.title</h5>
-          <p data-v-4007b26b="" class="mt-1 text-sm font-body text-navy/70 dark:text-poster-darkMuted">pages.register.form.description</p>
+          <h5 data-v-4007b26b="" class="text-lg font-display text-navy dark:text-ivory">pages.register.form.title</h5>
+          <p data-v-4007b26b="" class="mt-1 text-sm font-body text-navy/70 dark:text-poster-darkMuted">pages.register.form.description-invited</p>
         </div>
         <div data-v-4007b26b="" class="space-y-5">
           <div data-v-4007b26b=""><label data-v-4007b26b="" for="firstName" class="block mb-2 text-base font-medium font-body text-navy dark:text-ivory">pages.register.form.firstName.label</label><input data-v-4007b26b="" id="firstName" type="text" autocomplete="given-name" class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full p-3" placeholder="pages.register.form.firstName.placeholder"></div>

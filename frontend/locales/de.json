@@ -170,6 +170,7 @@
       "form": {
         "button": "Konto anlegen",
         "description": "Lege dir einen Zugang zum Jahrweiser an.",
+        "description-invited": "Du wurdest von {inviter} eingeladen, dir einen Zugang zum Jahrweiser anzulegen.",
         "email": {
           "invalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
           "label": "E-Mail-Adresse",
@@ -185,7 +186,7 @@
           "placeholder": "Mustermann"
         },
         "loading": "Wird gesendet…",
-        "title": "Konto anlegen"
+        "title": "Gemeinschafts-Konto anlegen"
       },
       "invalid": {
         "exhausted": "Dieser Registrierungslink hat sein Nutzungslimit erreicht.",

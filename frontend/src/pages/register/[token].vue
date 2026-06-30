@@ -55,11 +55,15 @@
       >
         <form class="space-y-5" novalidate @submit.prevent="submit">
           <div>
-            <h5 class="text-xl font-display text-navy dark:text-ivory">
+            <h5 class="text-lg font-display text-navy dark:text-ivory">
               {{ $t('pages.register.form.title') }}
             </h5>
             <p class="mt-1 text-sm font-body text-navy/70 dark:text-poster-darkMuted">
-              {{ $t('pages.register.form.description') }}
+              {{
+                invitedBy
+                  ? $t('pages.register.form.description-invited', { inviter: invitedBy })
+                  : $t('pages.register.form.description')
+              }}
             </p>
           </div>
 
@@ -167,6 +171,7 @@
 
   const validating = ref(true)
   const linkStatus = ref<'valid' | 'revoked' | 'expired' | 'exhausted' | 'notfound'>('valid')
+  const invitedBy = ref<string | null>(null)
   const result = ref<'created' | 'already-registered' | null>(null)
 
   // Static-key lookup (no dynamic i18n keys) for the "link unusable" reason.
@@ -203,8 +208,11 @@
 
   onMounted(async () => {
     try {
-      const res = await $fetch<{ status: typeof linkStatus.value }>(`/api/register/${token}`)
+      const res = await $fetch<{ status: typeof linkStatus.value; invitedBy: string | null }>(
+        `/api/register/${token}`,
+      )
       linkStatus.value = res.status
+      invitedBy.value = res.invitedBy
     } catch {
       linkStatus.value = 'notfound'
     } finally {

@@ -26,7 +26,9 @@ const ROUTE = '/register/tok-1'
 
 function defaultFetch(validateStatus = 'valid', postStatus = 'created') {
   return (url: string, opts?: { method?: string }) => {
-    if (url.startsWith('/api/register/')) return Promise.resolve({ status: validateStatus })
+    if (url.startsWith('/api/register/')) {
+      return Promise.resolve({ status: validateStatus, invitedBy: 'Admin Example' })
+    }
     if (url === '/api/register' && opts?.method === 'POST') {
       return Promise.resolve({ status: postStatus })
     }
@@ -58,6 +60,26 @@ describe('Page: Register Token', () => {
   it('renders the form once the link validates', async () => {
     const wrapper = await mountValid()
     expect(wrapper.html()).toMatchSnapshot()
+  })
+
+  it('shows the personalized inviter subtext when an inviter is returned', async () => {
+    const wrapper = await mountValid()
+    expect(wrapper.text()).toContain('pages.register.form.description-invited')
+  })
+
+  it('falls back to the generic subtext when no inviter is returned', async () => {
+    mock$fetch.mockImplementation((url: string, opts?: { method?: string }) => {
+      if (url.startsWith('/api/register/')) {
+        return Promise.resolve({ status: 'valid', invitedBy: null })
+      }
+      if (url === '/api/register' && opts?.method === 'POST') {
+        return Promise.resolve({ status: 'created' })
+      }
+      return Promise.resolve({})
+    })
+    const wrapper = await mountValid()
+    expect(wrapper.text()).toContain('pages.register.form.description')
+    expect(wrapper.text()).not.toContain('description-invited')
   })
 
   it('renders the validating state initially', async () => {

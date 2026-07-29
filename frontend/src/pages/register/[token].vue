@@ -197,6 +197,7 @@
       )
       linkStatus.value = res.status
       invitedBy.value = res.invitedBy
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Link-Pruefung fehlgeschlagen = Zustand notfound
     } catch {
       linkStatus.value = 'notfound'
     } finally {
@@ -222,6 +223,7 @@
         },
       })
       result.value = res.status
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Registrierung fehlgeschlagen = Zustand sendError
     } catch {
       // 410/404 means the link expired/was revoked between page load and submit.
       sendError.value = true

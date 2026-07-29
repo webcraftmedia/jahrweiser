@@ -54,6 +54,7 @@ if (args.length > 1) {
       // Single file
       files = [resolvedPattern]
     }
+    // eslint-disable-next-line no-catch-all/no-catch-all -- stat-Probe: jeder Fehler bedeutet "kein Pfad" und faellt auf Glob zurueck
   } catch {
     // Not a directory or doesn't exist, treat as glob pattern
   }
@@ -92,6 +93,7 @@ for (const [index, file] of files.entries()) {
     if (!config.url || !config.account || !config.calendar) {
       throw new Error('Missing required fields: url, account, calendar')
     }
+    // eslint-disable-next-line no-catch-all/no-catch-all -- pro Config-Datei: Fehler wird ausgegeben und als failure gezaehlt
   } catch (error) {
     console.error(`Failed to read config file: ${file}`)
     console.error(error)

@@ -18,6 +18,7 @@ async function waitForBaikal(timeoutMs = 30_000): Promise<void> {
     try {
       const res = await fetch(`${baseUrl}/`, { method: 'GET' })
       if (res.status > 0) return
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Poll-Schleife: der letzte Fehler wird gemerkt und im Timeout-Error geworfen
     } catch (err) {
       lastErr = err
     }
@@ -48,6 +49,7 @@ try {
     'docker compose exec -T --user nginx baikal php /tmp/provision-dav-user.php admin admin admin@example.com Admin',
     { stdio: 'inherit', cwd: composeCwd, shell: '/bin/sh' },
   )
+  // eslint-disable-next-line no-catch-all/no-catch-all -- CLI-Toplevel: meldet den Fehler und beendet mit exit 1
 } catch (err) {
   console.error('[baikal-bootstrap] docker compose exec failed:', (err as Error).message)
   console.error('Make sure `docker compose ps` shows the baikal service up.')

@@ -789,8 +789,8 @@
             method: 'POST',
             body: {
               calendar: cal.name,
-              startDate: startDate,
-              endDate: endDate,
+              startDate,
+              endDate,
             },
           }).catch((err: unknown) => {
             console.warn(`Failed to fetch calendar "${cal.name}":`, err)
@@ -802,6 +802,7 @@
       rawEvents.value = results.flat()
       scheduleStagger()
       scrollToDay()
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Kalender-Abruf: Fehler wird geloggt, die Ansicht bleibt leer statt zu brechen
     } catch (error) {
       console.error(error)
     } finally {
@@ -900,7 +901,7 @@
     })
 
     // Force browser to commit opacity:0 before starting fade-in
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions, no-unused-expressions
     events[0]?.offsetHeight
 
     // Stagger fade-in chronologically
@@ -1024,6 +1025,7 @@
         },
       })
       selectedEvent.value = eventData
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Modal schliesst und die URL wird zurueckgesetzt
     } catch (error) {
       console.error(error)
       modal.value?.close()

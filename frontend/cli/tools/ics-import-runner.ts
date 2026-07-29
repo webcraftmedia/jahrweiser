@@ -54,6 +54,7 @@ export async function runIcsImport(config: ImportConfig): Promise<ImportResult> 
       throw new Error('Missing required fields: serverUrl, username, password')
     }
     account = createCalDAVAccount(accountConfig)
+    // eslint-disable-next-line no-catch-all/no-catch-all -- Fehlertext wandert in das zurueckgegebene Result-Objekt
   } catch (error) {
     return {
       success: false,
@@ -79,6 +80,7 @@ export async function runIcsImport(config: ImportConfig): Promise<ImportResult> 
       }
     }
     icsData = await icsResponse.text()
+    // eslint-disable-next-line no-catch-all/no-catch-all -- Fehlertext wandert in das zurueckgegebene Result-Objekt
   } catch (error) {
     return {
       success: false,
@@ -107,6 +109,7 @@ export async function runIcsImport(config: ImportConfig): Promise<ImportResult> 
       account,
       headers: headers(),
     })
+    // eslint-disable-next-line no-catch-all/no-catch-all -- Fehlertext wandert in das zurueckgegebene Result-Objekt
   } catch (error) {
     return {
       success: false,
@@ -150,6 +153,7 @@ export async function runIcsImport(config: ImportConfig): Promise<ImportResult> 
             existingUids.add(uid.toString())
           }
         }
+        // eslint-disable-next-line no-catch-all/no-catch-all -- Parse-Fehler = defektes Event; wird uebersprungen
       } catch {
         // Skip malformed events
       }
@@ -194,6 +198,7 @@ export async function runIcsImport(config: ImportConfig): Promise<ImportResult> 
       })
       imported++
       existingUids.add(uidStr) // Prevent duplicates within same import
+      // eslint-disable-next-line no-catch-all/no-catch-all -- pro Event: Fehler wird geloggt, der Import laeuft weiter
     } catch (error) {
       console.error(`Failed to import event ${summary}:`, error)
     }

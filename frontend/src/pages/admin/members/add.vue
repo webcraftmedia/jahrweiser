@@ -27,6 +27,7 @@
     try {
       emailSchema.parse(email.value)
       return true
+      // eslint-disable-next-line no-catch-all/no-catch-all -- zod parse: der Fehler IST das Validierungsergebnis
     } catch {
       return false
     }
@@ -40,6 +41,7 @@
           email,
         },
       })
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, leere Tag-Liste ist der Fallback
     } catch (error) {
       console.error(error)
       return []
@@ -90,7 +92,7 @@
       })
 
       submitResult.value = result ? 'success-with-email' : 'success-without-email'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-catch-all/no-catch-all -- einzelner $fetch: Fehlermeldung wird im Formular angezeigt
     } catch (error: any) {
       submitResult.value = 'error'
       submitError.value = error?.message || $t('pages.admin.members.add.result.error-unknown')

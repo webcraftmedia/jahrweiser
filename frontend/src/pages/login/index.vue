@@ -173,6 +173,7 @@
         body: { email, ...(redirect ? { redirect } : {}) },
       })
       requestedLogin.value = true
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als sendError angezeigt
     } catch (error) {
       console.error('Failed to request login link:', error)
       sendError.value = true

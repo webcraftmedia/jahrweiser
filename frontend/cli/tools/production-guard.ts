@@ -5,6 +5,7 @@ function isLocalUrl(value: string | undefined): boolean {
   try {
     const url = new URL(value)
     return LOCAL_HOSTS.includes(url.hostname)
+    // eslint-disable-next-line no-catch-all/no-catch-all -- new URL wirft nur bei ungueltiger URL — dann ist der Wert ein blosser Hostname
   } catch {
     return LOCAL_HOSTS.includes(value)
   }

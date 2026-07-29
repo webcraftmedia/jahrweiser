@@ -132,6 +132,7 @@ vi.mock('@schedule-x/calendar', () => ({
             end: { epochMilliseconds: end.getTime() },
           })
           mockEventsServiceSet(events)
+          // eslint-disable-next-line no-catch-all/no-catch-all -- Test-Scaffolding: fetchEvents behandelt seine Fehler selbst
         } catch {
           /* error handled inside fetchEvents */
         }
@@ -259,6 +260,7 @@ describe('Page: Index', () => {
     wrappers.forEach((w) => {
       try {
         w.unmount()
+        // eslint-disable-next-line no-catch-all/no-catch-all -- Teardown: Komponente kann bereits unmounted sein
       } catch {
         // Component may already be unmounted
       }

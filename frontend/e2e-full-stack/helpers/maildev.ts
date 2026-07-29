@@ -56,7 +56,7 @@ export async function getAllMail(): Promise<MaildevMessage[]> {
     // Guards against a future API reshuffle silently degrading into a
     // confusing "no mail arrived" timeout further down.
     throw new Error(
-      `Maildev API at ${base}/email returned ${JSON.stringify(body)?.slice(0, 200)} instead of an array`,
+      `Maildev API at ${base}/email returned ${JSON.stringify(body).slice(0, 200)} instead of an array`,
     )
   }
   return body as MaildevMessage[]

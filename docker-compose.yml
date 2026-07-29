@@ -7,6 +7,8 @@ services:
       - ./admin:/srv:ro
 
   mailserver:
+    # unpinned on purpose — the e2e maildev helper probes both the 2.x (/email)
+    # and 3.x (/api/email) REST API layouts
     image: maildev/maildev
     ports:
       - 1080:1080

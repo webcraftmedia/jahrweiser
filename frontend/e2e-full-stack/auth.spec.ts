@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 import {
   deleteAllMail,
   extractLoginTokenFromMail,
+  getMailFor,
   preparePage,
   waitForMailFor,
 } from './helpers/maildev'
@@ -51,12 +52,7 @@ test.describe('full-stack auth', () => {
     await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
 
     await page.waitForTimeout(1500)
-    const response = await fetch(`${process.env.MAILDEV_URL ?? 'http://localhost:1080'}/email`)
-    const messages = (await response.json()) as { to: { address: string }[] }[]
-    const matching = messages.filter((m) =>
-      m.to.some((t) => t.address.toLowerCase() === UNKNOWN.toLowerCase()),
-    )
-    expect(matching).toHaveLength(0)
+    expect(await getMailFor(UNKNOWN)).toHaveLength(0)
   })
 
   test('reusing a consumed token fails with 401', async ({ page }) => {

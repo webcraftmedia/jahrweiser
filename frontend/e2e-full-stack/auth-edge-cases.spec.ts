@@ -11,6 +11,7 @@ import {
 import {
   deleteAllMail,
   extractLoginTokenFromMail,
+  getMailFor,
   preparePage,
   waitForMailFor,
 } from './helpers/maildev'
@@ -53,11 +54,7 @@ test.describe('soft-delete', () => {
     expect(resp.status).toBe(200)
 
     await new Promise((r) => setTimeout(r, 1000))
-    const mail = await fetch('http://localhost:1080/email').then((r) => r.json())
-    const matching = (mail as { to: { address: string }[] }[]).filter((m) =>
-      m.to.some((t) => t.address.toLowerCase() === email),
-    )
-    expect(matching).toHaveLength(0)
+    expect(await getMailFor(email)).toHaveLength(0)
   })
 })
 
@@ -221,11 +218,8 @@ test.describe('negative cache invalidation', () => {
     })
     expect(resp.status).toBe(200)
     await new Promise((r) => setTimeout(r, 500))
-    let mail = await fetch('http://localhost:1080/email').then((r) => r.json())
-    const matching = (mail as { to: { address: string }[] }[]).filter((m) =>
-      m.to.some((t) => t.address.toLowerCase() === email),
-    )
-    expect(matching).toHaveLength(0) // no mail: address is unknown (and now cached)
+    // no mail: address is unknown (and now cached)
+    expect(await getMailFor(email)).toHaveLength(0)
 
     // 2) Add the user in DAV and sync -> sync must invalidate the cached entry.
     await createDavUser({ uid, email, displayName: 'Neg Cache' })
@@ -238,7 +232,7 @@ test.describe('negative cache invalidation', () => {
       body: JSON.stringify({ email }),
     })
     expect(resp.status).toBe(200)
-    mail = await waitForMailFor(email)
+    const mail = await waitForMailFor(email)
     expect(mail.subject).toContain('Login')
   })
 })

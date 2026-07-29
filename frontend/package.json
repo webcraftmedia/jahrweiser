@@ -78,7 +78,7 @@
     "eslint-config-it4c": "^0.12.1",
     "happy-dom": "^20.11.1",
     "prettier": "^3.9.6",
-    "size-limit": "^12.1.0",
+    "size-limit": "^13.0.2",
     "vitest": "^4.1.9",
     "vue-tsc": "^3.3.8"
   }

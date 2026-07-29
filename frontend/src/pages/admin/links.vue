@@ -67,6 +67,7 @@
     loadError.value = false
     try {
       links.value = await $fetch<LinkRow[]>('/api/admin/registration-links/list')
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als loadError angezeigt
     } catch (error) {
       console.error(error)
       loadError.value = true
@@ -91,6 +92,7 @@
       maxUses.value = null
       duration.value = '30d'
       await loadLinks()
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als createError angezeigt
     } catch (error) {
       console.error(error)
       createError.value = true
@@ -106,6 +108,7 @@
         body: { token },
       })
       await loadLinks()
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Liste wird neu geladen
     } catch (error) {
       console.error(error)
     }
@@ -134,6 +137,7 @@
       })
       editingToken.value = null
       await loadLinks()
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Liste wird neu geladen
     } catch (error) {
       console.error(error)
     } finally {
@@ -148,6 +152,7 @@
         body: { token },
       })
       await loadLinks()
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Liste wird neu geladen
     } catch (error) {
       console.error(error)
     }
@@ -161,6 +166,7 @@
         body: { token },
       })
       await loadLinks()
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Liste wird neu geladen
     } catch (error) {
       console.error(error)
     }
@@ -173,6 +179,7 @@
       setTimeout(() => {
         if (copiedToken.value === row.token) copiedToken.value = null
       }, 2000)
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Clipboard-API kann vom Browser verweigert werden; Fehler wird geloggt
     } catch (error) {
       console.error(error)
     }

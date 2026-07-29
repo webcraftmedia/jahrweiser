@@ -34,9 +34,12 @@
       firstName.value = data.firstName
       lastName.value = data.lastName
       postalCode.value = data.postalCode
-    } catch {
+      // eslint-disable-next-line no-catch-all/no-catch-all -- geloggt; Fallback auf den Session-Namen ist gewollt
+    } catch (error) {
       // Fallback if the profile endpoint is unreachable: derive first/last from
       // the session display name so the form is still pre-filled and usable.
+      // Logged, because otherwise a broken endpoint looks like an empty profile.
+      console.warn('Failed to load profile, falling back to session name:', error)
       const name = String(user.value?.name ?? '').trim()
       const idx = name.indexOf(' ')
       firstName.value = idx === -1 ? name : name.slice(0, idx)
@@ -70,6 +73,7 @@
       // Best-effort: refresh the session so the header greeting updates. A
       // failure here must NOT turn a successful save into an error.
       void refreshSession().catch(() => {})
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Server-Begruendung wird im UI angezeigt
     } catch (error) {
       // Surface the server's reason (e.g. "Contact not found") so a failure is
       // diagnosable instead of a generic message.

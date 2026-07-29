@@ -70,7 +70,7 @@
       })
       await refreshSession()
       await navigateTo(redirect || '/')
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-catch-all/no-catch-all -- Token-Einloesung fehlgeschlagen = genau der Zustand success=false
     } catch (error) {
       success.value = false
     }

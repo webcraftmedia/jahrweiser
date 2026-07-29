@@ -134,6 +134,7 @@ export default defineEventHandler(async (event) => {
         .set({ newsletterLastSentAt: new Date() })
         .where(eq(users.uid, user.uid))
       result.sent += 1
+      // eslint-disable-next-line no-catch-all/no-catch-all -- pro Empfaenger: Fehler wird geloggt und in result.errors gezaehlt, Versand laeuft weiter
     } catch (err) {
       console.error(`[newsletter] failed for ${user.email}:`, err)
       result.errors += 1

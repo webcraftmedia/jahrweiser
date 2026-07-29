@@ -106,8 +106,10 @@ export default withNuxt(
   ...it4cNode,
   {
     // Build-, Test- und CLI-Ebene liest Umgebungsvariablen direkt ein — in der App
-    // selbst übernimmt das Nuxts runtimeConfig, dort bleibt die Regel aktiv
-    files: ['*.config.ts', 'scripts/**', 'cli/**', 'e2e-full-stack/**'],
+    // selbst übernimmt das Nuxts runtimeConfig, dort bleibt die Regel aktiv.
+    // server/db ist die Ausnahme: dasselbe Modul wird vom Nitro-Server UND von den
+    // CLI-Skripten importiert, wo es keinen runtimeConfig gibt.
+    files: ['*.config.ts', 'scripts/**', 'cli/**', 'e2e-full-stack/**', 'server/db/**'],
     rules: {
       'n/no-process-env': 'off',
     },
@@ -117,6 +119,20 @@ export default withNuxt(
     files: ['cli/**', 'e2e-full-stack/**'],
     rules: {
       'n/no-sync': 'off',
+    },
+  },
+  {
+    files: ['**/*.spec.ts', '**/*.spec.js', '**/*.test.ts', '**/*.test.js'],
+    rules: {
+      // require() in vi.mock-Factories ist das vorgeschriebene vitest-Pattern:
+      // die Factory wird gehoisted, ein Top-Level-Import wäre dort noch undefined
+      'n/global-require': 'off',
+      // Die Regel matcht auf Identifier mit `Sync`-Endung und trifft damit
+      // Mock-Namen wie `mockReadFileSync`/`mockSync` — reiner Fehlalarm
+      'n/no-sync': 'off',
+      // Test-Doubles für Browser-Callback-APIs (matchMedia-Listener) lassen sich
+      // nicht auf async/await umstellen
+      'n/no-callback-literal': 'off',
     },
   },
   {
@@ -133,6 +149,10 @@ export default withNuxt(
     rules: {
       'promise/avoid-new': 'off',
       'promise/param-names': 'off',
+      // Callback-basierte Browser-APIs (matchMedia-Listener) im Test-Double
+      'promise/prefer-await-to-callbacks': 'off',
+      // then()-Ketten im Test dienen dem Timing, nicht der Wertweitergabe
+      'promise/always-return': 'off',
     },
   },
   ...security,

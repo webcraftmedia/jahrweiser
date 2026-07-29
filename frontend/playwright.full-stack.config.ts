@@ -23,7 +23,10 @@ export default defineConfig({
     },
   ],
   webServer: {
+    // Playwright reicht das Kommando an eine Shell weiter — `${VAR:-default}` ist
+    // damit Shell-Parameter-Expansion, kein verunglücktes Template-Literal.
     command:
+      // eslint-disable-next-line no-template-curly-in-string
       'cross-env TZ=UTC SYNC_SECRET=${SYNC_SECRET:-dev-sync-secret} LOGIN_RATE_LIMIT_MS=0 NODE_ENV=test npm run dev',
     url: 'http://localhost:3000',
     timeout: 120_000,

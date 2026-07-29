@@ -36,7 +36,11 @@ export function extractUserFromVCardData(vcardData: string): DavUserSnapshot | n
   let component: ICAL.Component
   try {
     component = new ICAL.Component(ICAL.parse(vcardData))
-  } catch {
+    // eslint-disable-next-line no-catch-all/no-catch-all -- null ist der dokumentierte Rueckgabewert fuer unlesbare VCards
+  } catch (error) {
+    // null = "kein verwertbarer Nutzer" (Contract dieser Funktion). Geloggt, weil
+    // ein unlesbares VCard sonst stillschweigend aus dem Sync fällt.
+    console.warn('[sync] skipping unparseable vCard:', error)
     return null
   }
   const uid = component.getFirstPropertyValue('uid')?.toString()

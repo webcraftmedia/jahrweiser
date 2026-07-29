@@ -96,15 +96,15 @@ export const findEvents = async (account: DAVAccount, url: string, from: Date, t
       [`${DAVNamespaceShort.CALDAV}:calendar-data`]: {},
     },
     filters: {
-      ['comp-filter']: {
+      'comp-filter': {
         _attributes: {
           name: 'VCALENDAR',
         },
-        ['comp-filter']: {
+        'comp-filter': {
           _attributes: {
             name: 'VEVENT',
           },
-          ['time-range']: {
+          'time-range': {
             _attributes: {
               start: formatDate(from),
               end: formatDate(to),
@@ -149,11 +149,11 @@ async function findUserByProperty(
     },
     depth: '1',
     filters: {
-      ['prop-filter']: {
+      'prop-filter': {
         _attributes: {
           name: propertyName,
         },
-        ['text-match']: collation
+        'text-match': collation
           ? { _attributes: { collation }, _text: propertyValue }
           : propertyValue,
       },

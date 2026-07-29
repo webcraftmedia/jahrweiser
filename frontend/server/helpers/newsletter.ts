@@ -284,6 +284,10 @@ let cachedLocale: NewsletterLocale | null = null
 function loadNewsletterLocale(): NewsletterLocale {
   if (!cachedLocale) {
     const file = path.join(process.cwd(), 'server/emails/_locales/de.json')
+    // Einmaliges, gecachtes Lesen einer statischen Locale-Datei. renderNewsletterText
+    // ist synchron und wird aus synchronen Render-Pfaden aufgerufen — async würde
+    // sich durch die gesamte öffentliche API des Moduls ziehen.
+    // eslint-disable-next-line n/no-sync
     cachedLocale = JSON.parse(readFileSync(file, 'utf-8')) as NewsletterLocale
   }
   return cachedLocale

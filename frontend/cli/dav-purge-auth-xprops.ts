@@ -41,6 +41,7 @@ for (const ab of addressbooks) {
     let component: ICAL.Component
     try {
       component = new ICAL.Component(ICAL.parse(vc.data))
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Parse-Fehler = unlesbares VCard; wird gemeldet und uebersprungen
     } catch {
       console.warn(`  skipped: failed to parse ${vc.url}`)
       continue

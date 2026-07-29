@@ -82,6 +82,7 @@ export async function waitForMailFor(address: string, timeoutMs = 10_000): Promi
     try {
       const msg = await getLatestMailFor(address)
       if (msg) return msg
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Poll-Schleife: der letzte Fehler wird gemerkt und in der Timeout-Meldung ausgegeben
     } catch (error) {
       // Transient socket errors (Maildev closing keep-alive connections,
       // momentary DNS hiccup) shouldn't fail the wait — keep polling until

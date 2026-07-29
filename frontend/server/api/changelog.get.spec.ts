@@ -2,11 +2,17 @@
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockReadFileSync = vi.fn()
+const mockReadFile = vi.fn()
 
-vi.mock('node:fs', () => ({
-  readFileSync: (...args: unknown[]) => mockReadFileSync(...args),
+vi.mock('node:fs/promises', () => ({
+  readFile: (...args: unknown[]) => mockReadFile(...args),
 }))
+
+function errnoError(code: string): NodeJS.ErrnoException {
+  const error: NodeJS.ErrnoException = new Error(code)
+  error.code = code
+  return error
+}
 
 describe('changelog.get', () => {
   beforeEach(() => {
@@ -15,29 +21,32 @@ describe('changelog.get', () => {
   })
 
   it('returns changelog content from file', async () => {
-    mockReadFileSync.mockReturnValue('## 1.0.0\n\nChanges here')
+    mockReadFile.mockResolvedValue('## 1.0.0\n\nChanges here')
     const { default: freshHandler } = await import('./changelog.get')
-    const fn = freshHandler as unknown as (event: unknown) => string
-    const result = fn({})
-    expect(result).toBe('## 1.0.0\n\nChanges here')
+    const fn = freshHandler as unknown as (event: unknown) => Promise<string>
+    await expect(fn({})).resolves.toBe('## 1.0.0\n\nChanges here')
   })
 
   it('returns fallback when file not found', async () => {
-    mockReadFileSync.mockImplementation(() => {
-      throw new Error('ENOENT')
-    })
+    mockReadFile.mockRejectedValue(errnoError('ENOENT'))
     const { default: freshHandler } = await import('./changelog.get')
-    const fn = freshHandler as unknown as (event: unknown) => string
-    const result = fn({})
-    expect(result).toContain('No changelog available')
+    const fn = freshHandler as unknown as (event: unknown) => Promise<string>
+    await expect(fn({})).resolves.toContain('No changelog available')
+  })
+
+  it('propagates errors that are not a missing file', async () => {
+    mockReadFile.mockRejectedValue(errnoError('EACCES'))
+    const { default: freshHandler } = await import('./changelog.get')
+    const fn = freshHandler as unknown as (event: unknown) => Promise<string>
+    await expect(fn({})).rejects.toThrow('EACCES')
   })
 
   it('caches the result on subsequent calls', async () => {
-    mockReadFileSync.mockReturnValue('## 2.0.0\n\nCached')
+    mockReadFile.mockResolvedValue('## 2.0.0\n\nCached')
     const { default: freshHandler } = await import('./changelog.get')
-    const fn = freshHandler as unknown as (event: unknown) => string
-    fn({})
-    fn({})
-    expect(mockReadFileSync).toHaveBeenCalledTimes(1)
+    const fn = freshHandler as unknown as (event: unknown) => Promise<string>
+    await fn({})
+    await fn({})
+    expect(mockReadFile).toHaveBeenCalledTimes(1)
   })
 })

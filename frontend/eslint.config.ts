@@ -9,19 +9,13 @@ import {
   css,
   prettier,
   typescript as it4cTypescript,
-  // TODO: vue3-Modul exportiert auch @typescript-eslint-Regeln (via @vue/eslint-config-typescript).
-  // Diese sind redundant zum typescript-Modul und haben teils schwächere Konfiguration
-  // (z.B. no-unused-vars ohne argsIgnorePattern). In eslint-config-it4c nur vue/*-Regeln exportieren.
   vue3 as it4cVue3,
-  // TODO: importX-Modul exportiert über neostandard() auch n/*, promise/*, react/*
-  // und ESLint-Core-Regeln. In eslint-config-it4c nur import-x/*-Regeln exportieren.
   importX as it4cImportX,
+  node as it4cNode,
+  promise as it4cPromise,
 } from 'eslint-config-it4c'
 
 import withNuxt from './.nuxt/eslint.config.mjs'
-// TODO: `node` und `promise` Module aus eslint-config-it4c sind nicht self-contained —
-// sie registrieren ihr Plugin nicht selbst (eslint-plugin-n / eslint-plugin-promise).
-// Bug in eslint-config-it4c melden, dann hier einbinden.
 
 // it4c ESLint-Basisregeln extrahieren (recommended + custom, kein Plugin/Parser-Overlap mit Nuxt)
 const it4cEslintRules = Object.assign({}, ...it4cEslint.map((c) => c.rules))
@@ -34,25 +28,23 @@ const it4cVue3Rules = Object.assign({}, ...it4cVue3.map((c) => c.rules))
 
 // it4c Import-X-Regeln extrahieren und auf Nuxt-Pluginname `import` umbenennen
 // (Nuxt registriert eslint-plugin-import-x als `import`, it4c als `import-x`)
-// TODO: importX-Modul nutzt neostandard() als Quelle für import-x-Regeln, exportiert dadurch
-// aber auch 129 Fremdregeln (n/*, promise/*, react/*, ESLint-Core). In eslint-config-it4c
-// die import-x-Regeln direkt aus eslint-plugin-import-x zusammenstellen statt über neostandard.
-// Dann kann der .filter() hier entfernt werden.
 const it4cImportRules = Object.fromEntries(
-  Object.entries(Object.assign({}, ...it4cImportX.map((c) => c.rules)))
-    .filter(([key]) => key.startsWith('import-x/'))
-    .map(([key, value]) => [key.replace('import-x/', 'import/'), value]),
+  Object.entries(Object.assign({}, ...it4cImportX.map((c) => c.rules))).map(([key, value]) => [
+    key.replace('import-x/', 'import/'),
+    value,
+  ]),
 )
 
-// TODO: no-catch-all gehört nicht ins TypeScript-Modul — ist ein allgemeines JS-Pattern.
-// In eslint-config-it4c ins `eslint`-Basismodul verschieben, dann hier entfernen.
-delete it4cTsRules['no-catch-all/no-catch-all']
+// no-catch-all liefert das it4c-eslint-Basismodul. Da hier nur die Regeln der it4c-Module
+// übernommen werden (Plugins/Parser stellt Nuxt), muss dessen Plugin mitregistriert werden.
+const it4cEslintPlugins = Object.assign({}, ...it4cEslint.map((c) => c.plugins))
 
 export default withNuxt(
   { ignores: ['.nuxt.old/', '.claude/'] },
   // it4c ESLint-Basisregeln (recommended + no-console, no-unused-vars, no-void)
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue}'],
+    plugins: it4cEslintPlugins,
     rules: it4cEslintRules,
   },
   {
@@ -66,7 +58,6 @@ export default withNuxt(
     },
   },
   // it4c Vue3-Regeln (recommended + custom, Plugin wird von Nuxt bereitgestellt)
-  // Muss VOR TypeScript-Regeln stehen, da vue3 schwächere @typescript-eslint-Regeln mitbringt
   {
     files: ['**/*.vue', '**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
     rules: it4cVue3Rules,
@@ -112,6 +103,38 @@ export default withNuxt(
     },
   },
   // it4c-Module (self-contained, kein Nuxt-Overlap)
+  ...it4cNode,
+  {
+    // Build-, Test- und CLI-Ebene liest Umgebungsvariablen direkt ein — in der App
+    // selbst übernimmt das Nuxts runtimeConfig, dort bleibt die Regel aktiv
+    files: ['*.config.ts', 'scripts/**', 'cli/**', 'e2e-full-stack/**'],
+    rules: {
+      'n/no-process-env': 'off',
+    },
+  },
+  {
+    // CLI-Tools und Test-Setup laufen ohne Event-Loop-Druck, synchrones I/O ist dort korrekt
+    files: ['cli/**', 'e2e-full-stack/**'],
+    rules: {
+      'n/no-sync': 'off',
+    },
+  },
+  {
+    // Nuxt generiert die Flat-Config als .mjs, der Import braucht die Extension
+    files: ['eslint.config.ts'],
+    rules: {
+      'n/file-extension-in-import': 'off',
+    },
+  },
+  ...it4cPromise,
+  {
+    // Test-Setup und CLI bauen legitim eigene Promises (Timeouts, Prozess-Handles)
+    files: ['cli/**', 'e2e-full-stack/**', '**/*.spec.ts', '**/*.test.ts'],
+    rules: {
+      'promise/avoid-new': 'off',
+      'promise/param-names': 'off',
+    },
+  },
   ...security,
   {
     files: ['cli/**'],

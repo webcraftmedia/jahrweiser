@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.4](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.3...v1.10.4) (2026-07-29)
+
+
+### Bug Fixes
+
+* **frontend:** support maildev v3 ([#310](https://github.com/webcraftmedia/jahrweiser/issues/310)) ([6cd0eec](https://github.com/webcraftmedia/jahrweiser/commit/6cd0eece505e71f028129e4e8c4a23d76f901d24))
+* **frontend:** update eslint config ([#313](https://github.com/webcraftmedia/jahrweiser/issues/313)) ([2b82f8f](https://github.com/webcraftmedia/jahrweiser/commit/2b82f8f7c3545b265e8ad2e910193319f17ff1be))
+
 ## [1.10.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.2...v1.10.3) (2026-06-30)
 
 

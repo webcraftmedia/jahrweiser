@@ -51,7 +51,7 @@
     "mysql2": "^3.23.2",
     "nodemailer": "^9.0.3",
     "nuxt": "^4.4.8",
-    "nuxt-auth-utils": "^0.5.29",
+    "nuxt-auth-utils": "^0.5.30",
     "nuxt-svgo": "^5.3.0",
     "pug": "^3.0.4",
     "temporal-polyfill": "0.3.0",

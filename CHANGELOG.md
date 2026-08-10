@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.5](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.4...v1.10.5) (2026-08-10)
+
+
+### Bug Fixes
+
+* **frontend:** fix recurring event with adjusted event times ([#329](https://github.com/webcraftmedia/jahrweiser/issues/329)) ([28f2b98](https://github.com/webcraftmedia/jahrweiser/commit/28f2b98635352a8d3691bb33d4093851f3ff5e6e))
+
 ## [1.10.4](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.3...v1.10.4) (2026-07-29)
 
 

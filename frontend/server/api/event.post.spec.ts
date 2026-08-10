@@ -8,6 +8,8 @@ import {
   RECURRING_EVENT,
   RECURRING_EVENT_WITH_DETAILS,
   RECURRING_EVENT_WITH_TIMEZONE,
+  RECURRING_EVENT_WITH_OVERRIDE,
+  RECURRING_EVENT_OVERRIDE_FIRST,
 } from '../../test/fixtures/ical-data'
 
 import handler from './event.post'
@@ -109,6 +111,52 @@ describe('event.post', () => {
     expect(result.summary).toBe('Berlin Recurring')
     // DTSTART;TZID=Europe/Berlin:20250301T190000 → display should show 19:00 (local Berlin time)
     expect(result.startDate).toBe('2025-03-01T19:00:00')
+  })
+
+  const withOccurrence = (occurrence: number) => {
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+      return (validator as (data: unknown) => unknown)({
+        calendar: 'Work',
+        id: 'event-123',
+        occurrence,
+      })
+    })
+  }
+
+  it('returns the override data for a moved occurrence', async () => {
+    withOccurrence(3)
+    mockFindEvent.mockResolvedValue([{ data: RECURRING_EVENT_WITH_OVERRIDE }])
+    const result = (await handlerFn({})) as Record<string, unknown>
+    // Occurrence 3 was moved from Mar 15 to Mar 18 via RECURRENCE-ID
+    expect(result.startDate).toContain('2025-03-18')
+    expect(result.endDate).toContain('2025-03-18T11:30:00')
+    expect(result.summary).toBe('Weekly Meeting (moved)')
+    expect(result.description).toBe('Moved to Tuesday')
+    expect(result.location).toBe('Room C')
+    expect(result.url).toBe('https://example.com/moved')
+    expect(result.duration).toBe('PT1H30M')
+  })
+
+  it('returns unmodified occurrences of a series with overrides', async () => {
+    withOccurrence(2)
+    mockFindEvent.mockResolvedValue([{ data: RECURRING_EVENT_WITH_OVERRIDE }])
+    const result = (await handlerFn({})) as Record<string, unknown>
+    expect(result.startDate).toContain('2025-03-08')
+    expect(result.summary).toBe('Weekly Meeting')
+  })
+
+  it('expands the series when an override comes before the master VEVENT', async () => {
+    withOccurrence(1)
+    mockFindEvent.mockResolvedValue([{ data: RECURRING_EVENT_OVERRIDE_FIRST }])
+    const result = (await handlerFn({})) as Record<string, unknown>
+    expect(result.startDate).toContain('2025-03-01')
+    expect(result.summary).toBe('Weekly Meeting')
+  })
+
+  it('throws when the occurrence is past the end of the series', async () => {
+    withOccurrence(99)
+    mockFindEvent.mockResolvedValue([{ data: RECURRING_EVENT }])
+    await expect(handlerFn({})).rejects.toThrow('Event not found')
   })
 
   it('throws 502 when DAV connection fails', async () => {

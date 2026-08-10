@@ -1,4 +1,3 @@
-import ICAL from 'ical.js'
 import { z } from 'zod'
 
 import {
@@ -8,6 +7,14 @@ import {
   findEvents,
   findUserByEmail,
 } from '../helpers/dav'
+import {
+  isPrivate,
+  lastRelevantRecurrenceId,
+  parseCalendarEvent,
+  toComparableDate,
+  toDateString,
+  toInclusiveEndDateString,
+} from '../helpers/ical'
 
 const bodySchema = z.object({
   calendar: z.string(),
@@ -73,61 +80,58 @@ export default defineEventHandler(async (event) => {
   const results: any[] = []
 
   caldata.forEach((data) => {
-    const vcalendar = new ICAL.Component(ICAL.parse(data.props?.calendarData))
-    // Register VTIMEZONE components so toJSDate() can resolve timezone offsets
-    for (const vtimezone of vcalendar.getAllSubcomponents('vtimezone')) {
-      ICAL.TimezoneService.register(new ICAL.Timezone(vtimezone))
-    }
-    const vevent = vcalendar.getFirstSubcomponent('vevent')
-    if (vevent) {
-      if (!showPrivate && vevent.getFirstProperty('class')?.getFirstValue() === 'PRIVATE') {
+    const parsed = parseCalendarEvent(data.props?.calendarData)
+    if (parsed) {
+      const { vevent, event: calEvent, exceptions } = parsed
+      if (!showPrivate && isPrivate(vevent)) {
         return
       }
-      const calEvent = new ICAL.Event(vevent)
 
       const isAllDay = calEvent.startDate.isDate
 
       if (calEvent.isRecurring()) {
-        // Expandiere wiederkehrende Events
-        const expand = new ICAL.RecurExpansion({
-          component: vevent,
-          dtstart: vevent.getFirstPropertyValue('dtstart') as ICAL.Time,
-        })
+        // Expandiere wiederkehrende Events. Der Iterator läuft über die
+        // RRULE-Termine, getOccurrenceDetails() legt die RECURRENCE-ID-
+        // Overrides (verschobene/geänderte Einzeltermine) darüber.
+        const iterator = calEvent.iterator()
+        const iterateUntil = lastRelevantRecurrenceId(exceptions, endDate)
 
         let count = 0
         let next
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
-        while ((next = expand.next())) {
-          const occurrence = next.toJSDate()
+        while ((next = iterator.next())) {
           count += 1
+          // Abbruch, sobald die Serie den Zeitraum verlassen hat — aber erst,
+          // wenn auch kein Override mehr in den Zeitraum vorgezogen wurde
+          const recurrenceId = toComparableDate(next)
+          if (recurrenceId > endDate && (!iterateUntil || recurrenceId > iterateUntil)) break
+
+          const details = calEvent.getOccurrenceDetails(next)
+          // Overrides können eine eigene CLASS tragen
+          if (!showPrivate && isPrivate(details.item.component)) continue
+
+          const occurrence = toComparableDate(details.startDate)
           // Nur Events im gewünschten Zeitraum
-          if (occurrence > endDate) break
-          if (occurrence >= startDate) {
-            const recEndDate = new Date(occurrence.getTime() + calEvent.duration.toSeconds() * 1000)
-            if (isAllDay) {
-              recEndDate.setDate(recEndDate.getDate() - 1) // DTEND is exclusive, subtract 1 day for inclusive end
-            }
-            results.push({
-              calendar: selectedCalendar.displayName,
-              color:
-                typeof selectedCalendar.calendarColor === 'string'
-                  ? selectedCalendar.calendarColor
-                  : '#e7e7ff',
-              id: hrefToId(data.href as string),
-              occurrence: count,
-              startDate: isAllDay ? occurrence.toISOString().slice(0, 10) : occurrence,
-              endDate: isAllDay ? recEndDate.toISOString().slice(0, 10) : recEndDate,
-              title: calEvent.summary,
-              isRecurring: true,
-            })
-          }
+          if (occurrence > endDate || occurrence < startDate) continue
+
+          const occurrenceIsAllDay = details.startDate.isDate
+          results.push({
+            calendar: selectedCalendar.displayName,
+            color:
+              typeof selectedCalendar.calendarColor === 'string'
+                ? selectedCalendar.calendarColor
+                : '#e7e7ff',
+            id: hrefToId(data.href as string),
+            occurrence: count,
+            startDate: occurrenceIsAllDay ? toDateString(details.startDate) : occurrence,
+            endDate: occurrenceIsAllDay
+              ? toInclusiveEndDateString(details.endDate) // DTEND is exclusive
+              : details.endDate.toJSDate(),
+            title: details.item.summary,
+            isRecurring: true,
+          })
         }
       } else {
-        const sd = calEvent.startDate.toJSDate()
-        const ed = calEvent.endDate.toJSDate()
-        if (isAllDay) {
-          ed.setDate(ed.getDate() - 1) // DTEND is exclusive, subtract 1 day for inclusive end
-        }
         results.push({
           calendar: selectedCalendar.displayName,
           color:
@@ -135,8 +139,10 @@ export default defineEventHandler(async (event) => {
               ? selectedCalendar.calendarColor
               : '#e7e7ff',
           id: hrefToId(data.href as string),
-          startDate: isAllDay ? sd.toISOString().slice(0, 10) : sd,
-          endDate: isAllDay ? ed.toISOString().slice(0, 10) : ed,
+          startDate: isAllDay ? toDateString(calEvent.startDate) : calEvent.startDate.toJSDate(),
+          endDate: isAllDay
+            ? toInclusiveEndDateString(calEvent.endDate) // DTEND is exclusive
+            : calEvent.endDate.toJSDate(),
           title: calEvent.summary,
         })
       }

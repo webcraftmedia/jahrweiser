@@ -1,7 +1,7 @@
-import ICAL from 'ical.js'
 import { z } from 'zod'
 
 import { createCalDAVAccount, findCalendars, findEvent } from '../helpers/dav'
+import { parseCalendarEvent } from '../helpers/ical'
 
 const bodySchema = z.object({
   calendar: z.string(),
@@ -43,43 +43,40 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Event not found' })
   }
 
-  const vcalendar = new ICAL.Component(ICAL.parse(caldata[0].data))
-  // Register VTIMEZONE components so toJSDate() can resolve timezone offsets
-  for (const vtimezone of vcalendar.getAllSubcomponents('vtimezone')) {
-    ICAL.TimezoneService.register(new ICAL.Timezone(vtimezone))
-  }
-  const vevent = vcalendar.getFirstSubcomponent('vevent')
+  const parsed = parseCalendarEvent(caldata[0].data)
 
-  if (!vevent) {
+  if (!parsed) {
     throw createError({ statusCode: 404, statusMessage: 'Event not found' })
   }
 
-  const e = new ICAL.Event(vevent)
-  // console.log(e)
+  const { vevent, event: e } = parsed
 
   if (e.isRecurring() && occurrence) {
-    // Expandiere wiederkehrende Events
-    const expand = new ICAL.RecurExpansion({
-      component: vevent,
-      dtstart: vevent.getFirstPropertyValue('dtstart') as ICAL.Time,
-    })
+    // Expandiere wiederkehrende Events; getOccurrenceDetails() liefert die
+    // effektiven Daten inklusive RECURRENCE-ID-Overrides
+    const iterator = e.iterator()
 
-    let next = expand.next()
+    let next = iterator.next()
     for (let i = 1; i < occurrence; i++) {
-      next = expand.next()
+      next = iterator.next()
     }
 
-    const rEnd = next.clone()
-    rEnd.addDuration(e.duration)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
+    if (!next) {
+      throw createError({ statusCode: 404, statusMessage: 'Event not found' })
+    }
+
+    const details = e.getOccurrenceDetails(next)
+    const item = details.item
     return {
-      description: e.description,
-      duration: e.duration.toString(),
-      endDate: rEnd.toString(),
-      location: e.location,
-      startDate: next.toString(),
-      summary: e.summary,
+      description: item.description,
+      duration: item.duration.toString(),
+      endDate: details.endDate.toString(),
+      location: item.location,
+      startDate: details.startDate.toString(),
+      summary: item.summary,
       uid: e.uid,
-      url: vevent.getFirstPropertyValue('url') ?? '',
+      url: item.component.getFirstPropertyValue('url') ?? '',
     }
   } else {
     return {

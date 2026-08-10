@@ -10,6 +10,11 @@ import {
   PRIVATE_EVENT,
   VCALENDAR_NO_VEVENT,
   RECURRING_ALLDAY_EVENT,
+  RECURRING_ALLDAY_EVENT_WITH_OVERRIDE,
+  RECURRING_EVENT_OVERRIDE_FIRST,
+  RECURRING_EVENT_OVERRIDE_MOVED_BACK,
+  RECURRING_EVENT_PRIVATE_OVERRIDE,
+  RECURRING_EVENT_WITH_OVERRIDE,
 } from '../../test/fixtures/ical-data'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
 
@@ -323,6 +328,107 @@ describe('calendar.post', () => {
     ])
     const result = (await handlerFn({})) as unknown[]
     expect(result).toHaveLength(0)
+  })
+
+  it('applies RECURRENCE-ID overrides to moved occurrences', async () => {
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/recurring-override-1.ics',
+        props: { calendarData: RECURRING_EVENT_WITH_OVERRIDE },
+      },
+    ])
+    const result = (await handlerFn({})) as {
+      startDate: Date
+      endDate: Date
+      title: string
+      occurrence: number
+    }[]
+    const days = result.map((e) => e.startDate.toISOString().slice(0, 10))
+    // Third occurrence moved from Mar 15 to Mar 18
+    expect(days).toStrictEqual([
+      '2025-03-01',
+      '2025-03-08',
+      '2025-03-18',
+      '2025-03-22',
+      '2025-03-29',
+    ])
+    const moved = result[2]!
+    expect(moved.title).toBe('Weekly Meeting (moved)')
+    // Occurrence index still counts the series position, not the moved date
+    expect(moved.occurrence).toBe(3)
+    // Override has its own duration (1.5h instead of 1h)
+    expect(moved.endDate.toISOString()).toBe('2025-03-18T11:30:00.000Z')
+  })
+
+  it('finds the master VEVENT when an override comes first', async () => {
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/recurring-override-first-1.ics',
+        props: { calendarData: RECURRING_EVENT_OVERRIDE_FIRST },
+      },
+    ])
+    const result = (await handlerFn({})) as { startDate: Date; isRecurring?: boolean }[]
+    // Whole series must expand, not just the leading override
+    expect(result).toHaveLength(5)
+    expect(result[0]!.isRecurring).toBe(true)
+    expect(result.map((e) => e.startDate.toISOString().slice(0, 10))).toContain('2025-03-18')
+  })
+
+  it('includes occurrences pulled back into the window from beyond endDate', async () => {
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/recurring-override-back-1.ics',
+        props: { calendarData: RECURRING_EVENT_OVERRIDE_MOVED_BACK },
+      },
+    ])
+    const result = (await handlerFn({})) as { startDate: Date; occurrence: number }[]
+    const days = result.map((e) => e.startDate.toISOString().slice(0, 10))
+    // Apr 5 (occurrence 6) was moved to Mar 30, so it belongs into the March window
+    expect(days).toContain('2025-03-30')
+    expect(result.find((e) => e.startDate.toISOString().startsWith('2025-03-30'))!.occurrence).toBe(
+      6,
+    )
+  })
+
+  it('hides occurrences whose override is CLASS:PRIVATE', async () => {
+    mockFindUserByEmail.mockResolvedValue({
+      user: { href: '/abc.vcf' },
+      vcard: createMockVCard({ email: 'test@example.com', categories: ['Other'] }),
+    })
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/recurring-private-override-1.ics',
+        props: { calendarData: RECURRING_EVENT_PRIVATE_OVERRIDE },
+      },
+    ])
+    const result = (await handlerFn({})) as { startDate: Date; title: string }[]
+    expect(result).toHaveLength(4)
+    expect(result.map((e) => e.title)).not.toContain('Internal Retro')
+  })
+
+  it('shows private overrides when user has matching tag', async () => {
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/recurring-private-override-1.ics',
+        props: { calendarData: RECURRING_EVENT_PRIVATE_OVERRIDE },
+      },
+    ])
+    const result = (await handlerFn({})) as { title: string }[]
+    expect(result).toHaveLength(5)
+    expect(result.map((e) => e.title)).toContain('Internal Retro')
+  })
+
+  it('applies overrides to recurring all-day events', async () => {
+    mockFindEvents.mockResolvedValue([
+      {
+        href: '/cal/work/recurring-allday-override-1.ics',
+        props: { calendarData: RECURRING_ALLDAY_EVENT_WITH_OVERRIDE },
+      },
+    ])
+    const result = (await handlerFn({})) as { startDate: string; endDate: string }[]
+    expect(result.map((e) => e.startDate)).toStrictEqual(['2025-03-01', '2025-03-11', '2025-03-15'])
+    // DTEND stays exclusive for the moved occurrence too
+    expect(result[1]!.endDate).toBe('2025-03-11')
   })
 
   it('hrefToId extracts ID from path', async () => {

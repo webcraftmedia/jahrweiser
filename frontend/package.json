@@ -74,7 +74,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
-    "eslint": "^10.8.1",
+    "eslint": "^10.9.1",
     "eslint-config-it4c": "^0.12.1",
     "happy-dom": "^20.11.12",
     "prettier": "^3.9.6",

@@ -58,7 +58,7 @@
     "tsdav": "^2.3.1",
     "tsx": "^4.23.12",
     "vue": "^3.5.41",
-    "vue-router": "^5.1.0",
+    "vue-router": "^5.3.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

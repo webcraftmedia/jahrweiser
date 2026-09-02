@@ -75,7 +75,7 @@
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.9.1",
-    "eslint-config-it4c": "^0.12.1",
+    "eslint-config-it4c": "^0.13.2",
     "happy-dom": "^20.11.12",
     "prettier": "^3.9.6",
     "size-limit": "^12.1.0",

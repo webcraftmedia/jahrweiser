@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.6](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.5...v1.10.6) (2026-09-08)
+
+
+### Bug Fixes
+
+* **frontend:** bind calendar at invite link ([#365](https://github.com/webcraftmedia/jahrweiser/issues/365)) ([7a7a6ba](https://github.com/webcraftmedia/jahrweiser/commit/7a7a6ba7d898dd2743784a44395ea2c76c1c7cd9))
+* **frontend:** e2e test for private events in newsletter ([#366](https://github.com/webcraftmedia/jahrweiser/issues/366)) ([97bb202](https://github.com/webcraftmedia/jahrweiser/commit/97bb20254fd11a03046daf9032d3d0cc73f36faa))
+* **frontend:** fix recurring events in newsletter - unify logic in one place ([#363](https://github.com/webcraftmedia/jahrweiser/issues/363)) ([32c592d](https://github.com/webcraftmedia/jahrweiser/commit/32c592d2d0e21266c735953a2b4a9b6b3188b253))
+
 ## [1.10.5](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.4...v1.10.5) (2026-08-10)
 
 

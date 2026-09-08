@@ -1,5 +1,10 @@
 {
   "components": {
+    "AppIconRail": {
+      "calendar": "Kalender",
+      "label": "Hauptnavigation",
+      "telegram": "Telegram-Kanäle"
+    },
     "Footer": {
       "changelog": "Versionshistorie",
       "changelog-intro-after": "GitHub abzurufen",
@@ -235,6 +240,17 @@
         "saving": "Wird gespeichert..."
       },
       "title": "Einstellungen"
+    },
+    "telegram": {
+      "badge": {
+        "invite": "nur mit Einladung",
+        "public": "öffentlich"
+      },
+      "empty": "Es sind noch keine Telegram-Kanäle hinterlegt.",
+      "error": "Die Kanäle konnten nicht geladen werden.",
+      "intro": "Über diese Links trittst du unseren Telegram-Kanälen bei. Bitte gib sie nicht öffentlich weiter — wer den Link hat, kann beitreten.",
+      "join": "Beitreten",
+      "title": "Telegram-Kanäle"
     }
   }
 }

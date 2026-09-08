@@ -22,6 +22,7 @@ const runtimeConfig = vi.hoisted(() => ({
   CLIENT_URI: 'http://localhost:3000',
   LOGIN_RATE_LIMIT_MS: 60000,
   SYNC_SECRET: 'test-sync-secret',
+  TELEGRAM_CHANNELS_FILE: 'data/telegram-channels.json',
 }))
 
 vi.mock('#app/nuxt', async (importOriginal) => {

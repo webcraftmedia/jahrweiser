@@ -234,6 +234,17 @@ export const findEvents = async (account: DAVAccount, url: string, from: Date, t
     fetchOptions: getFetchOptions(),
   })
 
+/**
+ * Every object in one calendar, unfiltered. `findEvents` is time-range scoped
+ * because the app only ever renders a window; a backup must not be.
+ */
+export const findAllCalendarObjects = async (account: DAVAccount, url: string) =>
+  fetchCalendarObjects({
+    calendar: { url },
+    headers: headers(account),
+    fetchOptions: getFetchOptions(),
+  })
+
 export const findEvent = async (account: DAVAccount, url: string, id: string) =>
   fetchCalendarObjects({
     calendar: {

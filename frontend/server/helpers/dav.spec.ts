@@ -25,6 +25,7 @@ import {
   findUserByToken,
   saveUser,
   createUser,
+  findAllCalendarObjects,
   findAllUsers,
   saveVCardAt,
   writeAdminTags,
@@ -541,6 +542,17 @@ describe('bulk vCard maintenance', () => {
     await expect(
       findAllUsers({ ...createCardDAVAccount(config), homeUrl: undefined }),
     ).rejects.toThrow(/No addressbook found/)
+  })
+
+  it('fetches a calendar unfiltered, unlike the time-ranged findEvents', async () => {
+    // A backup must not be scoped to the window the app happens to render.
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      { url: '/a.ics', data: 'BEGIN:VCALENDAR' },
+    ] as never)
+    const account = createCalDAVAccount(config)
+    await expect(
+      findAllCalendarObjects(account, 'https://dav.example.com/cal/work/'),
+    ).resolves.toStrictEqual([{ url: '/a.ics', data: 'BEGIN:VCALENDAR' }])
   })
 
   it('writes a vCard back to its own URL, passing the etag through', async () => {

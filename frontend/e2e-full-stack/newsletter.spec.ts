@@ -166,6 +166,36 @@ test.describe('full-stack newsletter', () => {
     expect(res.status()).toBe(401)
   })
 
+  test('private events reach only the users holding that calendar', async ({ request }) => {
+    // The newsletter runs its own access check (server/helpers/newsletter.ts),
+    // separate from the calendar view's. Both compare CATEGORIES against the
+    // calendar key, so both need proving end to end.
+    //
+    // Seeded state: carol holds `familie`, bob holds `sportgruppe`. The
+    // `familie` calendar carries one private and one public event.
+    await subscribeUserDirectly(CAROL)
+    await subscribeUserDirectly(BOB)
+
+    await deleteAllMail()
+    const result = await triggerSendNewsletter(request)
+    expect(result.errors).toBe(0)
+
+    const carolMail = await waitForMailFor(CAROL)
+    const bobMail = await waitForMailFor(BOB)
+    const carolBody = carolMail.text || carolMail.html || ''
+    const bobBody = bobMail.text || bobMail.html || ''
+
+    // Carol holds `familie`, so the private event in it reaches her.
+    expect(carolBody).toContain('Familienrat')
+    // Bob does not hold it, so it must not.
+    expect(bobBody).not.toContain('Familienrat')
+    // But the *public* event of that same calendar reaches both — otherwise
+    // this would also pass if the calendar were dropped wholesale, or if bob's
+    // mail were simply empty.
+    expect(bobBody).toContain('Kinderflohmarkt')
+    expect(carolBody).toContain('Kinderflohmarkt')
+  })
+
   test('audience excludes login-disabled and soft-deleted users', async ({ page, request }) => {
     // Subscribe three users directly in the sidecar. Going through the UI
     // would mean three sequential magic-link logins in one context — but

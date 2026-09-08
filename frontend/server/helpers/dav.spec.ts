@@ -27,6 +27,7 @@ import {
   createUser,
   findAllUsers,
   saveVCardAt,
+  writeAdminTags,
   calendarKey,
   calendarLabel,
   readAdminTags,
@@ -394,6 +395,18 @@ describe('vCard calendar access helpers', () => {
       ])
     })
 
+    it('parses a legacy single-string value written before the multi-value design', () => {
+      // On the wire a comma-separated list is the same bytes either way, so
+      // vCards written before X-ADMIN-TAGS became a text list still read back
+      // correctly — that is why no data migration was needed.
+      const vcard = new ICAL.Component(
+        ICAL.parse(
+          ['BEGIN:VCARD', 'VERSION:4.0', 'X-ADMIN-TAGS:chor,vorstand', 'END:VCARD'].join('\r\n'),
+        ),
+      )
+      expect(readAdminTags(vcard)).toStrictEqual(['chor', 'vorstand'])
+    })
+
     it('yields no tags for an absent or empty property', () => {
       expect(readAdminTags(createMockVCard({}))).toStrictEqual([])
       expect(readAdminTags(createMockVCard({ adminTags: ',,' }))).toStrictEqual([])
@@ -539,5 +552,55 @@ describe('bulk vCard maintenance', () => {
         vCard: { url: '/a.vcf', data: vcard, etag: 'W/"1"' },
       }),
     )
+  })
+})
+
+describe('writeAdminTags', () => {
+  it('round-trips a list through serialisation', () => {
+    const vcard = createMockVCard({ email: 'a@b.de' })
+    writeAdminTags(vcard, ['theater-ag', 'sportgruppe'])
+    const reparsed = new ICAL.Component(ICAL.parse(vcard.toString()))
+    expect(readAdminTags(reparsed)).toStrictEqual(['theater-ag', 'sportgruppe'])
+  })
+
+  it('serialises a plain list to the same bytes as before the multi-value switch', () => {
+    // Existing vCards must not need rewriting.
+    const vcard = createMockVCard({ email: 'a@b.de' })
+    writeAdminTags(vcard, ['theater-ag', 'sportgruppe'])
+    expect(vcard.toString()).toContain('X-ADMIN-TAGS:theater-ag,sportgruppe')
+  })
+
+  it('splits on a card that carries no VERSION (vCard 3 design fallback)', () => {
+    // ical.js picks the vCard 3 design for a VERSION-less card that has EMAIL,
+    // so the design has to be registered on both sets.
+    const vcard = new ICAL.Component(
+      ICAL.parse(
+        ['BEGIN:VCARD', 'EMAIL:a@b.de', 'X-ADMIN-TAGS:chor,vorstand', 'END:VCARD'].join('\r\n'),
+      ),
+    )
+    expect(readAdminTags(vcard)).toStrictEqual(['chor', 'vorstand'])
+  })
+
+  it('escapes a comma inside a single value instead of splitting it', () => {
+    // The whole point of the multi-value design: a calendar key containing a
+    // comma used to silently become two tags.
+    const vcard = createMockVCard({ email: 'a@b.de' })
+    writeAdminTags(vcard, ['chor, nord', 'b'])
+    const reparsed = new ICAL.Component(ICAL.parse(vcard.toString()))
+    expect(readAdminTags(reparsed)).toStrictEqual(['chor, nord', 'b'])
+  })
+
+  it('removes the property for an empty list', () => {
+    // An `X-ADMIN-TAGS:` with no value would read back as one blank tag.
+    const vcard = createMockVCard({ email: 'a@b.de', adminTags: 'chor' })
+    writeAdminTags(vcard, [])
+    expect(vcard.getFirstProperty('x-admin-tags')).toBeNull()
+    expect(readAdminTags(vcard)).toStrictEqual([])
+  })
+
+  it('replaces rather than appends on repeated writes', () => {
+    const vcard = createMockVCard({ email: 'a@b.de', adminTags: 'chor' })
+    writeAdminTags(vcard, ['vorstand'])
+    expect(readAdminTags(vcard)).toStrictEqual(['vorstand'])
   })
 })

@@ -10,7 +10,7 @@ import {
   readAdminTags,
   readCategories,
   saveVCardAt,
-  X_ADMIN_TAGS,
+  writeAdminTags,
 } from '../server/helpers/dav'
 
 import { config } from './tools/config'
@@ -90,22 +90,11 @@ function resolve(values: string[]): Resolution {
   return { kept, dropped, ambiguous }
 }
 
-/**
- * CATEGORIES is a real multi-value property; X-ADMIN-TAGS is not — ical.js
- * rejects setValues() on it, which is exactly why readAdminTags() splits the
- * single value on commas itself. Write each in its own encoding.
- */
 function setCategories(vcard: ICAL.Component, values: string[]): void {
   vcard.removeAllProperties('categories')
   if (values.length === 0) return
   vcard.addPropertyWithValue('categories', '')
   vcard.getFirstProperty('categories')!.setValues(values)
-}
-
-function setAdminTags(vcard: ICAL.Component, values: string[]): void {
-  vcard.removeAllProperties(X_ADMIN_TAGS)
-  if (values.length === 0) return
-  vcard.updatePropertyWithValue(X_ADMIN_TAGS, values.join(','))
 }
 
 const cards = await findAllUsers(cardDavAccount)
@@ -156,7 +145,7 @@ for (const card of cards) {
 
   if (apply) {
     setCategories(vcard, cat.kept)
-    setAdminTags(vcard, adm.kept)
+    writeAdminTags(vcard, adm.kept)
     await saveVCardAt(cardDavAccount, { url: card.url, etag: card.etag }, vcard)
   }
   changed += 1

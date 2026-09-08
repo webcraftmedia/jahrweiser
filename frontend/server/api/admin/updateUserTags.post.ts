@@ -48,6 +48,10 @@ export default defineEventHandler(async (event) => {
   let newTags: string[] = []
   if (!userQuery) {
     const newUser = new ICAL.Component('vcard')
+    // VERSION is mandatory (RFC 6350 §6.7.9) and must come first. Without it
+    // ical.js falls back to the vCard 3 design when re-reading the card, which
+    // changes how comma-separated properties are parsed.
+    newUser.addPropertyWithValue('version', '4.0')
     newUser.addPropertyWithValue('email', email)
     newUser.addPropertyWithValue('categories', '')
     newUser

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 
 import ICAL from 'ical.js'
 
-import { createCardDAVAccount, createUser, X_ADMIN_TAGS, X_ROLE } from '../server/helpers/dav'
+import { createCardDAVAccount, createUser, writeAdminTags, X_ROLE } from '../server/helpers/dav'
 import { syncDavToSidecar } from '../server/helpers/sync'
 
 import { config } from './tools/config'
@@ -67,9 +67,7 @@ function buildVCard(user: SeedUser): ICAL.Component {
   vcard.updatePropertyWithValue('fn', user.fullname)
   vcard.updatePropertyWithValue('email', user.email)
   vcard.updatePropertyWithValue(X_ROLE, user.role)
-  if (user.tags.length > 0) {
-    vcard.updatePropertyWithValue(X_ADMIN_TAGS, user.tags.join(','))
-  }
+  writeAdminTags(vcard, user.tags)
   if (user.categories.length > 0) {
     vcard.updatePropertyWithValue('categories', '')
     vcard.getFirstProperty('categories')!.setValues(user.categories)

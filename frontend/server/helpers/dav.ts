@@ -23,6 +23,27 @@ export const X_LOGIN_DISABLED = 'x-login-disabled'
 export const X_ROLE = 'x-role'
 export const X_ADMIN_TAGS = 'x-admin-tags'
 
+// Teach ical.js that X-ADMIN-TAGS is a comma-separated text list, exactly like
+// CATEGORIES (ical.js calls that shape DEFAULT_TYPE_TEXT_MULTI). Without this an
+// X- property is a single opaque string, which forced every caller to split on
+// ',' by hand and made a comma inside a value unrepresentable.
+//
+// Purely a parser/serialiser concern, not a data format change: a list without
+// commas serialises to the exact same bytes, so existing vCards keep working
+// untouched. Values that *do* contain a comma are now escaped (`chor\, nord`)
+// and round-trip correctly instead of silently splitting into two.
+//
+// Registered here because this module owns X_ADMIN_TAGS and every vCard path
+// imports it, so the design is in place before anything parses.
+//
+// Both design sets, deliberately: ical.js picks vcard3 for a card that carries
+// no VERSION but does carry a property it knows from vCard 3 (EMAIL is enough).
+// Registering only on `vcard` would make the split work for some stored cards
+// and silently not for others.
+const ADMIN_TAGS_DESIGN = { defaultType: 'text', multiValue: ',' }
+ICAL.design.vcard.property[X_ADMIN_TAGS] = ADMIN_TAGS_DESIGN
+ICAL.design.vcard3.property[X_ADMIN_TAGS] = ADMIN_TAGS_DESIGN
+
 export interface DAV_CONFIG {
   DAV_USERNAME: string
   DAV_PASSWORD: string
@@ -73,20 +94,25 @@ export function calendarLabel(calendar: { displayName?: unknown; url: string }):
  * X-ADMIN-TAGS. Entries are calendar keys (see `calendarKey`) — the same strings
  * a user carries in CATEGORIES (see server/api/calendar.post.ts).
  *
- * Comma-separated because the vCard format leaves no better option. Entries are
- * trimmed, so `"chor, vorstand"` grants access to `vorstand` and not to
- * `" vorstand"`, and blanks are dropped so an empty property yields no tag
- * rather than a single empty one.
+ * Entries are trimmed, so a hand-written `"chor, vorstand"` grants access to
+ * `vorstand` and not to `" vorstand"`, and blanks are dropped so an empty
+ * property yields no tag rather than a single empty one.
  */
 export function readAdminTags(vcard: ICAL.Component): string[] {
-  return (
-    vcard
-      .getFirstPropertyValue(X_ADMIN_TAGS)
-      ?.toString()
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0) ?? []
-  )
+  const values = vcard.getFirstProperty(X_ADMIN_TAGS)?.getValues() as string[] | undefined
+  return (values ?? []).map((tag) => tag.trim()).filter((tag) => tag.length > 0)
+}
+
+/**
+ * Replace the calendars an admin may hand out. Removes the property entirely
+ * for an empty list — an `X-ADMIN-TAGS:` with no value would read back as a
+ * single blank entry.
+ */
+export function writeAdminTags(vcard: ICAL.Component, tags: string[]): void {
+  vcard.removeAllProperties(X_ADMIN_TAGS)
+  if (tags.length === 0) return
+  vcard.addPropertyWithValue(X_ADMIN_TAGS, '')
+  vcard.getFirstProperty(X_ADMIN_TAGS)!.setValues(tags)
 }
 
 /** Calendars a user has private access to, by calendar key, from CATEGORIES. */

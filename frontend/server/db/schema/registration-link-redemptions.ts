@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { datetime, foreignKey, index, int, mysqlTable, varchar } from 'drizzle-orm/mysql-core'
+import { datetime, foreignKey, index, int, json, mysqlTable, varchar } from 'drizzle-orm/mysql-core'
 
 import { registrationLinks } from './registration-links'
 import { users } from './users'
@@ -18,6 +18,14 @@ export const registrationLinkRedemptions = mysqlTable(
     id: int('id').autoincrement().primaryKey(),
     linkToken: varchar('link_token', { length: 64 }).notNull(),
     userUid: varchar('user_uid', { length: 255 }).notNull(),
+    // Snapshot of the calendars this particular join actually granted. The
+    // link's own `calendars` may be edited afterwards, so it cannot answer
+    // "what did this user get" — only this column can. NULL = granted nothing
+    // (an unbound link).
+    //
+    // For an existing account this holds only the calendars that were *newly*
+    // added; a redemption is recorded at all only when at least one was.
+    grantedCalendars: json('granted_calendars').$type<string[]>(),
     createdAt: datetime('created_at')
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),

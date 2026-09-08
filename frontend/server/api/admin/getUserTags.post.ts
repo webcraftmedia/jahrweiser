@@ -1,6 +1,15 @@
 import { z } from 'zod'
 
-import { createCardDAVAccount, findUserByEmail, X_ADMIN_TAGS } from '~~/server/helpers/dav'
+import {
+  calendarKey,
+  calendarLabel,
+  createCalDAVAccount,
+  createCardDAVAccount,
+  findCalendars,
+  findUserByEmail,
+  readAdminTags,
+  readCategories,
+} from '~~/server/helpers/dav'
 
 const bodySchema = z.object({
   email: z.email(),
@@ -26,7 +35,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const { vcard: adminVcard } = adminQuery
-  const adminTags = adminVcard.getFirstPropertyValue(X_ADMIN_TAGS)?.toString().split(',') ?? []
+  const adminTags = readAdminTags(adminVcard)
+
+  // Tags are calendar keys; the UI needs the human display name next to them.
+  // A key without a matching calendar falls back to itself, so a dangling grant
+  // stays visible instead of rendering as a blank checkbox.
+  const calendars = await findCalendars(createCalDAVAccount(config))
+  const labels = new Map(calendars.map((cal) => [calendarKey(cal), calendarLabel(cal)]))
+  const labelFor = (key: string) => labels.get(key) || key
 
   // Find user
   const { email } = await readValidatedBody(event, bodySchema.parse)
@@ -34,14 +50,14 @@ export default defineEventHandler(async (event) => {
 
   if (!userQuery) {
     return adminTags.map((t) => {
-      return { name: t, state: false }
+      return { name: t, label: labelFor(t), state: false }
     })
   }
 
   const { vcard: userVcard } = userQuery
-  const userTags = userVcard.getFirstProperty('categories')?.getValues()
+  const userTags = readCategories(userVcard)
 
   return adminTags.map((t) => {
-    return { name: t, state: userTags?.includes(t) }
+    return { name: t, label: labelFor(t), state: userTags.includes(t) }
   })
 })

@@ -31,6 +31,8 @@
     "cli:seed:demo": "npx tsx cli/seed-demo.ts",
     "cli:baikal:bootstrap": "npx tsx cli/baikal-bootstrap.ts",
     "cli:dav:purge-auth-xprops": "npx tsx cli/dav-purge-auth-xprops.ts",
+    "cli:migrate:calendar-tags": "npx tsx cli/migrate-calendar-tags.ts",
+    "cli:backup": "npx tsx cli/backup.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "npx tsx scripts/db-migrate.ts",
     "db:push": "drizzle-kit push",

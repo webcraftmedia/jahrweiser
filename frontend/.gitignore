@@ -32,3 +32,6 @@ imports/*.json
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Data exports from cli/backup.ts — contain personal data, never commit
+backups

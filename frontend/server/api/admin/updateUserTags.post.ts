@@ -7,8 +7,8 @@ import {
   createCardDAVAccount,
   createUser,
   findUserByEmail,
+  readAdminTags,
   saveUser,
-  X_ADMIN_TAGS,
 } from '~~/server/helpers/dav'
 import { defaultParams, emailRenderer } from '~~/server/helpers/email'
 
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const { vcard: adminVcard } = adminQuery
-  const adminTags = adminVcard.getFirstPropertyValue(X_ADMIN_TAGS)?.toString().split(',') ?? []
+  const adminTags = readAdminTags(adminVcard)
 
   const { email, tags, sendMail } = await readValidatedBody(event, bodySchema.parse)
   const filteredTags = tags.filter((t) => adminTags.includes(t.name))
@@ -48,6 +48,10 @@ export default defineEventHandler(async (event) => {
   let newTags: string[] = []
   if (!userQuery) {
     const newUser = new ICAL.Component('vcard')
+    // VERSION is mandatory (RFC 6350 §6.7.9) and must come first. Without it
+    // ical.js falls back to the vCard 3 design when re-reading the card, which
+    // changes how comma-separated properties are parsed.
+    newUser.addPropertyWithValue('version', '4.0')
     newUser.addPropertyWithValue('email', email)
     newUser.addPropertyWithValue('categories', '')
     newUser

@@ -4,8 +4,10 @@ import ICAL from 'ical.js'
 import {
   addressBookQuery,
   calendarQuery,
+  fetchAddressBooks,
   fetchCalendarObjects,
   fetchCalendars as tsdavFetchCalendars,
+  fetchVCards,
   updateVCard,
 } from 'tsdav'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -23,6 +25,15 @@ import {
   findUserByToken,
   saveUser,
   createUser,
+  findAllCalendarObjects,
+  findAllUsers,
+  saveVCardAt,
+  writeAdminTags,
+  calendarKey,
+  calendarLabel,
+  readAdminTags,
+  readCategories,
+  addCategories,
   X_LOGIN_REQUEST_TIME,
   X_LOGIN_TOKEN,
   X_LOGIN_TIME,
@@ -38,8 +49,10 @@ vi.mock('tsdav', () => ({
   calendarQuery: vi.fn(),
   createVCard: vi.fn(),
   DAVNamespaceShort: { DAV: 'd', CALDAV: 'c', CARDDAV: 'card' },
+  fetchAddressBooks: vi.fn(),
   fetchCalendarObjects: vi.fn(),
   fetchCalendars: vi.fn(),
+  fetchVCards: vi.fn(),
   updateVCard: vi.fn(),
 }))
 
@@ -364,5 +377,242 @@ describe('dav helpers', () => {
       await expect(createUser(account, vcard)).rejects.toThrow(/HTTP 403/)
       fetchSpy.mockRestore()
     })
+  })
+})
+
+describe('vCard calendar access helpers', () => {
+  describe('readAdminTags', () => {
+    it('splits the comma-separated X-ADMIN-TAGS', () => {
+      expect(readAdminTags(createMockVCard({ adminTags: 'Chor,Vorstand' }))).toStrictEqual([
+        'Chor',
+        'Vorstand',
+      ])
+    })
+
+    it('trims entries so a space after the comma still matches a calendar', () => {
+      expect(readAdminTags(createMockVCard({ adminTags: 'Chor, Vorstand' }))).toStrictEqual([
+        'Chor',
+        'Vorstand',
+      ])
+    })
+
+    it('parses a legacy single-string value written before the multi-value design', () => {
+      // On the wire a comma-separated list is the same bytes either way, so
+      // vCards written before X-ADMIN-TAGS became a text list still read back
+      // correctly — that is why no data migration was needed.
+      const vcard = new ICAL.Component(
+        ICAL.parse(
+          ['BEGIN:VCARD', 'VERSION:4.0', 'X-ADMIN-TAGS:chor,vorstand', 'END:VCARD'].join('\r\n'),
+        ),
+      )
+      expect(readAdminTags(vcard)).toStrictEqual(['chor', 'vorstand'])
+    })
+
+    it('yields no tags for an absent or empty property', () => {
+      expect(readAdminTags(createMockVCard({}))).toStrictEqual([])
+      expect(readAdminTags(createMockVCard({ adminTags: ',,' }))).toStrictEqual([])
+    })
+  })
+
+  describe('readCategories', () => {
+    it('reads the calendars a user has private access to', () => {
+      expect(readCategories(createMockVCard({ categories: ['Chor'] }))).toStrictEqual(['Chor'])
+    })
+
+    it('returns an empty list when CATEGORIES is absent', () => {
+      expect(readCategories(createMockVCard({}))).toStrictEqual([])
+    })
+  })
+
+  describe('addCategories', () => {
+    it('adds a calendar to a vCard that has none yet', () => {
+      const vcard = createMockVCard({ email: 'a@b.de' })
+      expect(addCategories(vcard, ['Chor'])).toStrictEqual(['Chor'])
+      expect(readCategories(vcard)).toStrictEqual(['Chor'])
+    })
+
+    it('keeps existing access and reports only what was added', () => {
+      const vcard = createMockVCard({ categories: ['Chor'] })
+      expect(addCategories(vcard, ['Chor', 'Vorstand'])).toStrictEqual(['Vorstand'])
+      expect(readCategories(vcard)).toStrictEqual(['Chor', 'Vorstand'])
+    })
+
+    it('reports nothing added when the user already has all of them', () => {
+      // The caller uses this to skip the DAV write and, for a registration
+      // link, to not book a join that grants nothing.
+      const vcard = createMockVCard({ categories: ['Chor', 'Vorstand'] })
+      expect(addCategories(vcard, ['Chor'])).toStrictEqual([])
+      expect(readCategories(vcard)).toStrictEqual(['Chor', 'Vorstand'])
+    })
+
+    it('never removes access', () => {
+      const vcard = createMockVCard({ categories: ['Chor'] })
+      addCategories(vcard, ['Vorstand'])
+      expect(readCategories(vcard)).toContain('Chor')
+    })
+  })
+})
+
+describe('calendar identity', () => {
+  describe('calendarKey', () => {
+    it('takes the collection segment of the calendar URL', () => {
+      expect(
+        calendarKey({ url: 'https://dav.example.com/dav.php/calendars/admin/theater-ag/' }),
+      ).toBe('theater-ag')
+    })
+
+    it('is unaffected by a missing trailing slash', () => {
+      expect(calendarKey({ url: 'https://dav.example.com/cal/familie' })).toBe('familie')
+    })
+
+    it('decodes percent-escapes so the key matches what a grant stores', () => {
+      expect(calendarKey({ url: 'https://dav.example.com/cal/theater%20ag/' })).toBe('theater ag')
+    })
+
+    it('returns the raw segment when the URL holds a broken percent-escape', () => {
+      // decodeURIComponent would throw; a malformed calendar URL must not take
+      // the whole calendar view down with a 500.
+      expect(calendarKey({ url: 'https://dav.example.com/cal/theater%zz/' })).toBe('theater%zz')
+    })
+
+    it('is stable across a display-name rename', () => {
+      // The whole point: renaming the calendar must not change its identity,
+      // otherwise every grant silently stops matching.
+      const before = { url: 'https://dav.example.com/cal/chor/', displayName: 'Chor' }
+      const after = { url: 'https://dav.example.com/cal/chor/', displayName: 'Chorgruppe Nord' }
+      expect(calendarKey(after)).toBe(calendarKey(before))
+    })
+  })
+
+  describe('calendarLabel', () => {
+    it('returns the display name when there is one', () => {
+      expect(calendarLabel({ url: 'https://x/cal/chor/', displayName: 'Chor' })).toBe('Chor')
+    })
+
+    it('falls back to the key when the server omits the display name', () => {
+      expect(calendarLabel({ url: 'https://x/cal/chor/' })).toBe('chor')
+    })
+
+    it('falls back to the key for a structured display name', () => {
+      // tsdav types displayName loosely; a non-string must not render as
+      // "[object Object]".
+      expect(calendarLabel({ url: 'https://x/cal/chor/', displayName: { _text: 'Chor' } })).toBe(
+        'chor',
+      )
+    })
+  })
+})
+
+describe('bulk vCard maintenance', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('fetches every contact from the discovered address book', async () => {
+    vi.mocked(fetchAddressBooks).mockResolvedValue([
+      { url: 'https://dav.example.com/card/books/main/' },
+    ] as never)
+    vi.mocked(fetchVCards).mockResolvedValue([{ url: '/a.vcf', data: 'BEGIN:VCARD' }] as never)
+
+    const account = createCardDAVAccount(config)
+    await expect(findAllUsers(account)).resolves.toStrictEqual([
+      { url: '/a.vcf', data: 'BEGIN:VCARD' },
+    ])
+    expect(fetchVCards).toHaveBeenCalledWith(
+      expect.objectContaining({
+        addressBook: { url: 'https://dav.example.com/card/books/main/' },
+      }),
+    )
+  })
+
+  it('falls back to the configured homeUrl when discovery finds nothing', async () => {
+    // Fresh Baikal installs do not always expose principal discovery.
+    vi.mocked(fetchAddressBooks).mockResolvedValue([] as never)
+    vi.mocked(fetchVCards).mockResolvedValue([] as never)
+
+    const account = createCardDAVAccount(config)
+    await findAllUsers(account)
+    expect(fetchVCards).toHaveBeenCalledWith(
+      expect.objectContaining({ addressBook: { url: account.homeUrl } }),
+    )
+  })
+
+  it('throws when there is neither a discovered book nor a homeUrl', async () => {
+    vi.mocked(fetchAddressBooks).mockResolvedValue([] as never)
+    await expect(
+      findAllUsers({ ...createCardDAVAccount(config), homeUrl: undefined }),
+    ).rejects.toThrow(/No addressbook found/)
+  })
+
+  it('fetches a calendar unfiltered, unlike the time-ranged findEvents', async () => {
+    // A backup must not be scoped to the window the app happens to render.
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      { url: '/a.ics', data: 'BEGIN:VCALENDAR' },
+    ] as never)
+    const account = createCalDAVAccount(config)
+    await expect(
+      findAllCalendarObjects(account, 'https://dav.example.com/cal/work/'),
+    ).resolves.toStrictEqual([{ url: '/a.ics', data: 'BEGIN:VCALENDAR' }])
+  })
+
+  it('writes a vCard back to its own URL, passing the etag through', async () => {
+    const account = createCardDAVAccount(config)
+    const vcard = createMockVCard({ email: 'a@b.de' })
+    await saveVCardAt(account, { url: '/a.vcf', etag: 'W/"1"' }, vcard)
+    expect(updateVCard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        vCard: { url: '/a.vcf', data: vcard, etag: 'W/"1"' },
+      }),
+    )
+  })
+})
+
+describe('writeAdminTags', () => {
+  it('round-trips a list through serialisation', () => {
+    const vcard = createMockVCard({ email: 'a@b.de' })
+    writeAdminTags(vcard, ['theater-ag', 'sportgruppe'])
+    const reparsed = new ICAL.Component(ICAL.parse(vcard.toString()))
+    expect(readAdminTags(reparsed)).toStrictEqual(['theater-ag', 'sportgruppe'])
+  })
+
+  it('serialises a plain list to the same bytes as before the multi-value switch', () => {
+    // Existing vCards must not need rewriting.
+    const vcard = createMockVCard({ email: 'a@b.de' })
+    writeAdminTags(vcard, ['theater-ag', 'sportgruppe'])
+    expect(vcard.toString()).toContain('X-ADMIN-TAGS:theater-ag,sportgruppe')
+  })
+
+  it('splits on a card that carries no VERSION (vCard 3 design fallback)', () => {
+    // ical.js picks the vCard 3 design for a VERSION-less card that has EMAIL,
+    // so the design has to be registered on both sets.
+    const vcard = new ICAL.Component(
+      ICAL.parse(
+        ['BEGIN:VCARD', 'EMAIL:a@b.de', 'X-ADMIN-TAGS:chor,vorstand', 'END:VCARD'].join('\r\n'),
+      ),
+    )
+    expect(readAdminTags(vcard)).toStrictEqual(['chor', 'vorstand'])
+  })
+
+  it('escapes a comma inside a single value instead of splitting it', () => {
+    // The whole point of the multi-value design: a calendar key containing a
+    // comma used to silently become two tags.
+    const vcard = createMockVCard({ email: 'a@b.de' })
+    writeAdminTags(vcard, ['chor, nord', 'b'])
+    const reparsed = new ICAL.Component(ICAL.parse(vcard.toString()))
+    expect(readAdminTags(reparsed)).toStrictEqual(['chor, nord', 'b'])
+  })
+
+  it('removes the property for an empty list', () => {
+    // An `X-ADMIN-TAGS:` with no value would read back as one blank tag.
+    const vcard = createMockVCard({ email: 'a@b.de', adminTags: 'chor' })
+    writeAdminTags(vcard, [])
+    expect(vcard.getFirstProperty('x-admin-tags')).toBeNull()
+    expect(readAdminTags(vcard)).toStrictEqual([])
+  })
+
+  it('replaces rather than appends on repeated writes', () => {
+    const vcard = createMockVCard({ email: 'a@b.de', adminTags: 'chor' })
+    writeAdminTags(vcard, ['vorstand'])
+    expect(readAdminTags(vcard)).toStrictEqual(['vorstand'])
   })
 })

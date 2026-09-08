@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { datetime, index, int, mysqlTable, varchar } from 'drizzle-orm/mysql-core'
+import { datetime, index, int, json, mysqlTable, varchar } from 'drizzle-orm/mysql-core'
 
 import { users } from './users'
 
@@ -21,6 +21,18 @@ export const registrationLinks = mysqlTable(
     label: varchar('label', { length: 255 }),
     // Optional cap on total joins. NULL = unlimited.
     maxUses: int('max_uses'),
+    // Calendars a redeemer gets private access to, by CalDAV display name — the
+    // same strings that live in a user's vCard CATEGORIES (see
+    // server/api/calendar.post.ts). NULL = no calendar binding. Always a subset
+    // of the creating admin's X-ADMIN-TAGS, enforced on write.
+    //
+    // Editable at any time: what a past join actually received is snapshotted on
+    // its `registration_link_redemptions` row, so changing this never rewrites
+    // history — it only changes what *future* redemptions grant.
+    //
+    // JSON rather than a comma-separated string (as X-ADMIN-TAGS has to be, the
+    // vCard format leaves no choice) so a comma in a calendar name is harmless.
+    calendars: json('calendars').$type<string[]>(),
     // Optional validity. NULL = never expires.
     expiresAt: datetime('expires_at'),
     // Set when an admin deactivates the link. A revoked link can never be used

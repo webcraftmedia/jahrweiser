@@ -1,4 +1,4 @@
-import { createCalDAVAccount, findCalendars } from '../helpers/dav'
+import { calendarKey, createCalDAVAccount, findCalendars } from '../helpers/dav'
 
 const config = useRuntimeConfig()
 
@@ -13,6 +13,8 @@ export default defineEventHandler(async (event) => {
 
   return calendars.map((cal) => {
     return {
+      // Stable identity, used to join access grants; `name` is the mutable label.
+      key: calendarKey(cal),
       name: cal.displayName,
       color: typeof cal.calendarColor === 'string' ? cal.calendarColor : '#e7e7ff',
     }

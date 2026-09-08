@@ -2,7 +2,8 @@ import {
   createCardDAVAccount,
   findUserByEmail,
   saveUser,
-  X_ADMIN_TAGS,
+  readAdminTags,
+  writeAdminTags,
   X_ROLE,
 } from '../server/helpers/dav'
 
@@ -38,11 +39,11 @@ if (vcard.getFirstPropertyValue(X_ROLE) !== 'admin') {
   process.exit(1)
 }
 
-const oldTags = vcard.getFirstPropertyValue(X_ADMIN_TAGS)?.toString().split(',') ?? []
+const oldTags = readAdminTags(vcard)
 
 const newTags = [...new Set([...tags, ...oldTags])]
 
-vcard.updatePropertyWithValue(X_ADMIN_TAGS, newTags.join(','))
+writeAdminTags(vcard, newTags)
 
 console.log(`Admin ${email} now has the following admin-tags: ${newTags}`)
 

@@ -7,12 +7,14 @@ import {
   addressBookQuery,
   calendarQuery,
   DAVNamespaceShort,
+  fetchAddressBooks,
   fetchCalendarObjects,
   fetchCalendars,
+  fetchVCards,
   updateVCard,
 } from 'tsdav'
 
-import type { DAVAccount, DAVResponse } from 'tsdav'
+import type { DAVAccount, DAVResponse, DAVVCard } from 'tsdav'
 
 export const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
 export const X_LOGIN_TOKEN = 'x-login-token'
@@ -21,11 +23,125 @@ export const X_LOGIN_DISABLED = 'x-login-disabled'
 export const X_ROLE = 'x-role'
 export const X_ADMIN_TAGS = 'x-admin-tags'
 
+// Teach ical.js that X-ADMIN-TAGS is a comma-separated text list, exactly like
+// CATEGORIES (ical.js calls that shape DEFAULT_TYPE_TEXT_MULTI). Without this an
+// X- property is a single opaque string, which forced every caller to split on
+// ',' by hand and made a comma inside a value unrepresentable.
+//
+// Purely a parser/serialiser concern, not a data format change: a list without
+// commas serialises to the exact same bytes, so existing vCards keep working
+// untouched. Values that *do* contain a comma are now escaped (`chor\, nord`)
+// and round-trip correctly instead of silently splitting into two.
+//
+// Registered here because this module owns X_ADMIN_TAGS and every vCard path
+// imports it, so the design is in place before anything parses.
+//
+// Both design sets, deliberately: ical.js picks vcard3 for a card that carries
+// no VERSION but does carry a property it knows from vCard 3 (EMAIL is enough).
+// Registering only on `vcard` would make the split work for some stored cards
+// and silently not for others.
+const ADMIN_TAGS_DESIGN = { defaultType: 'text', multiValue: ',' }
+ICAL.design.vcard.property[X_ADMIN_TAGS] = ADMIN_TAGS_DESIGN
+ICAL.design.vcard3.property[X_ADMIN_TAGS] = ADMIN_TAGS_DESIGN
+
 export interface DAV_CONFIG {
   DAV_USERNAME: string
   DAV_PASSWORD: string
   DAV_URL: string
   DAV_URL_CARD: string
+}
+
+/**
+ * Stable identity of a calendar: the last segment of its collection URL, e.g.
+ * `theater-ag` for `/dav.php/calendars/admin/theater-ag/`.
+ *
+ * Access grants are joined on this, never on DAV:displayname. A display name is
+ * a mutable label that any CalDAV client may rename at will; joining on it means
+ * a rename silently revokes every grant, with no error anywhere — the check only
+ * ever denies. The collection URL segment cannot change without the calendar
+ * being recreated.
+ *
+ * The full URL would also be stable but embeds host and principal, so moving the
+ * DAV server to another hostname would break every grant instead.
+ */
+export function calendarKey(calendar: { url: string }): string {
+  const segments = calendar.url.replace(/\/+$/, '').split('/')
+  // String#split always yields at least one element, so the last one exists.
+  const segment = segments[segments.length - 1]!
+  try {
+    return decodeURIComponent(segment)
+    // eslint-disable-next-line no-catch-all/no-catch-all -- decodeURIComponent wirft nur bei kaputter Prozent-Sequenz; die roh zurückzugeben ist besser als die Kalenderansicht mit 500 zu quittieren
+  } catch {
+    return segment
+  }
+}
+
+/**
+ * Human-facing name of a calendar, for display only — never as a join key.
+ *
+ * `DAV:displayname` is not guaranteed to be a plain string (tsdav types it as
+ * possibly structured, and a server may omit it), so fall back to the key rather
+ * than rendering `[object Object]` or an empty label.
+ */
+export function calendarLabel(calendar: { displayName?: unknown; url: string }): string {
+  return typeof calendar.displayName === 'string' && calendar.displayName.length > 0
+    ? calendar.displayName
+    : calendarKey(calendar)
+}
+
+/**
+ * Calendars an admin is allowed to hand out, read from their own vCard's
+ * X-ADMIN-TAGS. Entries are calendar keys (see `calendarKey`) — the same strings
+ * a user carries in CATEGORIES (see server/api/calendar.post.ts).
+ *
+ * Entries are trimmed, so a hand-written `"chor, vorstand"` grants access to
+ * `vorstand` and not to `" vorstand"`, and blanks are dropped so an empty
+ * property yields no tag rather than a single empty one.
+ */
+export function readAdminTags(vcard: ICAL.Component): string[] {
+  const values = vcard.getFirstProperty(X_ADMIN_TAGS)?.getValues() as string[] | undefined
+  return (values ?? []).map((tag) => tag.trim()).filter((tag) => tag.length > 0)
+}
+
+/**
+ * Replace the calendars an admin may hand out. Removes the property entirely
+ * for an empty list — an `X-ADMIN-TAGS:` with no value would read back as a
+ * single blank entry.
+ */
+export function writeAdminTags(vcard: ICAL.Component, tags: string[]): void {
+  vcard.removeAllProperties(X_ADMIN_TAGS)
+  if (tags.length === 0) return
+  vcard.addPropertyWithValue(X_ADMIN_TAGS, '')
+  vcard.getFirstProperty(X_ADMIN_TAGS)!.setValues(tags)
+}
+
+/** Calendars a user has private access to, by calendar key, from CATEGORIES. */
+export function readCategories(vcard: ICAL.Component): string[] {
+  // ICAL.Property#getValues() always returns an array; the fallback covers only
+  // a missing CATEGORIES property.
+  return (vcard.getFirstProperty('categories')?.getValues() as string[] | undefined) ?? []
+}
+
+/**
+ * Grant additional calendars on a vCard, keeping the existing ones. Never
+ * removes access.
+ *
+ * @returns the names that were actually new — empty when the user already had
+ * all of them, which lets the caller skip both the DAV write and, for a
+ * registration link, booking a join that grants nothing.
+ */
+export function addCategories(vcard: ICAL.Component, names: string[]): string[] {
+  const current = readCategories(vcard)
+  const added = names.filter((name) => !current.includes(name))
+  if (added.length === 0) return []
+
+  let categories = vcard.getFirstProperty('categories')
+  if (!categories) {
+    vcard.addPropertyWithValue('categories', '')
+    categories = vcard.getFirstProperty('categories')!
+  }
+  categories.setValues([...current, ...added])
+  return added
 }
 
 export const createCalDAVAccount = (config: DAV_CONFIG): DAVAccount => ({
@@ -118,6 +234,17 @@ export const findEvents = async (account: DAVAccount, url: string, from: Date, t
     fetchOptions: getFetchOptions(),
   })
 
+/**
+ * Every object in one calendar, unfiltered. `findEvents` is time-range scoped
+ * because the app only ever renders a window; a backup must not be.
+ */
+export const findAllCalendarObjects = async (account: DAVAccount, url: string) =>
+  fetchCalendarObjects({
+    calendar: { url },
+    headers: headers(account),
+    fetchOptions: getFetchOptions(),
+  })
+
 export const findEvent = async (account: DAVAccount, url: string, id: string) =>
   fetchCalendarObjects({
     calendar: {
@@ -175,6 +302,34 @@ async function findUserByProperty(
     vcard: new ICAL.Component(ICAL.parse(data)),
   }
 }
+
+/**
+ * Every contact in the address book. For maintenance tasks that have to touch
+ * all users (see cli/migrate-calendar-tags.ts) rather than look one up.
+ */
+export const findAllUsers = async (account: DAVAccount): Promise<DAVVCard[]> => {
+  const fetchHeaders = headers(account)
+  const discovered = await fetchAddressBooks({ account, headers: fetchHeaders })
+  // Fresh Baikal installs don't always expose principal discovery cleanly —
+  // same fallback as server/helpers/sync.ts.
+  const addressBook = discovered[0] ?? { url: account.homeUrl ?? '' }
+  if (!addressBook.url) {
+    throw new Error('No addressbook found on the DAV server and no homeUrl configured.')
+  }
+  return fetchVCards({ addressBook, headers: fetchHeaders, fetchOptions: getFetchOptions() })
+}
+
+/** Persist a vCard addressed by its own URL, as returned by `findAllUsers`. */
+export const saveVCardAt = async (
+  account: DAVAccount,
+  card: { url: string; etag?: string },
+  vcard: ICAL.Component,
+) =>
+  updateVCard({
+    vCard: { url: card.url, data: vcard, etag: card.etag },
+    headers: headers(account),
+    fetchOptions: getFetchOptions(),
+  })
 
 export const findUserByToken = async (account: DAVAccount, token: string) =>
   findUserByProperty(account, X_LOGIN_TOKEN, token)

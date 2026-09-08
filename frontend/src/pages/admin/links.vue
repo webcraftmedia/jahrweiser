@@ -21,6 +21,10 @@
     useCount: number
     status: LinkStatus
     url: string
+    /** Calendars a redemption grants private access to. null = no binding. */
+    calendars: string[] | null
+    /** Joins that received something other than the binding shown above. */
+    divergentUseCount: number
   }
 
   // Copying, editing, reactivating and deleting are reserved for the link's
@@ -41,10 +45,25 @@
   const createError = ref(false)
   const copiedToken = ref<string | null>(null)
 
-  // Inline row editing (label + validity).
+  // Calendars this admin may hand out (their own X-ADMIN-TAGS). An empty list
+  // means the admin administers no calendar, so the binding UI stays hidden.
+  // `key` is the stable identity that gets stored; `label` is only for display.
+  const grantableCalendars = ref<{ key: string; label: string }[]>([])
+  const selectedCalendars = ref<string[]>([])
+
+  // Every calendar on the server, purely to label keys a link is bound to — a
+  // link may reference a calendar this admin does not administer, so the
+  // grantable list above is not enough to resolve every badge.
+  const calendarLabels = ref<Record<string, string>>({})
+  function calendarLabel(key: string): string {
+    return calendarLabels.value[key] || key
+  }
+
+  // Inline row editing (label + validity + calendar binding).
   const editingToken = ref<string | null>(null)
   const editLabel = ref('')
   const editDuration = ref<'keep' | '1d' | '7d' | '30d' | 'unlimited'>('keep')
+  const editCalendars = ref<string[]>([])
   const isSavingEdit = ref(false)
 
   const durationOptions: { value: typeof duration.value; label: string }[] = [
@@ -76,6 +95,29 @@
     }
   }
 
+  async function loadGrantableCalendars() {
+    try {
+      grantableCalendars.value = await $fetch<{ key: string; label: string }[]>(
+        '/api/admin/grantable-calendars',
+      )
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, leere Auswahl ist der Fallback
+    } catch (error) {
+      console.error(error)
+      grantableCalendars.value = []
+    }
+  }
+
+  async function loadCalendarLabels() {
+    try {
+      const calendars = await $fetch<{ key: string; name: string }[]>('/api/calendars')
+      calendarLabels.value = Object.fromEntries(calendars.map((c) => [c.key, c.name]))
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Keys werden dann roh angezeigt
+    } catch (error) {
+      console.error(error)
+      calendarLabels.value = {}
+    }
+  }
+
   async function createLink() {
     isCreating.value = true
     createError.value = false
@@ -86,11 +128,13 @@
           ...(label.value.trim() ? { label: label.value.trim() } : {}),
           duration: duration.value,
           ...(maxUses.value && maxUses.value > 0 ? { maxUses: maxUses.value } : {}),
+          calendars: selectedCalendars.value,
         },
       })
       label.value = ''
       maxUses.value = null
       duration.value = '30d'
+      selectedCalendars.value = []
       await loadLinks()
       // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als createError angezeigt
     } catch (error) {
@@ -118,6 +162,7 @@
     editingToken.value = row.token
     editLabel.value = row.label ?? ''
     editDuration.value = 'keep'
+    editCalendars.value = [...(row.calendars ?? [])]
   }
 
   function cancelEdit() {
@@ -133,6 +178,7 @@
           token,
           label: editLabel.value.trim(),
           ...(editDuration.value !== 'keep' ? { duration: editDuration.value } : {}),
+          calendars: editCalendars.value,
         },
       })
       editingToken.value = null
@@ -210,7 +256,9 @@
     }[status]
   }
 
-  onMounted(loadLinks)
+  onMounted(async () => {
+    await Promise.all([loadLinks(), loadGrantableCalendars(), loadCalendarLabels()])
+  })
 </script>
 
 <template>
@@ -277,6 +325,35 @@
             />
           </div>
         </div>
+        <fieldset v-if="grantableCalendars.length > 0">
+          <legend class="block mb-2 text-sm font-medium font-body text-navy dark:text-ivory">
+            {{ $t('pages.admin.links.create.calendars') }}
+          </legend>
+          <p class="mb-2 text-xs font-body text-navy/60 dark:text-poster-darkMuted">
+            {{ $t('pages.admin.links.create.calendars-hint') }}
+          </p>
+          <div class="flex flex-wrap gap-x-6 gap-y-2">
+            <div
+              v-for="calendar in grantableCalendars"
+              :key="calendar.key"
+              class="flex items-center"
+            >
+              <input
+                :id="`link-calendar-${calendar.key}`"
+                v-model="selectedCalendars"
+                :value="calendar.key"
+                type="checkbox"
+                class="w-4 h-4 text-sienna bg-ivory dark:bg-poster-dark border-navy/20 dark:border-poster-darkBorder rounded focus:ring-sienna dark:focus:ring-sienna-dark focus:ring-2 accent-sienna"
+              />
+              <label
+                :for="`link-calendar-${calendar.key}`"
+                class="ms-2 text-sm font-medium font-body text-navy dark:text-ivory"
+              >
+                {{ calendar.label }}
+              </label>
+            </div>
+          </div>
+        </fieldset>
         <button
           type="submit"
           :disabled="isCreating"
@@ -328,6 +405,7 @@
             <tr class="border-b border-navy/10 dark:border-poster-darkBorder">
               <th class="py-2 pr-3">{{ $t('pages.admin.links.table.label') }}</th>
               <th class="py-2 px-3">{{ $t('pages.admin.links.table.createdBy') }}</th>
+              <th class="py-2 px-3">{{ $t('pages.admin.links.table.calendars') }}</th>
               <th class="py-2 px-3">{{ $t('pages.admin.links.table.expires') }}</th>
               <th class="py-2 px-3">{{ $t('pages.admin.links.table.uses') }}</th>
               <th class="py-2 px-3">{{ $t('pages.admin.links.table.status') }}</th>
@@ -353,6 +431,44 @@
               <td class="py-2 px-3 text-navy/70 dark:text-ivory/70">
                 {{ row.createdByName || row.createdByEmail }}
               </td>
+              <td class="py-2 px-3">
+                <div
+                  v-if="editingToken === row.token && grantableCalendars.length > 0"
+                  class="flex flex-col gap-1"
+                >
+                  <div
+                    v-for="calendar in grantableCalendars"
+                    :key="calendar.key"
+                    class="flex items-center"
+                  >
+                    <input
+                      :id="`edit-calendar-${row.token}-${calendar.key}`"
+                      v-model="editCalendars"
+                      :value="calendar.key"
+                      type="checkbox"
+                      class="w-4 h-4 text-sienna bg-ivory dark:bg-poster-dark border-navy/20 dark:border-poster-darkBorder rounded focus:ring-sienna dark:focus:ring-sienna-dark focus:ring-2 accent-sienna"
+                    />
+                    <label
+                      :for="`edit-calendar-${row.token}-${calendar.key}`"
+                      class="ms-2 text-xs font-body text-navy dark:text-ivory"
+                    >
+                      {{ calendar.label }}
+                    </label>
+                  </div>
+                </div>
+                <template v-else-if="row.calendars?.length">
+                  <span
+                    v-for="calendar in row.calendars"
+                    :key="calendar"
+                    class="inline-block mr-1 mb-1 rounded px-2 py-0.5 text-xs font-medium bg-navy/10 dark:bg-poster-darkBorder text-navy dark:text-ivory"
+                  >
+                    {{ calendarLabel(calendar) }}
+                  </span>
+                </template>
+                <span v-else class="text-navy/40 dark:text-poster-darkMuted">
+                  {{ $t('pages.admin.links.table.noCalendars') }}
+                </span>
+              </td>
               <td class="py-2 px-3 text-navy/70 dark:text-ivory/70">
                 <select
                   v-if="editingToken === row.token"
@@ -367,6 +483,16 @@
               </td>
               <td class="py-2 px-3">
                 {{ row.useCount }}{{ row.maxUses ? ' / ' + row.maxUses : '' }}
+                <!-- The binding is editable, so past joins may have received
+                     something else. Without this the count above would read as
+                     "all of them got the calendars shown". -->
+                <span
+                  v-if="row.divergentUseCount > 0"
+                  class="block text-xs text-navy/50 dark:text-poster-darkMuted"
+                  :title="$t('pages.admin.links.table.divergentHint')"
+                >
+                  {{ $t('pages.admin.links.table.divergent', { count: row.divergentUseCount }) }}
+                </span>
               </td>
               <td class="py-2 px-3">
                 <span

@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 import { useDb } from '~~/server/db'
 import { registrationLinkRedemptions, registrationLinks, users } from '~~/server/db/schema'
@@ -24,28 +24,54 @@ export default defineEventHandler(async (event) => {
       createdByUid: registrationLinks.createdByUid,
       createdByName: users.displayName,
       createdByEmail: users.email,
+      calendars: registrationLinks.calendars,
     })
     .from(registrationLinks)
     .leftJoin(users, eq(users.uid, registrationLinks.createdByUid))
     .orderBy(desc(registrationLinks.createdAt))
 
-  // Counts in a separate grouped query, merged in JS — keeps us clear of
-  // ONLY_FULL_GROUP_BY without listing every selected column in GROUP BY.
-  const counts = await db
+  // One row per join, aggregated in JS. No GROUP BY, so ONLY_FULL_GROUP_BY
+  // cannot bite, and both numbers below come from the same consistent read.
+  //
+  // The count alone could be a cheaper COUNT(*), but the second number needs the
+  // individual rows anyway: since the binding stays editable, a link's current
+  // `calendars` says nothing about what earlier joins received - only the
+  // per-redemption snapshot does. `divergentUseCount` reports how many joins got
+  // something other than today's binding, so an admin never reads "5 Beitritte,
+  // Kalender: Herbstfest" as "all five got Herbstfest".
+  const redemptions = await db
     .select({
       linkToken: registrationLinkRedemptions.linkToken,
-      count: sql<string>`count(*)`,
+      grantedCalendars: registrationLinkRedemptions.grantedCalendars,
     })
     .from(registrationLinkRedemptions)
-    .groupBy(registrationLinkRedemptions.linkToken)
-  const countByToken = new Map(counts.map((r) => [r.linkToken, Number(r.count)]))
+
+  /**
+   * Order-independent identity of a calendar set; '' means "granted nothing".
+   *
+   * JSON-encoded rather than joined on a separator: calendar names may contain
+   * anything, so `['Chor Nord']` and `['Chor', 'Nord']` would collide under a
+   * space (or any other) separator and be reported as equal.
+   */
+  const fingerprint = (calendars: string[] | null): string =>
+    calendars?.length ? JSON.stringify([...calendars].sort()) : ''
+
+  const grantsByToken = new Map<string, string[]>()
+  for (const redemption of redemptions) {
+    const grants = grantsByToken.get(redemption.linkToken) ?? []
+    grants.push(fingerprint(redemption.grantedCalendars))
+    grantsByToken.set(redemption.linkToken, grants)
+  }
 
   const now = Date.now()
   return links.map((l) => {
-    const useCount = countByToken.get(l.token) ?? 0
+    const grants = grantsByToken.get(l.token) ?? []
+    const current = fingerprint(l.calendars)
+    const useCount = grants.length
     return {
       ...l,
       useCount,
+      divergentUseCount: grants.filter((grant) => grant !== current).length,
       status: linkStatus(l, useCount, now),
       url: new URL(`/register/${l.token}`, config.CLIENT_URI).toString(),
     }

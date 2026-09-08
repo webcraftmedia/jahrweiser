@@ -6,7 +6,7 @@ import { useDb } from '../db'
 import { loginTokens, sessions, syncState, userTags, users } from '../db/schema'
 
 import { displayNameFromVCard } from './contactName'
-import { createCardDAVAccount, headers, X_ADMIN_TAGS, X_ROLE } from './dav'
+import { createCardDAVAccount, headers, readAdminTags, X_ROLE } from './dav'
 import { clearEmailNotFound } from './negativeCache'
 
 import type { DAV_CONFIG } from './dav'
@@ -53,11 +53,7 @@ export function extractUserFromVCardData(vcardData: string): DavUserSnapshot | n
   const displayName = displayNameFromVCard(component)
   const roleValue = component.getFirstPropertyValue(X_ROLE)?.toString()
   const role: 'admin' | 'user' = roleValue === 'admin' ? 'admin' : 'user'
-  const tagsValue = component.getFirstPropertyValue(X_ADMIN_TAGS)?.toString() ?? ''
-  const tags = tagsValue
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean)
+  const tags = readAdminTags(component)
   return { uid, email, displayName, role, tags }
 }
 

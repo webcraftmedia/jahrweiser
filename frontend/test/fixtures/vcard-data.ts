@@ -25,6 +25,12 @@ export function createMockVCard(options: MockVCardOptions = {}): ICAL.Component 
     vcard.addPropertyWithValue('categories', '')
     vcard.getFirstProperty('categories')?.setValues(options.categories)
   }
-  if (options.adminTags) vcard.addPropertyWithValue('x-admin-tags', options.adminTags)
+  if (options.adminTags) {
+    // X-ADMIN-TAGS is a comma-separated text list (registered in
+    // server/helpers/dav.ts), so build it as real multiple values rather than
+    // one string that happens to contain commas.
+    vcard.addPropertyWithValue('x-admin-tags', '')
+    vcard.getFirstProperty('x-admin-tags')!.setValues(options.adminTags.split(','))
+  }
   return vcard
 }

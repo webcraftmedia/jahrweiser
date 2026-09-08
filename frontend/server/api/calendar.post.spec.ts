@@ -26,7 +26,10 @@ const mockFindUserByEmail = vi.fn()
 const mockCreateCalDAVAccount = vi.fn().mockReturnValue({ accountType: 'caldav' })
 const mockCreateCardDAVAccount = vi.fn().mockReturnValue({ accountType: 'carddav' })
 
-vi.mock('../helpers/dav', () => ({
+// Only the DAV I/O is mocked; the pure helpers (calendarKey, readCategories, ...)
+// stay real, so these tests exercise the actual logic instead of a copy of it.
+vi.mock('../helpers/dav', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../helpers/dav')>()),
   createCalDAVAccount: (...args: unknown[]) => mockCreateCalDAVAccount(...args),
   createCardDAVAccount: (...args: unknown[]) => mockCreateCardDAVAccount(...args),
   findCalendars: (...args: unknown[]) => mockFindCalendars(...args),
@@ -57,7 +60,7 @@ describe('calendar.post', () => {
     // Default: user found with categories
     mockFindUserByEmail.mockResolvedValue({
       user: { href: '/abc.vcf' },
-      vcard: createMockVCard({ email: 'test@example.com', categories: ['Work'] }),
+      vcard: createMockVCard({ email: 'test@example.com', categories: ['work'] }),
     })
   })
 

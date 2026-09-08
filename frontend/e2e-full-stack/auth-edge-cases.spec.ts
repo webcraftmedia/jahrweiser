@@ -253,13 +253,16 @@ test.describe('admin tag management', () => {
     await page.goto(`/login/${token}`)
     await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
 
-    // Set 'veranstalter' tag on alice via the admin API. Admin endpoints
-    // continue to round-trip through DAV, so success means the VCard's
-    // CATEGORIES property gets updated.
+    // Grant alice the 'sportgruppe' calendar via the admin API. Tags are
+    // calendar keys and are filtered against the admin's own X-ADMIN-TAGS, so
+    // this has to name a calendar the seeded admin actually administers. Admin
+    // endpoints continue to round-trip through DAV, so success means the
+    // VCard's CATEGORIES property gets updated.
+    const grantedCalendar = 'sportgruppe'
     const resp = await context.request.post('/api/admin/updateUserTags', {
       data: {
         email: targetEmail,
-        tags: [{ name: 'veranstalter', state: true }],
+        tags: [{ name: grantedCalendar, state: true }],
         sendMail: false,
       },
     })
@@ -275,6 +278,6 @@ test.describe('admin tag management', () => {
     })
     const body = await vc.text()
     expect(body).toContain('CATEGORIES')
-    expect(body).toContain('veranstalter')
+    expect(body).toContain(grantedCalendar)
   })
 })

@@ -433,14 +433,28 @@ test.describe('registration via link', () => {
     )
     await guestContext.close()
 
-    // ...while Alice, who was granted nothing, does not.
-    const aliceContext = await browser.newContext()
-    const alice = await aliceContext.newPage()
-    await loginViaMagicLink(alice, ALICE)
-    expect(await visibleEventTitles(alice, 'Theater AG')).not.toContain(
+    // ...while someone who joined through an unbound link does not. The control
+    // user is created inside this test on purpose: reusing a seeded account
+    // would couple the assertion to whatever earlier tests granted them.
+    const { token: unboundToken } = await createLink(page, {
+      label: 'E2E Private Control',
+      duration: '30d',
+    })
+    const controlEmail = 'private-control@example.com'
+    await registerVia(browser, unboundToken, {
+      firstName: 'No',
+      lastName: 'Access',
+      email: controlEmail,
+    })
+    const controlContext = await browser.newContext()
+    const control = await controlContext.newPage()
+    await loginViaMagicLink(control, controlEmail)
+    expect(await visibleEventTitles(control, 'Theater AG')).not.toContain(
       'Interne Probe (nicht oeffentlich)',
     )
-    await aliceContext.close()
+    // The public event in the same calendar stays visible to them.
+    expect(await visibleEventTitles(control, 'Theater AG')).toContain('Probe Theater AG')
+    await controlContext.close()
   })
 
   test('renaming a calendar does not revoke access', async ({ page }) => {

@@ -13,7 +13,11 @@ import { runSeedDemo, runSeedReset } from './helpers/stack'
 
 import type { Page } from '@playwright/test'
 
+// One seeded user per test: /api/requestLoginLink is rate-limited per user
+// (60s), so three logins as the same account in one file would be flaky.
 const ALICE = 'alice@example.com'
+const BOB = 'bob@example.com'
+const CAROL = 'carol@example.com'
 
 // The real file is git-ignored (an invite link is the permission itself), so
 // the suite writes its own and removes it afterwards. Same path the server
@@ -60,6 +64,38 @@ async function loginViaMagicLink(page: Page, email: string): Promise<void> {
 }
 
 test.describe('icon rail', () => {
+  test('hides the telegram entry when nothing is configured', async ({ page }) => {
+    // Empty list and missing file both reach the client as [] — the entry has
+    // to disappear, and the calendar must stay reachable.
+    await writeFile(CHANNELS_FILE, '[]', 'utf-8')
+    await loginViaMagicLink(page, BOB)
+    const rail = page.locator('nav[aria-label]').first()
+    await expect(rail.locator('a[href="/"]')).toBeVisible()
+    await expect(rail.locator('a[href="/telegram"]')).toHaveCount(0)
+
+    await rm(CHANNELS_FILE, { force: true })
+    await page.reload()
+    await preparePage(page)
+    await expect(rail.locator('a[href="/telegram"]')).toHaveCount(0)
+
+    await writeFile(CHANNELS_FILE, JSON.stringify(CHANNELS, null, 2), 'utf-8')
+  })
+
+  test('hides the telegram entry when the file is broken', async ({ page }) => {
+    // A hand-edit gone wrong must not offer members a link into an error page.
+    await writeFile(CHANNELS_FILE, '[{ "name": "x", },]', 'utf-8')
+    await loginViaMagicLink(page, CAROL)
+    const rail = page.locator('nav[aria-label]').first()
+    await expect(rail.locator('a[href="/"]')).toBeVisible()
+    await expect(rail.locator('a[href="/telegram"]')).toHaveCount(0)
+
+    // The operator still gets a hard failure, not a quiet empty list.
+    const resp = await page.context().request.get('/api/telegram-channels')
+    expect(resp.status()).toBe(500)
+
+    await writeFile(CHANNELS_FILE, JSON.stringify(CHANNELS, null, 2), 'utf-8')
+  })
+
   // One login for the whole flow: /api/requestLoginLink is rate-limited per
   // user, so a login per test would be flaky.
   test('navigates between calendar and telegram and tracks the active section', async ({

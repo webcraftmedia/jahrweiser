@@ -3,32 +3,14 @@
     middleware: ['authenticated'],
   })
 
-  interface TelegramChannel {
-    name: string
-    description?: string
-    url: string
-    public?: boolean
-  }
+  // Shared with the icon rail, which already loaded the list to decide whether
+  // to show its entry at all — reusing it avoids a second request.
+  const { channels, isLoading, loadError, load } = useTelegramChannels()
 
-  const channels = ref<TelegramChannel[]>([])
-  const isLoading = ref(true)
-  const loadError = ref(false)
-
-  async function loadChannels() {
-    isLoading.value = true
-    loadError.value = false
-    try {
-      channels.value = await $fetch<TelegramChannel[]>('/api/telegram-channels')
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als loadError angezeigt
-    } catch (error) {
-      console.error(error)
-      loadError.value = true
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  onMounted(loadChannels)
+  // Force a refresh: the file is edited on the server without a restart, so a
+  // visit to this page should show what is there now, not what the rail read
+  // when the app was opened.
+  onMounted(() => load(true))
 </script>
 
 <template>

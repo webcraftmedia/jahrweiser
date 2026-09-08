@@ -11,6 +11,11 @@
 
   const { t } = useI18n()
   const route = useRoute()
+  const { hasChannels, load } = useTelegramChannels()
+
+  // The Telegram entry only exists when there is something behind it. Loaded
+  // here rather than on the page so the rail can decide before anyone clicks.
+  onMounted(load)
 
   interface RailItem {
     to: string
@@ -37,12 +42,19 @@
       icon: IconCalendar,
       isActive: isCalendarPath,
     },
-    {
-      to: '/telegram',
-      label: t('components.AppIconRail.telegram'),
-      icon: IconTelegram,
-      isActive: (path) => path === '/telegram',
-    },
+    // Hidden when no invitations are configured — and equally when they could
+    // not be read at all, so a broken config never offers members a link into
+    // an error page. The endpoint still logs and answers 500 for the operator.
+    ...(hasChannels.value
+      ? [
+          {
+            to: '/telegram',
+            label: t('components.AppIconRail.telegram'),
+            icon: IconTelegram,
+            isActive: (path: string) => path === '/telegram',
+          },
+        ]
+      : []),
   ])
 
   const isVertical = computed(() => props.orientation === 'vertical')

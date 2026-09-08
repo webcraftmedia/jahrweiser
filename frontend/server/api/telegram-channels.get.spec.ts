@@ -79,6 +79,19 @@ describe('telegram-channels.get', () => {
     consoleSpy.mockRestore()
   })
 
+  it('reports a JSON syntax error against the file rather than crashing', async () => {
+    // The file is hand-edited on the server; one comma too many must not
+    // produce a bare 500 with no log line naming the file.
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mockReadFile.mockResolvedValue('[{ "name": "x", },]')
+    await expect(handlerFn({})).rejects.toThrow('Telegram channels malformed')
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('is not valid JSON'),
+      expect.anything(),
+    )
+    consoleSpy.mockRestore()
+  })
+
   it('rejects a malformed file instead of silently dropping entries', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockReadFile.mockResolvedValue(JSON.stringify([{ name: 'no url here' }]))

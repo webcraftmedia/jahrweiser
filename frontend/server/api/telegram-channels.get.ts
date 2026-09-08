@@ -52,7 +52,17 @@ export default defineEventHandler(async (event): Promise<TelegramChannel[]> => {
     throw createError({ statusCode: 500, statusMessage: 'Telegram channels unreadable' })
   }
 
-  const parsed = fileSchema.safeParse(JSON.parse(raw))
+  let json: unknown
+  try {
+    json = JSON.parse(raw)
+  } catch (error) {
+    // JSON.parse wirft nur SyntaxError. Die Datei wird von Hand gepflegt — ein
+    // Komma zu viel darf keinen nackten 500 ohne Logzeile ergeben.
+    console.error(`Telegram channel file ${file} is not valid JSON:`, error)
+    throw createError({ statusCode: 500, statusMessage: 'Telegram channels malformed' })
+  }
+
+  const parsed = fileSchema.safeParse(json)
   if (!parsed.success) {
     // A malformed file is an operator error. Failing loudly beats rendering an
     // empty list that looks like "no channels configured".

@@ -36,6 +36,10 @@ describe('Page: Telegram', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mock$fetch.mockImplementation(fetchReturning(CHANNELS))
+    // The channel list lives in useState, shared with the icon rail.
+    useState<unknown[]>('telegram-channels', () => []).value = []
+    useState('telegram-channels-loaded', () => false).value = false
+    useState('telegram-channels-error', () => false).value = false
   })
 
   it('renders the loaded channels', async () => {

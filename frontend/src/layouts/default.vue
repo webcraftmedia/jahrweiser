@@ -26,8 +26,9 @@
 
 <script setup lang="ts">
   const { zoomLevel } = useZoom()
-  // Mirrors the Header: the rail is only meaningful once signed in, and
-  // /telegram is behind auth anyway.
+  // `v-if`, not `v-show`: the rail fetches the channel list on mount, and
+  // src/plugins/auth-redirect.ts turns any 401 into a forced logout. Mounting
+  // it for a signed-out visitor would log them out on the spot.
   const { loggedIn } = useUserSession()
 </script>
 

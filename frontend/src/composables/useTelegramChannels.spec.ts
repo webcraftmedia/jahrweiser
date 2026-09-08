@@ -15,6 +15,22 @@ describe('useTelegramChannels', () => {
     state.channels.value = []
     state.loadError.value = false
     useState('telegram-channels-loaded', () => false).value = false
+    useState<Promise<void> | null>('telegram-channels-inflight', () => null).value = null
+  })
+
+  it('shares one request between the two rail instances', async () => {
+    // Desktop and mobile rail both mount before the first response arrives.
+    mock$fetch.mockImplementation(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => {
+            resolve(CHANNELS)
+          }, 10),
+        ),
+    )
+    const { load } = useTelegramChannels()
+    await Promise.all([load(), load()])
+    expect(mock$fetch).toHaveBeenCalledTimes(1)
   })
 
   it('loads the channels once and reports that there are some', async () => {

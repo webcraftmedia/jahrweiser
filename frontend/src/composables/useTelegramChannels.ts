@@ -17,6 +17,10 @@ export function useTelegramChannels() {
   const isLoading = useState('telegram-channels-loading', () => false)
   const loadError = useState('telegram-channels-error', () => false)
   const loaded = useState('telegram-channels-loaded', () => false)
+  // The rail is mounted twice (desktop + mobile) and both mount before the
+  // first request resolves, so share the in-flight promise instead of firing
+  // the same request twice.
+  const inFlight = useState<Promise<void> | null>('telegram-channels-inflight', () => null)
 
   /**
    * A failed load leaves `channels` empty, so the rail hides its entry rather
@@ -24,8 +28,7 @@ export function useTelegramChannels() {
    * the endpoint logs it server-side and answers 500, and `loadError` lets the
    * page tell "nothing configured" apart from "could not load".
    */
-  async function load(force = false): Promise<void> {
-    if (loaded.value && !force) return
+  async function fetchChannels(): Promise<void> {
     isLoading.value = true
     loadError.value = false
     try {
@@ -38,6 +41,18 @@ export function useTelegramChannels() {
     } finally {
       isLoading.value = false
       loaded.value = true
+    }
+  }
+
+  async function load(force = false): Promise<void> {
+    if (loaded.value && !force) return
+    if (inFlight.value && !force) return inFlight.value
+    const run = fetchChannels()
+    inFlight.value = run
+    try {
+      await run
+    } finally {
+      inFlight.value = null
     }
   }
 

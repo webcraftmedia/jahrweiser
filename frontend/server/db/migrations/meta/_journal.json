@@ -29,6 +29,13 @@
       "when": 1782811702694,
       "tag": "0003_lazy_kitty_pryde",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1788868042230,
+      "tag": "0004_chemical_joshua_kane",
+      "breakpoints": true
     }
   ]
 }

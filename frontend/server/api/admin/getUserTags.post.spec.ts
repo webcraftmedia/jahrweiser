@@ -9,10 +9,12 @@ import handler from './getUserTags.post'
 const mockFindUserByEmail = vi.fn()
 const mockCreateCardDAVAccount = vi.fn().mockReturnValue({ accountType: 'carddav' })
 
-vi.mock('~~/server/helpers/dav', () => ({
+// Only the DAV I/O is mocked; the pure vCard helpers (readAdminTags & co.) stay
+// real, so these tests exercise the actual parsing instead of a copy of it.
+vi.mock('~~/server/helpers/dav', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~~/server/helpers/dav')>()),
   createCardDAVAccount: (...args: unknown[]) => mockCreateCardDAVAccount(...args),
   findUserByEmail: (...args: unknown[]) => mockFindUserByEmail(...args),
-  X_ADMIN_TAGS: 'x-admin-tags',
 }))
 
 const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>

@@ -28,6 +28,56 @@ export interface DAV_CONFIG {
   DAV_URL_CARD: string
 }
 
+/**
+ * Calendars an admin is allowed to hand out, read from their own vCard's
+ * X-ADMIN-TAGS. Entries are CalDAV calendar display names — the same strings a
+ * user carries in CATEGORIES (see server/api/calendar.post.ts).
+ *
+ * Comma-separated because the vCard format leaves no better option. Entries are
+ * trimmed, so `"Chor, Vorstand"` grants access to `Vorstand` and not to
+ * `" Vorstand"`, and blanks are dropped so an empty property yields no tag
+ * rather than a single empty one.
+ */
+export function readAdminTags(vcard: ICAL.Component): string[] {
+  return (
+    vcard
+      .getFirstPropertyValue(X_ADMIN_TAGS)
+      ?.toString()
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0) ?? []
+  )
+}
+
+/** Calendars a user has private access to, from their vCard CATEGORIES. */
+export function readCategories(vcard: ICAL.Component): string[] {
+  // ICAL.Property#getValues() always returns an array; the fallback covers only
+  // a missing CATEGORIES property.
+  return (vcard.getFirstProperty('categories')?.getValues() as string[] | undefined) ?? []
+}
+
+/**
+ * Grant additional calendars on a vCard, keeping the existing ones. Never
+ * removes access.
+ *
+ * @returns the names that were actually new — empty when the user already had
+ * all of them, which lets the caller skip both the DAV write and, for a
+ * registration link, booking a join that grants nothing.
+ */
+export function addCategories(vcard: ICAL.Component, names: string[]): string[] {
+  const current = readCategories(vcard)
+  const added = names.filter((name) => !current.includes(name))
+  if (added.length === 0) return []
+
+  let categories = vcard.getFirstProperty('categories')
+  if (!categories) {
+    vcard.addPropertyWithValue('categories', '')
+    categories = vcard.getFirstProperty('categories')!
+  }
+  categories.setValues([...current, ...added])
+  return added
+}
+
 export const createCalDAVAccount = (config: DAV_CONFIG): DAVAccount => ({
   accountType: 'caldav',
   serverUrl: config.DAV_URL,

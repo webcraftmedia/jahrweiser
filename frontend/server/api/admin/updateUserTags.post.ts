@@ -7,8 +7,8 @@ import {
   createCardDAVAccount,
   createUser,
   findUserByEmail,
+  readAdminTags,
   saveUser,
-  X_ADMIN_TAGS,
 } from '~~/server/helpers/dav'
 import { defaultParams, emailRenderer } from '~~/server/helpers/email'
 
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const { vcard: adminVcard } = adminQuery
-  const adminTags = adminVcard.getFirstPropertyValue(X_ADMIN_TAGS)?.toString().split(',') ?? []
+  const adminTags = readAdminTags(adminVcard)
 
   const { email, tags, sendMail } = await readValidatedBody(event, bodySchema.parse)
   const filteredTags = tags.filter((t) => adminTags.includes(t.name))

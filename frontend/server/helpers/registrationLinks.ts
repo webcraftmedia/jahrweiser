@@ -1,5 +1,9 @@
 import ICAL from 'ical.js'
 
+import { createCardDAVAccount, findUserByEmail, readAdminTags } from './dav'
+
+import type { DAV_CONFIG } from './dav'
+
 // Selectable validity presets shown to admins when creating a link. Values are
 // the number of days until expiry; `null` means the link never expires.
 export const LINK_DURATIONS = {
@@ -35,6 +39,40 @@ export function assertLinkOwner(createdByUid: string | undefined, uid: string): 
   }
 }
 
+/**
+ * The calendars an admin may bind a registration link to: their own
+ * X-ADMIN-TAGS, read from DAV. Mirrors the gate in
+ * server/api/admin/updateUserTags.post.ts — a link must never be able to grant
+ * access its creator cannot grant directly.
+ */
+export async function findGrantableCalendars(
+  config: DAV_CONFIG,
+  adminEmail: string,
+): Promise<string[]> {
+  const adminQuery = await findUserByEmail(createCardDAVAccount(config), adminEmail)
+  if (!adminQuery) {
+    throw createError({ statusCode: 403, statusMessage: 'Admin account not found' })
+  }
+  return readAdminTags(adminQuery.vcard)
+}
+
+/**
+ * Narrow a requested calendar binding to what the admin may actually grant.
+ * Unknown names are dropped rather than rejected, matching how
+ * updateUserTags.post.ts filters its input.
+ *
+ * @returns null for "no binding" — an empty selection is stored as NULL, not as
+ * an empty array, so the two cannot drift apart in the UI or in queries.
+ */
+export function narrowCalendarBinding(
+  requested: string[] | undefined,
+  grantable: string[],
+): string[] | null {
+  if (!requested) return null
+  const allowed = requested.filter((name) => grantable.includes(name))
+  return allowed.length > 0 ? allowed : null
+}
+
 export type LinkStatus = 'valid' | 'revoked' | 'expired' | 'exhausted'
 
 /**
@@ -65,6 +103,8 @@ export function buildRegistrantVCard(input: {
   firstName: string
   lastName: string
   email: string
+  /** Calendar binding of the link, granted as CATEGORIES. */
+  calendars?: string[] | null
 }): ICAL.Component {
   const vcard = new ICAL.Component('vcard')
   vcard.addPropertyWithValue('version', '4.0')
@@ -74,6 +114,10 @@ export function buildRegistrantVCard(input: {
   n.setValue([input.lastName, input.firstName, '', '', ''])
   vcard.addProperty(n)
   vcard.addPropertyWithValue('email', input.email)
+  if (input.calendars?.length) {
+    vcard.addPropertyWithValue('categories', '')
+    vcard.getFirstProperty('categories')!.setValues(input.calendars)
+  }
   return vcard
 }
 

@@ -11,12 +11,14 @@ const mockSaveUser = vi.fn()
 const mockCreateUser = vi.fn()
 const mockCreateCardDAVAccount = vi.fn().mockReturnValue({ accountType: 'carddav' })
 
-vi.mock('~~/server/helpers/dav', () => ({
+// Only the DAV I/O is mocked; the pure vCard helpers (readAdminTags & co.) stay
+// real, so these tests exercise the actual parsing instead of a copy of it.
+vi.mock('~~/server/helpers/dav', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~~/server/helpers/dav')>()),
   createCardDAVAccount: (...args: unknown[]) => mockCreateCardDAVAccount(...args),
   findUserByEmail: (...args: unknown[]) => mockFindUserByEmail(...args),
   saveUser: (...args: unknown[]) => mockSaveUser(...args),
   createUser: (...args: unknown[]) => mockCreateUser(...args),
-  X_ADMIN_TAGS: 'x-admin-tags',
 }))
 
 const mockEmailSend = vi.fn()

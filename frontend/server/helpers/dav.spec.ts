@@ -23,6 +23,9 @@ import {
   findUserByToken,
   saveUser,
   createUser,
+  readAdminTags,
+  readCategories,
+  addCategories,
   X_LOGIN_REQUEST_TIME,
   X_LOGIN_TOKEN,
   X_LOGIN_TIME,
@@ -363,6 +366,67 @@ describe('dav helpers', () => {
       const vcard = createMockVCard({ email: 'new@example.com' })
       await expect(createUser(account, vcard)).rejects.toThrow(/HTTP 403/)
       fetchSpy.mockRestore()
+    })
+  })
+})
+
+describe('vCard calendar access helpers', () => {
+  describe('readAdminTags', () => {
+    it('splits the comma-separated X-ADMIN-TAGS', () => {
+      expect(readAdminTags(createMockVCard({ adminTags: 'Chor,Vorstand' }))).toStrictEqual([
+        'Chor',
+        'Vorstand',
+      ])
+    })
+
+    it('trims entries so a space after the comma still matches a calendar', () => {
+      expect(readAdminTags(createMockVCard({ adminTags: 'Chor, Vorstand' }))).toStrictEqual([
+        'Chor',
+        'Vorstand',
+      ])
+    })
+
+    it('yields no tags for an absent or empty property', () => {
+      expect(readAdminTags(createMockVCard({}))).toStrictEqual([])
+      expect(readAdminTags(createMockVCard({ adminTags: ',,' }))).toStrictEqual([])
+    })
+  })
+
+  describe('readCategories', () => {
+    it('reads the calendars a user has private access to', () => {
+      expect(readCategories(createMockVCard({ categories: ['Chor'] }))).toStrictEqual(['Chor'])
+    })
+
+    it('returns an empty list when CATEGORIES is absent', () => {
+      expect(readCategories(createMockVCard({}))).toStrictEqual([])
+    })
+  })
+
+  describe('addCategories', () => {
+    it('adds a calendar to a vCard that has none yet', () => {
+      const vcard = createMockVCard({ email: 'a@b.de' })
+      expect(addCategories(vcard, ['Chor'])).toStrictEqual(['Chor'])
+      expect(readCategories(vcard)).toStrictEqual(['Chor'])
+    })
+
+    it('keeps existing access and reports only what was added', () => {
+      const vcard = createMockVCard({ categories: ['Chor'] })
+      expect(addCategories(vcard, ['Chor', 'Vorstand'])).toStrictEqual(['Vorstand'])
+      expect(readCategories(vcard)).toStrictEqual(['Chor', 'Vorstand'])
+    })
+
+    it('reports nothing added when the user already has all of them', () => {
+      // The caller uses this to skip the DAV write and, for a registration
+      // link, to not book a join that grants nothing.
+      const vcard = createMockVCard({ categories: ['Chor', 'Vorstand'] })
+      expect(addCategories(vcard, ['Chor'])).toStrictEqual([])
+      expect(readCategories(vcard)).toStrictEqual(['Chor', 'Vorstand'])
+    })
+
+    it('never removes access', () => {
+      const vcard = createMockVCard({ categories: ['Chor'] })
+      addCategories(vcard, ['Vorstand'])
+      expect(readCategories(vcard)).toContain('Chor')
     })
   })
 })

@@ -5,7 +5,13 @@ import { z } from 'zod'
 
 import { useDb } from '../db'
 import { registrationLinkRedemptions, registrationLinks, users } from '../db/schema'
-import { createCardDAVAccount, createUser, findUserByEmail, saveUser } from '../helpers/dav'
+import {
+  addCategories,
+  createCardDAVAccount,
+  createUser,
+  findUserByEmail,
+  saveUser,
+} from '../helpers/dav'
 import { sendLoginLink } from '../helpers/loginLink'
 import { clearEmailNotFound } from '../helpers/negativeCache'
 import {
@@ -64,6 +70,11 @@ export default defineEventHandler(async (event) => {
     let displayName: string | null
     let role: 'user' | 'admin'
 
+    // Calendars this account does not have private access to yet. The link's
+    // binding is additive: existing access is never taken away, and a link that
+    // grants nothing new leaves the account (and the join count) untouched.
+    let newlyGranted: string[] = []
+
     if (davMatch) {
       // Fill missing UID/name on the DAV VCard (source of truth) and persist
       // only if something actually changed.
@@ -72,7 +83,10 @@ export default defineEventHandler(async (event) => {
         firstName,
         lastName,
       })
-      if (mutated) await saveUser(davAccount, davMatch.user, davMatch.vcard)
+      newlyGranted = link.calendars ? addCategories(davMatch.vcard, link.calendars) : []
+      if (mutated || newlyGranted.length > 0) {
+        await saveUser(davAccount, davMatch.user, davMatch.vcard)
+      }
       const snap = extractUserFromVCardData(davMatch.vcard.toString())
       uid = snap?.uid ?? sidecarRow?.uid ?? randomUUID()
       displayName = snap?.displayName ?? sidecarRow?.displayName ?? null
@@ -91,6 +105,16 @@ export default defineEventHandler(async (event) => {
       .onDuplicateKeyUpdate({ set: { displayName, deletedAt: null } })
     clearEmailNotFound(normalizedEmail)
 
+    // An existing account counts as a join only when the link actually granted
+    // it something new. Redeeming an unbound link, or one whose calendars the
+    // account already has, changes nothing and must not burn a `maxUses` slot -
+    // which also makes a second click on the same link a no-op.
+    if (newlyGranted.length > 0) {
+      await db
+        .insert(registrationLinkRedemptions)
+        .values({ linkToken: token, userUid: uid, grantedCalendars: newlyGranted })
+    }
+
     await sendLoginLink(config, { uid, email: normalizedEmail, displayName }, undefined)
     return { status: 'created' as const }
   }
@@ -101,7 +125,13 @@ export default defineEventHandler(async (event) => {
   const displayName = `${firstName} ${lastName}`.trim()
   await createUser(
     davAccount,
-    buildRegistrantVCard({ uid, firstName, lastName, email: normalizedEmail }),
+    buildRegistrantVCard({
+      uid,
+      firstName,
+      lastName,
+      email: normalizedEmail,
+      calendars: link.calendars,
+    }),
   )
   await db
     .insert(users)
@@ -111,8 +141,12 @@ export default defineEventHandler(async (event) => {
   // address; clear it so the verification link works immediately.
   clearEmailNotFound(normalizedEmail)
 
-  // 4. Record the join (the "who + when" audit trail; count = COUNT(*)).
-  await db.insert(registrationLinkRedemptions).values({ linkToken: token, userUid: uid })
+  // 4. Record the join (the "who + when" audit trail). `grantedCalendars` is a
+  // snapshot: the link's own binding may be edited later, so only this row can
+  // answer what this user actually received.
+  await db
+    .insert(registrationLinkRedemptions)
+    .values({ linkToken: token, userUid: uid, grantedCalendars: link.calendars })
 
   // 5. Verify email ownership by sending the magic login link — clicking it
   // both confirms the address and logs the new user in.

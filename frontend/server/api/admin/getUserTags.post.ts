@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { createCardDAVAccount, findUserByEmail, X_ADMIN_TAGS } from '~~/server/helpers/dav'
+import { createCardDAVAccount, findUserByEmail, readAdminTags } from '~~/server/helpers/dav'
 
 const bodySchema = z.object({
   email: z.email(),
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const { vcard: adminVcard } = adminQuery
-  const adminTags = adminVcard.getFirstPropertyValue(X_ADMIN_TAGS)?.toString().split(',') ?? []
+  const adminTags = readAdminTags(adminVcard)
 
   // Find user
   const { email } = await readValidatedBody(event, bodySchema.parse)

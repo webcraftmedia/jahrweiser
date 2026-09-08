@@ -102,3 +102,120 @@ export function lastRelevantRecurrenceId(exceptions: ICAL.Component[], endDate: 
 
   return latest
 }
+
+export interface DateRange {
+  from: Date
+  to: Date
+}
+
+/** One occurrence of an event, with any RECURRENCE-ID override already applied. */
+export interface EventOccurrence {
+  /**
+   * 1-based position within the RRULE expansion — the value that addresses this
+   * occurrence in a detail URL. Undefined for non-recurring events.
+   */
+  occurrence?: number
+  startDate: ICAL.Time
+  endDate: ICAL.Time
+  /** Per occurrence: an override may turn a single date into an all-day one. */
+  allDay: boolean
+  /** Effective event data — the override when one applies, else the master. */
+  item: ICAL.Event
+}
+
+function toOccurrence(startDate: ICAL.Time, endDate: ICAL.Time, item: ICAL.Event): EventOccurrence {
+  return { startDate, endDate, allDay: startDate.isDate, item }
+}
+
+/**
+ * True when `[start, end)` overlaps `range`.
+ *
+ * DTEND is exclusive (RFC 5545 §3.8.2.2), so an event ending exactly at
+ * `range.from` is already over. The exception is a DTSTART without DTEND and
+ * without DURATION: ical.js reports `endDate === startDate` for those, and a
+ * zero-length event can only be matched on its start instant.
+ */
+function overlapsRange(start: Date, end: Date, range: DateRange): boolean {
+  if (start > range.to) return false
+  return end.getTime() === start.getTime() ? start >= range.from : end > range.from
+}
+
+/**
+ * Every occurrence of one iCalendar object that overlaps `range`.
+ *
+ * This is the single place that turns a VEVENT into occurrences. The calendar
+ * view, the detail view and the newsletter each used to expand the series
+ * themselves, so the override handling only ever got fixed in some of them.
+ *
+ * Private events are dropped unless `showPrivate` — checked per occurrence,
+ * since an override may carry a CLASS of its own.
+ */
+export function collectOccurrences(
+  parsed: ParsedCalendarEvent,
+  range: DateRange,
+  options: { showPrivate: boolean },
+): EventOccurrence[] {
+  const { vevent, event, exceptions } = parsed
+
+  if (!options.showPrivate && isPrivate(vevent)) return []
+
+  if (!event.isRecurring()) {
+    const start = toComparableDate(event.startDate)
+    const end = toComparableDate(event.endDate)
+    return overlapsRange(start, end, range)
+      ? [toOccurrence(event.startDate, event.endDate, event)]
+      : []
+  }
+
+  // The iterator walks the RRULE; getOccurrenceDetails() lays the
+  // RECURRENCE-ID overrides (moved or edited single occurrences) on top.
+  const iterator = event.iterator()
+  const iterateUntil = lastRelevantRecurrenceId(exceptions, range.to)
+  const results: EventOccurrence[] = []
+
+  let count = 0
+  let next
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
+  while ((next = iterator.next())) {
+    count += 1
+    // Stop once the series has left the window — but not before the last
+    // override that was pulled back into it has been visited.
+    const recurrenceId = toComparableDate(next)
+    if (recurrenceId > range.to && (!iterateUntil || recurrenceId > iterateUntil)) break
+
+    const details = event.getOccurrenceDetails(next)
+    if (!options.showPrivate && isPrivate(details.item.component)) continue
+
+    const start = toComparableDate(details.startDate)
+    const end = toComparableDate(details.endDate)
+    if (!overlapsRange(start, end, range)) continue
+
+    results.push({
+      ...toOccurrence(details.startDate, details.endDate, details.item),
+      occurrence: count,
+    })
+  }
+
+  return results
+}
+
+/**
+ * The `n`-th occurrence (1-based) of a series with its override applied — the
+ * counterpart to the `occurrence` index handed out by `collectOccurrences`.
+ *
+ * @returns null when the series ends before reaching `n`.
+ */
+export function occurrenceAt(parsed: ParsedCalendarEvent, n: number): EventOccurrence | null {
+  const iterator = parsed.event.iterator()
+
+  let next
+  for (let i = 0; i < n; i++) {
+    next = iterator.next()
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
+    if (!next) return null
+  }
+  if (!next) return null
+
+  const details = parsed.event.getOccurrenceDetails(next)
+  return toOccurrence(details.startDate, details.endDate, details.item)
+}

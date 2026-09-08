@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { createCalDAVAccount, findCalendars, findEvent } from '../helpers/dav'
-import { parseCalendarEvent } from '../helpers/ical'
+import { occurrenceAt, parseCalendarEvent } from '../helpers/ical'
 
 const bodySchema = z.object({
   calendar: z.string(),
@@ -52,21 +52,13 @@ export default defineEventHandler(async (event) => {
   const { vevent, event: e } = parsed
 
   if (e.isRecurring() && occurrence) {
-    // Expandiere wiederkehrende Events; getOccurrenceDetails() liefert die
-    // effektiven Daten inklusive RECURRENCE-ID-Overrides
-    const iterator = e.iterator()
+    // Expansion inkl. RECURRENCE-ID-Overrides liegt in helpers/ical.ts
+    const details = occurrenceAt(parsed, occurrence)
 
-    let next = iterator.next()
-    for (let i = 1; i < occurrence; i++) {
-      next = iterator.next()
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
-    if (!next) {
+    if (!details) {
       throw createError({ statusCode: 404, statusMessage: 'Event not found' })
     }
 
-    const details = e.getOccurrenceDetails(next)
     const item = details.item
     return {
       description: item.description,

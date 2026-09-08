@@ -4,8 +4,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import {
   ALLDAY_EVENT,
+  MULTI_DAY_EVENT,
   PRIVATE_EVENT,
   RECURRING_EVENT,
+  RECURRING_EVENT_OVERRIDE_FIRST,
+  RECURRING_EVENT_OVERRIDE_MOVED_BACK,
+  RECURRING_EVENT_PRIVATE_OVERRIDE,
+  RECURRING_EVENT_WITH_OVERRIDE,
   RECURRING_EVENT_WITH_TIMEZONE,
   SIMPLE_EVENT,
   VCALENDAR_NO_VEVENT,
@@ -489,6 +494,83 @@ describe('collectEventsForUser', () => {
     result.forEach((ev) => {
       expect(ev.startDate.getTime()).toBeGreaterThanOrEqual(narrowRange.from.getTime())
       expect(ev.startDate.getTime()).toBeLessThanOrEqual(narrowRange.to.getTime())
+    })
+  })
+
+  describe('RECURRENCE-ID overrides', () => {
+    // Regression guard for #329: the newsletter expanded the RRULE on its own
+    // and never applied the overrides, so a rescheduled occurrence went out at
+    // its original time while the detail view already showed the new one.
+    const marchRange = {
+      from: new Date('2025-03-01T00:00:00Z'),
+      to: new Date('2025-03-31T23:59:59Z'),
+    }
+
+    const collect = async (calendarData: string, window = marchRange) => {
+      mockFindEvents.mockResolvedValue([
+        { href: '/cal/work/recurring-override-1.ics', props: { calendarData } },
+      ])
+      return collectEventsForUser(DAV_CONFIG, 'http://app.example.com', 'test@example.com', window)
+    }
+
+    it('sends the moved occurrence at its new time, not the RRULE time', async () => {
+      const result = await collect(RECURRING_EVENT_WITH_OVERRIDE)
+      expect(result.map((ev) => ev.startDate.toISOString())).toStrictEqual([
+        '2025-03-01T10:00:00.000Z',
+        '2025-03-08T10:00:00.000Z',
+        '2025-03-18T10:00:00.000Z',
+        '2025-03-22T10:00:00.000Z',
+        '2025-03-29T10:00:00.000Z',
+      ])
+    })
+
+    it('takes title, location and description of the moved occurrence from the override', async () => {
+      const moved = (await collect(RECURRING_EVENT_WITH_OVERRIDE))[2]!
+      expect(moved.title).toBe('Weekly Meeting (moved)')
+      expect(moved.location).toBe('Room C')
+      expect(moved.description).toBe('Moved to Tuesday')
+      expect(moved.endDate.toISOString()).toBe('2025-03-18T11:30:00.000Z')
+    })
+
+    it('links the detail view with the index the mail rendered the time for', async () => {
+      // The mail and server/api/event.post.ts must agree on what occurrence 3
+      // is — a mismatch here is exactly what the user saw in the newsletter.
+      const moved = (await collect(RECURRING_EVENT_WITH_OVERRIDE))[2]!
+      expect(moved.occurrence).toBe(3)
+      expect(moved.detailUrl).toBe('http://app.example.com/2025/03/event/recurring-override-1/3')
+    })
+
+    it('picks the master VEVENT even when the override is listed first', async () => {
+      const result = await collect(RECURRING_EVENT_OVERRIDE_FIRST)
+      expect(result).toHaveLength(5)
+      expect(result[2]!.startDate.toISOString()).toBe('2025-03-18T10:00:00.000Z')
+    })
+
+    it('includes an occurrence pulled back into the newsletter window', async () => {
+      const result = await collect(RECURRING_EVENT_OVERRIDE_MOVED_BACK, {
+        from: new Date('2025-03-01T00:00:00Z'),
+        to: new Date('2025-04-01T00:00:00Z'),
+      })
+      expect(result.map((ev) => ev.startDate.toISOString())).toContain('2025-03-30T10:00:00.000Z')
+    })
+
+    it('drops a single occurrence that its override marks CLASS:PRIVATE', async () => {
+      mockFindUserByEmail.mockResolvedValue({
+        user: { href: '/abc.vcf' },
+        vcard: createMockVCard({ email: 'test@example.com', categories: ['Other'] }),
+      })
+      const result = await collect(RECURRING_EVENT_PRIVATE_OVERRIDE)
+      expect(result).toHaveLength(4)
+      expect(result.map((ev) => ev.title)).not.toContain('Internal Retro')
+    })
+
+    it('keeps a multi-day event that started before the window', async () => {
+      const result = await collect(MULTI_DAY_EVENT, {
+        from: new Date('2025-03-01T00:00:00Z'),
+        to: new Date('2025-03-08T00:00:00Z'),
+      })
+      expect(result).toHaveLength(1)
+      expect(result[0]!.title).toBe('Festival')
     })
   })
 

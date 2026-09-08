@@ -1,8 +1,6 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import ICAL from 'ical.js'
-
 import { paletteMailColorForIndex } from '../../shared/calendar-palette'
 
 import {
@@ -12,8 +10,10 @@ import {
   findEvents,
   findUserByEmail,
 } from './dav'
+import { collectOccurrences, parseCalendarEvent, toComparableDate } from './ical'
 
 import type { DAV_CONFIG } from './dav'
+import type ICAL from 'ical.js'
 
 export interface NewsletterEvent {
   calendar: string
@@ -64,6 +64,15 @@ function hrefToId(href: string): string {
 }
 
 /**
+ * Optional free-text property of a VEVENT. Read off the component rather than
+ * ICAL.Event, whose getters are typed as non-nullable `string` but return null
+ * for absent properties.
+ */
+function optionalText(vevent: ICAL.Component, name: string): string | undefined {
+  return (vevent.getFirstProperty(name)?.getFirstValue() ?? undefined) as string | undefined
+}
+
+/**
  * Collect events visible to a specific user across all calendars, expanded
  * for recurrences, within `range`. Mirrors the privacy filter from
  * server/api/calendar.post.ts — events with `CLASS:PRIVATE` are dropped
@@ -97,66 +106,27 @@ export async function collectEventsForUser(
     const caldata = await findEvents(calDavAccount, cal.url, range.from, range.to)
 
     for (const data of caldata) {
-      const vcalendar = new ICAL.Component(ICAL.parse(data.props?.calendarData))
-      for (const vtimezone of vcalendar.getAllSubcomponents('vtimezone')) {
-        ICAL.TimezoneService.register(new ICAL.Timezone(vtimezone))
-      }
-      const vevent = vcalendar.getFirstSubcomponent('vevent')
-      if (!vevent) continue
-      if (!showPrivate && vevent.getFirstProperty('class')?.getFirstValue() === 'PRIVATE') {
-        continue
-      }
-      const calEvent = new ICAL.Event(vevent)
+      const parsed = parseCalendarEvent(data.props?.calendarData)
+      if (!parsed) continue
       const id = hrefToId(data.href as string)
-      const description = (vevent.getFirstProperty('description')?.getFirstValue() ?? undefined) as
-        string | undefined
-      const location = (vevent.getFirstProperty('location')?.getFirstValue() ?? undefined) as
-        string | undefined
-      const isAllDay = calEvent.startDate.isDate
 
-      if (calEvent.isRecurring()) {
-        const expand = new ICAL.RecurExpansion({
-          component: vevent,
-          dtstart: vevent.getFirstPropertyValue('dtstart') as ICAL.Time,
-        })
-        let count = 0
-        let next
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
-        while ((next = expand.next())) {
-          const start = next.toJSDate()
-          count += 1
-          if (start > range.to) break
-          if (start < range.from) continue
-          const end = new Date(start.getTime() + calEvent.duration.toSeconds() * 1000)
-          results.push({
-            calendar: calName,
-            color,
-            id,
-            occurrence: count,
-            startDate: start,
-            endDate: end,
-            allDay: isAllDay,
-            title: calEvent.summary,
-            description,
-            location,
-            detailUrl: buildDetailUrl(clientUri, start, id, count),
-          })
-        }
-      } else {
-        const start = calEvent.startDate.toJSDate()
-        if (start < range.from || start > range.to) continue
-        const end = calEvent.endDate.toJSDate()
+      // Expansion inkl. RECURRENCE-ID-Overrides liegt in helpers/ical.ts —
+      // Titel, Ort und Beschreibung stammen daher pro Termin aus dem Override,
+      // sofern einer existiert.
+      for (const occ of collectOccurrences(parsed, range, { showPrivate })) {
+        const start = toComparableDate(occ.startDate)
         results.push({
           calendar: calName,
           color,
           id,
+          occurrence: occ.occurrence,
           startDate: start,
-          endDate: end,
-          allDay: isAllDay,
-          title: calEvent.summary,
-          description,
-          location,
-          detailUrl: buildDetailUrl(clientUri, start, id),
+          endDate: toComparableDate(occ.endDate),
+          allDay: occ.allDay,
+          title: occ.item.summary,
+          description: optionalText(occ.item.component, 'description'),
+          location: optionalText(occ.item.component, 'location'),
+          detailUrl: buildDetailUrl(clientUri, start, id, occ.occurrence),
         })
       }
     }

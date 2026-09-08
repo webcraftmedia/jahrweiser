@@ -6,7 +6,10 @@
   })
 
   interface Tag {
+    /** Stable calendar key — this is what gets stored in the vCard. */
     name: string
+    /** Human display name of that calendar; falls back to the key. */
+    label?: string
     state: boolean
   }
 
@@ -227,7 +230,7 @@
               class="ms-2 text-sm font-medium font-body text-navy dark:text-ivory"
               :class="{ 'opacity-50': step !== 2 }"
             >
-              {{ tag.name }}
+              {{ tag.label || tag.name }}
             </label>
           </div>
         </div>

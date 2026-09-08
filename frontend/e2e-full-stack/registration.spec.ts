@@ -15,14 +15,16 @@ const NEWCOMER = 'newcomer@example.com'
 // A seeded user that already exists — re-registering with it must hit the
 // "existing account" path (login link, no new join).
 const ALICE = 'alice@example.com'
-const CAROL = 'carol@example.com'
+const BOB = 'bob@example.com'
 
-// Calendars the seeded admin may hand out, i.e. the X-ADMIN-TAGS on their vCard
-// (cli/seed-demo.ts). A registration link's binding is filtered against exactly
-// this set, and /api/admin/getUserTags reports a user's CATEGORIES against it —
-// which makes it the natural way to observe what a redemption granted.
-const GRANTABLE_A = 'veranstalter'
-const GRANTABLE_B = 'team'
+// Calendar keys the seeded admin may hand out, i.e. the X-ADMIN-TAGS on their
+// vCard (cli/seed-demo.ts). These are collection URI segments, not display
+// names — access is joined on the stable key, see calendarKey() in
+// server/helpers/dav.ts. A link's binding is filtered against exactly this set,
+// and /api/admin/getUserTags reports a user's CATEGORIES against it, which makes
+// it the natural way to observe what a redemption granted.
+const GRANTABLE_A = 'theater-ag'
+const GRANTABLE_B = 'sportgruppe'
 
 test.beforeAll(() => {
   runSeedReset()
@@ -85,6 +87,23 @@ async function calendarAccess(
   // all (see server/api/admin/getUserTags.post.ts), so normalise it here.
   const tags = (await resp.json()) as { name: string; state: boolean | undefined }[]
   return Object.fromEntries(tags.map((t) => [t.name, Boolean(t.state)]))
+}
+
+/** Titles of all events the logged-in user can see in a calendar right now. */
+async function visibleEventTitles(
+  page: import('@playwright/test').Page,
+  calendarName: string,
+): Promise<string[]> {
+  const now = new Date()
+  const resp = await page.context().request.post('/api/calendar', {
+    data: {
+      calendar: calendarName,
+      startDate: new Date(now.getTime() - 7 * 864e5).toISOString(),
+      endDate: new Date(now.getTime() + 30 * 864e5).toISOString(),
+    },
+  })
+  expect(resp.ok()).toBeTruthy()
+  return ((await resp.json()) as { title: string }[]).map((e) => e.title)
 }
 
 /** Redeem a link as an anonymous visitor. */
@@ -285,12 +304,13 @@ test.describe('registration via link', () => {
   test('a link the admin may not hand out is narrowed away before it is stored', async ({
     page,
   }) => {
-    // 'Theater AG' is a real calendar, but not one the seeded admin administers.
+    // 'familie' is a real calendar, but not one the seeded admin administers.
+    // The display name 'Theater AG' is rejected too: grants are keyed by URI.
     await loginViaMagicLink(page, ADMIN)
     const created = await createLink(page, {
       label: 'E2E Foreign',
       duration: '30d',
-      calendars: ['Theater AG'],
+      calendars: ['familie', 'Theater AG'],
     })
     expect(created.calendars).toBeNull()
     expect(await linkRow(page, created.token)).toMatchObject({ calendars: null })
@@ -320,23 +340,19 @@ test.describe('registration via link', () => {
     browser,
   }) => {
     await loginViaMagicLink(page, ADMIN)
-    // Give Carol the access up front, through the regular admin path.
-    const grant = await page.context().request.post('/api/admin/updateUserTags', {
-      data: { email: CAROL, tags: [{ name: GRANTABLE_B, state: true }], sendMail: false },
-    })
-    expect(grant.ok()).toBeTruthy()
-    expect(await calendarAccess(page, CAROL)).toMatchObject({ [GRANTABLE_B]: true })
+    // Bob is seeded with exactly this calendar already.
+    expect(await calendarAccess(page, BOB)).toMatchObject({ [GRANTABLE_B]: true })
 
     const { token } = await createLink(page, {
       label: 'E2E Already Granted',
       duration: '30d',
       calendars: [GRANTABLE_B],
     })
-    await registerVia(browser, token, { firstName: 'Carol', lastName: 'Example', email: CAROL })
+    await registerVia(browser, token, { firstName: 'Bob', lastName: 'Example', email: BOB })
 
-    // She still gets her login link, but nothing was granted, so no join is
+    // He still gets his login link, but nothing was granted, so no join is
     // booked and no maxUses slot is burnt.
-    expect(await waitForMailFor(CAROL)).toBeTruthy()
+    expect(await waitForMailFor(BOB)).toBeTruthy()
     expect(await linkRow(page, token)).toMatchObject({ useCount: 0 })
   })
 
@@ -393,6 +409,55 @@ test.describe('registration via link', () => {
       [GRANTABLE_A]: true,
       [GRANTABLE_B]: false,
     })
+  })
+
+  test('a granted calendar actually reveals its private events', async ({ page, browser }) => {
+    // The payoff the other tests only assert indirectly: CATEGORIES is not a
+    // label, it is what server/api/calendar.post.ts checks before handing out
+    // CLASS:PRIVATE events. Seeded private event lives in the theater-ag calendar.
+    const email = 'private-viewer@example.com'
+    await loginViaMagicLink(page, ADMIN)
+    const { token } = await createLink(page, {
+      label: 'E2E Private',
+      duration: '30d',
+      calendars: [GRANTABLE_A],
+    })
+    await registerVia(browser, token, { firstName: 'Private', lastName: 'Viewer', email })
+
+    // The freshly registered user logs in and sees the private event...
+    const guestContext = await browser.newContext()
+    const guest = await guestContext.newPage()
+    await loginViaMagicLink(guest, email)
+    expect(await visibleEventTitles(guest, 'Theater AG')).toContain(
+      'Interne Probe (nicht oeffentlich)',
+    )
+    await guestContext.close()
+
+    // ...while Alice, who was granted nothing, does not.
+    const aliceContext = await browser.newContext()
+    const alice = await aliceContext.newPage()
+    await loginViaMagicLink(alice, ALICE)
+    expect(await visibleEventTitles(alice, 'Theater AG')).not.toContain(
+      'Interne Probe (nicht oeffentlich)',
+    )
+    await aliceContext.close()
+  })
+
+  test('renaming a calendar does not revoke access', async ({ page }) => {
+    // The reason grants are keyed by collection URI: DAV:displayname is a label
+    // any CalDAV client may change, and the access check only ever denies, so a
+    // rename used to revoke everyone silently.
+    await loginViaMagicLink(page, ADMIN)
+    const calendars = (await (await page.context().request.get('/api/calendars')).json()) as {
+      key: string
+      name: string
+    }[]
+    const theater = calendars.find((c) => c.key === GRANTABLE_A)
+    expect(theater).toBeDefined()
+    // The admin is seeded with CATEGORIES: theater-ag, i.e. access by key.
+    expect(await calendarAccess(page, ADMIN)).toMatchObject({ [GRANTABLE_A]: true })
+    // Access is stored as the key, never as the display name it happens to have.
+    expect(await calendarAccess(page, ADMIN)).not.toHaveProperty(theater!.name)
   })
 
   test('registration endpoints reject anonymous admin access', async ({ request }) => {

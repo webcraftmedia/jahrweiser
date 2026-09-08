@@ -4,11 +4,13 @@ import path from 'node:path'
 import { paletteMailColorForIndex } from '../../shared/calendar-palette'
 
 import {
+  calendarKey,
   createCalDAVAccount,
   createCardDAVAccount,
   findCalendars,
   findEvents,
   findUserByEmail,
+  readCategories,
 } from './dav'
 import { collectOccurrences, parseCalendarEvent, toComparableDate } from './ical'
 
@@ -88,16 +90,14 @@ export async function collectEventsForUser(
   const cardDavAccount = createCardDAVAccount(davConfig)
   const calendars = await findCalendars(calDavAccount)
   const userQuery = await findUserByEmail(cardDavAccount, userEmail)
-  const userCategories = userQuery
-    ? ((userQuery.vcard.getFirstProperty('categories')?.getValues() as string[] | undefined) ?? [])
-    : []
+  const userCategories = userQuery ? readCategories(userQuery.vcard) : []
 
   const results: NewsletterEvent[] = []
 
   for (const [calIndex, cal] of calendars.entries()) {
     const calName = cal.displayName as string | undefined
     if (!calName) continue
-    const showPrivate = userCategories.includes(calName)
+    const showPrivate = userCategories.includes(calendarKey(cal))
     // Color is assigned by the calendar's position in the list. Newsletter
     // uses the higher-contrast `mail` variant; the in-app calendar view uses
     // the muted `light.border` for the same index (see shared/calendar-palette.ts).

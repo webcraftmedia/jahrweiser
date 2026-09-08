@@ -36,8 +36,18 @@ interface Row {
   divergentUseCount: number
 }
 
-// Calendars the logged-in admin may hand out (their own X-ADMIN-TAGS).
-const GRANTABLE = ['Chor', 'Vorstand']
+// Calendars the logged-in admin may hand out (their own X-ADMIN-TAGS), as the
+// stable key plus its display label. Grants are stored by key; the label is
+// purely what the human picks from.
+const GRANTABLE = [
+  { key: 'chor', label: 'Chor' },
+  { key: 'vorstand', label: 'Vorstand' },
+]
+// Every calendar on the server, used to label a link's binding.
+const ALL_CALENDARS = [
+  { key: 'chor', name: 'Chor' },
+  { key: 'vorstand', name: 'Vorstand' },
+]
 
 const VALID_ROW: Row = {
   token: 'tok-valid',
@@ -52,7 +62,7 @@ const VALID_ROW: Row = {
   useCount: 3,
   status: 'valid',
   url: 'http://localhost:3000/register/tok-valid',
-  calendars: ['Chor'],
+  calendars: ['chor'],
   divergentUseCount: 0,
 }
 
@@ -73,10 +83,11 @@ const REVOKED_ROW: Row = {
   divergentUseCount: 0,
 }
 
-function listFetch(rows: Row[], grantable: string[] = GRANTABLE) {
+function listFetch(rows: Row[], grantable: { key: string; label: string }[] = GRANTABLE) {
   return (url: string) => {
     if (url === '/api/admin/registration-links/list') return Promise.resolve(rows)
     if (url === '/api/admin/grantable-calendars') return Promise.resolve(grantable)
+    if (url === '/api/calendars') return Promise.resolve(ALL_CALENDARS)
     return Promise.resolve({})
   }
 }
@@ -183,28 +194,30 @@ describe('Page: Admin Links', () => {
   it('sends the selected calendar binding when creating', async () => {
     const wrapper = await mountLoaded()
     await vi.waitFor(() => {
-      expect(wrapper.find('#link-calendar-Vorstand').exists()).toBe(true)
+      expect(wrapper.find('#link-calendar-vorstand').exists()).toBe(true)
     })
-    await wrapper.find('#link-calendar-Vorstand').setValue(true)
+    await wrapper.find('#link-calendar-vorstand').setValue(true)
     await wrapper.find('form').trigger('submit')
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith(
         '/api/admin/registration-links/create',
         expect.objectContaining({
           method: 'POST',
-          body: { duration: '30d', calendars: ['Vorstand'] },
+          body: { duration: '30d', calendars: ['vorstand'] },
         }),
       )
     })
   })
 
   it('offers only the calendars the admin may hand out', async () => {
-    mock$fetch.mockImplementation(listFetch([VALID_ROW, REVOKED_ROW], ['Chor']))
+    mock$fetch.mockImplementation(
+      listFetch([VALID_ROW, REVOKED_ROW], [{ key: 'chor', label: 'Chor' }]),
+    )
     const wrapper = await mountSuspended(Page, { route: '/admin/links' })
     await vi.waitFor(() => {
-      expect(wrapper.find('#link-calendar-Chor').exists()).toBe(true)
+      expect(wrapper.find('#link-calendar-chor').exists()).toBe(true)
     })
-    expect(wrapper.find('#link-calendar-Vorstand').exists()).toBe(false)
+    expect(wrapper.find('#link-calendar-vorstand').exists()).toBe(false)
   })
 
   it('hides the binding controls when the admin administers no calendar', async () => {
@@ -238,7 +251,7 @@ describe('Page: Admin Links', () => {
     const wrapper = await mountLoaded()
     await findButton(wrapper, 'pages.admin.links.table.edit')!.trigger('click')
     // VALID_ROW is bound to Chor; add Vorstand.
-    await wrapper.find('#edit-calendar-tok-valid-Vorstand').setValue(true)
+    await wrapper.find('#edit-calendar-tok-valid-vorstand').setValue(true)
     await findButton(wrapper, 'pages.admin.links.table.save')!.trigger('click')
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith(
@@ -248,7 +261,7 @@ describe('Page: Admin Links', () => {
           body: {
             token: 'tok-valid',
             label: 'Flyer Herbstfest',
-            calendars: ['Chor', 'Vorstand'],
+            calendars: ['chor', 'vorstand'],
           },
         }),
       )
@@ -258,7 +271,7 @@ describe('Page: Admin Links', () => {
   it('clears the binding when every calendar is unchecked', async () => {
     const wrapper = await mountLoaded()
     await findButton(wrapper, 'pages.admin.links.table.edit')!.trigger('click')
-    await wrapper.find('#edit-calendar-tok-valid-Chor').setValue(false)
+    await wrapper.find('#edit-calendar-tok-valid-chor').setValue(false)
     await findButton(wrapper, 'pages.admin.links.table.save')!.trigger('click')
     await vi.waitFor(() => {
       expect(mock$fetch).toHaveBeenCalledWith(
@@ -428,7 +441,7 @@ describe('Page: Admin Links', () => {
         '/api/admin/registration-links/update',
         expect.objectContaining({
           method: 'POST',
-          body: { token: 'tok-valid', label: 'Renamed', calendars: ['Chor'] },
+          body: { token: 'tok-valid', label: 'Renamed', calendars: ['chor'] },
         }),
       )
     })
@@ -448,7 +461,7 @@ describe('Page: Admin Links', () => {
             token: 'tok-valid',
             label: 'Flyer Herbstfest',
             duration: '7d',
-            calendars: ['Chor'],
+            calendars: ['chor'],
           },
         }),
       )

@@ -4,8 +4,10 @@ import ICAL from 'ical.js'
 import {
   addressBookQuery,
   calendarQuery,
+  fetchAddressBooks,
   fetchCalendarObjects,
   fetchCalendars as tsdavFetchCalendars,
+  fetchVCards,
   updateVCard,
 } from 'tsdav'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -23,6 +25,10 @@ import {
   findUserByToken,
   saveUser,
   createUser,
+  findAllUsers,
+  saveVCardAt,
+  calendarKey,
+  calendarLabel,
   readAdminTags,
   readCategories,
   addCategories,
@@ -41,8 +47,10 @@ vi.mock('tsdav', () => ({
   calendarQuery: vi.fn(),
   createVCard: vi.fn(),
   DAVNamespaceShort: { DAV: 'd', CALDAV: 'c', CARDDAV: 'card' },
+  fetchAddressBooks: vi.fn(),
   fetchCalendarObjects: vi.fn(),
   fetchCalendars: vi.fn(),
+  fetchVCards: vi.fn(),
   updateVCard: vi.fn(),
 }))
 
@@ -428,5 +436,108 @@ describe('vCard calendar access helpers', () => {
       addCategories(vcard, ['Vorstand'])
       expect(readCategories(vcard)).toContain('Chor')
     })
+  })
+})
+
+describe('calendar identity', () => {
+  describe('calendarKey', () => {
+    it('takes the collection segment of the calendar URL', () => {
+      expect(
+        calendarKey({ url: 'https://dav.example.com/dav.php/calendars/admin/theater-ag/' }),
+      ).toBe('theater-ag')
+    })
+
+    it('is unaffected by a missing trailing slash', () => {
+      expect(calendarKey({ url: 'https://dav.example.com/cal/familie' })).toBe('familie')
+    })
+
+    it('decodes percent-escapes so the key matches what a grant stores', () => {
+      expect(calendarKey({ url: 'https://dav.example.com/cal/theater%20ag/' })).toBe('theater ag')
+    })
+
+    it('returns the raw segment when the URL holds a broken percent-escape', () => {
+      // decodeURIComponent would throw; a malformed calendar URL must not take
+      // the whole calendar view down with a 500.
+      expect(calendarKey({ url: 'https://dav.example.com/cal/theater%zz/' })).toBe('theater%zz')
+    })
+
+    it('is stable across a display-name rename', () => {
+      // The whole point: renaming the calendar must not change its identity,
+      // otherwise every grant silently stops matching.
+      const before = { url: 'https://dav.example.com/cal/chor/', displayName: 'Chor' }
+      const after = { url: 'https://dav.example.com/cal/chor/', displayName: 'Chorgruppe Nord' }
+      expect(calendarKey(after)).toBe(calendarKey(before))
+    })
+  })
+
+  describe('calendarLabel', () => {
+    it('returns the display name when there is one', () => {
+      expect(calendarLabel({ url: 'https://x/cal/chor/', displayName: 'Chor' })).toBe('Chor')
+    })
+
+    it('falls back to the key when the server omits the display name', () => {
+      expect(calendarLabel({ url: 'https://x/cal/chor/' })).toBe('chor')
+    })
+
+    it('falls back to the key for a structured display name', () => {
+      // tsdav types displayName loosely; a non-string must not render as
+      // "[object Object]".
+      expect(calendarLabel({ url: 'https://x/cal/chor/', displayName: { _text: 'Chor' } })).toBe(
+        'chor',
+      )
+    })
+  })
+})
+
+describe('bulk vCard maintenance', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('fetches every contact from the discovered address book', async () => {
+    vi.mocked(fetchAddressBooks).mockResolvedValue([
+      { url: 'https://dav.example.com/card/books/main/' },
+    ] as never)
+    vi.mocked(fetchVCards).mockResolvedValue([{ url: '/a.vcf', data: 'BEGIN:VCARD' }] as never)
+
+    const account = createCardDAVAccount(config)
+    await expect(findAllUsers(account)).resolves.toStrictEqual([
+      { url: '/a.vcf', data: 'BEGIN:VCARD' },
+    ])
+    expect(fetchVCards).toHaveBeenCalledWith(
+      expect.objectContaining({
+        addressBook: { url: 'https://dav.example.com/card/books/main/' },
+      }),
+    )
+  })
+
+  it('falls back to the configured homeUrl when discovery finds nothing', async () => {
+    // Fresh Baikal installs do not always expose principal discovery.
+    vi.mocked(fetchAddressBooks).mockResolvedValue([] as never)
+    vi.mocked(fetchVCards).mockResolvedValue([] as never)
+
+    const account = createCardDAVAccount(config)
+    await findAllUsers(account)
+    expect(fetchVCards).toHaveBeenCalledWith(
+      expect.objectContaining({ addressBook: { url: account.homeUrl } }),
+    )
+  })
+
+  it('throws when there is neither a discovered book nor a homeUrl', async () => {
+    vi.mocked(fetchAddressBooks).mockResolvedValue([] as never)
+    await expect(
+      findAllUsers({ ...createCardDAVAccount(config), homeUrl: undefined }),
+    ).rejects.toThrow(/No addressbook found/)
+  })
+
+  it('writes a vCard back to its own URL, passing the etag through', async () => {
+    const account = createCardDAVAccount(config)
+    const vcard = createMockVCard({ email: 'a@b.de' })
+    await saveVCardAt(account, { url: '/a.vcf', etag: 'W/"1"' }, vcard)
+    expect(updateVCard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        vCard: { url: '/a.vcf', data: vcard, etag: 'W/"1"' },
+      }),
+    )
   })
 })

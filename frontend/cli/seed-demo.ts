@@ -20,19 +20,44 @@ interface SeedUser {
   fullname: string
   email: string
   role: 'user' | 'admin'
+  /** Calendar keys this user may grant to others (X-ADMIN-TAGS). */
   tags: string[]
+  /** Calendar keys whose private events this user may see (CATEGORIES). */
+  categories: string[]
 }
 
+// `tags` (X-ADMIN-TAGS) and `categories` (CATEGORIES) both hold *calendar keys*
+// — the collection URL segment of a calendar, see calendarKey() in
+// server/helpers/dav.ts. They used to hold role-ish labels ('veranstalter',
+// 'team') that matched no calendar at all, which made the whole private-event
+// feature a no-op in the demo.
+//
+//   tags       = which calendars this user may hand out to others (admins only)
+//   categories = which calendars this user sees the private events of
 const seedUsers: SeedUser[] = [
-  { fullname: 'Alice Example', email: 'alice@example.com', role: 'user', tags: [] },
-  { fullname: 'Bob Example', email: 'bob@example.com', role: 'user', tags: ['veranstalter'] },
+  // No access at all — the baseline for "private events stay hidden".
+  { fullname: 'Alice Example', email: 'alice@example.com', role: 'user', tags: [], categories: [] },
+  {
+    fullname: 'Bob Example',
+    email: 'bob@example.com',
+    role: 'user',
+    tags: [],
+    categories: ['sportgruppe'],
+  },
   {
     fullname: 'Admin Example',
     email: 'admin@example.com',
     role: 'admin',
-    tags: ['veranstalter', 'team'],
+    tags: ['theater-ag', 'sportgruppe'],
+    categories: ['theater-ag'],
   },
-  { fullname: 'Carol Example', email: 'carol@example.com', role: 'user', tags: ['team'] },
+  {
+    fullname: 'Carol Example',
+    email: 'carol@example.com',
+    role: 'user',
+    tags: [],
+    categories: ['familie'],
+  },
 ]
 
 function buildVCard(user: SeedUser): ICAL.Component {
@@ -44,6 +69,10 @@ function buildVCard(user: SeedUser): ICAL.Component {
   vcard.updatePropertyWithValue(X_ROLE, user.role)
   if (user.tags.length > 0) {
     vcard.updatePropertyWithValue(X_ADMIN_TAGS, user.tags.join(','))
+  }
+  if (user.categories.length > 0) {
+    vcard.updatePropertyWithValue('categories', '')
+    vcard.getFirstProperty('categories')!.setValues(user.categories)
   }
   return vcard
 }
@@ -146,6 +175,12 @@ interface SeedEvent {
   allDay?: boolean
   /** Calendar URI (e.g. 'default', 'theater-ag'). Defaults to 'default'. */
   calendar?: string
+  /**
+   * CLASS:PRIVATE — only visible to users whose CATEGORIES contain this
+   * calendar's key. Without at least one of these the access feature is
+   * invisible in the demo and nothing end-to-end can assert it works.
+   */
+  isPrivate?: boolean
 }
 
 function pad(n: number): string {
@@ -191,11 +226,34 @@ function buildIcs(event: SeedEvent): string {
   ]
   if (event.description) lines.push(`DESCRIPTION:${event.description}`)
   if (event.location) lines.push(`LOCATION:${event.location}`)
+  if (event.isPrivate) lines.push('CLASS:PRIVATE')
   lines.push('END:VEVENT', 'END:VCALENDAR')
   return lines.join('\r\n')
 }
 
 const seedEvents: SeedEvent[] = [
+  // --- Private events: visible only with the matching CATEGORIES entry. ---
+  {
+    uid: 'seed-event-private-theater',
+    summary: 'Interne Probe (nicht oeffentlich)',
+    description: 'Nur fuer die Theater AG sichtbar',
+    location: 'Probenraum',
+    startOffsetDays: 1,
+    startHourUTC: 17,
+    durationHours: 2,
+    calendar: 'theater-ag',
+    isPrivate: true,
+  },
+  {
+    uid: 'seed-event-private-familie',
+    summary: 'Familienrat (nicht oeffentlich)',
+    description: 'Nur fuer die Familie sichtbar',
+    startOffsetDays: 2,
+    startHourUTC: 19,
+    durationHours: 1,
+    calendar: 'familie',
+    isPrivate: true,
+  },
   {
     uid: 'seed-event-yesterday',
     summary: 'Vorstandssitzung',

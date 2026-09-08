@@ -7,7 +7,10 @@ import handler from './calendars.get'
 const mockFindCalendars = vi.fn()
 const mockCreateCalDAVAccount = vi.fn().mockReturnValue({ accountType: 'caldav' })
 
-vi.mock('../helpers/dav', () => ({
+// Only the DAV I/O is mocked; the pure helpers (calendarKey, readCategories, ...)
+// stay real, so these tests exercise the actual logic instead of a copy of it.
+vi.mock('../helpers/dav', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../helpers/dav')>()),
   createCalDAVAccount: (...args: unknown[]) => mockCreateCalDAVAccount(...args),
   findCalendars: (...args: unknown[]) => mockFindCalendars(...args),
 }))
@@ -24,20 +27,32 @@ describe('calendars.get', () => {
 
   it('returns calendars with color', async () => {
     mockFindCalendars.mockResolvedValue([
-      { displayName: 'Work', calendarColor: '#ff0000' },
-      { displayName: 'Personal', calendarColor: '#00ff00' },
+      { displayName: 'Work', url: 'https://dav.example.com/cal/work', calendarColor: '#ff0000' },
+      {
+        displayName: 'Personal',
+        url: 'https://dav.example.com/cal/personal',
+        calendarColor: '#00ff00',
+      },
     ])
     const result = await handlerFn({})
+    // `key` is the stable identity access grants are joined on; `name` is only
+    // the mutable label.
     expect(result).toStrictEqual([
-      { name: 'Work', color: '#ff0000' },
-      { name: 'Personal', color: '#00ff00' },
+      { key: 'work', name: 'Work', color: '#ff0000' },
+      { key: 'personal', name: 'Personal', color: '#00ff00' },
     ])
   })
 
   it('returns default color when calendar has no color', async () => {
-    mockFindCalendars.mockResolvedValue([{ displayName: 'NoColor', calendarColor: undefined }])
+    mockFindCalendars.mockResolvedValue([
+      {
+        displayName: 'NoColor',
+        url: 'https://dav.example.com/cal/nocolor',
+        calendarColor: undefined,
+      },
+    ])
     const result = await handlerFn({})
-    expect(result).toStrictEqual([{ name: 'NoColor', color: '#e7e7ff' }])
+    expect(result).toStrictEqual([{ key: 'nocolor', name: 'NoColor', color: '#e7e7ff' }])
   })
 
   it('returns empty array for empty list', async () => {

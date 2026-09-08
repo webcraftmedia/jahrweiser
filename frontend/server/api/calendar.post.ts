@@ -1,11 +1,13 @@
 import { z } from 'zod'
 
 import {
+  calendarKey,
   createCalDAVAccount,
   createCardDAVAccount,
   findCalendars,
   findEvents,
   findUserByEmail,
+  readCategories,
 } from '../helpers/dav'
 import {
   collectOccurrences,
@@ -68,10 +70,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 502, statusMessage: 'CalDAV server unreachable' })
   }
 
+  // Access is joined on the calendar's stable key, never on the display name the
+  // request addresses it by — see calendarKey() in server/helpers/dav.ts.
   const showPrivate = userQuery
-    ? ((
-        userQuery.vcard.getFirstProperty('categories')?.getValues() as string[] | undefined
-      )?.includes(calendar) ?? false)
+    ? readCategories(userQuery.vcard).includes(calendarKey(selectedCalendar))
     : false
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

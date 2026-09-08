@@ -35,7 +35,10 @@ const mockFindUserByEmail = vi.fn()
 const mockCreateCalDAVAccount = vi.fn().mockReturnValue({ accountType: 'caldav' })
 const mockCreateCardDAVAccount = vi.fn().mockReturnValue({ accountType: 'carddav' })
 
-vi.mock('./dav', () => ({
+// Only the DAV I/O is mocked; the pure helpers (calendarKey, readCategories, ...)
+// stay real, so these tests exercise the actual logic instead of a copy of it.
+vi.mock('./dav', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./dav')>()),
   createCalDAVAccount: (...args: unknown[]) => mockCreateCalDAVAccount(...args),
   createCardDAVAccount: (...args: unknown[]) => mockCreateCardDAVAccount(...args),
   findCalendars: (...args: unknown[]) => mockFindCalendars(...args),
@@ -375,7 +378,7 @@ describe('collectEventsForUser', () => {
     ])
     mockFindUserByEmail.mockResolvedValue({
       user: { href: '/abc.vcf' },
-      vcard: createMockVCard({ email: 'test@example.com', categories: ['Work'] }),
+      vcard: createMockVCard({ email: 'test@example.com', categories: ['work'] }),
     })
     mockFindEvents.mockResolvedValue([])
   })
@@ -659,7 +662,7 @@ describe('collectEventsForUser', () => {
     ])
     mockFindUserByEmail.mockResolvedValue({
       user: { href: '/abc.vcf' },
-      vcard: createMockVCard({ email: 'test@example.com', categories: ['Work', 'Personal'] }),
+      vcard: createMockVCard({ email: 'test@example.com', categories: ['work', 'personal'] }),
     })
     const LATER_EVENT = SIMPLE_EVENT.replace('20250301', '20250305').replace(
       'simple-event-1',
@@ -731,7 +734,7 @@ describe('collectEventsForUser', () => {
     ])
     mockFindUserByEmail.mockResolvedValue({
       user: { href: '/abc.vcf' },
-      vcard: createMockVCard({ email: 'test@example.com', categories: ['Work', 'Personal'] }),
+      vcard: createMockVCard({ email: 'test@example.com', categories: ['work', 'personal'] }),
     })
     const LATER_EVENT = SIMPLE_EVENT.replace('20250301', '20250305').replace(
       'simple-event-1',

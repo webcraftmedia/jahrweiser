@@ -7,12 +7,14 @@ import {
   addressBookQuery,
   calendarQuery,
   DAVNamespaceShort,
+  fetchAddressBooks,
   fetchCalendarObjects,
   fetchCalendars,
+  fetchVCards,
   updateVCard,
 } from 'tsdav'
 
-import type { DAVAccount, DAVResponse } from 'tsdav'
+import type { DAVAccount, DAVResponse, DAVVCard } from 'tsdav'
 
 export const X_LOGIN_REQUEST_TIME = 'x-login-request-time'
 export const X_LOGIN_TOKEN = 'x-login-token'
@@ -29,13 +31,51 @@ export interface DAV_CONFIG {
 }
 
 /**
+ * Stable identity of a calendar: the last segment of its collection URL, e.g.
+ * `theater-ag` for `/dav.php/calendars/admin/theater-ag/`.
+ *
+ * Access grants are joined on this, never on DAV:displayname. A display name is
+ * a mutable label that any CalDAV client may rename at will; joining on it means
+ * a rename silently revokes every grant, with no error anywhere — the check only
+ * ever denies. The collection URL segment cannot change without the calendar
+ * being recreated.
+ *
+ * The full URL would also be stable but embeds host and principal, so moving the
+ * DAV server to another hostname would break every grant instead.
+ */
+export function calendarKey(calendar: { url: string }): string {
+  const segments = calendar.url.replace(/\/+$/, '').split('/')
+  // String#split always yields at least one element, so the last one exists.
+  const segment = segments[segments.length - 1]!
+  try {
+    return decodeURIComponent(segment)
+    // eslint-disable-next-line no-catch-all/no-catch-all -- decodeURIComponent wirft nur bei kaputter Prozent-Sequenz; die roh zurückzugeben ist besser als die Kalenderansicht mit 500 zu quittieren
+  } catch {
+    return segment
+  }
+}
+
+/**
+ * Human-facing name of a calendar, for display only — never as a join key.
+ *
+ * `DAV:displayname` is not guaranteed to be a plain string (tsdav types it as
+ * possibly structured, and a server may omit it), so fall back to the key rather
+ * than rendering `[object Object]` or an empty label.
+ */
+export function calendarLabel(calendar: { displayName?: unknown; url: string }): string {
+  return typeof calendar.displayName === 'string' && calendar.displayName.length > 0
+    ? calendar.displayName
+    : calendarKey(calendar)
+}
+
+/**
  * Calendars an admin is allowed to hand out, read from their own vCard's
- * X-ADMIN-TAGS. Entries are CalDAV calendar display names — the same strings a
- * user carries in CATEGORIES (see server/api/calendar.post.ts).
+ * X-ADMIN-TAGS. Entries are calendar keys (see `calendarKey`) — the same strings
+ * a user carries in CATEGORIES (see server/api/calendar.post.ts).
  *
  * Comma-separated because the vCard format leaves no better option. Entries are
- * trimmed, so `"Chor, Vorstand"` grants access to `Vorstand` and not to
- * `" Vorstand"`, and blanks are dropped so an empty property yields no tag
+ * trimmed, so `"chor, vorstand"` grants access to `vorstand` and not to
+ * `" vorstand"`, and blanks are dropped so an empty property yields no tag
  * rather than a single empty one.
  */
 export function readAdminTags(vcard: ICAL.Component): string[] {
@@ -49,7 +89,7 @@ export function readAdminTags(vcard: ICAL.Component): string[] {
   )
 }
 
-/** Calendars a user has private access to, from their vCard CATEGORIES. */
+/** Calendars a user has private access to, by calendar key, from CATEGORIES. */
 export function readCategories(vcard: ICAL.Component): string[] {
   // ICAL.Property#getValues() always returns an array; the fallback covers only
   // a missing CATEGORIES property.
@@ -225,6 +265,34 @@ async function findUserByProperty(
     vcard: new ICAL.Component(ICAL.parse(data)),
   }
 }
+
+/**
+ * Every contact in the address book. For maintenance tasks that have to touch
+ * all users (see cli/migrate-calendar-tags.ts) rather than look one up.
+ */
+export const findAllUsers = async (account: DAVAccount): Promise<DAVVCard[]> => {
+  const fetchHeaders = headers(account)
+  const discovered = await fetchAddressBooks({ account, headers: fetchHeaders })
+  // Fresh Baikal installs don't always expose principal discovery cleanly —
+  // same fallback as server/helpers/sync.ts.
+  const addressBook = discovered[0] ?? { url: account.homeUrl ?? '' }
+  if (!addressBook.url) {
+    throw new Error('No addressbook found on the DAV server and no homeUrl configured.')
+  }
+  return fetchVCards({ addressBook, headers: fetchHeaders, fetchOptions: getFetchOptions() })
+}
+
+/** Persist a vCard addressed by its own URL, as returned by `findAllUsers`. */
+export const saveVCardAt = async (
+  account: DAVAccount,
+  card: { url: string; etag?: string },
+  vcard: ICAL.Component,
+) =>
+  updateVCard({
+    vCard: { url: card.url, data: vcard, etag: card.etag },
+    headers: headers(account),
+    fetchOptions: getFetchOptions(),
+  })
 
 export const findUserByToken = async (account: DAVAccount, token: string) =>
   findUserByProperty(account, X_LOGIN_TOKEN, token)

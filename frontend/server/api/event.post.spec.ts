@@ -18,7 +18,10 @@ const mockFindCalendars = vi.fn()
 const mockFindEvent = vi.fn()
 const mockCreateCalDAVAccount = vi.fn().mockReturnValue({ accountType: 'caldav' })
 
-vi.mock('../helpers/dav', () => ({
+// Only the DAV I/O is mocked; the pure helpers (calendarKey, readCategories, ...)
+// stay real, so these tests exercise the actual logic instead of a copy of it.
+vi.mock('../helpers/dav', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../helpers/dav')>()),
   createCalDAVAccount: (...args: unknown[]) => mockCreateCalDAVAccount(...args),
   findCalendars: (...args: unknown[]) => mockFindCalendars(...args),
   findEvent: (...args: unknown[]) => mockFindEvent(...args),

@@ -35,3 +35,8 @@ imports/*.json
 
 # Data exports from cli/backup.ts — contain personal data, never commit
 backups
+
+# Telegram-Einladungen: ein privater Invite-Link IST die Berechtigung,
+# gehoert also nicht ins Repository. data/telegram-channels.example.json
+# dokumentiert das Format und bleibt eingecheckt.
+data/telegram-channels.json

@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Kultur-Steher",
+    "description": "Orga und Termine der Kultur-Steher",
+    "url": "https://t.me/+AbCdEfGhIjKlMnOp",
+    "public": false
+  },
+  {
+    "name": "GG&G Info",
+    "description": "Ankündigungen für alle",
+    "url": "https://t.me/beispiel_kanal",
+    "public": true
+  }
+]

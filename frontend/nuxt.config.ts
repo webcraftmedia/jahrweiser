@@ -127,6 +127,10 @@ export default defineNuxtConfig({
     // (e.g. the weekly newsletter). The Nuxt process itself runs with TZ=UTC,
     // so any human-facing formatting must explicitly opt into this zone.
     APP_TIMEZONE: process.env.APP_TIMEZONE || 'Europe/Berlin',
+    // Telegram invitations shown on /telegram. Git-ignored, so the invite links
+    // never reach the repository. Overridable so the file can live outside the
+    // deployment directory entirely (e.g. /etc/jahrweiser/telegram.json).
+    TELEGRAM_CHANNELS_FILE: process.env.TELEGRAM_CHANNELS_FILE || 'data/telegram-channels.json',
 
     // Keys within public, will be also exposed to the client-side
     public: {

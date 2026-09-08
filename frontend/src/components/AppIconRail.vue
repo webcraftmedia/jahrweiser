@@ -1,0 +1,104 @@
+<script setup lang="ts">
+  import IconCalendar from '~/assets/icon-calendar.svg'
+  import IconTelegram from '~/assets/icon-telegram.svg'
+
+  /**
+   * Top-level navigation, icons only. Rendered twice by the default layout: as
+   * a narrow rail beside the content on desktop, as a bottom bar on mobile
+   * (thumb reach, and the calendar keeps the full width on small screens).
+   */
+  const props = defineProps<{ orientation: 'vertical' | 'horizontal' }>()
+
+  const { t } = useI18n()
+  const route = useRoute()
+
+  interface RailItem {
+    to: string
+    label: string
+    icon: unknown
+    /** True while this item's section is open. */
+    isActive: (path: string) => boolean
+  }
+
+  /**
+   * The calendar owns `/` plus the dated permalinks it pushes into the URL
+   * (/2026/09, /2026/09/event/<id>) — see the route pattern in pages/index.vue.
+   * The pattern stays deliberately flat — a single bounded `\d{4}` followed by
+   * a separator — so there is nothing for a backtracking engine to chew on.
+   */
+  function isCalendarPath(path: string): boolean {
+    return path === '/' || /^\/\d{4}(\/|$)/.test(path)
+  }
+
+  const items = computed<RailItem[]>(() => [
+    {
+      to: '/',
+      label: t('components.AppIconRail.calendar'),
+      icon: IconCalendar,
+      isActive: isCalendarPath,
+    },
+    {
+      to: '/telegram',
+      label: t('components.AppIconRail.telegram'),
+      icon: IconTelegram,
+      isActive: (path) => path === '/telegram',
+    },
+  ])
+
+  const isVertical = computed(() => props.orientation === 'vertical')
+</script>
+
+<template>
+  <nav
+    :aria-label="$t('components.AppIconRail.label')"
+    :class="
+      isVertical
+        ? 'flex flex-col gap-1 shrink-0 w-14 py-3 border-r border-navy/10 dark:border-poster-darkBorder bg-ivory dark:bg-poster-darkCard'
+        : 'flex flex-row justify-around items-stretch shrink-0 w-full border-t border-navy/10 dark:border-poster-darkBorder bg-ivory dark:bg-poster-darkCard'
+    "
+  >
+    <NuxtLink
+      v-for="item in items"
+      :key="item.to"
+      :to="item.to"
+      :title="item.label"
+      :aria-label="item.label"
+      :aria-current="item.isActive(route.path) ? 'page' : undefined"
+      :class="[
+        item.isActive(route.path)
+          ? 'text-sienna dark:text-sienna-light bg-sienna/10 dark:bg-sienna/20'
+          : 'text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light hover:bg-sienna/5 dark:hover:bg-sienna/10',
+        'rail-item flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sienna/40',
+        isVertical ? 'mx-2 h-10 rounded-lg' : 'flex-1 py-2.5',
+      ]"
+    >
+      <component :is="item.icon" class="rail-icon" aria-hidden="true" />
+    </NuxtLink>
+  </nav>
+</template>
+
+<style scoped>
+  .rail-icon {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  /* Matches the hover nudge of the section sidebar (components/SidebarLayout.vue). */
+  .rail-item {
+    transition:
+      transform 0.2s ease,
+      color 0.15s ease,
+      background-color 0.15s ease;
+  }
+  .rail-item:hover {
+    transform: translateY(-1px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rail-item,
+    .rail-item:hover {
+      transition: none;
+      transform: none;
+    }
+  }
+</style>

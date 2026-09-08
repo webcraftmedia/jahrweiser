@@ -6,7 +6,6 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
 
 import { readCategories } from './dav'
-
 import {
   buildRegistrantVCard,
   computeExpiresAt,

@@ -102,6 +102,10 @@ describe('Page: Admin Links', () => {
     mockWriteText.mockResolvedValue(undefined)
   })
 
+  function findButton(wrapper: Awaited<ReturnType<typeof mountLoaded>>, key: string) {
+    return wrapper.findAll('button[type="button"]').find((b) => b.text().includes(key))
+  }
+
   it('renders the loaded list', async () => {
     const wrapper = await mountLoaded()
     expect(wrapper.html()).toMatchSnapshot()
@@ -396,10 +400,6 @@ describe('Page: Admin Links', () => {
     consoleSpy.mockRestore()
   })
 
-  function findButton(wrapper: Awaited<ReturnType<typeof mountLoaded>>, key: string) {
-    return wrapper.findAll('button[type="button"]').find((b) => b.text().includes(key))
-  }
-
   it('enters edit mode for a row', async () => {
     const wrapper = await mountLoaded()
     await findButton(wrapper, 'pages.admin.links.table.edit')!.trigger('click')
@@ -444,7 +444,12 @@ describe('Page: Admin Links', () => {
         '/api/admin/registration-links/update',
         expect.objectContaining({
           method: 'POST',
-          body: { token: 'tok-valid', label: 'Flyer Herbstfest', duration: '7d', calendars: ['Chor'] },
+          body: {
+            token: 'tok-valid',
+            label: 'Flyer Herbstfest',
+            duration: '7d',
+            calendars: ['Chor'],
+          },
         }),
       )
     })

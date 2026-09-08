@@ -211,6 +211,29 @@ describe('registration-links/list', () => {
     const res = await listFn({})
     expect(res[0]).toMatchObject({ useCount: 3, divergentUseCount: 2 })
   })
+
+  it('does not confuse a name containing a space with two separate calendars', async () => {
+    asAdmin()
+    queueDbResults(
+      [
+        {
+          token: 't1',
+          label: 'L1',
+          maxUses: null,
+          expiresAt: null,
+          revokedAt: null,
+          createdAt: new Date('2026-01-01'),
+          createdByUid: 'a',
+          createdByName: 'Admin',
+          createdByEmail: 'a@x.de',
+          calendars: ['Chor Nord'],
+        },
+      ],
+      [{ linkToken: 't1', grantedCalendars: ['Chor', 'Nord'] }],
+    )
+    const res = await listFn({})
+    expect(res[0]).toMatchObject({ useCount: 1, divergentUseCount: 1 })
+  })
 })
 
 describe('registration-links/revoke', () => {

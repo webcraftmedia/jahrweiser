@@ -46,9 +46,15 @@ export default defineEventHandler(async (event) => {
     })
     .from(registrationLinkRedemptions)
 
-  /** Order-independent identity of a calendar set; '' means "granted nothing". */
+  /**
+   * Order-independent identity of a calendar set; '' means "granted nothing".
+   *
+   * JSON-encoded rather than joined on a separator: calendar names may contain
+   * anything, so `['Chor Nord']` and `['Chor', 'Nord']` would collide under a
+   * space (or any other) separator and be reported as equal.
+   */
   const fingerprint = (calendars: string[] | null): string =>
-    calendars?.length ? [...calendars].sort().join(' ') : ''
+    calendars?.length ? JSON.stringify([...calendars].sort()) : ''
 
   const grantsByToken = new Map<string, string[]>()
   for (const redemption of redemptions) {

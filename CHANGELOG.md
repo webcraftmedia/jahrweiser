@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.6...v1.11.0) (2026-09-08)
+
+
+### Features
+
+* **frontend:** telergram channels ([#367](https://github.com/webcraftmedia/jahrweiser/issues/367)) ([144a871](https://github.com/webcraftmedia/jahrweiser/commit/144a871d7e06fdde4be40c1c9fb05762dc9b682e))
+
 ## [1.10.6](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.5...v1.10.6) (2026-09-08)
 
 

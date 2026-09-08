@@ -218,6 +218,29 @@ SUMMARY:Weekly All Day (moved)
 END:VEVENT
 END:VCALENDAR`
 
+/** Spans Feb 28 18:00 → Mar 2 12:00, for checking window overlap at the edges. */
+export const MULTI_DAY_EVENT = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Test//EN
+BEGIN:VEVENT
+DTSTART:20250228T180000Z
+DTEND:20250302T120000Z
+SUMMARY:Festival
+UID:multi-day-1
+END:VEVENT
+END:VCALENDAR`
+
+/** DTSTART without DTEND or DURATION — ical.js reports endDate === startDate. */
+export const ZERO_LENGTH_EVENT = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Test//EN
+BEGIN:VEVENT
+DTSTART:20250301T100000Z
+SUMMARY:Zero Length
+UID:zero-length-1
+END:VEVENT
+END:VCALENDAR`
+
 export const EVENT_WITH_DETAILS = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Test//Test//EN

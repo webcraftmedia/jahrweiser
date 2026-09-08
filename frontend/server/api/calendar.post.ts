@@ -8,10 +8,8 @@ import {
   findUserByEmail,
 } from '../helpers/dav'
 import {
-  isPrivate,
-  lastRelevantRecurrenceId,
+  collectOccurrences,
   parseCalendarEvent,
-  toComparableDate,
   toDateString,
   toInclusiveEndDateString,
 } from '../helpers/ical'
@@ -79,73 +77,34 @@ export default defineEventHandler(async (event) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: any[] = []
 
+  const color =
+    typeof selectedCalendar.calendarColor === 'string' ? selectedCalendar.calendarColor : '#e7e7ff'
+
   caldata.forEach((data) => {
     const parsed = parseCalendarEvent(data.props?.calendarData)
-    if (parsed) {
-      const { vevent, event: calEvent, exceptions } = parsed
-      if (!showPrivate && isPrivate(vevent)) {
-        return
+    if (!parsed) return
+
+    // Expansion inkl. RECURRENCE-ID-Overrides liegt in helpers/ical.ts
+    for (const occ of collectOccurrences(
+      parsed,
+      { from: startDate, to: endDate },
+      { showPrivate },
+    )) {
+      const entry: Record<string, unknown> = {
+        calendar: selectedCalendar.displayName,
+        color,
+        id: hrefToId(data.href as string),
+        startDate: occ.allDay ? toDateString(occ.startDate) : occ.startDate.toJSDate(),
+        endDate: occ.allDay
+          ? toInclusiveEndDateString(occ.endDate) // DTEND is exclusive
+          : occ.endDate.toJSDate(),
+        title: occ.item.summary,
       }
-
-      const isAllDay = calEvent.startDate.isDate
-
-      if (calEvent.isRecurring()) {
-        // Expandiere wiederkehrende Events. Der Iterator läuft über die
-        // RRULE-Termine, getOccurrenceDetails() legt die RECURRENCE-ID-
-        // Overrides (verschobene/geänderte Einzeltermine) darüber.
-        const iterator = calEvent.iterator()
-        const iterateUntil = lastRelevantRecurrenceId(exceptions, endDate)
-
-        let count = 0
-        let next
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ical.js types missing null return
-        while ((next = iterator.next())) {
-          count += 1
-          // Abbruch, sobald die Serie den Zeitraum verlassen hat — aber erst,
-          // wenn auch kein Override mehr in den Zeitraum vorgezogen wurde
-          const recurrenceId = toComparableDate(next)
-          if (recurrenceId > endDate && (!iterateUntil || recurrenceId > iterateUntil)) break
-
-          const details = calEvent.getOccurrenceDetails(next)
-          // Overrides können eine eigene CLASS tragen
-          if (!showPrivate && isPrivate(details.item.component)) continue
-
-          const occurrence = toComparableDate(details.startDate)
-          // Nur Events im gewünschten Zeitraum
-          if (occurrence > endDate || occurrence < startDate) continue
-
-          const occurrenceIsAllDay = details.startDate.isDate
-          results.push({
-            calendar: selectedCalendar.displayName,
-            color:
-              typeof selectedCalendar.calendarColor === 'string'
-                ? selectedCalendar.calendarColor
-                : '#e7e7ff',
-            id: hrefToId(data.href as string),
-            occurrence: count,
-            startDate: occurrenceIsAllDay ? toDateString(details.startDate) : occurrence,
-            endDate: occurrenceIsAllDay
-              ? toInclusiveEndDateString(details.endDate) // DTEND is exclusive
-              : details.endDate.toJSDate(),
-            title: details.item.summary,
-            isRecurring: true,
-          })
-        }
-      } else {
-        results.push({
-          calendar: selectedCalendar.displayName,
-          color:
-            typeof selectedCalendar.calendarColor === 'string'
-              ? selectedCalendar.calendarColor
-              : '#e7e7ff',
-          id: hrefToId(data.href as string),
-          startDate: isAllDay ? toDateString(calEvent.startDate) : calEvent.startDate.toJSDate(),
-          endDate: isAllDay
-            ? toInclusiveEndDateString(calEvent.endDate) // DTEND is exclusive
-            : calEvent.endDate.toJSDate(),
-          title: calEvent.summary,
-        })
+      if (occ.occurrence !== undefined) {
+        entry.occurrence = occ.occurrence
+        entry.isRecurring = true
       }
+      results.push(entry)
     }
   })
 

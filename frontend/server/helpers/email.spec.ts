@@ -33,7 +33,15 @@ describe('email helper', () => {
     expect(defaultParams.loginDays).toBe(7)
   })
 
-  it('transport is configured with SMTP config', () => {
+  it('transport is configured with SMTP config', async () => {
+    // Re-import instead of relying on the call from this file's very first
+    // import: the transport is created as a module side effect, and that call
+    // does not survive into the test run any more (vitest 5 clears mock
+    // history in between). The test below already takes this route.
+    mockCreateTransport.mockClear()
+    vi.resetModules()
+    await import('./email')
+
     expect(mockCreateTransport).toHaveBeenCalledWith(
       expect.objectContaining({
         host: 'localhost',

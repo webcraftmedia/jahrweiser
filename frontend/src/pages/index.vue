@@ -901,7 +901,7 @@
     })
 
     // Force browser to commit opacity:0 before starting fade-in
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions, no-unused-expressions
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     events[0]?.offsetHeight
 
     // Stagger fade-in chronologically

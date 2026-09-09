@@ -1,6 +1,8 @@
 import { mockNuxtImport, mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { stubApi } from '../../test/helpers/stub-api'
+
 import Page from './index.vue'
 
 const mock$fetch = vi.hoisted(() => vi.fn())
@@ -168,7 +170,7 @@ vi.mock('@schedule-x/calendar-controls', () => ({
 
 vi.mock('temporal-polyfill/global', () => ({}))
 
-vi.stubGlobal('$fetch', mock$fetch)
+stubApi(mock$fetch)
 
 // Provide Temporal globally for tests (happy-dom may not have it)
 if (typeof globalThis.Temporal === 'undefined') {

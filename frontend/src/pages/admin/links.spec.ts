@@ -1,10 +1,12 @@
 import { mockNuxtImport, mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
+import { stubApi } from '../../../test/helpers/stub-api'
+
 import Page from './links.vue'
 
 const mock$fetch = vi.fn()
-vi.stubGlobal('$fetch', mock$fetch)
+stubApi(mock$fetch)
 
 const mockWriteText = vi.fn()
 

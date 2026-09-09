@@ -3,6 +3,8 @@
     middleware: ['authenticated'],
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   const { t } = useI18n()
 
   const subscribed = ref<boolean | null>(null)
@@ -11,7 +13,7 @@
 
   async function load() {
     try {
-      const data = await $fetch<{ subscribed: boolean; explicit: boolean }>('/api/me/newsletter')
+      const data = await api<{ subscribed: boolean; explicit: boolean }>('/api/me/newsletter')
       subscribed.value = data.subscribed
       // eslint-disable-next-line no-catch-all/no-catch-all -- geloggt; false ist der bewusste Fallback-Zustand
     } catch (error) {
@@ -28,13 +30,13 @@
     message.value = null
     const next = !subscribed.value
     try {
-      await $fetch('/api/me/newsletter', {
+      await api('/api/me/newsletter', {
         method: 'POST',
         body: { subscribed: next },
       })
       subscribed.value = next
       message.value = { kind: 'ok', text: t('pages.settings.newsletter.saved') }
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehlermeldung wird im UI angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehlermeldung wird im UI angezeigt
     } catch {
       message.value = { kind: 'err', text: t('pages.settings.newsletter.error') }
     } finally {

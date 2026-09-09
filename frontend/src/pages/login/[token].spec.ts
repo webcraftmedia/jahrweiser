@@ -1,6 +1,8 @@
 import { mountSuspended, renderSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
+import { stubApi } from '../../../test/helpers/stub-api'
+
 import Page from './[token].vue'
 
 const { mockNavigateTo, mock$fetch, mockRefreshSession } = vi.hoisted(() => ({
@@ -17,7 +19,7 @@ mockNuxtImport('useUserSession', () => () => ({
 
 mockNuxtImport('navigateTo', () => mockNavigateTo)
 
-vi.stubGlobal('$fetch', mock$fetch)
+stubApi(mock$fetch)
 
 describe('Page: Login Token', () => {
   beforeEach(() => {

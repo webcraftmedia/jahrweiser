@@ -155,6 +155,8 @@
     email: '',
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   const emailSchema = z.email()
 
   async function requestLoginLink() {
@@ -168,12 +170,12 @@
     sendError.value = false
     loading.value = true
     try {
-      await $fetch('/api/requestLoginLink', {
+      await api('/api/requestLoginLink', {
         method: 'POST',
         body: { email, ...(redirect ? { redirect } : {}) },
       })
       requestedLogin.value = true
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als sendError angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als sendError angezeigt
     } catch (error) {
       console.error('Failed to request login link:', error)
       sendError.value = true

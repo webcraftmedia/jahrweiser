@@ -1,9 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
+import { stubApi } from '../../test/helpers/stub-api'
+
 import { useTelegramChannels } from './useTelegramChannels'
 
 const mock$fetch = vi.fn()
-vi.stubGlobal('$fetch', mock$fetch)
+stubApi(mock$fetch)
 
 const CHANNELS = [{ id: 1, name: 'Info', url: 'https://t.me/info', public: true }]
 

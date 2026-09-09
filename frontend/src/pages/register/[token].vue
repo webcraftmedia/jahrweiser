@@ -192,7 +192,7 @@
 
   onMounted(async () => {
     try {
-      const res = await $fetch<{ status: typeof linkStatus.value; invitedBy: string | null }>(
+      const res = await api<{ status: typeof linkStatus.value; invitedBy: string | null }>(
         `/api/register/${token}`,
       )
       linkStatus.value = res.status
@@ -205,6 +205,8 @@
     }
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   async function submit() {
     if (!canSubmit.value) {
       emailError.value = !emailSchema.safeParse(email.value.trim()).success
@@ -213,7 +215,7 @@
     sendError.value = false
     loading.value = true
     try {
-      const res = await $fetch<{ status: 'created' }>('/api/register', {
+      const res = await api<{ status: 'created' }>('/api/register', {
         method: 'POST',
         body: {
           token,

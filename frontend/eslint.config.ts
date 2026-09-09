@@ -273,6 +273,29 @@ export default withNuxt(
     },
   },
 
+  {
+    // Die App spricht ausschliesslich über `useApi()` mit dem Server. Der nackte
+    // `$fetch` traegt die 401-Behandlung nicht (siehe src/composables/useApi.ts),
+    // und der Unterschied faellt nirgends auf: der Aufruf funktioniert, nur die
+    // Weiterleitung zum Login bleibt aus. Deshalb hier hart verboten, statt sich
+    // darauf zu verlassen, dass es im Review auffaellt.
+    files: ['src/**/*.{ts,vue}'],
+    ignores: ['src/plugins/auth-redirect.ts', 'src/**/*.spec.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.name='$fetch']",
+          message: 'Statt $fetch den Client aus useApi() nutzen — er traegt die 401-Behandlung.',
+        },
+        {
+          selector: "MemberExpression[object.name='$fetch']",
+          message: 'Statt $fetch den Client aus useApi() nutzen — er traegt die 401-Behandlung.',
+        },
+      ],
+    },
+  },
+
   // Prettier (MUSS letztes sein)
   ...prettier,
 )

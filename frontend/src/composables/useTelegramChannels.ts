@@ -8,6 +8,9 @@ import type { TelegramChannel } from '~~/shared/telegram'
  * server and does not leak between users during SSR.
  */
 export function useTelegramChannels() {
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
+
   const channels = useState<TelegramChannel[]>('telegram-channels', () => [])
   const isLoading = useState('telegram-channels-loading', () => false)
   const loadError = useState('telegram-channels-error', () => false)
@@ -27,8 +30,8 @@ export function useTelegramChannels() {
     isLoading.value = true
     loadError.value = false
     try {
-      channels.value = await $fetch<TelegramChannel[]>('/api/telegram-channels')
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, leere Liste ist der Fallback
+      channels.value = await api<TelegramChannel[]>('/api/telegram-channels')
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, leere Liste ist der Fallback
     } catch (error) {
       console.error(error)
       channels.value = []

@@ -64,7 +64,7 @@
 
   onMounted(async () => {
     try {
-      await $fetch('/api/redeemLoginLink', {
+      await api('/api/redeemLoginLink', {
         method: 'POST',
         body: route.params,
       })
@@ -75,4 +75,7 @@
       success.value = false
     }
   })
+
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
 </script>

@@ -5,6 +5,8 @@
     middleware: ['authenticated', 'admin'],
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   interface MetricsMonth {
     month: string
     members: number
@@ -47,8 +49,8 @@
     isLoading.value = true
     loadError.value = false
     try {
-      metrics.value = await $fetch<MetricsResponse>('/api/admin/metrics')
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als Statusmeldung angezeigt
+      metrics.value = await api<MetricsResponse>('/api/admin/metrics')
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als Statusmeldung angezeigt
     } catch (error) {
       console.error(error)
       loadError.value = true

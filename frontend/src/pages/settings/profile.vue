@@ -3,6 +3,8 @@
     middleware: ['authenticated'],
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   const { t } = useI18n()
   const { fetch: refreshSession, user } = useUserSession()
 
@@ -28,7 +30,7 @@
 
   async function loadProfile() {
     try {
-      const data = await $fetch<{ firstName: string; lastName: string; postalCode: string }>(
+      const data = await api<{ firstName: string; lastName: string; postalCode: string }>(
         '/api/me/profile',
       )
       firstName.value = data.firstName
@@ -57,7 +59,7 @@
     savingName.value = true
     nameMessage.value = null
     try {
-      await $fetch('/api/me/profile', {
+      await api('/api/me/profile', {
         method: 'POST',
         body: {
           firstName: firstName.value.trim(),
@@ -73,7 +75,7 @@
       // Best-effort: refresh the session so the header greeting updates. A
       // failure here must NOT turn a successful save into an error.
       void refreshSession().catch(() => {})
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Server-Begruendung wird im UI angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Server-Begruendung wird im UI angezeigt
     } catch (error) {
       // Surface the server's reason (e.g. "Contact not found") so a failure is
       // diagnosable instead of a generic message.

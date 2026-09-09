@@ -50,6 +50,13 @@
       "when": 1788956649288,
       "tag": "0006_mushy_starjammers",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1788980684453,
+      "tag": "0007_low_mister_sinister",
+      "breakpoints": true
     }
   ]
 }

@@ -42,6 +42,32 @@ export const MOCK_BLAETTCHEN = {
   contact: 'redaktion@example.com',
 }
 
+/** A square country and two postal codes — enough to draw and to assert on. */
+export const MOCK_MAP_OUTLINE = { viewBox: '0 0 4000 5000', d: 'M0 0l4000 0 0 5000-4000 0z' }
+export const MOCK_MAP = {
+  areas: [
+    {
+      plz: '64673',
+      ort: 'Zwingenberg',
+      count: 3,
+      d: 'M0 0l99 0 0 99z',
+      cx: 500,
+      cy: 500,
+      size: 900,
+    },
+    { plz: '10115', ort: 'Berlin', count: 7, d: 'M0 0l9 0 0 9z', cx: 2900, cy: 900, size: 9 },
+  ],
+  unlocated: 0,
+  located: 10,
+  total: 14,
+  max: 7,
+}
+
+export const MOCK_PLACES = [
+  { name: 'Zwingenberg', x: 500, y: 500, rank: 7291 },
+  { name: 'Bensheim', x: 2900, y: 900, rank: 40000 },
+]
+
 export const MOCK_EVENT_DETAIL = {
   summary: 'Jahresversammlung',
   description: 'Jährliche Mitgliederversammlung\nAlle Mitglieder sind eingeladen',
@@ -92,7 +118,7 @@ export async function mockCalendarEndpoints(page: Page) {
     }),
   )
 
-  // The icon rail requests these two on every page of the default layout.
+  // The icon rail requests these three on every page of the default layout.
   // Unmocked they would 401 against the real server, and
   // src/plugins/auth-redirect.ts turns any 401 into a logout — which empties
   // the page mid-test.
@@ -112,11 +138,58 @@ export async function mockCalendarEndpoints(page: Page) {
     }),
   )
 
+  await page.route('**/api/map/status', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ hasPostalCode: true }),
+    }),
+  )
+
   await page.route('**/api/event', async (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(MOCK_EVENT_DETAIL),
+    }),
+  )
+}
+
+/**
+ * The map page's own two requests. `locked` mocks the 403 a member without a
+ * postal code gets — the server sends no aggregate at all in that case, so
+ * neither does this.
+ */
+export async function mockMapEndpoints(page: Page, { locked = false } = {}) {
+  await page.route('**/api/map/outline', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_MAP_OUTLINE),
+    }),
+  )
+
+  await page.route('**/api/map/status', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ hasPostalCode: !locked }),
+    }),
+  )
+
+  await page.route('**/api/map/members', async (route) =>
+    route.fulfill({
+      status: locked ? 403 : 200,
+      contentType: 'application/json',
+      body: JSON.stringify(locked ? { statusMessage: 'postal-code-required' } : MOCK_MAP),
+    }),
+  )
+
+  await page.route('**/api/map/places*', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(locked ? [] : MOCK_PLACES),
     }),
   )
 }

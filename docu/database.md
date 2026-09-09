@@ -12,6 +12,7 @@ the app writes automatically.
 |--------------------------|-----------------|-------------------------------------------|
 | name, phone, address     | DAV (CardDAV)   | User-edited, propagated via DAV-Client    |
 | email (primary)          | DAV + mirror    | DAV authoritative, sidecar indexed copy   |
+| postal code (`ADR`)      | DAV + mirror    | DAV authoritative; mirrored so the member map can `GROUP BY` (see `docu/karte.md`) |
 | `role`                   | MariaDB         | Set via `cli:admin:grant`, never via DAV  |
 | admin tags (categories)  | DAV + mirror    | DAV authoritative; sync overwrites sidecar |
 | login tokens             | MariaDB         | One-time magic links                      |

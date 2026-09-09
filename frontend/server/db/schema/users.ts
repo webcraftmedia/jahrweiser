@@ -8,6 +8,10 @@ export const users = mysqlTable(
     email: varchar('email', { length: 255 }).notNull().unique(),
     displayName: varchar('display_name', { length: 255 }),
     role: mysqlEnum('role', ['user', 'admin']).notNull().default('user'),
+    // Mirror of the vCard's ADR postal code. DAV stays the source of truth —
+    // this copy exists so the member map can aggregate with a GROUP BY instead
+    // of scanning the whole address book on every request. Null = not given.
+    postalCode: varchar('postal_code', { length: 16 }),
     loginDisabled: boolean('login_disabled').notNull().default(false),
     // explicit newsletter subscription state. Defaults to 'subscribed' so new
     // users are auto-opted-in; users can opt out via the settings page.

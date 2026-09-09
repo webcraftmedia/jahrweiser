@@ -124,6 +124,9 @@ describe('buildRegistrantVCard', () => {
       uid: 'uid-123',
       email: 'anna@example.com',
       displayName: 'Anna Mustermann',
+      // A registrant has not been asked for one yet; they add it in the
+      // settings, and the map's rail entry says so until they do.
+      postalCode: null,
       role: 'user',
       tags: [],
     })

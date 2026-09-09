@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `postal_code` varchar(16);

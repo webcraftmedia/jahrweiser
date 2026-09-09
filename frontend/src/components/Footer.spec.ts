@@ -2,6 +2,8 @@ import { mountSuspended, renderSuspended, mockNuxtImport } from '@nuxt/test-util
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { stubApi } from '../../test/helpers/stub-api'
+
 import Component from './Footer.vue'
 
 const mockState = vi.hoisted(() => {
@@ -31,7 +33,7 @@ vi.mock('../composables/useZoom', () => ({
 
 const MOCK_CHANGELOG = '## 1.0.0 (2026-01-01)\n\n### Features\n\n* **scope:** feature one\n'
 
-vi.stubGlobal('$fetch', vi.fn().mockResolvedValue(MOCK_CHANGELOG))
+stubApi(vi.fn().mockResolvedValue(MOCK_CHANGELOG))
 
 const { changelogShouldOpen } = mockState
 mockNuxtImport('useChangelog', () => () => ({

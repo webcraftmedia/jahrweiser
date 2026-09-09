@@ -8,6 +8,9 @@ import type { BlaettchenIssue, BlaettchenListing } from '~~/shared/blaettchen'
  * server and does not leak between users during SSR.
  */
 export function useBlaettchen() {
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
+
   const issues = useState<BlaettchenIssue[]>('blaettchen-issues', () => [])
   const contact = useState<string | null>('blaettchen-contact', () => null)
   const isLoading = useState('blaettchen-loading', () => false)
@@ -28,10 +31,10 @@ export function useBlaettchen() {
     isLoading.value = true
     loadError.value = false
     try {
-      const listing = await $fetch<BlaettchenListing>('/api/blaettchen')
+      const listing = await api<BlaettchenListing>('/api/blaettchen')
       issues.value = listing.issues
       contact.value = listing.contact
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, leere Liste ist der Fallback
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, leere Liste ist der Fallback
     } catch (error) {
       console.error(error)
       issues.value = []

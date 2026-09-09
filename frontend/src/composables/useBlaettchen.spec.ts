@@ -1,9 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
+import { stubApi } from '../../test/helpers/stub-api'
+
 import { useBlaettchen } from './useBlaettchen'
 
 const mock$fetch = vi.fn()
-vi.stubGlobal('$fetch', mock$fetch)
+stubApi(mock$fetch)
 
 const LISTING = {
   issues: [{ number: 12, date: '2026-05-01', file: '12_2026-05-01.pdf' }],

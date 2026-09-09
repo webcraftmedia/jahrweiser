@@ -60,13 +60,15 @@
 </template>
 
 <script setup lang="ts">
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   const modal = ref<InstanceType<typeof Modal>>()
   const sectionsContainer = ref<HTMLElement>()
   const sections = ref<ReturnType<typeof parseChangelog>>([])
 
   async function open() {
     if (sections.value.length === 0) {
-      const raw = await $fetch<string>('/api/changelog')
+      const raw = await api<string>('/api/changelog')
       sections.value = parseChangelog(raw)
     }
     modal.value?.open()

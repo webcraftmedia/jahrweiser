@@ -1,10 +1,12 @@
 import { randomBytes } from 'node:crypto'
 
-import mysql from 'mysql2/promise'
+import { createPool } from 'mysql2/promise'
 
-let pool: mysql.Pool | null = null
+import type { Pool } from 'mysql2/promise'
 
-function getPool(): mysql.Pool {
+let pool: Pool | null = null
+
+function getPool(): Pool {
   if (pool) return pool
   const base = {
     user: process.env.DB_USER || 'jahrweiser',
@@ -14,8 +16,8 @@ function getPool(): mysql.Pool {
     waitForConnections: true,
   }
   pool = process.env.DB_SOCKET
-    ? mysql.createPool({ ...base, socketPath: process.env.DB_SOCKET })
-    : mysql.createPool({
+    ? createPool({ ...base, socketPath: process.env.DB_SOCKET })
+    : createPool({
         ...base,
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,

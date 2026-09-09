@@ -1,10 +1,12 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { stubApi } from '../../../test/helpers/stub-api'
+
 import Page from './index.vue'
 
 const mock$fetch = vi.fn()
-vi.stubGlobal('$fetch', mock$fetch)
+stubApi(mock$fetch)
 
 const CURRENT = {
   members: 42,

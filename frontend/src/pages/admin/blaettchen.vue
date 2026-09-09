@@ -7,6 +7,8 @@
     middleware: ['authenticated', 'admin'],
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   // The same listing the icon rail and /blaettchen use — reloading it here
   // makes the rail entry appear the moment the first issue is published.
   const { issues, isLoading, loadError, load, urlFor, formatDate } = useBlaettchen()
@@ -127,14 +129,14 @@
       if (title.value.trim()) form.append('title', title.value.trim())
       form.append('replace', replace.value ? 'true' : 'false')
 
-      const result = await $fetch<{ issue: BlaettchenIssue; replaced: string[] }>(
+      const result = await api<{ issue: BlaettchenIssue; replaced: string[] }>(
         '/api/admin/blaettchen/upload',
         { method: 'POST', body: form },
       )
       uploaded.value = result.issue
       resetForm()
       await load(true)
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als Statusmeldung angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als Statusmeldung angezeigt
     } catch (error) {
       console.error(error)
       uploadError.value = errorKeyFor(error)
@@ -146,10 +148,10 @@
   async function remove(file: string): Promise<void> {
     deleteError.value = false
     try {
-      await $fetch('/api/admin/blaettchen/delete', { method: 'POST', body: { file } })
+      await api('/api/admin/blaettchen/delete', { method: 'POST', body: { file } })
       pendingDelete.value = null
       await load(true)
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als Statusmeldung angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als Statusmeldung angezeigt
     } catch (error) {
       console.error(error)
       deleteError.value = true

@@ -5,6 +5,8 @@
     middleware: ['authenticated', 'admin'],
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   interface Tag {
     /** Stable calendar key — this is what gets stored in the vCard. */
     name: string
@@ -38,13 +40,13 @@
 
   async function getUserTags(email: string): Promise<Tag[]> {
     try {
-      return await $fetch<Tag[]>('/api/admin/getUserTags', {
+      return await api<Tag[]>('/api/admin/getUserTags', {
         method: 'POST',
         body: {
           email,
         },
       })
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, leere Tag-Liste ist der Fallback
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, leere Tag-Liste ist der Fallback
     } catch (error) {
       console.error(error)
       return []
@@ -85,7 +87,7 @@
     submitError.value = null
 
     try {
-      const result = await $fetch<boolean>('/api/admin/updateUserTags', {
+      const result = await api<boolean>('/api/admin/updateUserTags', {
         method: 'POST',
         body: {
           email: email.value,
@@ -95,7 +97,7 @@
       })
 
       submitResult.value = result ? 'success-with-email' : 'success-without-email'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-catch-all/no-catch-all -- einzelner $fetch: Fehlermeldung wird im Formular angezeigt
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehlermeldung wird im Formular angezeigt
     } catch (error: any) {
       submitResult.value = 'error'
       submitError.value = error?.message || $t('pages.admin.members.add.result.error-unknown')

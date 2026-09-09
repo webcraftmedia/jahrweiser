@@ -12,6 +12,8 @@
     middleware: ['authenticated', 'admin'],
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   // The same list /telegram and the icon rail use — reloading it here makes the
   // rail entry appear with the first channel and vanish with the last.
   const { channels, isLoading, loadError, load } = useTelegramChannels()
@@ -68,13 +70,13 @@
     isCreating.value = true
     createError.value = false
     try {
-      await $fetch('/api/admin/telegram-channels/create', {
+      await api('/api/admin/telegram-channels/create', {
         method: 'POST',
         body: payload(create.value),
       })
       create.value = emptyForm()
       await load(true)
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als Statusmeldung angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als Statusmeldung angezeigt
     } catch (error) {
       console.error(error)
       createError.value = true
@@ -99,13 +101,13 @@
     isSaving.value = true
     editError.value = false
     try {
-      await $fetch('/api/admin/telegram-channels/update', {
+      await api('/api/admin/telegram-channels/update', {
         method: 'POST',
         body: { id: editingId.value, ...payload(edit.value) },
       })
       editingId.value = null
       await load(true)
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als Statusmeldung angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als Statusmeldung angezeigt
     } catch (error) {
       console.error(error)
       editError.value = true
@@ -117,12 +119,12 @@
   async function move(id: number, direction: 'up' | 'down'): Promise<void> {
     actionError.value = false
     try {
-      await $fetch('/api/admin/telegram-channels/move', {
+      await api('/api/admin/telegram-channels/move', {
         method: 'POST',
         body: { id, direction },
       })
       await load(true)
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als Statusmeldung angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als Statusmeldung angezeigt
     } catch (error) {
       console.error(error)
       actionError.value = true
@@ -132,10 +134,10 @@
   async function remove(id: number): Promise<void> {
     actionError.value = false
     try {
-      await $fetch('/api/admin/telegram-channels/delete', { method: 'POST', body: { id } })
+      await api('/api/admin/telegram-channels/delete', { method: 'POST', body: { id } })
       pendingDelete.value = null
       await load(true)
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als Statusmeldung angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als Statusmeldung angezeigt
     } catch (error) {
       console.error(error)
       actionError.value = true

@@ -35,6 +35,19 @@ const it4cImportRules = Object.fromEntries(
   ]),
 )
 
+// it4c reicht mit dem Import-X-Modul auch `flatConfigs.typescript` von
+// eslint-plugin-import-x durch, und daran haengen dessen `settings`: der
+// TypeScript-Resolver, die aufloesbaren Extensions und external-module-folders.
+// Oben werden nur die Rules uebernommen — ohne diese Settings faellt import-x auf
+// seinen Legacy-Resolver namens `node` zurueck. Dessen letzter Auflösungsversuch
+// ist `require(<paketwurzel>/node)`, und trifft der auf ein Paket mit einem
+// Verzeichnis `node/` (z.B. lightningcss, seit Nuxt 4.5 im Baum), laedt import-x
+// es als Resolver und bricht den ganzen Lauf ab.
+//
+// Die Keys bleiben `import-x/…`, auch wenn Nuxt das Plugin als `import`
+// registriert — import-x liest sie fest verdrahtet unter diesem Praefix.
+const it4cImportSettings = Object.assign({}, ...it4cImportX.map((c) => c.settings))
+
 // no-catch-all liefert das it4c-eslint-Basismodul. Da hier nur die Regeln der it4c-Module
 // übernommen werden (Plugins/Parser stellt Nuxt), muss dessen Plugin mitregistriert werden.
 const it4cEslintPlugins = Object.assign({}, ...it4cEslint.map((c) => c.plugins))
@@ -84,7 +97,14 @@ export default withNuxt(
       'import/extensions': 'off',
       // Namespace-Imports für Typen (import type * as X) sind gängig
       'import/no-namespace': 'off',
+      // Zyklen in Abhaengigkeiten kann man nicht aufloesen — sie zu suchen kostet
+      // nur Laufzeit, und der Durchlauf durch node_modules ist der Weg, auf dem
+      // ein Resolver ueberhaupt erst ueber Fremdpakete stolpert.
+      'import/no-cycle': ['error', { ignoreExternal: true }],
     },
+  },
+  {
+    settings: it4cImportSettings,
   },
   {
     files: ['**/*.spec.ts', '**/*.spec.js', '**/*.test.ts', '**/*.test.js', 'test/**'],

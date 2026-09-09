@@ -3,6 +3,8 @@
     middleware: ['authenticated', 'admin'],
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   const { t } = useI18n()
   const { user } = useUserSession()
 
@@ -85,8 +87,8 @@
     isLoading.value = true
     loadError.value = false
     try {
-      links.value = await $fetch<LinkRow[]>('/api/admin/registration-links/list')
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als loadError angezeigt
+      links.value = await api<LinkRow[]>('/api/admin/registration-links/list')
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als loadError angezeigt
     } catch (error) {
       console.error(error)
       loadError.value = true
@@ -97,10 +99,10 @@
 
   async function loadGrantableCalendars() {
     try {
-      grantableCalendars.value = await $fetch<{ key: string; label: string }[]>(
+      grantableCalendars.value = await api<{ key: string; label: string }[]>(
         '/api/admin/grantable-calendars',
       )
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, leere Auswahl ist der Fallback
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, leere Auswahl ist der Fallback
     } catch (error) {
       console.error(error)
       grantableCalendars.value = []
@@ -109,9 +111,9 @@
 
   async function loadCalendarLabels() {
     try {
-      const calendars = await $fetch<{ key: string; name: string }[]>('/api/calendars')
+      const calendars = await api<{ key: string; name: string }[]>('/api/calendars')
       calendarLabels.value = Object.fromEntries(calendars.map((c) => [c.key, c.name]))
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Keys werden dann roh angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, Keys werden dann roh angezeigt
     } catch (error) {
       console.error(error)
       calendarLabels.value = {}
@@ -122,7 +124,7 @@
     isCreating.value = true
     createError.value = false
     try {
-      await $fetch('/api/admin/registration-links/create', {
+      await api('/api/admin/registration-links/create', {
         method: 'POST',
         body: {
           ...(label.value.trim() ? { label: label.value.trim() } : {}),
@@ -136,7 +138,7 @@
       duration.value = '30d'
       selectedCalendars.value = []
       await loadLinks()
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt und als createError angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als createError angezeigt
     } catch (error) {
       console.error(error)
       createError.value = true
@@ -147,12 +149,12 @@
 
   async function revokeLink(token: string) {
     try {
-      await $fetch('/api/admin/registration-links/revoke', {
+      await api('/api/admin/registration-links/revoke', {
         method: 'POST',
         body: { token },
       })
       await loadLinks()
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Liste wird neu geladen
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, Liste wird neu geladen
     } catch (error) {
       console.error(error)
     }
@@ -172,7 +174,7 @@
   async function saveEdit(token: string) {
     isSavingEdit.value = true
     try {
-      await $fetch('/api/admin/registration-links/update', {
+      await api('/api/admin/registration-links/update', {
         method: 'POST',
         body: {
           token,
@@ -183,7 +185,7 @@
       })
       editingToken.value = null
       await loadLinks()
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Liste wird neu geladen
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, Liste wird neu geladen
     } catch (error) {
       console.error(error)
     } finally {
@@ -193,12 +195,12 @@
 
   async function reactivateLink(token: string) {
     try {
-      await $fetch('/api/admin/registration-links/reactivate', {
+      await api('/api/admin/registration-links/reactivate', {
         method: 'POST',
         body: { token },
       })
       await loadLinks()
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Liste wird neu geladen
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, Liste wird neu geladen
     } catch (error) {
       console.error(error)
     }
@@ -207,12 +209,12 @@
   // Deletable only once deactivated and never redeemed (enforced server-side too).
   async function deleteLink(token: string) {
     try {
-      await $fetch('/api/admin/registration-links/delete', {
+      await api('/api/admin/registration-links/delete', {
         method: 'POST',
         body: { token },
       })
       await loadLinks()
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Liste wird neu geladen
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, Liste wird neu geladen
     } catch (error) {
       console.error(error)
     }

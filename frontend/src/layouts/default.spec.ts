@@ -1,6 +1,8 @@
 import { mockNuxtImport, renderSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { stubApi } from '../../test/helpers/stub-api'
+
 import Layout from './default.vue'
 
 const mockZoom = vi.hoisted(() => {
@@ -24,7 +26,7 @@ vi.mock('~/composables/useZoom', () => ({ useZoom: () => mockZoom }))
 // Unmocked those requests resolve to nothing here, and the composables would
 // store that instead of a list.
 const mock$fetch = vi.fn()
-vi.stubGlobal('$fetch', mock$fetch)
+stubApi(mock$fetch)
 
 // The icon rail is only rendered for signed-in users, mirroring the Header.
 const mockLoggedIn = ref(false)

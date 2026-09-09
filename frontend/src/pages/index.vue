@@ -210,6 +210,9 @@
     ],
     path: '/:year(\\d{4})?/:month(0[1-9]|[1-9]|1[0-2])?/:_event(event)?/:eventId?/:occurrence(\\d+)?',
   })
+
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   /* v8 ignore stop */
 
   const route = useRoute()
@@ -778,14 +781,14 @@
 
       // Fetch all calendars if not already loaded
       if (calendars.value.length === 0) {
-        calendars.value = await $fetch('/api/calendars')
+        calendars.value = await api('/api/calendars')
         buildScheduleXCalendars()
       }
 
       // Fetch events from all calendars in parallel
       const results = await Promise.all(
         calendars.value.map((cal) =>
-          $fetch('/api/calendar', {
+          api('/api/calendar', {
             method: 'POST',
             body: {
               calendar: cal.name,
@@ -1016,7 +1019,7 @@
       if (window.location.pathname !== url) {
         window.history.pushState(null, '', url)
       }
-      const eventData = await $fetch('/api/event', {
+      const eventData = await api('/api/event', {
         method: 'POST',
         body: {
           calendar,
@@ -1025,7 +1028,7 @@
         },
       })
       selectedEvent.value = eventData
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehler wird geloggt, Modal schliesst und die URL wird zurueckgesetzt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, Modal schliesst und die URL wird zurueckgesetzt
     } catch (error) {
       console.error(error)
       modal.value?.close()

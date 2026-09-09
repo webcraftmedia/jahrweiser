@@ -3,6 +3,8 @@
     middleware: ['authenticated'],
   })
 
+  // The client with the 401 handling — see useApi().
+  const api = useApi()
   const { t } = useI18n()
 
   const subscribed = ref<boolean | null>(null)
@@ -11,7 +13,7 @@
 
   async function load() {
     try {
-      const data = await $fetch<{ subscribed: boolean; explicit: boolean }>('/api/me/newsletter')
+      const data = await api<{ subscribed: boolean; explicit: boolean }>('/api/me/newsletter')
       subscribed.value = data.subscribed
       // eslint-disable-next-line no-catch-all/no-catch-all -- geloggt; false ist der bewusste Fallback-Zustand
     } catch (error) {
@@ -22,19 +24,20 @@
     }
   }
 
+  // Only reachable once `subscribed` is known: the button lives in the `v-else`
+  // of the loading state, so there is nothing to guard against here.
   async function toggle() {
-    if (subscribed.value === null) return
     saving.value = true
     message.value = null
     const next = !subscribed.value
     try {
-      await $fetch('/api/me/newsletter', {
+      await api('/api/me/newsletter', {
         method: 'POST',
         body: { subscribed: next },
       })
       subscribed.value = next
       message.value = { kind: 'ok', text: t('pages.settings.newsletter.saved') }
-      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner $fetch: Fehlermeldung wird im UI angezeigt
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehlermeldung wird im UI angezeigt
     } catch {
       message.value = { kind: 'err', text: t('pages.settings.newsletter.error') }
     } finally {
@@ -42,7 +45,12 @@
     }
   }
 
-  await load()
+  // Loaded after the first render, not before it: awaiting here would make Vue
+  // hold the whole page back and the loading state below could never show —
+  // on a slow connection the user would just sit on the previous page.
+  onMounted(() => {
+    void load()
+  })
 </script>
 
 <template>

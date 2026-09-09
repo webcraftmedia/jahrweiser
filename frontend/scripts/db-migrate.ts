@@ -1,13 +1,13 @@
 import { config } from 'dotenv'
 import { drizzle } from 'drizzle-orm/mysql2'
 import { migrate } from 'drizzle-orm/mysql2/migrator'
-import mysql from 'mysql2/promise'
+import { createConnection } from 'mysql2/promise'
 
 config()
 
 // DB_SOCKET takes priority — needed when MariaDB only listens on a unix socket
 // (Alpine default) and the app user is GRANTed for '@localhost' only.
-const connection = await mysql.createConnection(
+const connection = await createConnection(
   process.env.DB_SOCKET
     ? {
         socketPath: process.env.DB_SOCKET,

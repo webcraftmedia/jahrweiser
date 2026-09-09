@@ -93,6 +93,15 @@
   .rail-icon {
     width: 1.375rem;
     height: 1.375rem;
+    /* nuxt-svgo wraps every imported asset in NuxtIcon, whose global
+       `.nuxt-icon--fill * { fill: currentColor }` overrides the `fill="none"`
+       in the asset. Stroke and fill therefore end up the same colour: at 60%
+       the icon still showed an edge (the two overlap there), but on the active
+       item, at full opacity, it collapsed into a solid shape with no contour.
+       Holding the fill back keeps the icon solid — it just stops competing
+       with its own outline. `fill-opacity` is inherited, so the shapes inside
+       pick it up without a `:deep()` selector. */
+    fill-opacity: 0.45;
   }
 
   /* Matches the hover nudge of the section sidebar (components/SidebarLayout.vue). */

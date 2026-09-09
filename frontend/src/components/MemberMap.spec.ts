@@ -216,6 +216,20 @@ describe('Component: MemberMap', () => {
       expect(box(wrapper)).toStrictEqual(before)
     })
 
+    it('re-fits when the numbers underneath it change', async () => {
+      // A different set of members covers a different part of the country;
+      // holding the old frame would leave them off screen.
+      const wrapper = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
+      await wrapper.find('button[aria-label="components.MemberMap.zoom-in"]').trigger('click')
+      const zoomed = box(wrapper)
+      await wrapper.setProps({ areas: [area('20095', 5, { cx: 3000, cy: 900 })] })
+      await nextTick()
+      const after = box(wrapper)
+      expect(after.x).not.toBe(zoomed.x)
+      expect(after.x).toBeLessThan(3000)
+      expect(after.x + after.w).toBeGreaterThan(3000)
+    })
+
     it('sizes its marks against the space it was actually given', async () => {
       // How many map units go into a pixel is not knowable up front — the page
       // hands the map whatever height is left — so it is measured.

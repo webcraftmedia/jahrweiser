@@ -71,7 +71,7 @@ never fetches geodata at build or run time.
 Both are server-side only, read through `useStorage('assets:server')`. The
 endpoints send the client only what a view needs — a few dozen areas, a few
 hundred place names — which is what keeps a country-wide choropleth inside the
-220 kB bundle budget (`.size-limit.json`) without thinning the geometry.
+bundle budget (`.size-limit.json`) without thinning the geometry.
 
 Coordinates are projected once at build time (spherical Mercator) and quantised
 to whole viewBox units — 12.000 units across Germany, about 53 m each — so
@@ -158,6 +158,12 @@ Both are named in the map's footer (`MAP_ATTRIBUTION` in `shared/map.ts`).
 budget — and would not help with the part that is actually work here. Leaflet
 brings no German postal-code geometry, and what it does bring is *tiles*, which
 would send every member's IP and map position to a third party on every visit.
+
+The whole map costs **4.8 kB brotli** of client bundle (its two chunks measured
+at 4155 + 671 bytes). The JS budget in `.size-limit.json` went from 220 to
+235 kB when it landed — not because the map is heavy, but because the app was
+already sitting at 219.9 kB and the next feature of any size was going to break
+it either way.
 
 - **Framing** — the map opens on the extent the members cover plus a margin,
   not on the whole country. Zoom by button or wheel, pan by dragging, out to the

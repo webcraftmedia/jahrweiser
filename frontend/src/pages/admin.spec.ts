@@ -66,7 +66,9 @@ describe('Page: Admin', () => {
   it('shows no active state classes when route does not match any menu item', async () => {
     // Falsy branch of isActive() for every NuxtLink (lines 57 + 121) and
     // falsy branch of `currentPageTitle` (line 27 → returns '').
-    mockRoutePath.value = '/admin'
+    // `/admin` itself is a menu item now (the overview), so this needs a path
+    // that really is outside the menu.
+    mockRoutePath.value = '/admin/unbekannt'
     const wrapper = await mountSuspended(Page)
     const nav = wrapper.find('aside nav')
     expect(nav.html()).not.toContain('bg-sienna/10 text-sienna')

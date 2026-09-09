@@ -71,6 +71,24 @@
           "uploading": "Wird hochgeladen..."
         }
       },
+      "dashboard": {
+        "chart": {
+          "derived-note": "Gestrichelt: aus Beitritts- und Austrittsdaten abgeleitet, nicht gemessen. Alle Mitglieder, die beim Umzug in die neue Nutzerverwaltung schon dabei waren, tragen dasselbe Datum — der Sprung dort ist kein Zuwachs.",
+          "members": "Mitglieder-Entwicklung",
+          "month": "Monat",
+          "newsletter": "Newsletter-Entwicklung",
+          "newsletter-derived-note": "Gestrichelt: aus dem heutigen Stand und dem Zeitpunkt der letzten Änderung je Person rekonstruiert, nicht gemessen. Wer abbestellt und später wieder bestellt hat, fehlt darin — der ältere Teil der Kurve zeigt daher eher zu wenige Abbestellungen."
+        },
+        "error": "Die Kennzahlen konnten nicht geladen werden.",
+        "tile": {
+          "blaettchen": "Blättchen-Ausgaben",
+          "members": "Mitglieder",
+          "subscribed": "Newsletter-Abos",
+          "telegram": "Telegram-Kanäle",
+          "unsubscribed": "Abbestellt"
+        },
+        "title": "Übersicht"
+      },
       "links": {
         "create": {
           "button": "Link erzeugen",
@@ -164,6 +182,7 @@
       "menu": {
         "blaettchen": "Blättchen",
         "calendar": "Kalender verwalten",
+        "dashboard": "Übersicht",
         "links": "Registrierungs-Links",
         "members-add": "Mitglieder hinzufügen",
         "telegram": "Telegram-Kanäle"

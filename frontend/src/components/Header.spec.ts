@@ -129,10 +129,10 @@ describe('Header', () => {
   it('hides admin link for non-admin users', async () => {
     mockUser.value = { name: 'Regular User', email: 'user@example.com', role: 'user' }
     const wrapper = await mountSuspended(Component)
-    expect(wrapper.find('#navbar-desktop a[href="/admin/members/add"]').exists()).toBe(false)
+    expect(wrapper.find('#navbar-desktop a[href="/admin"]').exists()).toBe(false)
     // Open mobile menu and check there too
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
-    expect(wrapper.find('#navbar-mobile a[href="/admin/members/add"]').exists()).toBe(false)
+    expect(wrapper.find('#navbar-mobile a[href="/admin"]').exists()).toBe(false)
   })
 
   it('logs out from mobile menu', async () => {
@@ -170,7 +170,7 @@ describe('Header', () => {
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
     expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
     // Admin link should not be present; Settings link should be the only nav link.
-    expect(wrapper.find('#navbar-mobile a[href="/admin/members/add"]').exists()).toBe(false)
+    expect(wrapper.find('#navbar-mobile a[href="/admin"]').exists()).toBe(false)
     const mobileLinks = wrapper.findAll('#navbar-mobile nav a')
     expect(mobileLinks).toHaveLength(1)
     expect(mobileLinks[0]!.attributes('href')).toBe('/settings')

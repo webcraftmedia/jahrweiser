@@ -1,3 +1,4 @@
+import { recordDailyMetrics } from '~~/server/helpers/metrics'
 import { syncDavToSidecar } from '~~/server/helpers/sync'
 
 export default defineEventHandler(async (event) => {
@@ -19,6 +20,17 @@ export default defineEventHandler(async (event) => {
     DAV_URL: config.DAV_URL,
     DAV_URL_CARD: config.DAV_URL_CARD,
   })
+
+  // Today's measurement rides along with the sync the cron already runs, so
+  // the dashboard series needs no schedule of its own. Deliberately after the
+  // sync and deliberately not fatal: a broken metrics write must never make a
+  // cron run look failed, and the numbers are re-measured ten minutes later.
+  try {
+    await recordDailyMetrics(config)
+    // eslint-disable-next-line no-catch-all/no-catch-all -- Kennzahlen sind Beiwerk; ein Fehler hier darf den Sync nicht als gescheitert melden
+  } catch (error) {
+    console.error('Failed to record daily metrics:', error)
+  }
 
   return result
 })

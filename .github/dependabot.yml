@@ -11,6 +11,12 @@ updates:
           - "vitest"
           - "@vitest/*"
           - "@nuxt/test-utils"
+      # @size-limit/file peer-pins size-limit to the exact same version, so a
+      # PR that moves only one of them can never install — see #315/#317.
+      size-limit:
+        patterns:
+          - "size-limit"
+          - "@size-limit/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"

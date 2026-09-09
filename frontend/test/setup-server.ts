@@ -23,6 +23,8 @@ const runtimeConfig = vi.hoisted(() => ({
   LOGIN_RATE_LIMIT_MS: 60000,
   SYNC_SECRET: 'test-sync-secret',
   TELEGRAM_CHANNELS_FILE: 'data/telegram-channels.json',
+  BLAETTCHEN_DIR: 'data/blaettchen',
+  BLAETTCHEN_CONTACT_EMAIL: 'redaktion@example.com',
 }))
 
 vi.mock('#app/nuxt', async (importOriginal) => {

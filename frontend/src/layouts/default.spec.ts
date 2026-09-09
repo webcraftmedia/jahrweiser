@@ -20,6 +20,12 @@ const mockZoom = vi.hoisted(() => {
 // straight at the module.
 vi.mock('~/composables/useZoom', () => ({ useZoom: () => mockZoom }))
 
+// The rail asks for the optional sections (Telegram, Blättchen) on mount.
+// Unmocked those requests resolve to nothing here, and the composables would
+// store that instead of a list.
+const mock$fetch = vi.fn()
+vi.stubGlobal('$fetch', mock$fetch)
+
 // The icon rail is only rendered for signed-in users, mirroring the Header.
 const mockLoggedIn = ref(false)
 mockNuxtImport('useUserSession', () => () => ({
@@ -33,6 +39,9 @@ describe('Layout: Default', () => {
   beforeEach(() => {
     mockZoom.zoomLevel.value = 1.0
     mockLoggedIn.value = false
+    mock$fetch.mockImplementation((url: string) =>
+      Promise.resolve(url === '/api/blaettchen' ? { issues: [], contact: null } : []),
+    )
   })
 
   it('renders with default zoom (no inline style)', async () => {

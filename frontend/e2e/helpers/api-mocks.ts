@@ -37,6 +37,11 @@ export const MOCK_TELEGRAM_CHANNELS = [
   { name: 'Vereinskanal', description: 'Alle Infos', url: 'https://t.me/verein', public: true },
 ]
 
+export const MOCK_BLAETTCHEN = {
+  issues: [{ number: 12, date: '2026-05-01', file: '12_2026-05-01.pdf' }],
+  contact: 'redaktion@example.com',
+}
+
 export const MOCK_EVENT_DETAIL = {
   summary: 'Jahresversammlung',
   description: 'Jährliche Mitgliederversammlung\nAlle Mitglieder sind eingeladen',
@@ -70,14 +75,23 @@ export async function mockCalendarEndpoints(page: Page) {
     }),
   )
 
-  // The icon rail requests this on every page of the default layout. Unmocked
-  // it would 401 against the real server, and src/plugins/auth-redirect.ts
-  // turns any 401 into a logout — which empties the page mid-test.
+  // The icon rail requests these two on every page of the default layout.
+  // Unmocked they would 401 against the real server, and
+  // src/plugins/auth-redirect.ts turns any 401 into a logout — which empties
+  // the page mid-test.
   await page.route('**/api/telegram-channels', async (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(MOCK_TELEGRAM_CHANNELS),
+    }),
+  )
+
+  await page.route('**/api/blaettchen', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_BLAETTCHEN),
     }),
   )
 

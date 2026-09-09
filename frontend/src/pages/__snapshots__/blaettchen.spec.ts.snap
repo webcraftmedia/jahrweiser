@@ -1,0 +1,35 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Page: Blaettchen > renders the loaded issues 1`] = `
+"<div class="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-6">
+  <h1 class="text-2xl font-display text-navy dark:text-ivory">pages.blaettchen.title</h1>
+  <!-- The call for contributions comes first: it is the one thing this page
+         asks of the reader, and the archive below is long. Hidden when no
+         address is configured rather than offering a dead link. -->
+  <div class="animate-fade-slide-up bg-sienna/5 dark:bg-sienna/10 rounded shadow-lg p-6 border-2 border-sienna/30 dark:border-sienna/40">
+    <h2 class="mb-2 font-display text-lg text-navy dark:text-ivory">pages.blaettchen.contribute.title</h2>
+    <p class="mb-4 text-sm font-body text-navy/70 dark:text-ivory/70">pages.blaettchen.contribute.text</p><a href="mailto:redaktion@example.com?subject=Beitrag%20f%C3%BCrs%20Bl%C3%A4ttchen" class="inline-block text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-4 py-2 transition-all">pages.blaettchen.contribute.action</a>
+  </div>
+  <div class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder">
+    <p class="mb-4 text-sm font-body text-navy/70 dark:text-ivory/70">pages.blaettchen.intro</p>
+    <ul class="space-y-3">
+      <li class="flex flex-wrap items-center justify-between gap-3 border-b border-navy/5 dark:border-poster-darkBorder/50 pb-3 last:border-b-0 last:pb-0">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2"><span class="font-medium font-body text-navy dark:text-ivory">pages.blaettchen.issue</span><span class="inline-block rounded px-2 py-0.5 text-xs font-medium bg-navy/10 dark:bg-poster-darkBorder text-navy/70 dark:text-ivory/70"><time datetime="2026-05-01">May 1, 2026</time></span></div>
+          <!--v-if-->
+        </div>
+        <!-- Opens the PDF in the browser's viewer; noopener/noreferrer so the
+               new tab cannot reach back into this one. --><a href="/api/blaettchen/12_2026-05-01.pdf" target="_blank" rel="noopener noreferrer" aria-label="pages.blaettchen.open-issue" class="shrink-0 text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-4 py-2 transition-all">pages.blaettchen.open</a>
+      </li>
+      <li class="flex flex-wrap items-center justify-between gap-3 border-b border-navy/5 dark:border-poster-darkBorder/50 pb-3 last:border-b-0 last:pb-0">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2"><span class="font-medium font-body text-navy dark:text-ivory">pages.blaettchen.issue</span><span class="inline-block rounded px-2 py-0.5 text-xs font-medium bg-navy/10 dark:bg-poster-darkBorder text-navy/70 dark:text-ivory/70"><time datetime="2023-12-23">December 23, 2023</time></span></div>
+          <p class="text-sm font-body text-navy/60 dark:text-poster-darkMuted">Sonderausgabe Weihnachten</p>
+        </div>
+        <!-- Opens the PDF in the browser's viewer; noopener/noreferrer so the
+               new tab cannot reach back into this one. --><a href="/api/blaettchen/04_2023-12-23_Sonderausgabe%20Weihnachten.pdf" target="_blank" rel="noopener noreferrer" aria-label="pages.blaettchen.open-issue" class="shrink-0 text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-4 py-2 transition-all">pages.blaettchen.open</a>
+      </li>
+    </ul>
+  </div>
+</div>"
+`;

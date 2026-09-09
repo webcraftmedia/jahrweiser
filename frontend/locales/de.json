@@ -1,6 +1,7 @@
 {
   "components": {
     "AppIconRail": {
+      "blaettchen": "Blättchen",
       "calendar": "Kalender",
       "label": "Hauptnavigation",
       "telegram": "Telegram-Kanäle"
@@ -130,6 +131,20 @@
         "members-add": "Mitglieder hinzufügen"
       },
       "title": "Admin"
+    },
+    "blaettchen": {
+      "contribute": {
+        "action": "Beitrag einsenden",
+        "text": "Das Blättchen lebt von dem, was ihr hineingebt: Texte, Gedichte, Fotos, Gedanken, Berichte von Veranstaltungen. Schick einfach, was du für die nächste Ausgabe beisteuern möchtest.",
+        "title": "Schreib mit!"
+      },
+      "empty": "Es sind noch keine Ausgaben hinterlegt.",
+      "error": "Die Ausgaben konnten nicht geladen werden.",
+      "intro": "Das GG&Gemeinschafts-Blättche erscheint unregelmäßig. Hier findest du alle Ausgaben zum Nachlesen — die neueste ganz oben.",
+      "issue": "{number}. Ausgabe",
+      "open": "Öffnen",
+      "open-issue": "{number}. Ausgabe vom {date} öffnen (PDF)",
+      "title": "Blättchen"
     },
     "index": {
       "details": {

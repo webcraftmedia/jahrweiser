@@ -198,9 +198,9 @@ describe('Component: MemberMap', () => {
         area('10115', 5, { cx: 1400, cy: 1600 }),
       ])
       const before = box(wrapper)
-      await wrapper.find('svg').trigger('wheel', { deltaY: -100, clientX: 200, clientY: 200 })
+      await wrapper.find('svg').trigger('wheel', { deltaY: -100, offsetX: 200, offsetY: 200 })
       expect(box(wrapper).w).toBeLessThan(before.w)
-      await wrapper.find('svg').trigger('wheel', { deltaY: 100, clientX: 200, clientY: 200 })
+      await wrapper.find('svg').trigger('wheel', { deltaY: 100, offsetX: 200, offsetY: 200 })
       expect(box(wrapper).w).toBeCloseTo(before.w, 5)
     })
 
@@ -212,8 +212,19 @@ describe('Component: MemberMap', () => {
       const svg = wrapper.find('svg')
       await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 200, clientY: 200 })
       await svg.trigger('pointermove', { pointerId: 1, clientX: 100, clientY: 100 })
-      await svg.trigger('wheel', { deltaY: -100, clientX: 200, clientY: 200 })
+      await svg.trigger('wheel', { deltaY: -100, offsetX: 200, offsetY: 200 })
       expect(box(wrapper)).toStrictEqual(before)
+    })
+
+    it('falls back to a nominal size where nothing can measure it', async () => {
+      // Server-side rendering, and some test environments.
+      vi.stubGlobal('ResizeObserver', undefined)
+      try {
+        const wrapper = await mount([area('64673', 4, { cx: 1000, cy: 1000 })])
+        expect(Number(wrapper.find('.dots circle').attributes('r'))).toBeGreaterThan(0)
+      } finally {
+        vi.unstubAllGlobals()
+      }
     })
 
     it('re-fits when the numbers underneath it change', async () => {
@@ -256,6 +267,11 @@ describe('Component: MemberMap', () => {
         observers[0]?.([{ contentRect: { width: 320, height: 400 } as DOMRectReadOnly }])
         await nextTick()
         expect(Number(wrapper.find('.dots circle').attributes('r'))).toBeGreaterThan(assumed)
+
+        // And the wheel now anchors against the measured box.
+        const before = box(wrapper).w
+        await wrapper.find('svg').trigger('wheel', { deltaY: -100, offsetX: 40, offsetY: 40 })
+        expect(box(wrapper).w).toBeLessThan(before)
       } finally {
         vi.unstubAllGlobals()
       }
@@ -310,9 +326,23 @@ describe('Component: MemberMap', () => {
       expect(shown).toBeLessThan(crowd.length)
     })
 
-    it('ignores places outside the current view', async () => {
+    it('stops well before the map becomes a wall of names', async () => {
+      // Eighty places with room for all of them: the cap, not the collisions,
+      // is what has to hold here.
+      const spread = Array.from({ length: 80 }, (_, i) =>
+        place(`Ort ${i}`, 200 + (i % 10) * 380, 200 + Math.floor(i / 10) * 380),
+      )
+      const wrapper = await mount([], { places: spread })
+      expect(wrapper.findAll('.places text').length).toBeLessThanOrEqual(70)
+      expect(wrapper.findAll('.places text').length).toBeGreaterThan(30)
+    })
+
+    it.each([
+      ['to the side of', 3900, 1000],
+      ['above or below', 1000, 4900],
+    ])('ignores places %s the current view', async (_case, x, y) => {
       const wrapper = await mount([area('64673', 3, { cx: 1000, cy: 1000 })], {
-        places: [place('Weit weg', 3900, 4900)],
+        places: [place('Weit weg', x, y)],
       })
       expect(wrapper.findAll('.places text')).toHaveLength(0)
     })

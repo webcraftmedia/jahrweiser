@@ -173,14 +173,15 @@
   const frame = ref<{ width: number; height: number } | null>(null)
 
   onMounted(() => {
-    if (typeof ResizeObserver === 'undefined' || !svg.value) return
+    // Absent in some test environments; the nominal width then stands in.
+    if (typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect
       if (rect && rect.width > 0 && rect.height > 0) {
         frame.value = { width: rect.width, height: rect.height }
       }
     })
-    observer.observe(svg.value)
+    observer.observe(svg.value!)
     onBeforeUnmount(() => {
       observer.disconnect()
     })
@@ -197,8 +198,6 @@
     return Math.max(view.value.w / frame.value.width, h / frame.value.height)
   })
 
-  const unitsPerPixel = (): number => unit.value
-
   /**
    * What is actually on screen.
    *
@@ -214,18 +213,22 @@
     return { w: frame.value.width * unit.value, h: frame.value.height * unit.value }
   })
 
-  /** Where a pointer event lands, in viewBox units. */
-  function pointAt(event: PointerEvent | WheelEvent): { x: number; y: number } {
-    const rect = svg.value?.getBoundingClientRect()
-    const perPixel = unitsPerPixel()
+  /**
+   * Where an event landed, in viewBox units. `offsetX/Y` rather than a fresh
+   * measurement: it is already relative to the element, and the size of that
+   * element is something this component is told about, not something it should
+   * go and ask for on every wheel tick.
+   */
+  function pointAt(event: WheelEvent): { x: number; y: number } {
+    const size = frame.value ?? { width: NOMINAL_WIDTH, height: NOMINAL_WIDTH }
+    const perPixel = unit.value
     const h = view.value.w * (full.value.height / full.value.width)
-    // The drawing is centred in the box; the letterbox margins are the rest.
-    const marginX = ((rect?.width ?? 0) - view.value.w / perPixel) / 2
-    const marginY = ((rect?.height ?? 0) - h / perPixel) / 2
+    // The drawing is centred in its box; the letterbox margins are the rest.
+    const marginX = (size.width - view.value.w / perPixel) / 2
+    const marginY = (size.height - h / perPixel) / 2
     return {
-      x:
-        view.value.cx - view.value.w / 2 + (event.clientX - (rect?.left ?? 0) - marginX) * perPixel,
-      y: view.value.cy - h / 2 + (event.clientY - (rect?.top ?? 0) - marginY) * perPixel,
+      x: view.value.cx - view.value.w / 2 + (event.offsetX - marginX) * perPixel,
+      y: view.value.cy - h / 2 + (event.offsetY - marginY) * perPixel,
     }
   }
 
@@ -243,7 +246,7 @@
 
   function onPointerMove(event: PointerEvent): void {
     if (!dragFrom) return
-    const perPixel = unitsPerPixel()
+    const perPixel = unit.value
     framed.value = clamp({
       cx: dragFrom.cx - (event.clientX - dragFrom.x) * perPixel,
       cy: dragFrom.cy - (event.clientY - dragFrom.y) * perPixel,
@@ -441,11 +444,15 @@
     clearTimeout(viewportTimer)
   })
 
-  /** The two numbers that label the ramp where the classes have no room. */
-  const legendEnds = computed(() => ({
-    from: String(legend.value[0]?.from ?? 1),
-    to: `${legend.value[legend.value.length - 1]?.from ?? 1}+`,
-  }))
+  /**
+   * The two numbers that label the ramp where the classes have no room. Derived
+   * from the breaks by reduction rather than by indexing, so there is no "what
+   * if the list were empty" branch to answer for.
+   */
+  const legendEnds = {
+    from: '1',
+    to: `${CLASS_EDGES.reduce((top, edge) => Math.max(top, edge), 1)}+`,
+  }
 
   const total = computed(() => props.areas.reduce((sum, area) => sum + area.count, 0))
 </script>

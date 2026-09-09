@@ -20,6 +20,7 @@ the app writes automatically.
 | registration links       | MariaDB         | Admin-minted self-signup links            |
 | link redemptions         | MariaDB         | Who joined via which link (+ count)       |
 | telegram channels        | MariaDB         | Admin-edited invite list (see `docu/telegram-channels.md`) |
+| daily metrics            | MariaDB         | One measured snapshot per day for /admin (see `docu/admin-dashboard.md`) |
 
 Self-registration still funnels contact data into DAV: a successful signup
 writes the new VCard to DAV (source of truth) and mirrors it into the sidecar so

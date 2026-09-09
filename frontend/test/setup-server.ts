@@ -45,6 +45,9 @@ globalThis.readValidatedBody = vi.fn()
 // Multipart uploads (the Blättchen issues) — tests supply the parsed parts.
 globalThis.readMultipartFormData = vi.fn()
 
+// Nitro's server-asset storage (the member map's postal-code geometry).
+globalThis.useStorage = vi.fn()
+
 globalThis.useRuntimeConfig = () => runtimeConfig as unknown as ReturnType<typeof useRuntimeConfig>
 
 globalThis.requireUserSession = vi.fn()

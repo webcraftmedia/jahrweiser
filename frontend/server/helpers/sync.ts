@@ -5,7 +5,7 @@ import { fetchAddressBooks, fetchVCards } from 'tsdav'
 import { useDb } from '../db'
 import { loginTokens, sessions, syncState, userTags, users } from '../db/schema'
 
-import { displayNameFromVCard } from './contactName'
+import { displayNameFromVCard, readPostalCode } from './contactName'
 import { createCardDAVAccount, headers, readAdminTags, X_ROLE } from './dav'
 import { clearEmailNotFound } from './negativeCache'
 
@@ -28,6 +28,8 @@ interface DavUserSnapshot {
   uid: string
   email: string
   displayName: string | null
+  /** vCard ADR postal code, null when the contact has none. */
+  postalCode: string | null
   role: 'admin' | 'user'
   tags: string[]
 }
@@ -54,7 +56,10 @@ export function extractUserFromVCardData(vcardData: string): DavUserSnapshot | n
   const roleValue = component.getFirstPropertyValue(X_ROLE)?.toString()
   const role: 'admin' | 'user' = roleValue === 'admin' ? 'admin' : 'user'
   const tags = readAdminTags(component)
-  return { uid, email, displayName, role, tags }
+  // Unlike role, the postal code is contact data — DAV owns it, so an empty
+  // ADR here means "cleared in a DAV client" and must overwrite the sidecar.
+  const postalCode = readPostalCode(component) || null
+  return { uid, email, displayName, postalCode, role, tags }
 }
 
 async function acquireLock(
@@ -117,6 +122,7 @@ async function applyUserDiff(
         uid: dav.uid,
         email: dav.email,
         displayName: dav.displayName,
+        postalCode: dav.postalCode,
         role: dav.role,
       })
       if (dav.tags.length > 0) {
@@ -133,12 +139,18 @@ async function applyUserDiff(
     // only on INSERT (where it seeds from X_ROLE for initial backfill).
     const emailChanged = current.email !== dav.email
     const nameChanged = current.displayName !== dav.displayName
+    const postalCodeChanged = current.postalCode !== dav.postalCode
     const wasDeleted = current.deletedAt !== null
 
-    if (emailChanged || nameChanged || wasDeleted) {
+    if (emailChanged || nameChanged || postalCodeChanged || wasDeleted) {
       await db
         .update(users)
-        .set({ email: dav.email, displayName: dav.displayName, deletedAt: null })
+        .set({
+          email: dav.email,
+          displayName: dav.displayName,
+          postalCode: dav.postalCode,
+          deletedAt: null,
+        })
         .where(eq(users.uid, dav.uid))
       // New address (on email change) or a reactivated user may sit in the
       // negative cache; clear it so login works without waiting out the TTL.

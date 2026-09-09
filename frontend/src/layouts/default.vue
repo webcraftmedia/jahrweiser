@@ -7,10 +7,15 @@
            Keeping it out of that container also leaves the existing
            `flex-wrap` row untouched — a sibling in there would wrap, since
            pages/index.vue's `.box` is width:100%. -->
-      <div class="flex w-full flex-1">
+      <!-- `min-h-0` on both wrappers: without it a flex item may not shrink
+           below its content, so a page that wants to *fit* the space it is
+           given (the map) is pushed past it into a scroll instead. Pages that
+           want to grow are unaffected — they overflow into `.content`, which
+           scrolls, exactly as before. -->
+      <div class="flex w-full min-h-0 flex-1">
         <AppIconRail v-if="loggedIn" orientation="vertical" class="hidden md:flex" />
         <div
-          class="max-w-screen-2xl flex flex-wrap justify-between mx-auto w-full flex-1"
+          class="max-w-screen-2xl flex flex-wrap justify-between mx-auto w-full min-h-0 flex-1"
           :style="zoomLevel !== 1 ? { zoom: zoomLevel } : undefined"
         >
           <slot />

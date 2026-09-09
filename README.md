@@ -6,7 +6,7 @@ This repo is the calendar page for gg-g.info.
 - Kalenderübesicht zu anstehenden Terminen
 - Nutzerverwaltung
 - Anschluss weiterer Services
-  - Karte
+  - Karte (siehe `docu/karte.md`)
   - Telegram Kanäle
   - Lebensmittel
   - Blättchen

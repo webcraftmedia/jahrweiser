@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import IconBlaettchen from '~/assets/icon-blaettchen.svg'
   import IconCalendar from '~/assets/icon-calendar.svg'
+  import IconMap from '~/assets/icon-map.svg'
   import IconTelegram from '~/assets/icon-telegram.svg'
 
   /**
@@ -14,12 +15,16 @@
   const route = useRoute()
   const { hasChannels, load: loadChannels } = useTelegramChannels()
   const { hasIssues, load: loadIssues } = useBlaettchen()
+  const { hasPostalCode, loadStatus } = useMemberMap()
 
   // Both entries only exist when there is something behind them. Loaded here
-  // rather than on the pages so the rail can decide before anyone clicks.
+  // rather than on the pages so the rail can decide before anyone clicks. The
+  // map status is the same idea for a different decision — whether to mark the
+  // map as incomplete — and is a single-row lookup, not the map data.
   onMounted(() => {
     void loadChannels()
     void loadIssues()
+    void loadStatus()
   })
 
   interface RailItem {
@@ -28,6 +33,8 @@
     icon: unknown
     /** True while this item's section is open. */
     isActive: (path: string) => boolean
+    /** Marks the entry as needing something from the member before it works. */
+    warn?: boolean
   }
 
   /**
@@ -72,6 +79,19 @@
           },
         ]
       : []),
+    // Always offered, unlike the two above: the map exists for every member,
+    // it just cannot show anything until they have given their own postal
+    // code. The marker says so before the click rather than after it.
+    {
+      to: '/karte',
+      label:
+        hasPostalCode.value === false
+          ? t('components.AppIconRail.map-incomplete')
+          : t('components.AppIconRail.map'),
+      icon: IconMap,
+      isActive: (path: string) => path === '/karte',
+      warn: hasPostalCode.value === false,
+    },
   ])
 
   const isVertical = computed(() => props.orientation === 'vertical')
@@ -101,7 +121,12 @@
         isVertical ? 'mx-2 h-10 rounded-lg' : 'flex-1 py-2.5',
       ]"
     >
-      <component :is="item.icon" class="rail-icon" aria-hidden="true" />
+      <span class="relative flex">
+        <component :is="item.icon" class="rail-icon" aria-hidden="true" />
+        <!-- The state is in the link's aria-label too; the dot is never the
+             only thing carrying it. -->
+        <span v-if="item.warn" class="rail-warn" aria-hidden="true" />
+      </span>
     </NuxtLink>
   </nav>
 </template>
@@ -119,6 +144,23 @@
        with its own outline. `fill-opacity` is inherited, so the shapes inside
        pick it up without a `:deep()` selector. */
     fill-opacity: 0.45;
+  }
+
+  /* A warning dot, not a count badge: it says "something is missing here", and
+     the ring keeps it legible where it overlaps the icon's own strokes. */
+  .rail-warn {
+    position: absolute;
+    top: -0.125rem;
+    right: -0.25rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: #d97706;
+    box-shadow: 0 0 0 2px #faf5eb;
+  }
+  :global(.dark) .rail-warn {
+    background: #f59e0b;
+    box-shadow: 0 0 0 2px #2a2520;
   }
 
   /* Matches the hover nudge of the section sidebar (components/SidebarLayout.vue). */

@@ -39,10 +39,14 @@ export default defineEventHandler(async (event) => {
   }
   await saveUser(account, match.user, match.vcard)
 
-  // Mirror the display name into the sidecar so it's consistent without waiting
-  // for the daily sync.
+  // Mirror the display name and the postal code into the sidecar so they are
+  // consistent without waiting for the daily sync — the member map aggregates
+  // over the sidecar copy, so a fresh postal code has to show up right away.
   const displayName = `${firstName} ${lastName}`.trim()
-  await db.update(users).set({ displayName }).where(eq(users.uid, uid))
+  await db
+    .update(users)
+    .set({ displayName, postalCode: postalCode || null })
+    .where(eq(users.uid, uid))
 
   // Refresh the session so the header reflects the new name immediately. defu
   // merges, so uid/email/role are preserved; h3 keeps the session id, leaving

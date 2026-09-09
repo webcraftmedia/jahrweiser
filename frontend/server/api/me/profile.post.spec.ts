@@ -3,7 +3,7 @@ import '../../../test/setup-server'
 import ICAL from 'ical.js'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
+import { firstDbCall, mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
 
 import handler from './profile.post'
 
@@ -71,6 +71,30 @@ describe('profile.post', () => {
     })
     expect(card.toString()).toContain('ADR:;;;;;64653;')
     expect(mockSaveUser).toHaveBeenCalledTimes(1)
+  })
+
+  it('mirrors the postal code into the sidecar, where the map aggregates it', async () => {
+    const card = vcard(['UID:u1', 'EMAIL:anna@example.com'])
+    mockFindUserByEmail.mockResolvedValue({ user: { href: '/a.vcf', props: {} }, vcard: card })
+    queueDbResults({})
+    await fn({})
+    expect(firstDbCall('set')).toStrictEqual([
+      { displayName: 'Alicia Wonder', postalCode: '64653' },
+    ])
+  })
+
+  it('clears the sidecar copy when the postal code is removed', async () => {
+    // Null, not '': the map counts rows by postal code and an empty string
+    // would be a group of its own.
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+      (v as (d: unknown) => unknown)({ firstName: 'Alicia', lastName: 'Wonder', postalCode: '' }),
+    )
+    const card = vcard(['UID:u1', 'EMAIL:anna@example.com', 'ADR:;;;;;64653;'])
+    mockFindUserByEmail.mockResolvedValue({ user: { href: '/a.vcf', props: {} }, vcard: card })
+    queueDbResults({})
+    await fn({})
+    expect(firstDbCall('set')).toStrictEqual([{ displayName: 'Alicia Wonder', postalCode: null }])
+    expect(card.toString()).toContain('ADR:;;;;;;')
   })
 
   it('fills in a missing uid on legacy contacts', async () => {

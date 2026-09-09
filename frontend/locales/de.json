@@ -4,6 +4,8 @@
       "blaettchen": "Blättchen",
       "calendar": "Kalender",
       "label": "Hauptnavigation",
+      "map": "Karte",
+      "map-incomplete": "Karte — deine Postleitzahl fehlt noch",
       "telegram": "Telegram-Kanäle"
     },
     "Footer": {
@@ -28,6 +30,17 @@
       "open-menu": "Menü öffnen",
       "settings": "Einstellungen",
       "welcome": "Willkommen"
+    },
+    "MemberMap": {
+      "legend": "Mitglieder je Postleitzahl:",
+      "table": {
+        "count": "Mitglieder",
+        "place": "Ort",
+        "postalCode": "Postleitzahl",
+        "total": "Gesamt"
+      },
+      "zoom-in": "Karte vergrößern",
+      "zoom-out": "Karte verkleinern"
     },
     "Modal": {
       "close": "Modal schließen"
@@ -248,6 +261,21 @@
       "monthView": "Monat",
       "today": "Heute"
     },
+    "karte": {
+      "empty": "Noch hat niemand eine Postleitzahl hinterlegt — sobald das jemand tut, erscheint hier die erste Markierung.",
+      "error": "Die Karte konnte nicht geladen werden. Bitte später erneut versuchen.",
+      "locked": {
+        "cta": "Postleitzahl hinterlegen",
+        "text": "Die Karte zeigt, wo unsere Mitglieder wohnen — sichtbar wird sie, sobald du selbst eine Postleitzahl hinterlegt hast. Was du hier durchscheinen siehst, sind Beispielwerte.",
+        "title": "Karte freischalten"
+      },
+      "map-label": "Mitglieder je Postleitzahl, {located} verortet",
+      "summary": "{located} von {total} Mitgliedern haben eine Postleitzahl hinterlegt, verteilt auf {areas} Postleitzahlen.",
+      "summary-short": "{located}/{total} · {areas} PLZ",
+      "title": "Karte",
+      "unlocated": "Eine davon liegt außerhalb der Karte. | {count} davon liegen außerhalb der Karte.",
+      "unlocated-short": "{count} ohne Ort"
+    },
     "login": {
       "error": {
         "text": "Dein Code ist nicht mehr gültig.",
@@ -338,7 +366,7 @@
         "intro": "Verwalte hier deine persönlichen Angaben.",
         "lastName": "Nachname",
         "postalCode": "Postleitzahl",
-        "postalCode-hint": "Geplant ist, die Postleitzahlen künftig anonym und aggregiert — also ohne Namen — auf einer Karte darzustellen, die zeigt, woher unsere Gemeinschaft kommt. Eine solche Karte wäre ausschließlich für die Community sichtbar und nicht öffentlich.",
+        "postalCode-hint": "Deine Postleitzahl erscheint anonym und zusammengefasst — also ohne Namen — auf der Karte, die zeigt, woher unsere Gemeinschaft kommt. Die Karte ist ausschließlich für die Community sichtbar und nicht öffentlich; angezeigt wird sie dir, sobald du selbst eine Postleitzahl hinterlegt hast.",
         "postalCode-placeholder": "z. B. 64673",
         "save": "Speichern",
         "saved": "Gespeichert.",

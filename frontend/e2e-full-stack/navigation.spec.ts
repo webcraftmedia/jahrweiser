@@ -1,8 +1,9 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import { expect, test } from '@playwright/test'
 
+import { restoreTelegramChannels, setTelegramChannels, stashTelegramChannels } from './helpers/db'
 import {
   extractLoginTokenFromMail,
   preparePage,
@@ -11,29 +12,28 @@ import {
 } from './helpers/maildev'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
+import type { TelegramChannelRow } from './helpers/db'
 import type { Page } from '@playwright/test'
 
 // One seeded user per test: /api/requestLoginLink is rate-limited per user
 // (60s), so three logins as the same account in one file would be flaky.
 const ALICE = 'alice@example.com'
 const BOB = 'bob@example.com'
-const CAROL = 'carol@example.com'
 // The Blättchen is member content, not an admin feature — this account is
 // simply the fourth seeded user, so the fourth test gets its own login.
 const ADMIN = 'admin@example.com'
 
-// The real file is git-ignored (an invite link is the permission itself), so
-// the suite writes its own and removes it afterwards. Same path the server
-// resolves from its cwd — see TELEGRAM_CHANNELS_FILE in nuxt.config.ts.
-const CHANNELS_FILE = path.resolve(process.cwd(), 'data/telegram-channels.json')
+// The channels live in the sidecar table now (see docu/telegram-channels.md),
+// so the suite seeds them there. Deployment content rather than demo data, so
+// `cli:seed:demo` does not fill it and the suite owns it outright.
 const CHANNELS = [
   { name: 'E2E Öffentlich', description: 'Für alle', url: 'https://t.me/e2e_public', public: true },
   { name: 'E2E Privat', url: 'https://t.me/+E2ePrivateInvite', public: false },
 ]
 
-// A developer running this suite locally may well have a real channel file in
-// place. Stash it and put it back, rather than deleting their configuration.
-let previousChannels: string | null = null
+// Nothing re-creates the real list (it is deployment content, not demo data),
+// so it is stashed and put back rather than cleared.
+let stashedChannels: TelegramChannelRow[] = []
 
 // The issue directory is the suite's own (BLAETTCHEN_DIR in
 // playwright.full-stack.config.ts) — the real archive holds members' PDFs and
@@ -64,18 +64,13 @@ async function withdrawIssues(): Promise<void> {
 test.beforeAll(async () => {
   runSeedReset()
   runSeedDemo()
-  previousChannels = await readFile(CHANNELS_FILE, 'utf-8').catch(() => null)
-  await mkdir(path.dirname(CHANNELS_FILE), { recursive: true })
-  await writeFile(CHANNELS_FILE, JSON.stringify(CHANNELS, null, 2), 'utf-8')
+  stashedChannels = await stashTelegramChannels()
+  await setTelegramChannels(CHANNELS)
   await publishIssues()
 })
 
 test.afterAll(async () => {
-  if (previousChannels === null) {
-    await rm(CHANNELS_FILE, { force: true })
-  } else {
-    await writeFile(CHANNELS_FILE, previousChannels, 'utf-8')
-  }
+  await restoreTelegramChannels(stashedChannels)
   await withdrawIssues()
 })
 
@@ -95,36 +90,19 @@ async function loginViaMagicLink(page: Page, email: string): Promise<void> {
 }
 
 test.describe('icon rail', () => {
-  test('hides the telegram entry when nothing is configured', async ({ page }) => {
-    // Empty list and missing file both reach the client as [] — the entry has
-    // to disappear, and the calendar must stay reachable.
-    await writeFile(CHANNELS_FILE, '[]', 'utf-8')
+  test('hides the telegram entry when no channel is configured', async ({ page }) => {
+    // An empty list reaches the client as [] — the entry has to disappear, and
+    // the calendar must stay reachable.
+    await setTelegramChannels([])
     await loginViaMagicLink(page, BOB)
     const rail = page.locator('nav[aria-label]').first()
     await expect(rail.locator('a[href="/"]')).toBeVisible()
     await expect(rail.locator('a[href="/telegram"]')).toHaveCount(0)
 
-    await rm(CHANNELS_FILE, { force: true })
+    await setTelegramChannels(CHANNELS)
     await page.reload()
     await preparePage(page)
-    await expect(rail.locator('a[href="/telegram"]')).toHaveCount(0)
-
-    await writeFile(CHANNELS_FILE, JSON.stringify(CHANNELS, null, 2), 'utf-8')
-  })
-
-  test('hides the telegram entry when the file is broken', async ({ page }) => {
-    // A hand-edit gone wrong must not offer members a link into an error page.
-    await writeFile(CHANNELS_FILE, '[{ "name": "x", },]', 'utf-8')
-    await loginViaMagicLink(page, CAROL)
-    const rail = page.locator('nav[aria-label]').first()
-    await expect(rail.locator('a[href="/"]')).toBeVisible()
-    await expect(rail.locator('a[href="/telegram"]')).toHaveCount(0)
-
-    // The operator still gets a hard failure, not a quiet empty list.
-    const resp = await page.context().request.get('/api/telegram-channels')
-    expect(resp.status()).toBe(500)
-
-    await writeFile(CHANNELS_FILE, JSON.stringify(CHANNELS, null, 2), 'utf-8')
+    await expect(rail.locator('a[href="/telegram"]')).toHaveCount(1)
   })
 
   // One login for the whole flow: /api/requestLoginLink is rate-limited per
@@ -156,7 +134,7 @@ test.describe('icon rail', () => {
     await expect(desktopRail.locator('a[href="/telegram"]')).toHaveAttribute('aria-current', 'page')
     await expect(desktopRail.locator('a[href="/"]')).not.toHaveAttribute('aria-current', 'page')
 
-    // The channels come from the git-ignored file via the authenticated API.
+    // The channels come from the sidecar table via the authenticated API.
     await expect(page.getByText('E2E Öffentlich')).toBeVisible({ timeout: 10_000 })
     const privateLink = page.getByRole('link', { name: 'Beitreten' }).nth(1)
     await expect(privateLink).toHaveAttribute('href', 'https://t.me/+E2ePrivateInvite')

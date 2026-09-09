@@ -9,6 +9,7 @@
     { label: t('pages.admin.menu.members-add'), path: '/admin/members/add' },
     { label: t('pages.admin.menu.links'), path: '/admin/links' },
     { label: t('pages.admin.menu.blaettchen'), path: '/admin/blaettchen' },
+    { label: t('pages.admin.menu.telegram'), path: '/admin/telegram' },
     { label: t('pages.admin.menu.calendar'), path: '/admin/cal/', external: true },
   ])
 </script>

@@ -26,6 +26,7 @@
     "cli:newsletter:subscribe": "npx tsx cli/newsletter-subscribe.ts",
     "cli:newsletter:unsubscribe": "npx tsx cli/newsletter-unsubscribe.ts",
     "cli:ics:import": "npx tsx cli/ics-import.ts",
+    "cli:telegram:import": "npx tsx cli/telegram-import.ts",
     "cli:sync:run": "npx tsx cli/sync-run.ts",
     "cli:seed:reset": "npx tsx cli/seed-reset.ts",
     "cli:seed:demo": "npx tsx cli/seed-demo.ts",

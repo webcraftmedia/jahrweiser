@@ -165,7 +165,41 @@
         "blaettchen": "Blättchen",
         "calendar": "Kalender verwalten",
         "links": "Registrierungs-Links",
-        "members-add": "Mitglieder hinzufügen"
+        "members-add": "Mitglieder hinzufügen",
+        "telegram": "Telegram-Kanäle"
+      },
+      "telegram": {
+        "create": {
+          "button": "Kanal hinzufügen",
+          "creating": "Wird gespeichert...",
+          "error": "Der Kanal konnte nicht gespeichert werden.",
+          "hint": "Der Einladungslink ist die Berechtigung: wer ihn hat, kann beitreten. Trage hier nur Links ein, die alle Mitglieder bekommen dürfen.",
+          "title": "Neuen Kanal hinzufügen"
+        },
+        "field": {
+          "description": "Beschreibung (optional)",
+          "description-placeholder": "z. B. Orga und Termine",
+          "name": "Name",
+          "name-placeholder": "z. B. Kultur-Steher",
+          "public": "Öffentlicher Kanal (nur als Hinweis für die Leser)",
+          "url": "Einladungslink",
+          "url-invalid": "Das ist kein Telegram-Link — er muss mit https://t.me/ beginnen."
+        },
+        "list": {
+          "action-error": "Die Änderung konnte nicht gespeichert werden.",
+          "cancel": "Abbrechen",
+          "delete": "Löschen",
+          "delete-confirm": "Wirklich löschen",
+          "edit": "Bearbeiten",
+          "empty": "Es sind noch keine Kanäle hinterlegt.",
+          "error": "Die Kanäle konnten nicht geladen werden.",
+          "move-down": "Nach unten schieben",
+          "move-up": "Nach oben schieben",
+          "save": "Speichern",
+          "save-error": "Die Änderung konnte nicht gespeichert werden.",
+          "title": "Vorhandene Kanäle"
+        },
+        "title": "Telegram-Kanäle"
       },
       "title": "Admin"
     },

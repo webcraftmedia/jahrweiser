@@ -37,8 +37,10 @@ imports/*.json
 backups
 
 # Telegram-Einladungen: ein privater Invite-Link IST die Berechtigung,
-# gehoert also nicht ins Repository. data/telegram-channels.example.json
-# dokumentiert das Format und bleibt eingecheckt.
+# gehoert also nicht ins Repository. Die Liste liegt inzwischen in der
+# Datenbank (Admin-Bereich); diese Datei ist nur noch die Quelle des
+# einmaligen Imports (npm run cli:telegram:import) und bleibt ignoriert,
+# solange sie auf Servern noch herumliegt.
 data/telegram-channels.json
 
 # Blaettchen-Ausgaben: die PDFs sind Inhalt der Gemeinschaft, nicht Quellcode,

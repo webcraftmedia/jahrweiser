@@ -131,6 +131,16 @@ export default defineNuxtConfig({
     // never reach the repository. Overridable so the file can live outside the
     // deployment directory entirely (e.g. /etc/jahrweiser/telegram.json).
     TELEGRAM_CHANNELS_FILE: process.env.TELEGRAM_CHANNELS_FILE || 'data/telegram-channels.json',
+    // Blättchen issues (PDFs) shown on /blaettchen. Git-ignored, so the issues
+    // never reach the repository. Overridable so the directory can live outside
+    // the deployment directory entirely (e.g. /var/lib/jahrweiser/blaettchen)
+    // and survive a redeploy — see docu/blaettchen.md.
+    BLAETTCHEN_DIR: process.env.BLAETTCHEN_DIR || 'data/blaettchen',
+    // Where contributions for the next issue go. A private address, so it is
+    // handed out through the authenticated endpoint and never through
+    // `public` — the latter would put it in the client bundle, readable by any
+    // anonymous visitor in the page source. Empty = no call for contributions.
+    BLAETTCHEN_CONTACT_EMAIL: process.env.BLAETTCHEN_CONTACT_EMAIL || '',
 
     // Keys within public, will be also exposed to the client-side
     public: {

@@ -25,9 +25,12 @@ export default defineConfig({
   webServer: {
     // Playwright reicht das Kommando an eine Shell weiter — `${VAR:-default}` ist
     // damit Shell-Parameter-Expansion, kein verunglücktes Template-Literal.
+    // BLAETTCHEN_*: die Suite bekommt ihr eigenes Ausgaben-Verzeichnis und eine
+    // eigene Kontaktadresse, damit sie ein echtes Archiv auf dem Entwickler-
+    // rechner weder anfasst noch preisgibt — siehe navigation.spec.ts.
     command:
       // eslint-disable-next-line no-template-curly-in-string
-      'cross-env TZ=UTC SYNC_SECRET=${SYNC_SECRET:-dev-sync-secret} LOGIN_RATE_LIMIT_MS=0 NODE_ENV=test npm run dev',
+      'cross-env TZ=UTC SYNC_SECRET=${SYNC_SECRET:-dev-sync-secret} LOGIN_RATE_LIMIT_MS=0 BLAETTCHEN_DIR=e2e-full-stack/.blaettchen BLAETTCHEN_CONTACT_EMAIL=redaktion@example.com NODE_ENV=test npm run dev',
     url: 'http://localhost:3000',
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,

@@ -40,3 +40,10 @@ backups
 # gehoert also nicht ins Repository. data/telegram-channels.example.json
 # dokumentiert das Format und bleibt eingecheckt.
 data/telegram-channels.json
+
+# Blaettchen-Ausgaben: die PDFs sind Inhalt der Gemeinschaft, nicht Quellcode,
+# und enthalten personenbezogene Daten. Sie werden im Betrieb ins Verzeichnis
+# gelegt (siehe docu/blaettchen.md), nie eingecheckt.
+data/blaettchen/
+# Ausgaben-Verzeichnis der Full-Stack-E2E-Suite (BLAETTCHEN_DIR dort)
+e2e-full-stack/.blaettchen/

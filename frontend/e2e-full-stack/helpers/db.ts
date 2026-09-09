@@ -54,3 +54,32 @@ export async function closeDb(): Promise<void> {
   await pool.end()
   pool = null
 }
+
+export interface SeedChannel {
+  name: string
+  description?: string
+  url: string
+  public?: boolean
+}
+
+/**
+ * Replaces the Telegram channel list. The suite owns this table outright — it
+ * is deployment content, not seeded demo data, so nothing else fills it.
+ * Written in list order, which is what `sort_order` means.
+ */
+export async function setTelegramChannels(channels: SeedChannel[]): Promise<void> {
+  await getPool().query('DELETE FROM telegram_channels')
+  for (const [index, channel] of channels.entries()) {
+    await getPool().query(
+      `INSERT INTO telegram_channels (name, description, url, is_public, sort_order)
+       VALUES (?, ?, ?, ?, ?)`,
+      [channel.name, channel.description ?? null, channel.url, channel.public ?? false, index],
+    )
+  }
+}
+
+/** The channel names in the order the table returns them. */
+export async function readTelegramChannelOrder(): Promise<string[]> {
+  const [rows] = await getPool().query('SELECT name FROM telegram_channels ORDER BY sort_order, id')
+  return (rows as { name: string }[]).map((row) => row.name)
+}

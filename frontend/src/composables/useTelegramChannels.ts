@@ -1,9 +1,4 @@
-export interface TelegramChannel {
-  name: string
-  description?: string
-  url: string
-  public?: boolean
-}
+import type { TelegramChannel } from '~~/shared/telegram'
 
 /**
  * The Telegram invitations, fetched once and shared between the icon rail

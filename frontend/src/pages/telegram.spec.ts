@@ -8,12 +8,13 @@ vi.stubGlobal('$fetch', mock$fetch)
 
 const CHANNELS = [
   {
+    id: 1,
     name: 'Kultur-Steher',
     description: 'Orga und Termine',
     url: 'https://t.me/+AbCdEf',
     public: false,
   },
-  { name: 'GG&G Info', url: 'https://t.me/ggg_info', public: true },
+  { id: 2, name: 'GG&G Info', url: 'https://t.me/ggg_info', public: true },
 ]
 
 function fetchReturning(channels: unknown) {

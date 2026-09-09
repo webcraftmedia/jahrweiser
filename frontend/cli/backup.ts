@@ -47,6 +47,7 @@ const CORE_TABLES = [
   'sync_state',
   'registration_links',
   'registration_link_redemptions',
+  'telegram_channels',
 ]
 const AUTH_TABLES = ['sessions', 'login_tokens']
 

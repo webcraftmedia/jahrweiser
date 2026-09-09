@@ -6,7 +6,7 @@ import AppIconRail from './AppIconRail.vue'
 const mock$fetch = vi.fn()
 vi.stubGlobal('$fetch', mock$fetch)
 
-const CHANNELS = [{ name: 'Info', url: 'https://t.me/info' }]
+const CHANNELS = [{ id: 1, name: 'Info', url: 'https://t.me/info', public: true }]
 const BLAETTCHEN = {
   issues: [{ number: 12, date: '2026-05-01', file: '12_2026-05-01.pdf' }],
   contact: 'redaktion@example.com',

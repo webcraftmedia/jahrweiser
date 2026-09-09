@@ -46,7 +46,7 @@
       <ul v-else class="space-y-3">
         <li
           v-for="channel in channels"
-          :key="channel.url"
+          :key="channel.id"
           class="flex flex-wrap items-center justify-between gap-3 border-b border-navy/5 dark:border-poster-darkBorder/50 pb-3 last:border-b-0 last:pb-0"
         >
           <div class="min-w-0">

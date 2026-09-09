@@ -5,7 +5,7 @@ import { useTelegramChannels } from './useTelegramChannels'
 const mock$fetch = vi.fn()
 vi.stubGlobal('$fetch', mock$fetch)
 
-const CHANNELS = [{ name: 'Info', url: 'https://t.me/info' }]
+const CHANNELS = [{ id: 1, name: 'Info', url: 'https://t.me/info', public: true }]
 
 describe('useTelegramChannels', () => {
   beforeEach(() => {

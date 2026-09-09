@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import mysql from 'mysql2/promise'
+import { createConnection } from 'mysql2/promise'
 
 import {
   calendarKey,
@@ -68,7 +68,7 @@ await mkdir(outDir, { recursive: true })
 // ---------------------------------------------------------------------------
 // MariaDB
 // ---------------------------------------------------------------------------
-const connection = await mysql.createConnection(
+const connection = await createConnection(
   process.env.DB_SOCKET
     ? {
         socketPath: process.env.DB_SOCKET,

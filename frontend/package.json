@@ -79,7 +79,6 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.10.0",
     "eslint-config-it4c": "^0.13.2",
-    "eslint-import-resolver-typescript": "^4.4.5",
     "happy-dom": "^20.14.0",
     "prettier": "^3.9.6",
     "size-limit": "^13.0.3",

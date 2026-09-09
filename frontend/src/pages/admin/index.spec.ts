@@ -22,8 +22,8 @@ function months() {
       month: `2026-${String(index + 1).padStart(2, '0')}`,
       members: 30 + index,
       derived: !measured,
-      newsletterSubscribed: measured ? 35 + index : null,
-      newsletterUnsubscribed: measured ? index : null,
+      newsletterSubscribed: 35 + index,
+      newsletterUnsubscribed: index,
     }
   })
 }
@@ -75,8 +75,6 @@ describe('Page: Admin Übersicht', () => {
       months: months().map((month) => ({
         ...month,
         derived: true,
-        newsletterSubscribed: null,
-        newsletterUnsubscribed: null,
       })),
     })
     const wrapper = await mountLoaded()
@@ -89,31 +87,18 @@ describe('Page: Admin Übersicht', () => {
   it('drops the note once every month has been measured', async () => {
     serving({
       current: CURRENT,
-      months: months().map((month) => ({
-        ...month,
-        derived: false,
-        newsletterSubscribed: 1,
-        newsletterUnsubscribed: 0,
-      })),
+      months: months().map((month) => ({ ...month, derived: false })),
     })
     const wrapper = await mountLoaded()
     expect(wrapper.text()).not.toContain('pages.admin.dashboard.chart.derived-note')
   })
 
-  it('explains the empty newsletter chart instead of drawing an empty one', async () => {
-    // Nothing can be reconstructed here, so the page says so rather than
-    // showing a line that starts at zero.
-    serving({
-      current: CURRENT,
-      months: months().map((month) => ({
-        ...month,
-        newsletterSubscribed: null,
-        newsletterUnsubscribed: null,
-      })),
-    })
+  it('marks the reconstructed span of the newsletter chart too', async () => {
+    // Both series are inferred before the first measurement, so both are
+    // dashed — and the note names what the reconstruction cannot see.
     const wrapper = await mountLoaded()
-    expect(wrapper.text()).toContain('pages.admin.dashboard.chart.newsletter-pending')
-    expect(wrapper.findAll('svg')).toHaveLength(1)
+    expect(wrapper.findAll('path.series-derived').length).toBeGreaterThan(2)
+    expect(wrapper.text()).toContain('pages.admin.dashboard.chart.newsletter-derived-note')
   })
 
   it('labels the months as dates rather than raw keys', async () => {

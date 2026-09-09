@@ -27,8 +27,8 @@
       labels: string[]
       series: ChartSeries[]
       /**
-       * Number of leading points of the first series that are derived rather
-       * than measured — drawn dashed, because they are an inference.
+       * Number of leading points that are derived rather than measured — drawn
+       * dashed across every series, because they are an inference.
        */
       derivedCount?: number
       /** Accessible name; also the caption of the data table. */
@@ -95,19 +95,22 @@
   }
 
   /**
-   * The derived span is drawn as its own dashed path, overlapping the measured
-   * one by a point so the two meet without a gap.
+   * The derived span of each series, dashed, overlapping the measured path by
+   * one point so the two meet without a gap.
    */
-  const derivedPath = computed(() =>
-    props.derivedCount > 0 && props.series[0]
-      ? pathFor(props.series[0].values, 0, Math.min(props.derivedCount + 1, props.labels.length))
-      : '',
+  const derivedPaths = computed(() =>
+    props.derivedCount > 0
+      ? props.series.map((entry) => ({
+          tone: entry.tone,
+          d: pathFor(entry.values, 0, Math.min(props.derivedCount + 1, props.labels.length)),
+        }))
+      : [],
   )
 
   const measuredPaths = computed(() =>
-    props.series.map((entry, index) => ({
+    props.series.map((entry) => ({
       tone: entry.tone,
-      d: pathFor(entry.values, index === 0 ? Math.max(0, props.derivedCount) : 0),
+      d: pathFor(entry.values, Math.max(0, props.derivedCount)),
     })),
   )
 
@@ -196,10 +199,11 @@
         />
 
         <path
-          v-if="derivedPath"
+          v-for="entry in derivedPaths"
+          :key="`derived-${entry.tone}`"
           class="series line series-derived"
-          :class="`tone-${series[0]!.tone}`"
-          :d="derivedPath"
+          :class="`tone-${entry.tone}`"
+          :d="entry.d"
         />
         <path
           v-for="entry in measuredPaths"

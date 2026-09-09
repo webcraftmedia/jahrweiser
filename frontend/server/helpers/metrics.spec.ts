@@ -10,6 +10,7 @@ import {
   countBlaettchenIssues,
   countTelegramChannels,
   deriveMemberCounts,
+  deriveNewsletterCounts,
   monthEnd,
   monthKeys,
   recordDailyMetrics,
@@ -24,7 +25,21 @@ vi.mock('node:fs/promises', () => fs)
 const CONFIG = { BLAETTCHEN_DIR: 'data/blaettchen' }
 
 function user(createdAt: string, deletedAt: string | null = null) {
-  return { createdAt: new Date(createdAt), deletedAt: deletedAt ? new Date(deletedAt) : null }
+  return {
+    createdAt: new Date(createdAt),
+    deletedAt: deletedAt ? new Date(deletedAt) : null,
+    newsletterSubscribed: 'subscribed' as const,
+    updatedAt: new Date(createdAt),
+  }
+}
+
+/** Somebody who opted out; `updatedAt` is when that (probably) happened. */
+function optedOut(createdAt: string, at: string, deletedAt: string | null = null) {
+  return {
+    ...user(createdAt, deletedAt),
+    newsletterSubscribed: 'unsubscribed' as const,
+    updatedAt: new Date(at),
+  }
 }
 
 describe('monthKeys', () => {
@@ -76,6 +91,51 @@ describe('deriveMemberCounts', () => {
 
   it('returns zeros for an empty sidecar', () => {
     expect(deriveMemberCounts([], months)).toStrictEqual([0, 0, 0])
+  })
+})
+
+describe('deriveNewsletterCounts', () => {
+  const months = ['2026-01', '2026-02', '2026-03']
+
+  it('counts everyone as a subscriber until they opted out', () => {
+    // A new account starts subscribed, so subscribers are simply everyone
+    // present minus those who left the list.
+    const rows = [user('2025-12-01'), optedOut('2025-12-01', '2026-02-10')]
+    expect(deriveNewsletterCounts(rows, months)).toStrictEqual({
+      subscribed: [2, 1, 1],
+      unsubscribed: [0, 1, 1],
+    })
+  })
+
+  it('counts an opt-out from its own month, not before', () => {
+    const rows = [optedOut('2025-12-01', '2026-03-20')]
+    expect(deriveNewsletterCounts(rows, months)).toStrictEqual({
+      subscribed: [1, 1, 0],
+      unsubscribed: [0, 0, 1],
+    })
+  })
+
+  it('drops people who left the community from both series', () => {
+    const rows = [user('2025-12-01', '2026-02-05'), optedOut('2025-12-01', '2026-01-05')]
+    expect(deriveNewsletterCounts(rows, months)).toStrictEqual({
+      subscribed: [1, 0, 0],
+      unsubscribed: [1, 1, 1],
+    })
+  })
+
+  it('ignores anyone who had not joined yet', () => {
+    const rows = [optedOut('2026-02-20', '2026-02-25')]
+    expect(deriveNewsletterCounts(rows, months)).toStrictEqual({
+      subscribed: [0, 0, 0],
+      unsubscribed: [0, 1, 1],
+    })
+  })
+
+  it('returns zeroes for an empty sidecar', () => {
+    expect(deriveNewsletterCounts([], months)).toStrictEqual({
+      subscribed: [0, 0, 0],
+      unsubscribed: [0, 0, 0],
+    })
   })
 })
 
@@ -206,11 +266,12 @@ describe('buildMonthlySeries', () => {
     expect(series[11]).toMatchObject({ month: '2026-09', members: 2, derived: true })
   })
 
-  it('leaves newsletter figures empty where nothing was measured', async () => {
-    // They cannot be reconstructed — no column records when someone opted out.
-    queueDbResults([user('2025-09-01')], [])
+  it('reconstructs the newsletter split for months nothing was measured in', async () => {
+    // From the current state plus `updated_at` — see deriveNewsletterCounts.
+    queueDbResults([user('2025-09-01'), optedOut('2025-09-01', '2026-03-04')], [])
     const series = await buildMonthlySeries(NOW)
-    expect(series.every((month) => month.newsletterSubscribed === null)).toBe(true)
+    expect(series[0]).toMatchObject({ newsletterSubscribed: 2, newsletterUnsubscribed: 0 })
+    expect(series[11]).toMatchObject({ newsletterSubscribed: 1, newsletterUnsubscribed: 1 })
   })
 
   it('prefers a measurement over the derivation once one exists', async () => {

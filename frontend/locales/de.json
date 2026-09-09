@@ -77,7 +77,7 @@
           "members": "Mitglieder-Entwicklung",
           "month": "Monat",
           "newsletter": "Newsletter-Entwicklung",
-          "newsletter-pending": "Für den Newsletter wird seit heute gemessen — wann jemand ab- oder zubestellt hat, lässt sich rückwirkend nicht ermitteln. Die Kurve füllt sich ab dem nächsten Tag."
+          "newsletter-derived-note": "Gestrichelt: aus dem heutigen Stand und dem Zeitpunkt der letzten Änderung je Person rekonstruiert, nicht gemessen. Wer abbestellt und später wieder bestellt hat, fehlt darin — der ältere Teil der Kurve zeigt daher eher zu wenige Abbestellungen."
         },
         "error": "Die Kennzahlen konnten nicht geladen werden.",
         "tile": {

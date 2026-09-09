@@ -4,23 +4,42 @@ Five current numbers as tiles — members, newsletter subscribers, people who
 opted out, Telegram channels, Blättchen issues — plus a twelve-month curve for
 the two that move: membership and the newsletter.
 
-## What can be known, and what cannot
+## What is measured, and what is reconstructed
 
-This is the part worth understanding before reading the charts.
+Measuring only started when this shipped, so the twelve-month window reaches
+back into a time nobody was recording. Everything before the first daily
+snapshot is therefore **reconstructed from the user rows** and drawn dashed,
+with a note on the card. Both reconstructions are biased in a knowable
+direction, and both biases fade as the curve approaches today.
 
-- **Newsletter history does not exist retroactively.**
-  `users.newsletter_subscribed` is a *state*, not a history, and `updated_at`
-  moves on every change (email, display name, soft delete, sync). Nothing in
-  the schema can answer "when did somebody unsubscribe". The curve therefore
-  starts on the day this shipped and fills up from there; until the first
-  snapshot exists the card says so instead of drawing a line from zero.
-- **The member curve is measured going forward and inferred backwards.**
-  `users.created_at` is when the sidecar first *saw* a person through the DAV
-  sync, not when they joined. Everybody who was already there at the cutover
-  shares that one date, so the inferred span shows a step that was never an
-  influx. That span is drawn **dashed** and the card says why. `deleted_at`
-  gives real departures, and self-registrations carry a real date in
-  `registration_link_redemptions`.
+**Members** come from `created_at` and `deleted_at`. The catch is that
+`created_at` is when the sidecar first *saw* somebody through the DAV sync, not
+when they joined: everybody who was already there at the cutover shares one
+date, so the dashed span shows a step that was never an influx.
+
+**The newsletter split** comes from the current state plus `updated_at`. That
+works because nothing touches an unsubscribed user's row on a schedule:
+
+- the sync writes only when the name, address or deleted flag really changed
+  (`server/helpers/sync.ts` — the `emailChanged || nameChanged || wasDeleted`
+  guard), so a ten-minute cron does not restamp every row;
+- the weekly send stamps `newsletter_last_sent_at` on its **recipients**, who
+  are by definition the subscribed ones.
+
+So for somebody who is unsubscribed today, `updated_at` is normally the moment
+they opted out. Subscribers need no separate reconstruction: an account starts
+out subscribed, so subscribers are everyone present minus those who opted out.
+
+Its two limits, both understating the past:
+
+- **Upper bound.** A later name or email change moves the date forward, so the
+  opt-out looks more recent than it was.
+- **Churn is invisible.** Somebody who opted out and later re-subscribed reads
+  as "subscribed" and nothing remembers the detour, so the older part of the
+  curve shows too few opt-outs.
+
+Once a month has a snapshot, the measurement replaces the reconstruction and
+the line turns solid.
 
 ## Where the numbers come from
 

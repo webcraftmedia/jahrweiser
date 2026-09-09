@@ -9,8 +9,8 @@
     month: string
     members: number
     derived: boolean
-    newsletterSubscribed: number | null
-    newsletterUnsubscribed: number | null
+    newsletterSubscribed: number
+    newsletterUnsubscribed: number
   }
 
   interface MetricsResponse {
@@ -103,11 +103,6 @@
     return firstMeasured === -1 ? months.length : firstMeasured
   })
 
-  /** True while no month carries a newsletter measurement yet. */
-  const newsletterPending = computed(() =>
-    metrics.value.months.every((month) => month.newsletterSubscribed === null),
-  )
-
   const tiles = computed(() => [
     { key: 'members', value: metrics.value.current.members },
     { key: 'subscribed', value: metrics.value.current.newsletterSubscribed },
@@ -181,18 +176,18 @@
         <h2 class="text-lg font-display text-navy dark:text-ivory mb-4">
           {{ $t('pages.admin.dashboard.chart.newsletter') }}
         </h2>
-        <p
-          v-if="newsletterPending"
-          class="text-sm font-body text-navy/60 dark:text-poster-darkMuted"
-        >
-          {{ $t('pages.admin.dashboard.chart.newsletter-pending') }}
-        </p>
         <AdminTrendChart
-          v-else
           :labels="labels"
           :series="newsletterSeries"
+          :derived-count="derivedCount"
           :title="$t('pages.admin.dashboard.chart.newsletter')"
         />
+        <p
+          v-if="derivedCount > 0"
+          class="mt-3 text-xs font-body text-navy/60 dark:text-poster-darkMuted"
+        >
+          {{ $t('pages.admin.dashboard.chart.newsletter-derived-note') }}
+        </p>
       </div>
     </template>
   </div>

@@ -27,9 +27,13 @@ export interface MetricsMonth {
    * real influx — the chart marks this span for exactly that reason.
    */
   derived: boolean
-  /** null before the first daily snapshot: nothing was measured that month. */
-  newsletterSubscribed: number | null
-  newsletterUnsubscribed: number | null
+  /**
+   * Measured where a snapshot exists, reconstructed from `updated_at` before
+   * that — see `deriveNewsletterCounts` for what that reconstruction can and
+   * cannot see.
+   */
+  newsletterSubscribed: number
+  newsletterUnsubscribed: number
 }
 
 /** The window shown on the dashboard. */
@@ -70,6 +74,57 @@ export function deriveMemberCounts(
       (row) => row.createdAt < end && (row.deletedAt === null || row.deletedAt >= end),
     ).length
   })
+}
+
+/** A user row as the derivation needs it. */
+export interface DerivableUser {
+  createdAt: Date
+  deletedAt: Date | null
+  newsletterSubscribed: 'subscribed' | 'unsubscribed'
+  updatedAt: Date
+}
+
+/**
+ * The newsletter split at each month end, reconstructed from the current state
+ * plus `updated_at`.
+ *
+ * Why this works at all: nothing touches an unsubscribed user's row on a
+ * schedule. The sync only writes when the name, address or deleted flag really
+ * changed (server/helpers/sync.ts), and the weekly send stamps
+ * `newsletter_last_sent_at` on its *recipients* — who by definition are the
+ * subscribed ones. So for somebody who is unsubscribed today, `updated_at` is
+ * normally the moment they opted out.
+ *
+ * Two limits, both of which understate the past and vanish as the curve
+ * approaches today:
+ *   - it is an upper bound: a later name or email change moves the date
+ *     forward, so the opt-out looks more recent than it was;
+ *   - somebody who opted out and later re-subscribed is invisible — their row
+ *     says "subscribed" and nothing remembers the detour.
+ *
+ * Subscribers need no separate reconstruction: a new account starts out
+ * subscribed, so it is simply everyone present minus those who opted out.
+ */
+export function deriveNewsletterCounts(
+  rows: DerivableUser[],
+  months: string[],
+): { subscribed: number[]; unsubscribed: number[] } {
+  const subscribed: number[] = []
+  const unsubscribed: number[] = []
+
+  for (const month of months) {
+    const end = monthEnd(month)
+    const present = rows.filter(
+      (row) => row.createdAt < end && (row.deletedAt === null || row.deletedAt >= end),
+    )
+    const optedOut = present.filter(
+      (row) => row.newsletterSubscribed === 'unsubscribed' && row.updatedAt < end,
+    ).length
+    unsubscribed.push(optedOut)
+    subscribed.push(present.length - optedOut)
+  }
+
+  return { subscribed, unsubscribed }
 }
 
 /** Today as `YYYY-MM-DD`, matching the process timezone (TZ=UTC). */
@@ -139,11 +194,11 @@ export async function recordDailyMetrics(config: MetricsConfig, now = new Date()
 /**
  * The 12-month series behind the charts.
  *
- * Members are measured where a snapshot exists and derived from join dates
- * before that, so the curve reaches back past the day measuring started.
- * Newsletter figures have no such fallback — nothing in the schema records
- * when somebody unsubscribed — so those months stay null and the chart starts
- * the line where the data starts.
+ * Every figure is measured where a snapshot exists and reconstructed from the
+ * user rows before that, so the curves reach back past the day measuring
+ * started. The reconstruction is marked as such (`derived`) rather than passed
+ * off as a measurement: it carries known biases, all of which fade as the
+ * curve approaches today.
  */
 export async function buildMonthlySeries(now = new Date()): Promise<MetricsMonth[]> {
   const db = useDb()
@@ -152,9 +207,15 @@ export async function buildMonthlySeries(now = new Date()): Promise<MetricsMonth
   windowStart.setUTCMonth(windowStart.getUTCMonth() - 1)
 
   const userRows = await db
-    .select({ createdAt: users.createdAt, deletedAt: users.deletedAt })
+    .select({
+      createdAt: users.createdAt,
+      deletedAt: users.deletedAt,
+      newsletterSubscribed: users.newsletterSubscribed,
+      updatedAt: users.updatedAt,
+    })
     .from(users)
-  const derived = deriveMemberCounts(userRows, months)
+  const derivedMembers = deriveMemberCounts(userRows, months)
+  const derivedNewsletter = deriveNewsletterCounts(userRows, months)
 
   const snapshots = await db
     .select()
@@ -172,11 +233,15 @@ export async function buildMonthlySeries(now = new Date()): Promise<MetricsMonth
     const snapshot = measured.get(month)
     return {
       month,
-      // `derived` is built from the same month list, so index-for-index.
-      members: snapshot ? snapshot.members : derived[index]!,
+      // The derivations are built from the same month list, so index-for-index.
+      members: snapshot ? snapshot.members : derivedMembers[index]!,
       derived: !snapshot,
-      newsletterSubscribed: snapshot ? snapshot.newsletterSubscribed : null,
-      newsletterUnsubscribed: snapshot ? snapshot.newsletterUnsubscribed : null,
+      newsletterSubscribed: snapshot
+        ? snapshot.newsletterSubscribed
+        : derivedNewsletter.subscribed[index]!,
+      newsletterUnsubscribed: snapshot
+        ? snapshot.newsletterUnsubscribed
+        : derivedNewsletter.unsubscribed[index]!,
     }
   })
 }

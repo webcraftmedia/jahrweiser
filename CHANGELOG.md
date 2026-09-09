@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.12.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.11.0...v1.12.0) (2026-09-09)
+
+
+### Features
+
+* **frontend:** admin dashboard ([#373](https://github.com/webcraftmedia/jahrweiser/issues/373)) ([80a0ef9](https://github.com/webcraftmedia/jahrweiser/commit/80a0ef9172a7dd7a4a0b239135f47dc414199518))
+* **frontend:** blaettchen ([#369](https://github.com/webcraftmedia/jahrweiser/issues/369)) ([aa8c37e](https://github.com/webcraftmedia/jahrweiser/commit/aa8c37e3f6ab5c25079ee7c4f2aaa8b1dfb9bd11))
+* **frontend:** telegram admin - initial implementation ([#372](https://github.com/webcraftmedia/jahrweiser/issues/372)) ([c635b36](https://github.com/webcraftmedia/jahrweiser/commit/c635b36d30e216c535729dcd4cab6c3e9dce75f2))
+
+
+### Bug Fixes
+
+* **frontend:** bump size-limit, vitest and eslint-config-it4c together ([#374](https://github.com/webcraftmedia/jahrweiser/issues/374)) ([f8a2e1a](https://github.com/webcraftmedia/jahrweiser/commit/f8a2e1ad1da92232c787d8f14a7594896935cc91))
+* **frontend:** fix menu icon fill/stroke contrast ([#371](https://github.com/webcraftmedia/jahrweiser/issues/371)) ([d112052](https://github.com/webcraftmedia/jahrweiser/commit/d1120521457112f802511816ef0c41dc1e7f8e8f))
+
 ## [1.11.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.10.6...v1.11.0) (2026-09-08)
 
 

@@ -74,7 +74,7 @@
     "@types/email-templates": "^10.0.4",
     "@types/node": "^26.4.1",
     "@types/nodemailer": "^8.0.1",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.0",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.9.1",
@@ -82,7 +82,7 @@
     "happy-dom": "^20.14.0",
     "prettier": "^3.9.6",
     "size-limit": "^12.1.0",
-    "vitest": "^4.1.9",
+    "vitest": "^5.0.0",
     "vue-tsc": "^3.3.11"
   }
 }

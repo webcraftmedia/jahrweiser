@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import IconBlaettchen from '~/assets/icon-blaettchen.svg'
   import IconCalendar from '~/assets/icon-calendar.svg'
   import IconTelegram from '~/assets/icon-telegram.svg'
 
@@ -11,11 +12,15 @@
 
   const { t } = useI18n()
   const route = useRoute()
-  const { hasChannels, load } = useTelegramChannels()
+  const { hasChannels, load: loadChannels } = useTelegramChannels()
+  const { hasIssues, load: loadIssues } = useBlaettchen()
 
-  // The Telegram entry only exists when there is something behind it. Loaded
-  // here rather than on the page so the rail can decide before anyone clicks.
-  onMounted(load)
+  // Both entries only exist when there is something behind them. Loaded here
+  // rather than on the pages so the rail can decide before anyone clicks.
+  onMounted(() => {
+    void loadChannels()
+    void loadIssues()
+  })
 
   interface RailItem {
     to: string
@@ -42,6 +47,18 @@
       icon: IconCalendar,
       isActive: isCalendarPath,
     },
+    // Hidden while no issue has been published — and equally when they could
+    // not be read at all, same reasoning as Telegram below.
+    ...(hasIssues.value
+      ? [
+          {
+            to: '/blaettchen',
+            label: t('components.AppIconRail.blaettchen'),
+            icon: IconBlaettchen,
+            isActive: (path: string) => path === '/blaettchen',
+          },
+        ]
+      : []),
     // Hidden when no invitations are configured — and equally when they could
     // not be read at all, so a broken config never offers members a link into
     // an error page. The endpoint still logs and answers 500 for the operator.

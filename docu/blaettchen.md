@@ -77,16 +77,43 @@ Read-only is enough — the app never writes issues.
 | --- | --- |
 | `GET /api/blaettchen` | `{ issues: [...], contact: string \| null }`, newest issue first |
 | `GET /api/blaettchen/<file>` | The PDF, `Content-Type: application/pdf`, `Cache-Control: private, no-store` |
+| `POST /api/admin/blaettchen/upload` | multipart: `file`, `number`, `date`, `title?`, `replace?`. Answers `{ issue, replaced }`, or 400/409/413/415 |
+| `POST /api/admin/blaettchen/delete` | `{ file }` → `{}`, or 404 |
 
-Both require a session. The download endpoint parses the requested name with
+All four require a session; the two under `/admin/` additionally require the
+admin role. The download endpoint parses the requested name with
 the same grammar as the listing before it touches the file system: the pattern
 is anchored and contains no path separator, so a name that matches can never
 address anything outside the issue directory. Anything else is a 404.
 
 ## Adding an issue
 
-1. Read the issue number and date off the paper's header line
-   (`Südhessen, 01.05.26, 12. Ausgabe`).
+### Through the admin page (the usual way)
+
+`/admin/blaettchen` (Admin → Blättchen) uploads an issue and lists what is
+already published.
+
+1. Pick the PDF. If its name already follows the convention, number, date and
+   subtitle fill themselves; otherwise read them off the paper's header line
+   (`Südhessen, 01.05.26, 12. Ausgabe`) and type them in. The form shows the
+   resulting file name before anything is sent.
+2. Upload. **The browser's file name is never used as a path** — the server
+   builds the name from the fields and parses it back with the reading grammar,
+   so nothing can be written that the listing could not read again.
+3. An issue number that already exists is refused (409) until "Vorhandene
+   Ausgabe ersetzen" is ticked. Replacing removes the old file of that number,
+   which is logged with the admin's address; the archive keeps no other history.
+
+Refusals the form spells out: not a PDF (checked by magic bytes, not by the
+content type the browser claims), larger than 10 MB, impossible date, subtitle
+containing a path separator.
+
+Deleting an issue takes two clicks and is irreversible — there is no second copy
+on the server.
+
+### By hand on the server
+
+1. Read the issue number and date off the paper's header line.
 2. Copy the PDF to `$BLAETTCHEN_DIR/12_2026-05-01.pdf`.
 3. Reload `/blaettchen` — it is there. If it is not, check the server log for
    the "do not follow" warning naming the file.

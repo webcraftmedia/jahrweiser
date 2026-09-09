@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { compareBlaettchenIssues, parseBlaettchenFile } from './blaettchen'
+import { compareBlaettchenIssues, formatBlaettchenFile, parseBlaettchenFile } from './blaettchen'
 
 import type { BlaettchenIssue } from './blaettchen'
 
@@ -57,6 +57,46 @@ describe('parseBlaettchenFile', () => {
     ['/etc/shadow.pdf', 'an absolute path'],
   ])('refuses %s (%s), so no name reaches the file system that could escape', (file) => {
     expect(parseBlaettchenFile(file)).toBeNull()
+  })
+})
+
+describe('formatBlaettchenFile', () => {
+  it('pads the number so the archive sorts as text too', () => {
+    expect(formatBlaettchenFile({ number: 6, date: '2024-04-14' })).toBe('06_2024-04-14.pdf')
+  })
+
+  it('leaves a three-digit number alone', () => {
+    expect(formatBlaettchenFile({ number: 100, date: '2030-01-01' })).toBe('100_2030-01-01.pdf')
+  })
+
+  it('appends the subtitle when there is one', () => {
+    expect(
+      formatBlaettchenFile({ number: 4, date: '2023-12-23', title: 'Sonderausgabe Weihnachten' }),
+    ).toBe('04_2023-12-23_Sonderausgabe Weihnachten.pdf')
+  })
+
+  it('omits a subtitle that is only whitespace, separator and all', () => {
+    // `04_2023-12-23_.pdf` is not a name the parser accepts.
+    expect(formatBlaettchenFile({ number: 4, date: '2023-12-23', title: '  ' })).toBe(
+      '04_2023-12-23.pdf',
+    )
+  })
+
+  it('trims a subtitle rather than baking the spaces into the name', () => {
+    expect(formatBlaettchenFile({ number: 4, date: '2023-12-23', title: ' Sommer ' })).toBe(
+      '04_2023-12-23_Sommer.pdf',
+    )
+  })
+
+  it.each([
+    { number: 12, date: '2026-05-01' },
+    { number: 4, date: '2023-12-23', title: 'Sonderausgabe Weihnachten' },
+    { number: 100, date: '2030-01-01', title: 'Titel_mit_Unterstrich' },
+  ])('round-trips %o through the parser', (issue) => {
+    // The upload relies on exactly this: what it formats, the listing parses
+    // back to the same issue.
+    const parsed = parseBlaettchenFile(formatBlaettchenFile(issue))
+    expect(parsed).toMatchObject(issue)
   })
 })
 

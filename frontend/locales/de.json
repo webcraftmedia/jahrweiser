@@ -35,6 +35,42 @@
   },
   "pages": {
     "admin": {
+      "blaettchen": {
+        "list": {
+          "cancel": "Abbrechen",
+          "delete": "Löschen",
+          "delete-confirm": "Wirklich löschen",
+          "delete-error": "Die Ausgabe konnte nicht gelöscht werden.",
+          "empty": "Es sind noch keine Ausgaben vorhanden.",
+          "error": "Die Ausgaben konnten nicht geladen werden.",
+          "title": "Vorhandene Ausgaben"
+        },
+        "title": "Blättchen",
+        "upload": {
+          "clash": "Für diese Nummer gibt es bereits eine Ausgabe ({file}). Sie wird beim Hochladen unwiderruflich ersetzt.",
+          "date": "Erscheinungsdatum",
+          "error": {
+            "exists": "Diese Ausgabe gibt es schon. Setze den Haken zum Ersetzen.",
+            "failed": "Der Upload ist fehlgeschlagen.",
+            "invalid": "Nummer, Datum oder Untertitel sind ungültig.",
+            "not-pdf": "Die Datei ist keine PDF.",
+            "too-large": "Die Datei ist größer als 10 MB."
+          },
+          "file": "PDF-Datei",
+          "number": "Ausgabe-Nummer",
+          "number-placeholder": "z. B. 13",
+          "prefilled": "Nummer, Datum und Untertitel stammen aus dem Dateinamen.",
+          "replace": "Vorhandene Ausgabe ersetzen",
+          "submit": "Hochladen",
+          "subtitle": "Untertitel (optional)",
+          "subtitle-placeholder": "z. B. Sonderausgabe Weihnachten",
+          "success": "{file} wurde veröffentlicht.",
+          "target": "Wird gespeichert als:",
+          "target-incomplete": "Nummer und Datum fehlen noch.",
+          "title": "Neue Ausgabe hochladen",
+          "uploading": "Wird hochgeladen..."
+        }
+      },
       "links": {
         "create": {
           "button": "Link erzeugen",
@@ -126,6 +162,7 @@
         }
       },
       "menu": {
+        "blaettchen": "Blättchen",
         "calendar": "Kalender verwalten",
         "links": "Registrierungs-Links",
         "members-add": "Mitglieder hinzufügen"

@@ -95,6 +95,15 @@ describe('useBlaettchen', () => {
     consoleSpy.mockRestore()
   })
 
+  it('formats a publication date without slipping a day', () => {
+    // `2025-12-24` parses as UTC midnight; formatting that instant west of
+    // Greenwich would show the 23rd. The test locale is en, the app's is de —
+    // what matters here is the day, not the wording.
+    const { formatDate } = useBlaettchen()
+    expect(formatDate('2025-12-24')).toContain('24')
+    expect(formatDate('2025-12-24')).toContain('2025')
+  })
+
   it('escapes the file name into a single URL segment', () => {
     // Issue names carry spaces and umlauts; unescaped they would break the
     // route match — or, with a slash, address a different path entirely.

@@ -62,5 +62,20 @@ export function useBlaettchen() {
     return `/api/blaettchen/${encodeURIComponent(issue.file)}`
   }
 
-  return { issues, contact, hasIssues, isLoading, loadError, load, urlFor }
+  const { locale } = useI18n()
+
+  /**
+   * A publication date for reading. Noon rather than midnight: `2025-12-24`
+   * parses as UTC, and formatting that instant west of Greenwich would show
+   * the 23rd.
+   */
+  function formatDate(date: string): string {
+    return new Date(`${date}T12:00:00`).toLocaleDateString(locale.value, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
+  return { issues, contact, hasIssues, isLoading, loadError, load, urlFor, formatDate }
 }

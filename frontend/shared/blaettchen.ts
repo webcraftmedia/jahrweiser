@@ -75,6 +75,40 @@ export function parseBlaettchenFile(file: string): BlaettchenIssue | null {
   }
 }
 
+/** What the upload form may send, before it becomes a file name. */
+export interface BlaettchenIssueInput {
+  number: number
+  date: string
+  title?: string
+}
+
+/**
+ * Builds the canonical file name for an issue — the inverse of
+ * `parseBlaettchenFile`. Used by the upload endpoint (which never lets the
+ * client's file name become a path) and by the form, which shows the resulting
+ * name before anything is sent.
+ *
+ * The result is *not* trusted on its own: the upload parses it back and
+ * compares, so the same grammar decides what may be written as decides what may
+ * be read.
+ */
+export function formatBlaettchenFile(issue: BlaettchenIssueInput): string {
+  const number = String(issue.number).padStart(2, '0')
+  const title = issue.title?.trim()
+  return `${number}_${issue.date}${title ? `_${title}` : ''}${EXTENSION}`
+}
+
+/**
+ * Upload ceiling. Matches `client_max_body_size` in the nginx config (see
+ * README) — a larger file would be cut off by the proxy with an opaque 413
+ * before the app ever sees it, so the app's own limit may not be higher.
+ * Issues run 0.3–0.9 MB, so this is roomy.
+ */
+export const BLAETTCHEN_MAX_BYTES = 10 * 1024 * 1024
+
+/** Every PDF starts with this, whatever the browser claims the type is. */
+export const PDF_MAGIC = '%PDF-'
+
 /**
  * Newest first: by issue number, and by date where a number repeats (a
  * corrected reissue keeps its number).

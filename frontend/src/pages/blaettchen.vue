@@ -5,26 +5,12 @@
 
   // Shared with the icon rail, which already loaded the list to decide whether
   // to show its entry at all — reusing it avoids a second request.
-  const { issues, contact, isLoading, loadError, load, urlFor } = useBlaettchen()
+  const { issues, contact, isLoading, loadError, load, urlFor, formatDate } = useBlaettchen()
 
   // Force a refresh: issues are dropped into the directory on the server
   // without a restart, so a visit to this page should show what is there now,
   // not what the rail read when the app was opened.
   onMounted(() => load(true))
-
-  const { locale } = useI18n()
-
-  /**
-   * Noon rather than midnight: `2025-12-24` parses as UTC, and formatting that
-   * instant west of Greenwich would show the 23rd.
-   */
-  function formatDate(date: string): string {
-    return new Date(`${date}T12:00:00`).toLocaleDateString(locale.value, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
-  }
 
   /** `mailto:` with a prefilled subject, so contributions arrive recognisable. */
   function contributionMailto(address: string): string {

@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { expect, test } from '@playwright/test'
 
-import { setTelegramChannels } from './helpers/db'
+import { restoreTelegramChannels, setTelegramChannels, stashTelegramChannels } from './helpers/db'
 import {
   extractLoginTokenFromMail,
   preparePage,
@@ -12,6 +12,7 @@ import {
 } from './helpers/maildev'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
+import type { TelegramChannelRow } from './helpers/db'
 import type { Page } from '@playwright/test'
 
 // One seeded user per test: /api/requestLoginLink is rate-limited per user
@@ -29,6 +30,10 @@ const CHANNELS = [
   { name: 'E2E Öffentlich', description: 'Für alle', url: 'https://t.me/e2e_public', public: true },
   { name: 'E2E Privat', url: 'https://t.me/+E2ePrivateInvite', public: false },
 ]
+
+// Nothing re-creates the real list (it is deployment content, not demo data),
+// so it is stashed and put back rather than cleared.
+let stashedChannels: TelegramChannelRow[] = []
 
 // The issue directory is the suite's own (BLAETTCHEN_DIR in
 // playwright.full-stack.config.ts) — the real archive holds members' PDFs and
@@ -59,12 +64,13 @@ async function withdrawIssues(): Promise<void> {
 test.beforeAll(async () => {
   runSeedReset()
   runSeedDemo()
+  stashedChannels = await stashTelegramChannels()
   await setTelegramChannels(CHANNELS)
   await publishIssues()
 })
 
 test.afterAll(async () => {
-  await setTelegramChannels([])
+  await restoreTelegramChannels(stashedChannels)
   await withdrawIssues()
 })
 

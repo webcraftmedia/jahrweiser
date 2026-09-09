@@ -78,6 +78,38 @@ export async function setTelegramChannels(channels: SeedChannel[]): Promise<void
   }
 }
 
+/** One row exactly as the table stores it, for stash/restore. */
+export interface TelegramChannelRow {
+  id: number
+  name: string
+  description: string | null
+  url: string
+  is_public: number
+  sort_order: number
+  created_by_uid: string | null
+  created_at: Date
+  updated_at: Date
+}
+
+/**
+ * Reads the whole table so a suite can put it back afterwards. Unlike users or
+ * calendar events, the channels are not re-created by `cli:seed:demo` — they
+ * are deployment content. A suite that simply cleared the table would eat a
+ * developer's real list, which is why every suite touching it stashes first.
+ */
+export async function stashTelegramChannels(): Promise<TelegramChannelRow[]> {
+  const [rows] = await getPool().query('SELECT * FROM telegram_channels ORDER BY id')
+  return rows as TelegramChannelRow[]
+}
+
+/** Puts a stashed list back verbatim, ids and positions included. */
+export async function restoreTelegramChannels(rows: TelegramChannelRow[]): Promise<void> {
+  await getPool().query('DELETE FROM telegram_channels')
+  for (const row of rows) {
+    await getPool().query('INSERT INTO telegram_channels SET ?', [row])
+  }
+}
+
 /** The channel names in the order the table returns them. */
 export async function readTelegramChannelOrder(): Promise<string[]> {
   const [rows] = await getPool().query('SELECT name FROM telegram_channels ORDER BY sort_order, id')

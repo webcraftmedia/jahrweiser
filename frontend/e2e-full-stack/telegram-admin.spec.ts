@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-import { readTelegramChannelOrder, setTelegramChannels } from './helpers/db'
+import {
+  readTelegramChannelOrder,
+  restoreTelegramChannels,
+  setTelegramChannels,
+  stashTelegramChannels,
+} from './helpers/db'
 import {
   deleteAllMail,
   extractLoginTokenFromMail,
@@ -9,6 +14,7 @@ import {
 } from './helpers/maildev'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
+import type { TelegramChannelRow } from './helpers/db'
 import type { Page } from '@playwright/test'
 
 const ADMIN = 'admin@example.com'
@@ -19,13 +25,19 @@ const SEEDED = [
   { name: 'E2E Zweiter', url: 'https://t.me/e2e_second', public: false },
 ]
 
+// The channel list is deployment content, not seeded demo data — nothing
+// re-creates it. Stash it and put it back, rather than leaving a developer
+// with an empty list after a test run.
+let stashedChannels: TelegramChannelRow[] = []
+
 test.beforeAll(async () => {
   runSeedReset()
   runSeedDemo()
+  stashedChannels = await stashTelegramChannels()
 })
 
 test.afterAll(async () => {
-  await setTelegramChannels([])
+  await restoreTelegramChannels(stashedChannels)
 })
 
 test.beforeEach(async () => {
@@ -79,11 +91,18 @@ test.describe('admin: editing the Telegram channels', () => {
       .poll(async () => readTelegramChannelOrder(), { timeout: 10_000 })
       .toStrictEqual(['E2E Erster', 'E2E Dritter', 'E2E Zweiter'])
 
-    // 3. Editing in place.
-    const third = page.locator('li', { hasText: 'E2E Dritter' })
-    await third.getByRole('button', { name: 'Bearbeiten' }).click()
-    await third.getByLabel('Name').fill('E2E Dritter (neu)')
-    await third.getByRole('button', { name: 'Speichern' }).click()
+    // 3. Editing in place. The row can only be found by its name *before* the
+    //    editor opens — from then on the name lives in an input's value, which
+    //    is not text content, so a `hasText` locator would stop matching. The
+    //    open editor is the only form inside the list, which is stable.
+    await page
+      .locator('li', { hasText: 'E2E Dritter' })
+      .getByRole('button', { name: 'Bearbeiten' })
+      .click()
+    const editor = page.locator('li form')
+    await expect(editor).toHaveCount(1)
+    await editor.getByLabel('Name').fill('E2E Dritter (neu)')
+    await editor.getByRole('button', { name: 'Speichern' }).click()
     await expect(page.getByText('E2E Dritter (neu)')).toBeVisible({ timeout: 10_000 })
 
     // 4. What the members see — same list, same order, through the member page.

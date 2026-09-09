@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.12.0...v1.12.1) (2026-09-09)
+
+
+### Bug Fixes
+
+* **frontend:** fix telegram import ([#377](https://github.com/webcraftmedia/jahrweiser/issues/377)) ([6f92963](https://github.com/webcraftmedia/jahrweiser/commit/6f92963eb2b62bc9a4c78cac56551b3704f20acf))
+
 ## [1.12.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.11.0...v1.12.0) (2026-09-09)
 
 

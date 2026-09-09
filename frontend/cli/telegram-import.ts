@@ -8,6 +8,12 @@ import { useDb } from '../server/db'
 import { telegramChannels } from '../server/db/schema'
 import { isTelegramUrl } from '../shared/telegram'
 
+// Loading the Nuxt config also reads `.env` into `process.env`, which is where
+// `useDb()` picks up `DB_SOCKET` & friends. Without this import the CLI
+// silently falls back to TCP `localhost:3306` and fails on production, where
+// MariaDB only listens on a unix socket.
+import { config } from './tools/config'
+
 /**
  * One-off import of the old `data/telegram-channels.json` into the sidecar
  * table, for deployments that ran the file-based version.
@@ -53,6 +59,13 @@ if (!parsed.success) {
   console.error(z.prettifyError(parsed.error))
   process.exit(1)
 }
+
+// Which database this one-off run is about to write to — worth stating, since
+// it is usually typed into a production shell.
+const target = process.env.DB_SOCKET
+  ? `socket ${process.env.DB_SOCKET}`
+  : `${config.DB_HOST}:${config.DB_PORT}`
+console.warn(`Importing into ${config.DB_NAME} (${target}) from ${file}`)
 
 const db = useDb()
 const existing = new Set(

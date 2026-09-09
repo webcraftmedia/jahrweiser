@@ -13,14 +13,20 @@ test.describe('Admin', () => {
     await expect(navbar.getByRole('link', { name: 'Admin' })).toBeVisible()
   })
 
-  test('navigates to admin members add page', async ({ page }) => {
+  test('lands on the overview and reaches the wizard from there', async ({ page }) => {
+    // "Admin" opens the overview; the sections hang off its sidebar.
     await page.locator('#navbar-desktop').getByRole('link', { name: 'Admin' }).click()
+    await expect(page).toHaveURL(/\/admin$/)
+    await expect(page.getByText('Mitglieder', { exact: false }).first()).toBeVisible()
+
+    await page.getByRole('link', { name: 'Mitglieder hinzufügen' }).first().click()
     await expect(page).toHaveURL(/\/admin\/members\/add/)
     await expect(page.getByText('Schritt 1')).toBeVisible()
   })
 
   test('completes full wizard flow', async ({ page }) => {
     await page.locator('#navbar-desktop').getByRole('link', { name: 'Admin' }).click()
+    await page.getByRole('link', { name: 'Mitglieder hinzufügen' }).first().click()
     await page.waitForURL(/\/admin\/members\/add/)
 
     // Step 1: Enter email
@@ -50,6 +56,7 @@ test.describe('Admin', () => {
     )
 
     await page.locator('#navbar-desktop').getByRole('link', { name: 'Admin' }).click()
+    await page.getByRole('link', { name: 'Mitglieder hinzufügen' }).first().click()
     await page.waitForURL(/\/admin\/members\/add/)
 
     // Step 1
@@ -67,6 +74,7 @@ test.describe('Admin', () => {
 
   test('step navigation back works', async ({ page }) => {
     await page.locator('#navbar-desktop').getByRole('link', { name: 'Admin' }).click()
+    await page.getByRole('link', { name: 'Mitglieder hinzufügen' }).first().click()
     await page.waitForURL(/\/admin\/members\/add/)
 
     // Step 1
@@ -97,7 +105,7 @@ test.describe('Admin Mobile Menu', () => {
     const mobileMenu = page.locator('#navbar-mobile')
     await expect(mobileMenu).toHaveClass(/menu-open/)
     await mobileMenu.getByRole('link', { name: 'Admin' }).click()
-    await page.waitForURL(/\/admin\/members\/add/)
+    await page.waitForURL(/\/admin$/)
   })
 
   test('hamburger button opens admin sidebar drawer', async ({ page }) => {

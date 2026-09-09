@@ -52,6 +52,23 @@ export const MOCK_EVENT_DETAIL = {
   uid: 'event-1',
 }
 
+export const MOCK_METRICS = {
+  current: {
+    members: 42,
+    newsletterSubscribed: 37,
+    newsletterUnsubscribed: 5,
+    telegramChannels: 4,
+    blaettchenIssues: 12,
+  },
+  months: Array.from({ length: 12 }, (_, index) => ({
+    month: `2026-${String(index + 1).padStart(2, '0')}`,
+    members: 30 + index,
+    derived: index < 10,
+    newsletterSubscribed: 25 + index,
+    newsletterUnsubscribed: index,
+  })),
+}
+
 export const MOCK_TAGS = [
   { name: 'Vereinskalender', state: true },
   { name: 'Geburtstage', state: false },
@@ -134,6 +151,16 @@ export async function loginAs(page: Page, user: typeof DEFAULT_USER) {
 }
 
 export async function mockAdminEndpoints(page: Page) {
+  // /admin is the overview now; it asks for this on mount, and an unmocked 401
+  // would log the user out through src/plugins/auth-redirect.ts mid-test.
+  await page.route('**/api/admin/metrics', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_METRICS),
+    }),
+  )
+
   await page.route('**/api/admin/getUserTags', async (route) =>
     route.fulfill({
       status: 200,

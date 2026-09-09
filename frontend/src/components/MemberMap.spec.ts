@@ -32,7 +32,9 @@ function mount(areas: MapArea[], props: Record<string, unknown> = {}) {
 
 /** `x y w h` of the rendered viewBox. */
 function box(wrapper: { find: (s: string) => { attributes: (a: string) => string | undefined } }) {
-  const [x, y, w, h] = (wrapper.find('svg').attributes('viewBox') ?? '').split(' ').map(Number)
+  const [x = 0, y = 0, w = 0, h = 0] = (wrapper.find('svg').attributes('viewBox') ?? '')
+    .split(' ')
+    .map(Number)
   return { x, y, w, h }
 }
 
@@ -62,9 +64,9 @@ describe('Component: MemberMap', () => {
 
   it('sizes the dots by the square root of the count, so area reads as the number', async () => {
     const wrapper = await mount([
-      area('64673', 1),
-      area('10115', 4, { cx: 2900, cy: 900 }),
-      area('01067', 16, { cx: 3100, cy: 2000 }),
+      area('64673', 4),
+      area('10115', 16, { cx: 2900, cy: 900 }),
+      area('01067', 64, { cx: 3100, cy: 2000 }),
     ])
     const radii = wrapper
       .findAll('.dots circle')
@@ -72,7 +74,19 @@ describe('Component: MemberMap', () => {
       .sort((a, b) => a - b)
     // 5 + 2.5·√count, whatever the zoom happens to scale that by.
     const [small] = radii as [number, number, number]
-    expect(radii.map((r) => Number((r / small).toFixed(3)))).toStrictEqual([1, 1.333, 2])
+    expect(radii.map((r) => Number((r / small).toFixed(3)))).toStrictEqual([1, 1.5, 2.5])
+  })
+
+  it('never draws a dot smaller than the number it has to hold', async () => {
+    // Below that floor the number would spill onto the map, and could no longer
+    // be coloured for contrast against the dot it belongs to.
+    const wrapper = await mount([area('64673', 1)])
+    const radius = Number(wrapper.find('.dots circle').attributes('r'))
+    const fontSize = Number(
+      /font-size:\s*([\d.]+)/.exec(wrapper.find('.labels').attributes('style') ?? '')?.[1] ?? 0,
+    )
+    expect(fontSize).toBeGreaterThan(0)
+    expect(radius).toBeGreaterThan(fontSize * 0.7)
   })
 
   it('paints the large areas first, so a city inside one stays visible', async () => {
@@ -202,6 +216,37 @@ describe('Component: MemberMap', () => {
       expect(box(wrapper)).toStrictEqual(before)
     })
 
+    it('sizes its marks against the space it was actually given', async () => {
+      // How many map units go into a pixel is not knowable up front — the page
+      // hands the map whatever height is left — so it is measured.
+      const observers: ((entries: { contentRect: DOMRectReadOnly }[]) => void)[] = []
+      class FakeObserver {
+        constructor(callback: (entries: { contentRect: DOMRectReadOnly }[]) => void) {
+          observers.push(callback)
+        }
+        observe() {}
+        disconnect() {}
+      }
+      vi.stubGlobal('ResizeObserver', FakeObserver)
+      try {
+        const wrapper = await mount([area('64673', 4, { cx: 1000, cy: 1000 })])
+        const assumed = Number(wrapper.find('.dots circle').attributes('r'))
+
+        // A box that has not been laid out yet says nothing.
+        observers[0]?.([{ contentRect: { width: 0, height: 0 } as DOMRectReadOnly }])
+        await nextTick()
+        expect(Number(wrapper.find('.dots circle').attributes('r'))).toBe(assumed)
+
+        // A narrow one makes every map unit worth less of a pixel, so the mark
+        // grows in map units to keep its size on screen.
+        observers[0]?.([{ contentRect: { width: 320, height: 400 } as DOMRectReadOnly }])
+        await nextTick()
+        expect(Number(wrapper.find('.dots circle').attributes('r'))).toBeGreaterThan(assumed)
+      } finally {
+        vi.unstubAllGlobals()
+      }
+    })
+
     it('reports the rectangle on screen, once the panning has settled', async () => {
       vi.useFakeTimers()
       try {
@@ -238,8 +283,8 @@ describe('Component: MemberMap', () => {
       })
       const label = wrapper.find('.places text')
       expect(label.text()).toBe('Zwingenberg')
-      const dy = Math.abs(Number(label.attributes('y')) - 2500)
-      const dx = Math.abs(Number(label.attributes('x')) - 2000)
+      const dy = Math.abs(Number(label.attributes('y') ?? 0) - 2500)
+      const dx = Math.abs(Number(label.attributes('x') ?? 0) - 2000)
       expect(dy + dx).toBeGreaterThan(0)
     })
 

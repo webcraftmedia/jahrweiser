@@ -264,7 +264,6 @@
     "karte": {
       "empty": "Noch hat niemand eine Postleitzahl hinterlegt — sobald das jemand tut, erscheint hier die erste Markierung.",
       "error": "Die Karte konnte nicht geladen werden. Bitte später erneut versuchen.",
-      "intro": "Woher unsere Gemeinschaft kommt — zusammengefasst je Postleitzahl, ohne Namen und ohne genaue Adressen.",
       "locked": {
         "cta": "Postleitzahl hinterlegen",
         "text": "Die Karte zeigt, wo unsere Mitglieder wohnen — sichtbar wird sie, sobald du selbst eine Postleitzahl hinterlegt hast. Was du hier durchscheinen siehst, sind Beispielwerte.",
@@ -272,8 +271,10 @@
       },
       "map-label": "Mitglieder je Postleitzahl, {located} verortet",
       "summary": "{located} von {total} Mitgliedern haben eine Postleitzahl hinterlegt, verteilt auf {areas} Postleitzahlen.",
+      "summary-short": "{located}/{total} · {areas} PLZ",
       "title": "Karte",
-      "unlocated": "Eine davon liegt außerhalb der Karte. | {count} davon liegen außerhalb der Karte."
+      "unlocated": "Eine davon liegt außerhalb der Karte. | {count} davon liegen außerhalb der Karte.",
+      "unlocated-short": "{count} ohne Ort"
     },
     "login": {
       "error": {

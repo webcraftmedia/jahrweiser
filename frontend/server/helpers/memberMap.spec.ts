@@ -213,12 +213,10 @@ describe('loadPlaces', () => {
 
   it('reads the place artefact and keeps it', async () => {
     const getItem = vi.fn().mockResolvedValue({ viewBox: FILE.viewBox, places: PLACES })
-    vi.mocked(globalThis.useStorage).mockReturnValue({ getItem } as unknown as ReturnType<
-      typeof useStorage
-    >)
+    vi.mocked(globalThis.useStorage).mockReturnValue({ getItem })
     const first = await loadPlaces()
     expect(first).toHaveLength(4)
-    expect(await loadPlaces()).toBe(first)
+    await expect(loadPlaces()).resolves.toBe(first)
     expect(getItem).toHaveBeenCalledExactlyOnceWith(PLACE_FILE_KEY)
   })
 

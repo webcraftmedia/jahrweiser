@@ -33,7 +33,7 @@ export async function loadPlzAreas(): Promise<LoadedAreas | null> {
   if (!raw?.areas) return null
   cache = {
     viewBox: raw.viewBox,
-    outline: raw.outline ?? '',
+    outline: raw.outline,
     areas: new Map(Object.entries(raw.areas)),
   }
   return cache

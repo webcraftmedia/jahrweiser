@@ -8,6 +8,8 @@ const mock$fetch = vi.fn()
 stubApi(mock$fetch)
 
 const OUTLINE = { viewBox: '0 0 4000 5000', d: 'M0 0z' }
+const PLACES = [{ name: 'Zwingenberg', x: 500, y: 500, rank: 7291 }]
+const VIEW = { minX: 400, minY: 400, maxX: 600, maxY: 600 }
 const PAYLOAD = {
   areas: [{ plz: '64673', ort: 'Zwingenberg', count: 3, d: 'M0 0z', cx: 1, cy: 2, size: 900 }],
   unlocated: 0,
@@ -24,6 +26,7 @@ function serving(options: { map?: unknown; status?: unknown } = {}) {
       return map instanceof Error ? Promise.reject(map) : Promise.resolve(map)
     }
     if (url === '/api/map/status') return Promise.resolve(status)
+    if (url === '/api/map/places') return Promise.resolve(PLACES)
     if (url === '/api/map/outline') return Promise.resolve(OUTLINE)
     return Promise.resolve({})
   })
@@ -45,6 +48,8 @@ describe('useMemberMap', () => {
     state.isLocked.value = false
     state.loadError.value = false
     state.loaded.value = false
+    state.places.value = []
+    useState<unknown>('member-map-place-box', () => null).value = null
     useState('member-map-status-loaded', () => false).value = false
     useState<Promise<void> | null>('member-map-status-inflight', () => null).value = null
     serving()
@@ -96,6 +101,58 @@ describe('useMemberMap', () => {
       const { hasPostalCode, loadStatus } = useMemberMap()
       await loadStatus()
       expect(hasPostalCode.value).toBeNull()
+      consoleSpy.mockRestore()
+    })
+  })
+
+  describe('place names', () => {
+    it('asks for a region bigger than the view, so panning needs no request', async () => {
+      const { places, loadPlaces } = useMemberMap()
+      await loadPlaces(VIEW)
+      expect(places.value).toStrictEqual(PLACES)
+      const [, options] = mock$fetch.mock.calls.find(([url]) => url === '/api/map/places') ?? []
+      const box = (options as { query: typeof VIEW }).query
+      expect(box.minX).toBeLessThan(VIEW.minX)
+      expect(box.maxX).toBeGreaterThan(VIEW.maxX)
+      expect(box.minY).toBeLessThan(VIEW.minY)
+      expect(box.maxY).toBeGreaterThan(VIEW.maxY)
+    })
+
+    it('says nothing again while the view stays inside what was fetched', async () => {
+      const { loadPlaces } = useMemberMap()
+      await loadPlaces(VIEW)
+      // Panned a little and zoomed a little — still inside, still coarse
+      // enough that the last answer holds.
+      await loadPlaces({ minX: 420, minY: 420, maxX: 590, maxY: 590 })
+      expect(mock$fetch.mock.calls.filter(([url]) => url === '/api/map/places')).toHaveLength(1)
+    })
+
+    it('asks again once the view has moved off the region', async () => {
+      const { loadPlaces } = useMemberMap()
+      await loadPlaces(VIEW)
+      await loadPlaces({ minX: 3000, minY: 3000, maxX: 3200, maxY: 3200 })
+      expect(mock$fetch.mock.calls.filter(([url]) => url === '/api/map/places')).toHaveLength(2)
+    })
+
+    it('asks again once it has been zoomed in far enough for smaller places', async () => {
+      // The last answer was picked for a wider frame; at this zoom there is
+      // room for names it left out.
+      const { loadPlaces } = useMemberMap()
+      await loadPlaces(VIEW)
+      await loadPlaces({ minX: 495, minY: 495, maxX: 505, maxY: 505 })
+      expect(mock$fetch.mock.calls.filter(([url]) => url === '/api/map/places')).toHaveLength(2)
+    })
+
+    it('keeps the map usable when the names cannot be fetched', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mock$fetch.mockRejectedValue(new Error('500'))
+      const { places, loadPlaces } = useMemberMap()
+      await loadPlaces(VIEW)
+      expect(places.value).toStrictEqual([])
+      // The region is given back, so the next view tries again.
+      serving()
+      await loadPlaces(VIEW)
+      expect(places.value).toStrictEqual(PLACES)
       consoleSpy.mockRestore()
     })
   })

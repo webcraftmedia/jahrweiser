@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import type { MapArea, MapOutline, MapPlace } from '~~/shared/map'
 
+  import { MAP_ATTRIBUTION } from '~~/shared/map'
+
   /**
    * Where the members are, one number per postal code.
    *
@@ -439,6 +441,12 @@
     clearTimeout(viewportTimer)
   })
 
+  /** The two numbers that label the ramp where the classes have no room. */
+  const legendEnds = computed(() => ({
+    from: String(legend.value[0]?.from ?? 1),
+    to: `${legend.value[legend.value.length - 1]?.from ?? 1}+`,
+  }))
+
   const total = computed(() => props.areas.reduce((sum, area) => sum + area.count, 0))
 </script>
 
@@ -513,6 +521,16 @@
         </g>
       </svg>
 
+      <!-- Where every map carries it: in a corner of the map itself, costing no
+           height. ODbL and CC BY require it to be there — quiet is as small as
+           it may get. -->
+      <p
+        v-if="!decorative"
+        class="pointer-events-none absolute bottom-0 right-0 max-w-full truncate pl-2 text-[0.625rem] leading-4 font-body text-navy/35 dark:text-ivory/35"
+      >
+        {{ MAP_ATTRIBUTION }}
+      </p>
+
       <div v-if="!decorative" class="absolute right-2 top-2 flex flex-col gap-1">
         <button
           v-for="control in [
@@ -533,15 +551,25 @@
 
     <!-- The scale, always present: the fill is the only thing that says how
          many, and it must never rest on colour the reader has to guess at. -->
+    <!-- One line, always. On a phone the classes are a bare ramp with its ends
+         labelled left and right, and whatever the page has to say about the
+         numbers sits on the same line rather than costing another one. -->
     <figcaption
       v-if="!decorative"
-      class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-body text-navy/70 dark:text-ivory/70"
+      class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-body text-navy/70 dark:text-ivory/70"
     >
-      <span>{{ t('components.MemberMap.legend') }}</span>
-      <span v-for="entry in legend" :key="entry.step" class="flex items-center gap-1.5">
-        <span class="swatch" :class="`step-${entry.step}`" aria-hidden="true" />
-        {{ entry.to ? `${entry.from}–${entry.to}` : `${entry.from}+` }}
+      <span class="hidden shrink-0 sm:inline">{{ t('components.MemberMap.legend') }}</span>
+      <span class="flex shrink-0 items-center gap-x-1.5 sm:gap-x-2">
+        <span class="sm:hidden">{{ legendEnds.from }}</span>
+        <span v-for="entry in legend" :key="entry.step" class="flex items-center gap-1.5">
+          <span class="swatch" :class="`step-${entry.step}`" aria-hidden="true" />
+          <span class="hidden sm:inline">
+            {{ entry.to ? `${entry.from}–${entry.to}` : `${entry.from}+` }}
+          </span>
+        </span>
+        <span class="sm:hidden">{{ legendEnds.to }}</span>
       </span>
+      <span class="text-navy/60 dark:text-poster-darkMuted"><slot name="caption" /></span>
     </figcaption>
 
     <!-- The same numbers, reachable without seeing the map. -->

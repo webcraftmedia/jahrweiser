@@ -1,6 +1,4 @@
 <script setup lang="ts">
-  import { MAP_ATTRIBUTION } from '~~/shared/map'
-
   definePageMeta({
     middleware: ['authenticated'],
   })
@@ -31,10 +29,6 @@
     <!-- No card around it: the map is meant to fill the page, and a frame
          around a map reads as part of the map. -->
     <div class="animate-fade-slide-up flex min-h-0 flex-1 flex-col">
-      <p class="mb-4 text-sm font-body text-navy/70 dark:text-ivory/70">
-        {{ $t('pages.karte.intro') }}
-      </p>
-
       <div v-if="!loaded || isLoading" class="flex items-center justify-center gap-2 py-8">
         <LoadingDots />
       </div>
@@ -97,24 +91,38 @@
           :places="places"
           :title="$t('pages.karte.map-label', { located: data!.located })"
           @viewport="loadPlaces"
-        />
-        <p class="mt-3 shrink-0 text-xs font-body text-navy/60 dark:text-poster-darkMuted">
-          {{
-            t('pages.karte.summary', {
-              located: data!.located,
-              total: data!.total,
-              areas: data!.areas.length,
-            })
-          }}
-          <span v-if="data!.unlocated > 0">
-            {{ t('pages.karte.unlocated', data!.unlocated) }}
-          </span>
-        </p>
+        >
+          <!-- Handed to the legend so the two share a line. Two lengths of the
+               same sentence: on a phone the map is what the page is for, and a
+               full sentence under it costs a tenth of it. -->
+          <template #caption>
+            <span class="sm:hidden">
+              {{
+                t('pages.karte.summary-short', {
+                  located: data!.located,
+                  total: data!.total,
+                  areas: data!.areas.length,
+                })
+              }}
+              <span v-if="data!.unlocated > 0">
+                {{ `· ${t('pages.karte.unlocated-short', { count: data!.unlocated })}` }}
+              </span>
+            </span>
+            <span class="hidden sm:inline">
+              {{
+                t('pages.karte.summary', {
+                  located: data!.located,
+                  total: data!.total,
+                  areas: data!.areas.length,
+                })
+              }}
+              <span v-if="data!.unlocated > 0">
+                {{ t('pages.karte.unlocated', data!.unlocated) }}
+              </span>
+            </span>
+          </template>
+        </MemberMap>
       </template>
-
-      <p class="mt-3 shrink-0 text-xs font-body text-navy/50 dark:text-poster-darkMuted">
-        {{ MAP_ATTRIBUTION }}
-      </p>
     </div>
   </div>
 </template>

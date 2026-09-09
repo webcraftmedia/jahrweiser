@@ -1,6 +1,7 @@
 // @vitest-environment node
 import '../../../test/setup-server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ZodError } from 'zod'
 
 import handler from './places.get'
 
@@ -62,7 +63,7 @@ describe('map/places.get', () => {
 
   it('rejects a rectangle it cannot read', async () => {
     vi.mocked(globalThis.getQuery).mockReturnValue({ minX: 'links' })
-    await expect(fn({})).rejects.toThrow()
+    await expect(fn({})).rejects.toThrow(ZodError)
   })
 
   it('refuses to be asked for more than it will ever draw', async () => {
@@ -73,7 +74,7 @@ describe('map/places.get', () => {
       maxY: '1',
       limit: '99999',
     })
-    await expect(fn({})).rejects.toThrow()
+    await expect(fn({})).rejects.toThrow(ZodError)
   })
 
   it('answers empty when the artefact was never built — a map without names is still a map', async () => {

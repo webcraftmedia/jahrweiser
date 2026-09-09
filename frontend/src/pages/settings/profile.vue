@@ -91,7 +91,12 @@
     }
   }
 
-  await loadProfile()
+  // Loaded after the first render, not before it: awaiting here would make Vue
+  // hold the whole page back and the loading state below could never show —
+  // on a slow connection the user would just sit on the previous page.
+  onMounted(() => {
+    void loadProfile()
+  })
 </script>
 
 <template>

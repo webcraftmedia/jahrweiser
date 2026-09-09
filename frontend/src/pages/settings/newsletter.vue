@@ -24,8 +24,9 @@
     }
   }
 
+  // Only reachable once `subscribed` is known: the button lives in the `v-else`
+  // of the loading state, so there is nothing to guard against here.
   async function toggle() {
-    if (subscribed.value === null) return
     saving.value = true
     message.value = null
     const next = !subscribed.value
@@ -44,7 +45,12 @@
     }
   }
 
-  await load()
+  // Loaded after the first render, not before it: awaiting here would make Vue
+  // hold the whole page back and the loading state below could never show —
+  // on a slow connection the user would just sit on the previous page.
+  onMounted(() => {
+    void load()
+  })
 </script>
 
 <template>

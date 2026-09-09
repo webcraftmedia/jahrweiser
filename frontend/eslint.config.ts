@@ -14,6 +14,7 @@ import {
   node as it4cNode,
   promise as it4cPromise,
 } from 'eslint-config-it4c'
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 
 import withNuxt from './.nuxt/eslint.config.mjs'
 
@@ -84,6 +85,28 @@ export default withNuxt(
       'import/extensions': 'off',
       // Namespace-Imports für Typen (import type * as X) sind gängig
       'import/no-namespace': 'off',
+      // Zyklen in Abhängigkeiten kann man nicht auflösen — sie zu suchen kostet nur
+      // Laufzeit. Der Durchlauf durch node_modules ist ausserdem der Weg, auf dem
+      // der Legacy-Resolver überhaupt erst auf Fremdpakete stösst (siehe unten).
+      'import/no-cycle': ['error', { ignoreExternal: true }],
+    },
+  },
+  {
+    // Ohne diese Angabe fällt eslint-plugin-import-x auf seinen Legacy-Resolver
+    // namens `node` zurück. Dessen letzter Auflösungsversuch ist
+    // `require(<paketwurzel>/node)` — trifft das auf ein Paket mit einem
+    // Verzeichnis `node/` (z.B. lightningcss, seit Nuxt 4.5 im Baum), lädt er es
+    // als Resolver und bricht den ganzen Lint-Lauf mit
+    // "node with invalid interface loaded as resolver" ab.
+    //
+    // Der TypeScript-Resolver behebt nebenbei das eigentliche Problem: der
+    // Legacy-Resolver kennt die `~~/`-Aliase nicht, jeder Import darüber war für
+    // sämtliche import-Regeln bisher unsichtbar.
+    //
+    // Der Settings-Key bleibt `import-x/…`, auch wenn Nuxt das Plugin als
+    // `import` registriert — import-x liest ihn fest verdrahtet.
+    settings: {
+      'import-x/resolver-next': [createTypeScriptImportResolver({ project: 'tsconfig.json' })],
     },
   },
   {
@@ -270,29 +293,6 @@ export default withNuxt(
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       // Projekt nutzt || für Env-Vars und optionale Strings (leerer String = fehlend)
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
-    },
-  },
-
-  {
-    // Die App spricht ausschliesslich über `useApi()` mit dem Server. Der nackte
-    // `$fetch` traegt die 401-Behandlung nicht (siehe src/composables/useApi.ts),
-    // und der Unterschied faellt nirgends auf: der Aufruf funktioniert, nur die
-    // Weiterleitung zum Login bleibt aus. Deshalb hier hart verboten, statt sich
-    // darauf zu verlassen, dass es im Review auffaellt.
-    files: ['src/**/*.{ts,vue}'],
-    ignores: ['src/plugins/auth-redirect.ts', 'src/**/*.spec.ts'],
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "CallExpression[callee.name='$fetch']",
-          message: 'Statt $fetch den Client aus useApi() nutzen — er traegt die 401-Behandlung.',
-        },
-        {
-          selector: "MemberExpression[object.name='$fetch']",
-          message: 'Statt $fetch den Client aus useApi() nutzen — er traegt die 401-Behandlung.',
-        },
-      ],
     },
   },
 

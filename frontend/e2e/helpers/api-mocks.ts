@@ -294,6 +294,18 @@ export async function mockAdminEndpoints(page: Page) {
   )
 }
 
+/**
+ * A section entry in the icon rail.
+ *
+ * Scoped by the rail's own landmark on purpose: the burger menu lists the same
+ * sections with the same `href`, so a bare `nav a[href="/karte"]` matches the
+ * menu entry first — and that one is hidden until the menu is opened. The rail
+ * itself is rendered twice (desktop and mobile), hence the `.first()`.
+ */
+export function railLink(page: Page, href: string) {
+  return page.locator(`nav[aria-label="Hauptnavigation"] a[href="${href}"]`).first()
+}
+
 export async function navigateClientSide(page: Page, path: string) {
   await page.evaluate((p) => {
     const el = document.getElementById('__nuxt')

@@ -6,6 +6,7 @@ import {
   mockCalendarEndpoints,
   mockMapEndpoints,
   navigateClientSide,
+  railLink,
 } from './helpers/api-mocks'
 
 test.describe('Karte', () => {
@@ -18,7 +19,7 @@ test.describe('Karte', () => {
     await mockMapEndpoints(page)
     await navigateClientSide(page, '/')
 
-    await page.locator('nav a[href="/karte"]').first().click()
+    await railLink(page, '/karte').click()
     await expect(page).toHaveURL(/\/karte$/)
 
     // One shape per postal code, and the numbers on top of them.
@@ -105,7 +106,7 @@ test.describe('Karte', () => {
     test('marks the rail entry', async ({ page }) => {
       await mockMapEndpoints(page, { locked: true })
       await navigateClientSide(page, '/')
-      await expect(page.locator('nav a[href="/karte"] .rail-warn').first()).toBeVisible()
+      await expect(railLink(page, '/karte').locator('.rail-warn')).toBeVisible()
     })
 
     test('shows a blurred preview and points at the settings', async ({ page }) => {

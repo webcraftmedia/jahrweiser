@@ -7,6 +7,7 @@ import {
   mockMapEndpoints,
   mockProfileEndpoints,
   navigateClientSide,
+  railLink,
 } from './helpers/api-mocks'
 
 /**
@@ -59,7 +60,7 @@ test.describe('Postleitzahl in den Einstellungen', () => {
     await mockProfileEndpoints(page)
     await navigateClientSide(page, '/settings/profile')
 
-    const marker = page.locator('nav a[href="/karte"] .rail-warn').first()
+    const marker = railLink(page, '/karte').locator('.rail-warn')
     await expect(marker).toBeVisible()
 
     await page.locator('#settings-postalCode').fill('64673')
@@ -75,7 +76,7 @@ test.describe('Postleitzahl in den Einstellungen', () => {
     await mockProfileEndpoints(page, { postalCode: '64673' })
     await navigateClientSide(page, '/settings/profile')
 
-    const marker = page.locator('nav a[href="/karte"] .rail-warn').first()
+    const marker = railLink(page, '/karte').locator('.rail-warn')
     await expect(marker).toBeHidden()
 
     await page.locator('#settings-postalCode').fill('')

@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.13.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.12.1...v1.13.0) (2026-09-11)
+
+
+### Features
+
+* **frontend:** map ([#381](https://github.com/webcraftmedia/jahrweiser/issues/381)) ([5a93b51](https://github.com/webcraftmedia/jahrweiser/commit/5a93b516b010586e281970ba5a1f934c362fb8a7))
+
+
+### Bug Fixes
+
+* **frontend:** map refinements ([#382](https://github.com/webcraftmedia/jahrweiser/issues/382)) ([898ce99](https://github.com/webcraftmedia/jahrweiser/commit/898ce99b8c0218d05fca468dadb393c45f0df3fd))
+* **frontend:** update nuxt ([#379](https://github.com/webcraftmedia/jahrweiser/issues/379)) ([922fdd0](https://github.com/webcraftmedia/jahrweiser/commit/922fdd00924cc62f7935e0ddd96de3c2ca12abe3))
+
 ## [1.12.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.12.0...v1.12.1) (2026-09-09)
 
 

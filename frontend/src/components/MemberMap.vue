@@ -678,16 +678,19 @@
   .areas path {
     fill: var(--fill);
     fill-rule: evenodd;
-    /* A hairline in the surface colour keeps two neighbouring areas apart —
-       the 2 px gap a stacked mark would get, at map scale. */
-    stroke: #faf5eb;
-    stroke-width: 1;
+    /* Drawn in the step's own ink rather than in the surface colour. A hairline
+       the colour of the page separates two neighbours only where there is page
+       behind it — and three villages that share borders, all at the same count
+       and therefore the same fill, ran together into one blob. The ink of a step
+       is the colour its numbers were contrast-checked against, so the edge is
+       legible on every step of the ramp and in both modes, without a second
+       palette to keep in sync. */
+    stroke: var(--ink);
+    stroke-opacity: 0.55;
+    stroke-width: 1.25;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
     opacity: 0.85;
-  }
-  .is-dark .areas path {
-    stroke: #2a2520;
   }
 
   .dots circle {

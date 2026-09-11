@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 
 import ICAL from 'ical.js'
 
+import { setPostalCode } from '../server/helpers/contactName'
 import { createCardDAVAccount, createUser, writeAdminTags, X_ROLE } from '../server/helpers/dav'
 import { syncDavToSidecar } from '../server/helpers/sync'
 
@@ -24,6 +25,13 @@ interface SeedUser {
   tags: string[]
   /** Calendar keys whose private events this user may see (CATEGORIES). */
   categories: string[]
+  /**
+   * Postal code, written to the vCard's `ADR` — the member map's only input.
+   * Absent for one of them on purpose: the map is gated on the *viewer's* own
+   * code, and without somebody who has none, that gate is never seen in the
+   * demo. See docu/karte.md.
+   */
+  postalCode?: string
 }
 
 // `tags` (X-ADMIN-TAGS) and `categories` (CATEGORIES) both hold *calendar keys*
@@ -34,17 +42,31 @@ interface SeedUser {
 //
 //   tags       = which calendars this user may hand out to others (admins only)
 //   categories = which calendars this user sees the private events of
+//
+// The three postal codes are neighbours along the Bergstraße, which is the
+// point: they share borders and all hold one member, so they are drawn in the
+// same colour and only their outlines tell them apart. A demo where every
+// member sits in a different corner of the country never shows that.
 const seedUsers: SeedUser[] = [
   // No access at all — the baseline for "private events stay hidden".
-  { fullname: 'Alice Example', email: 'alice@example.com', role: 'user', tags: [], categories: [] },
+  {
+    fullname: 'Alice Example',
+    email: 'alice@example.com',
+    role: 'user',
+    tags: [],
+    categories: [],
+    postalCode: '64673', // Zwingenberg
+  },
   {
     fullname: 'Bob Example',
     email: 'bob@example.com',
     role: 'user',
     tags: [],
     categories: ['sportgruppe'],
+    postalCode: '64625', // Bensheim
   },
   {
+    // No postal code: the one account that sees the map's locked state.
     fullname: 'Admin Example',
     email: 'admin@example.com',
     role: 'admin',
@@ -57,6 +79,7 @@ const seedUsers: SeedUser[] = [
     role: 'user',
     tags: [],
     categories: ['familie'],
+    postalCode: '64678', // Lindenfels
   },
 ]
 
@@ -67,6 +90,7 @@ function buildVCard(user: SeedUser): ICAL.Component {
   vcard.updatePropertyWithValue('fn', user.fullname)
   vcard.updatePropertyWithValue('email', user.email)
   vcard.updatePropertyWithValue(X_ROLE, user.role)
+  if (user.postalCode) setPostalCode(vcard, user.postalCode)
   writeAdminTags(vcard, user.tags)
   if (user.categories.length > 0) {
     vcard.updatePropertyWithValue('categories', '')
@@ -88,7 +112,7 @@ console.warn(`[seed-demo] Creating ${seedUsers.length} test user(s) in DAV.`)
 for (const user of seedUsers) {
   const vcard = buildVCard(user)
   await createUser(account, vcard)
-  console.warn(`  + ${user.email} (${user.role})`)
+  console.warn(`  + ${user.email} (${user.role}${user.postalCode ? `, ${user.postalCode}` : ''})`)
 }
 
 console.warn('[seed-demo] Running sync to populate MariaDB sidecar.')

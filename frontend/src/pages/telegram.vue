@@ -14,13 +14,16 @@
 </script>
 
 <template>
-  <div class="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-6">
+  <div class="w-full max-w-3xl mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-6">
+    <!-- `max-w-3xl`: a line of description stretched across a desktop window is
+         hard to read, and that width is what pushed the join button out of
+         sight of the channel it belongs to. -->
     <h1 class="text-2xl font-display text-navy dark:text-ivory">
       {{ $t('pages.telegram.title') }}
     </h1>
 
     <div
-      class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
+      class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-4 sm:p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <p class="mb-4 text-sm font-body text-navy/70 dark:text-ivory/70">
         {{ $t('pages.telegram.intro') }}
@@ -43,50 +46,36 @@
         {{ $t('pages.telegram.empty') }}
       </p>
 
+      <!-- Channel names and descriptions are free text and carry the whole
+           decision to join, so nothing here is cut short: the title wraps and
+           the button moves below it on a phone. -->
       <ul v-else class="space-y-3">
-        <li
+        <ListEntryCard
           v-for="channel in channels"
           :key="channel.id"
-          class="flex flex-wrap items-center justify-between gap-3 border-b border-navy/5 dark:border-poster-darkBorder/50 pb-3 last:border-b-0 last:pb-0"
+          :title="channel.name"
+          :description="channel.description"
+          :href="channel.url"
+          :action="$t('pages.telegram.join')"
+          :aria-label="$t('pages.telegram.join-channel', { name: channel.name })"
         >
-          <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="font-medium font-body text-navy dark:text-ivory">{{
-                channel.name
-              }}</span>
-              <span
-                class="inline-block rounded px-2 py-0.5 text-xs font-medium"
-                :class="
-                  channel.public
-                    ? 'bg-olive/15 text-olive-dark dark:text-olive-light'
-                    : 'bg-navy/10 dark:bg-poster-darkBorder text-navy/70 dark:text-ivory/70'
-                "
-              >
-                {{
-                  channel.public
-                    ? $t('pages.telegram.badge.public')
-                    : $t('pages.telegram.badge.invite')
-                }}
-              </span>
-            </div>
-            <p
-              v-if="channel.description"
-              class="text-sm font-body text-navy/60 dark:text-poster-darkMuted"
+          <template #badge>
+            <span
+              class="inline-block shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium"
+              :class="
+                channel.public
+                  ? 'bg-olive/15 text-olive-dark dark:text-olive-light'
+                  : 'bg-navy/10 dark:bg-poster-darkBorder text-navy/70 dark:text-ivory/70'
+              "
             >
-              {{ channel.description }}
-            </p>
-          </div>
-          <!-- Opens the Telegram app or web client; noopener/noreferrer so the
-               target page cannot reach back into this one. -->
-          <a
-            :href="channel.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="shrink-0 text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-4 py-2 transition-all"
-          >
-            {{ $t('pages.telegram.join') }}
-          </a>
-        </li>
+              {{
+                channel.public
+                  ? $t('pages.telegram.badge.public')
+                  : $t('pages.telegram.badge.invite')
+              }}
+            </span>
+          </template>
+        </ListEntryCard>
       </ul>
     </div>
   </div>

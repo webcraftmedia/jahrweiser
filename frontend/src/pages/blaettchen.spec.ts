@@ -103,7 +103,8 @@ describe('Page: Blaettchen', () => {
     // different. The row must not wrap, and the date must not break either.
     const wrapper = await mountLoaded()
     const row = wrapper.findAll('li')[1]!
-    expect(row.classes()).not.toContain('flex-wrap')
+    expect(row.find('div').classes()).not.toContain('flex-col')
+    expect(row.find('div').classes()).toContain('items-center')
     const chip = row.find('time').element.parentElement
     expect(chip?.className).toContain('whitespace-nowrap')
     expect(chip?.className).toContain('shrink-0')

@@ -1,26 +1,42 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Page: Telegram > renders the loaded channels 1`] = `
-"<div class="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-6">
+"<div class="w-full max-w-3xl mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-6">
+  <!-- \`max-w-3xl\`: a line of description stretched across a desktop window is
+         hard to read, and that width is what pushed the join button out of
+         sight of the channel it belongs to. -->
   <h1 class="text-2xl font-display text-navy dark:text-ivory">pages.telegram.title</h1>
-  <div class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder">
+  <div class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-4 sm:p-6 border-2 border-navy/15 dark:border-poster-darkBorder">
     <p class="mb-4 text-sm font-body text-navy/70 dark:text-ivory/70">pages.telegram.intro</p>
+    <!-- Channel names and descriptions are free text and carry the whole
+           decision to join, so nothing here is cut short: the title wraps and
+           the button moves below it on a phone. -->
     <ul class="space-y-3">
-      <li class="flex flex-wrap items-center justify-between gap-3 border-b border-navy/5 dark:border-poster-darkBorder/50 pb-3 last:border-b-0 last:pb-0">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2"><span class="font-medium font-body text-navy dark:text-ivory">Kultur-Steher</span><span class="inline-block rounded px-2 py-0.5 text-xs font-medium bg-navy/10 dark:bg-poster-darkBorder text-navy/70 dark:text-ivory/70">pages.telegram.badge.invite</span></div>
-          <p class="text-sm font-body text-navy/60 dark:text-poster-darkMuted">Orga und Termine</p>
+      <li class="rounded border-2 border-navy/10 dark:border-poster-darkBorder/60 bg-ivory/40 dark:bg-poster-dark/20 p-3 sm:p-4 transition-colors hover:border-sienna/40 dark:hover:border-sienna/50">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0 flex-1">
+            <div class="flex min-w-0 items-center gap-2 flex-wrap"><span class="font-medium font-body text-navy dark:text-ivory break-words">Kultur-Steher</span>
+              <!-- Date, visibility, whatever the list distinguishes its entries by.
+               A slot, because that is the one part the two lists do not share. --><span class="inline-block shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium bg-navy/10 dark:bg-poster-darkBorder text-navy/70 dark:text-ivory/70">pages.telegram.badge.invite</span>
+            </div>
+            <p class="text-sm font-body text-navy/60 dark:text-poster-darkMuted">Orga und Termine</p>
+          </div>
+          <!-- Opens in a new tab; noopener/noreferrer so the target cannot reach
+           back into this one. --><a href="https://t.me/+AbCdEf" target="_blank" rel="noopener noreferrer" aria-label="pages.telegram.join-channel" class="shrink-0 self-end sm:self-auto text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-3 sm:px-4 py-2 transition-all">pages.telegram.join</a>
         </div>
-        <!-- Opens the Telegram app or web client; noopener/noreferrer so the
-               target page cannot reach back into this one. --><a href="https://t.me/+AbCdEf" target="_blank" rel="noopener noreferrer" class="shrink-0 text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-4 py-2 transition-all">pages.telegram.join</a>
       </li>
-      <li class="flex flex-wrap items-center justify-between gap-3 border-b border-navy/5 dark:border-poster-darkBorder/50 pb-3 last:border-b-0 last:pb-0">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2"><span class="font-medium font-body text-navy dark:text-ivory">GG&amp;G Info</span><span class="inline-block rounded px-2 py-0.5 text-xs font-medium bg-olive/15 text-olive-dark dark:text-olive-light">pages.telegram.badge.public</span></div>
-          <!--v-if-->
+      <li class="rounded border-2 border-navy/10 dark:border-poster-darkBorder/60 bg-ivory/40 dark:bg-poster-dark/20 p-3 sm:p-4 transition-colors hover:border-sienna/40 dark:hover:border-sienna/50">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0 flex-1">
+            <div class="flex min-w-0 items-center gap-2 flex-wrap"><span class="font-medium font-body text-navy dark:text-ivory break-words">GG&amp;G Info</span>
+              <!-- Date, visibility, whatever the list distinguishes its entries by.
+               A slot, because that is the one part the two lists do not share. --><span class="inline-block shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium bg-olive/15 text-olive-dark dark:text-olive-light">pages.telegram.badge.public</span>
+            </div>
+            <!--v-if-->
+          </div>
+          <!-- Opens in a new tab; noopener/noreferrer so the target cannot reach
+           back into this one. --><a href="https://t.me/ggg_info" target="_blank" rel="noopener noreferrer" aria-label="pages.telegram.join-channel" class="shrink-0 self-end sm:self-auto text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-3 sm:px-4 py-2 transition-all">pages.telegram.join</a>
         </div>
-        <!-- Opens the Telegram app or web client; noopener/noreferrer so the
-               target page cannot reach back into this one. --><a href="https://t.me/ggg_info" target="_blank" rel="noopener noreferrer" class="shrink-0 text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-4 py-2 transition-all">pages.telegram.join</a>
       </li>
     </ul>
   </div>

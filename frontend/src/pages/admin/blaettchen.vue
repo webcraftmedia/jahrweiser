@@ -11,7 +11,7 @@
   const api = useApi()
   // The same listing the icon rail and /blaettchen use — reloading it here
   // makes the rail entry appear the moment the first issue is published.
-  const { issues, isLoading, loadError, load, urlFor, formatDate } = useBlaettchen()
+  const { issues, isLoading, loadError, load, urlFor, formatDateShort } = useBlaettchen()
 
   /** One per refusal the upload endpoint can answer with. */
   type UploadErrorKey = 'invalid' | 'exists' | 'too-large' | 'not-pdf' | 'failed'
@@ -352,7 +352,7 @@
               <span
                 class="inline-block rounded px-2 py-0.5 text-xs font-medium bg-navy/10 dark:bg-poster-darkBorder text-navy/70 dark:text-ivory/70"
               >
-                <time :datetime="issue.date">{{ formatDate(issue.date) }}</time>
+                <time :datetime="issue.date">{{ formatDateShort(issue.date) }}</time>
               </span>
             </div>
             <p class="text-sm font-body text-navy/60 dark:text-poster-darkMuted font-mono">

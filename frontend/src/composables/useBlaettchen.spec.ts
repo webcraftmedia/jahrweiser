@@ -106,6 +106,16 @@ describe('useBlaettchen', () => {
     expect(formatDate('2025-12-24')).toContain('2025')
   })
 
+  it('abbreviates the month for the list rows, without losing the day', () => {
+    // A row has to fit issue, date and button on one phone line, and the month
+    // name decided whether it did — see formatDateShort. Asserted against the
+    // long form rather than against a literal, so it holds in any locale.
+    const { formatDate, formatDateShort } = useBlaettchen()
+    expect(formatDateShort('2025-12-24')).toContain('24')
+    expect(formatDateShort('2025-12-24')).toContain('2025')
+    expect(formatDateShort('2025-12-24').length).toBeLessThan(formatDate('2025-12-24').length)
+  })
+
   it('escapes the file name into a single URL segment', () => {
     // Issue names carry spaces and umlauts; unescaped they would break the
     // route match — or, with a slash, address a different path entirely.

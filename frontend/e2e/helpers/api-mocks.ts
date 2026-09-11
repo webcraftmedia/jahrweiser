@@ -85,6 +85,7 @@ export const MOCK_METRICS = {
     newsletterUnsubscribed: 5,
     telegramChannels: 4,
     blaettchenIssues: 12,
+    withPostalCode: 29,
   },
   months: Array.from({ length: 12 }, (_, index) => ({
     month: `2026-${String(index + 1).padStart(2, '0')}`,
@@ -92,6 +93,8 @@ export const MOCK_METRICS = {
     derived: index < 10,
     newsletterSubscribed: 25 + index,
     newsletterUnsubscribed: index,
+    // Never derived — measured months only, the rest is a gap in the line.
+    withPostalCode: index < 10 ? null : 20 + index,
   })),
 }
 

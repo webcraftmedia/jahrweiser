@@ -57,6 +57,13 @@
       "when": 1788980684453,
       "tag": "0007_low_mister_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1789134022621,
+      "tag": "0008_good_shooting_star",
+      "breakpoints": true
     }
   ]
 }

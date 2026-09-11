@@ -4,10 +4,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { dbCalls, firstDbCall, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
 
+import { resetPlzAreaCache } from './memberMap'
 import {
   buildMonthlySeries,
   collectCurrentMetrics,
   countBlaettchenIssues,
+  countLocatable,
+  countMembersWithPostalCode,
   countTelegramChannels,
   deriveMemberCounts,
   deriveNewsletterCounts,
@@ -17,7 +20,24 @@ import {
   today,
 } from './metrics'
 
+import type { LoadedAreas } from './memberMap'
+
 vi.mock('~~/server/db', () => ({ useDb: () => mockDb }))
+
+/** A geometry that knows exactly one postal code. */
+const GEOMETRY: LoadedAreas = {
+  viewBox: '0 0 4000 5000',
+  outline: 'M0 0l10 0 0 10z',
+  areas: new Map([['64673', { o: 'Zwingenberg', d: 'M0 0l10 0 0 10z', c: [100, 200], s: 5000 }]]),
+}
+
+/** Serve (or withhold, with null) the geometry artefact `loadPlzAreas` reads. */
+function storageServing(value: unknown): void {
+  resetPlzAreaCache()
+  vi.mocked(globalThis.useStorage).mockReturnValue({
+    getItem: vi.fn().mockResolvedValue(value),
+  })
+}
 
 const fs = vi.hoisted(() => ({ readdir: vi.fn() }))
 vi.mock('node:fs/promises', () => fs)
@@ -179,15 +199,94 @@ describe('countBlaettchenIssues', () => {
   })
 })
 
+describe('countLocatable', () => {
+  it('counts only the codes the map can actually place', async () => {
+    // 64673 is in the geometry, 99999 is five digits but unknown — somebody the
+    // map cannot draw, so the dashboard must not claim them as covered.
+    expect(
+      countLocatable(
+        [
+          { postalCode: '64673', count: 3 },
+          { postalCode: '99999', count: 2 },
+        ],
+        GEOMETRY,
+      ),
+    ).toBe(3)
+  })
+
+  it('counts the spellings of one code together', async () => {
+    expect(
+      countLocatable(
+        [
+          { postalCode: '64673', count: 1 },
+          { postalCode: 'D-64673', count: 2 },
+        ],
+        GEOMETRY,
+      ),
+    ).toBe(3)
+  })
+
+  it('falls back to the format check when no geometry was built', async () => {
+    // Without the artefact "unknown code" cannot be told from "known code" —
+    // and silently reporting nobody would be the worse answer.
+    expect(
+      countLocatable(
+        [
+          { postalCode: '99999', count: 2 },
+          { postalCode: 'CH-8001', count: 1 },
+          { postalCode: null, count: 4 },
+        ],
+        null,
+      ),
+    ).toBe(2)
+  })
+
+  it('is zero while nobody has a code at all', async () => {
+    expect(countLocatable([], GEOMETRY)).toBe(0)
+  })
+})
+
+describe('countMembersWithPostalCode', () => {
+  beforeEach(() => {
+    resetDb()
+    vi.clearAllMocks()
+  })
+
+  it('adds up the grouped rows through the geometry', async () => {
+    storageServing({
+      viewBox: GEOMETRY.viewBox,
+      outline: GEOMETRY.outline,
+      areas: Object.fromEntries(GEOMETRY.areas),
+    })
+    queueDbResults([
+      { postalCode: '64673', count: 7 },
+      { postalCode: '00000', count: 2 },
+    ])
+    await expect(countMembersWithPostalCode()).resolves.toBe(7)
+  })
+
+  it('groups instead of scanning — one lookup per code, not per member', async () => {
+    storageServing(null)
+    queueDbResults([{ postalCode: '64673', count: 7 }])
+    await countMembersWithPostalCode()
+    expect(dbCalls().some((call) => call.method === 'groupBy')).toBe(true)
+  })
+})
+
 describe('collectCurrentMetrics', () => {
   beforeEach(() => {
     resetDb()
     vi.clearAllMocks()
     fs.readdir.mockResolvedValue([])
+    storageServing(null)
   })
 
   it('converts the decimal strings MySQL returns for SUM()', async () => {
-    queueDbResults([{ members: '42', subscribed: '37', unsubscribed: '5' }], [{ value: 1 }])
+    queueDbResults(
+      [{ members: '42', subscribed: '37', unsubscribed: '5' }],
+      [{ value: 1 }],
+      [{ postalCode: '64673', count: 29 }],
+    )
     fs.readdir.mockResolvedValue(['12_2026-05-01.pdf'])
     await expect(collectCurrentMetrics(CONFIG)).resolves.toStrictEqual({
       members: 42,
@@ -195,19 +294,21 @@ describe('collectCurrentMetrics', () => {
       newsletterUnsubscribed: 5,
       telegramChannels: 1,
       blaettchenIssues: 1,
+      withPostalCode: 29,
     })
   })
 
   it('reads an empty sidecar as zeros rather than NaN', async () => {
     // SUM() over no rows is NULL, not 0.
-    queueDbResults([{ members: null, subscribed: null, unsubscribed: null }], [{ value: 0 }])
+    queueDbResults([{ members: null, subscribed: null, unsubscribed: null }], [{ value: 0 }], [])
     const metrics = await collectCurrentMetrics(CONFIG)
     expect(metrics.members).toBe(0)
     expect(metrics.newsletterSubscribed).toBe(0)
+    expect(metrics.withPostalCode).toBe(0)
   })
 
   it('survives a query that returns no row at all', async () => {
-    queueDbResults([], [])
+    queueDbResults([], [], [])
     await expect(collectCurrentMetrics(CONFIG)).resolves.toMatchObject({ members: 0 })
   })
 })
@@ -217,12 +318,17 @@ describe('recordDailyMetrics', () => {
     resetDb()
     vi.clearAllMocks()
     fs.readdir.mockResolvedValue([])
+    storageServing(null)
   })
 
   it('writes one row keyed by the day, overwriting an earlier run', async () => {
     // The cron hits the sync every ten minutes; without the upsert this would
     // be 144 rows a day instead of one.
-    queueDbResults([{ members: '4', subscribed: '3', unsubscribed: '1' }], [{ value: 0 }])
+    queueDbResults(
+      [{ members: '4', subscribed: '3', unsubscribed: '1' }],
+      [{ value: 0 }],
+      [{ postalCode: '64673', count: 2 }],
+    )
     await recordDailyMetrics(CONFIG, new Date('2026-09-09T08:00:00Z'))
     expect(firstDbCall('values')?.[0]).toStrictEqual({
       day: '2026-09-09',
@@ -231,12 +337,13 @@ describe('recordDailyMetrics', () => {
       newsletterUnsubscribed: 1,
       telegramChannels: 0,
       blaettchenIssues: 0,
+      withPostalCode: 2,
     })
     expect(dbCalls().some((call) => call.method === 'onDuplicateKeyUpdate')).toBe(true)
   })
 
   it('does not put the day into the update set — it is the key', async () => {
-    queueDbResults([{ members: '4', subscribed: '3', unsubscribed: '1' }], [{ value: 0 }])
+    queueDbResults([{ members: '4', subscribed: '3', unsubscribed: '1' }], [{ value: 0 }], [])
     await recordDailyMetrics(CONFIG, new Date('2026-09-09T08:00:00Z'))
     const upsert = dbCalls().find((call) => call.method === 'onDuplicateKeyUpdate')
     expect((upsert?.args[0] as { set: Record<string, unknown> }).set).not.toHaveProperty('day')
@@ -285,6 +392,7 @@ describe('buildMonthlySeries', () => {
           newsletterUnsubscribed: 19,
           telegramChannels: 4,
           blaettchenIssues: 12,
+          withPostalCode: 61,
         },
       ],
     )
@@ -311,6 +419,7 @@ describe('buildMonthlySeries', () => {
           newsletterUnsubscribed: 1,
           telegramChannels: 0,
           blaettchenIssues: 0,
+          withPostalCode: 3,
         },
         {
           day: '2026-09-08',
@@ -319,10 +428,75 @@ describe('buildMonthlySeries', () => {
           newsletterUnsubscribed: 2,
           telegramChannels: 0,
           blaettchenIssues: 0,
+          withPostalCode: 5,
         },
       ],
     )
     const series = await buildMonthlySeries(NOW)
-    expect(series[11]).toMatchObject({ members: 12, newsletterUnsubscribed: 2 })
+    expect(series[11]).toMatchObject({ members: 12, newsletterUnsubscribed: 2, withPostalCode: 5 })
+  })
+
+  it('leaves the postal-code figure empty for months nothing was measured in', async () => {
+    // It is the one number with no derivation behind it: the column was
+    // backfilled in one go, so `updated_at` cannot say when somebody entered
+    // their code. A zero would read as "nobody had one", which is a claim.
+    queueDbResults([user('2025-09-01')], [])
+    const series = await buildMonthlySeries(NOW)
+    expect(series.every((month) => month.withPostalCode === null)).toBe(true)
+  })
+
+  it('takes the running month’s postal-code count from the live number', async () => {
+    // What the dashboard showed before this: a tile saying 3 above a chart
+    // whose newest point was empty, because no sync had written a snapshot yet.
+    queueDbResults([user('2025-09-01')], [])
+    const series = await buildMonthlySeries(NOW, 3)
+    expect(series[11]).toMatchObject({ month: '2026-09', withPostalCode: 3 })
+    expect(series[10]!.withPostalCode).toBeNull()
+  })
+
+  it('does not carry the live count into earlier months', async () => {
+    // It says something about today, not about March.
+    queueDbResults([], [])
+    const series = await buildMonthlySeries(NOW, 3)
+    expect(series.slice(0, 11).every((month) => month.withPostalCode === null)).toBe(true)
+  })
+
+  it('prefers the live count over the running month’s snapshot', async () => {
+    // The snapshot is up to ten minutes old; the live count is now.
+    queueDbResults(
+      [],
+      [
+        {
+          day: '2026-09-08',
+          members: 12,
+          newsletterSubscribed: 10,
+          newsletterUnsubscribed: 2,
+          telegramChannels: 0,
+          blaettchenIssues: 0,
+          withPostalCode: 5,
+        },
+      ],
+    )
+    const series = await buildMonthlySeries(NOW, 7)
+    expect(series[11]).toMatchObject({ members: 12, withPostalCode: 7 })
+  })
+
+  it('keeps it empty for a snapshot taken before the metric existed', async () => {
+    queueDbResults(
+      [],
+      [
+        {
+          day: '2026-09-08',
+          members: 12,
+          newsletterSubscribed: 10,
+          newsletterUnsubscribed: 2,
+          telegramChannels: 0,
+          blaettchenIssues: 0,
+          withPostalCode: null,
+        },
+      ],
+    )
+    const series = await buildMonthlySeries(NOW)
+    expect(series[11]).toMatchObject({ members: 12, derived: false, withPostalCode: null })
   })
 })

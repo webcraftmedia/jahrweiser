@@ -14,6 +14,7 @@ const CURRENT = {
   newsletterUnsubscribed: 5,
   telegramChannels: 4,
   blaettchenIssues: 12,
+  withPostalCode: 29,
 }
 
 /** Twelve months, the last two measured, everything before it derived. */
@@ -26,6 +27,8 @@ function months() {
       derived: !measured,
       newsletterSubscribed: 35 + index,
       newsletterUnsubscribed: index,
+      // Never derived: the postal-code figure exists only where it was measured.
+      withPostalCode: measured ? 20 + index : null,
     }
   })
 }
@@ -50,10 +53,10 @@ describe('Page: Admin Übersicht', () => {
     serving({ current: CURRENT, months: months() })
   })
 
-  it('shows the five current numbers', async () => {
+  it('shows the six current numbers', async () => {
     const wrapper = await mountLoaded()
     const text = wrapper.text()
-    for (const value of ['42', '37', '5', '4', '12']) {
+    for (const value of ['42', '37', '5', '4', '12', '29']) {
       expect(text).toContain(value)
     }
   })
@@ -93,6 +96,43 @@ describe('Page: Admin Übersicht', () => {
     })
     const wrapper = await mountLoaded()
     expect(wrapper.text()).not.toContain('pages.admin.dashboard.chart.derived-note')
+  })
+
+  it('draws the postal-code coverage into the member chart', async () => {
+    // Same chart on purpose: the gap to the member line is the open address work.
+    const wrapper = await mountLoaded()
+    const memberChart = wrapper.findAll('figure')[0]!
+    expect(memberChart.find('path.tone-members:not(.series-derived)').exists()).toBe(true)
+    expect(memberChart.find('path.tone-postal:not(.series-derived)').exists()).toBe(true)
+    // Two series now, so the chart needs the legend it did without before.
+    expect(memberChart.find('figcaption').text()).toContain('pages.admin.dashboard.tile.plz')
+  })
+
+  it('starts the postal-code line at the first measurement', async () => {
+    const wrapper = await mountLoaded()
+    const d = wrapper.find('path.tone-postal:not(.series-derived)').attributes('d')!
+    // The ten unmeasured months contribute no point at all — two measured
+    // months, so one segment.
+    expect(d.startsWith('M')).toBe(true)
+    expect(d.match(/L/g)).toHaveLength(1)
+  })
+
+  it('explains why the postal-code line starts later than the chart', async () => {
+    const wrapper = await mountLoaded()
+    expect(wrapper.text()).toContain('pages.admin.dashboard.chart.plz-note')
+  })
+
+  it('drops that note once the whole window has been measured', async () => {
+    serving({
+      current: CURRENT,
+      months: months().map((month, index) => ({
+        ...month,
+        derived: false,
+        withPostalCode: 20 + index,
+      })),
+    })
+    const wrapper = await mountLoaded()
+    expect(wrapper.text()).not.toContain('pages.admin.dashboard.chart.plz-note')
   })
 
   it('marks the reconstructed span of the newsletter chart too', async () => {

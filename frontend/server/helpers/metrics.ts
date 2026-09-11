@@ -1,19 +1,24 @@
 import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 
-import { asc, count as countRows, gte, sql } from 'drizzle-orm'
+import { and, asc, count as countRows, gte, isNull, ne, sql } from 'drizzle-orm'
+
+import type { LoadedAreas, PostalCodeCount } from '~~/server/helpers/memberMap'
 
 import { useDb } from '~~/server/db'
 import { metricsDaily, telegramChannels, users } from '~~/server/db/schema'
+import { loadPlzAreas, lookupPostalCode, normalisePostalCode } from '~~/server/helpers/memberMap'
 import { parseBlaettchenFile } from '~~/shared/blaettchen'
 
-/** The five numbers as they are right now. */
+/** The six numbers as they are right now. */
 export interface CurrentMetrics {
   members: number
   newsletterSubscribed: number
   newsletterUnsubscribed: number
   telegramChannels: number
   blaettchenIssues: number
+  /** Members the map can place — see `countMembersWithPostalCode`. */
+  withPostalCode: number
 }
 
 export interface MetricsMonth {
@@ -34,6 +39,13 @@ export interface MetricsMonth {
    */
   newsletterSubscribed: number
   newsletterUnsubscribed: number
+  /**
+   * Members with a postal code the map knows. Measured only: null for every
+   * month before the metric existed — there is no honest way to reconstruct it
+   * (see the column comment in `db/schema/metrics-daily.ts`), so the line
+   * simply starts where the measurements do.
+   */
+  withPostalCode: number | null
 }
 
 /** The window shown on the dashboard. */
@@ -150,6 +162,47 @@ export async function countBlaettchenIssues(dir: string): Promise<number> {
   }
 }
 
+/**
+ * How many members the grouped rows account for, counting only codes that put
+ * somebody on the map.
+ *
+ * "Has a postal code" is deliberately the map's definition and not "the column
+ * is filled": a code the geometry does not know places nobody, and
+ * `/api/map/status` already refuses for it. A dashboard that counted it would
+ * promise an operator a coverage the map does not deliver.
+ *
+ * Without the geometry artefact (a deployment that never ran `map:build`) the
+ * format check is the best that can be said — the same fallback the status
+ * endpoint makes, for the same reason: no artefact must not mean "nobody has a
+ * postal code".
+ */
+export function countLocatable(rows: PostalCodeCount[], geometry: LoadedAreas | null): number {
+  return rows.reduce((sum, row) => {
+    const usable = geometry
+      ? lookupPostalCode(row.postalCode, geometry)
+      : normalisePostalCode(row.postalCode)
+    return usable ? sum + row.count : sum
+  }, 0)
+}
+
+/**
+ * How many members the map can place, right now.
+ *
+ * Grouped rather than counted per row: the association covers a few dozen
+ * codes, so the geometry lookup runs a few dozen times instead of once per
+ * member — and it is the same aggregate `/api/map/members` draws from, which is
+ * what keeps the dashboard's number and the map's `located` from drifting
+ * apart. Soft-deleted members are gone from both.
+ */
+export async function countMembersWithPostalCode(): Promise<number> {
+  const rows = await useDb()
+    .select({ postalCode: users.postalCode, count: countRows() })
+    .from(users)
+    .where(and(isNull(users.deletedAt), ne(users.postalCode, '')))
+    .groupBy(users.postalCode)
+  return countLocatable(rows, await loadPlzAreas())
+}
+
 interface MetricsConfig {
   BLAETTCHEN_DIR: string
 }
@@ -177,6 +230,7 @@ export async function collectCurrentMetrics(config: MetricsConfig): Promise<Curr
     newsletterUnsubscribed: Number(counts?.unsubscribed ?? 0),
     telegramChannels: await countTelegramChannels(),
     blaettchenIssues: await countBlaettchenIssues(config.BLAETTCHEN_DIR),
+    withPostalCode: await countMembersWithPostalCode(),
   }
 }
 
@@ -199,8 +253,18 @@ export async function recordDailyMetrics(config: MetricsConfig, now = new Date()
  * started. The reconstruction is marked as such (`derived`) rather than passed
  * off as a measurement: it carries known biases, all of which fade as the
  * curve approaches today.
+ *
+ * `liveWithPostalCode` is the count as of right now, for the month that is
+ * still running. The other series get their current month from the derivation,
+ * which is exact for the present — for the postal code there is no derivation
+ * at all, so without this the newest point would stay empty until the next
+ * sync writes a snapshot, and on an installation whose cron never fires it
+ * would stay empty for good while the tile above it shows the number.
  */
-export async function buildMonthlySeries(now = new Date()): Promise<MetricsMonth[]> {
+export async function buildMonthlySeries(
+  now = new Date(),
+  liveWithPostalCode: number | null = null,
+): Promise<MetricsMonth[]> {
   const db = useDb()
   const months = monthKeys(METRICS_MONTHS, now)
   const windowStart = monthEnd(months[0]!)
@@ -231,6 +295,8 @@ export async function buildMonthlySeries(now = new Date()): Promise<MetricsMonth
 
   return months.map((month, index) => {
     const snapshot = measured.get(month)
+    // The running month, counted now rather than whenever the last sync was.
+    const live = index === months.length - 1 ? liveWithPostalCode : null
     return {
       month,
       // The derivations are built from the same month list, so index-for-index.
@@ -242,6 +308,12 @@ export async function buildMonthlySeries(now = new Date()): Promise<MetricsMonth
       newsletterUnsubscribed: snapshot
         ? snapshot.newsletterUnsubscribed
         : derivedNewsletter.unsubscribed[index]!,
+      // Measured or nothing — but the live count wins for the running month,
+      // where it is the fresher of the two measurements. A snapshot from
+      // before the metric existed carries null itself, so both gaps — no
+      // snapshot, and a snapshot without the figure — end up as the same
+      // "not measured" the chart draws as a gap.
+      withPostalCode: live ?? snapshot?.withPostalCode ?? null,
     }
   })
 }

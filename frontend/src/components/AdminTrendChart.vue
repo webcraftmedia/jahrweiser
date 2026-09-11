@@ -12,7 +12,7 @@
    * surfaces (teal/orange, worst-case ΔE 13.7; green/orange collapses to 1.7
    * under deuteranopia and was rejected for that reason).
    */
-  export type SeriesTone = 'members' | 'subscribed' | 'unsubscribed'
+  export type SeriesTone = 'members' | 'subscribed' | 'unsubscribed' | 'postal'
 
   export interface ChartSeries {
     tone: SeriesTone
@@ -335,6 +335,11 @@
   }
   .tone-unsubscribed {
     --series: #c2410c;
+  }
+  /* Same teal as `subscribed`: it is drawn against the same orange, and that
+     pair is the one that survived the CVD check. */
+  .tone-postal {
+    --series: #0d9488;
   }
   :global(.dark) .tone-members,
   :global(.dark) .tone-unsubscribed {

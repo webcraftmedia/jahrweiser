@@ -19,6 +19,15 @@ export const metricsDaily = mysqlTable('metrics_daily', {
   newsletterUnsubscribed: int('newsletter_unsubscribed').notNull(),
   telegramChannels: int('telegram_channels').notNull(),
   blaettchenIssues: int('blaettchen_issues').notNull(),
+  // How many members the map can actually place. Nullable, and that is the
+  // point: unlike the member count this one cannot be reconstructed at all
+  // (the column was backfilled from DAV in one go, so `updated_at` says
+  // nothing about when somebody entered their code), and unlike the newsletter
+  // split there is not even a biased approximation to fall back on. NULL means
+  // "not measured on this day" — the rows written before this metric existed
+  // keep it, and the chart starts the line where the measurements start
+  // instead of drawing a zero nobody counted.
+  withPostalCode: int('with_postal_code'),
 })
 
 export type MetricsDay = typeof metricsDaily.$inferSelect

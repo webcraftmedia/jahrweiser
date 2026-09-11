@@ -19,6 +19,7 @@ const CURRENT = {
   newsletterUnsubscribed: 5,
   telegramChannels: 4,
   blaettchenIssues: 12,
+  withPostalCode: 29,
 }
 const MONTHS = [
   {
@@ -27,6 +28,7 @@ const MONTHS = [
     derived: false,
     newsletterSubscribed: 37,
     newsletterUnsubscribed: 5,
+    withPostalCode: 29,
   },
 ]
 
@@ -62,5 +64,12 @@ describe('admin/metrics.get', () => {
     expect(mockCurrent).toHaveBeenCalledWith(
       expect.objectContaining({ BLAETTCHEN_DIR: expect.any(String) }),
     )
+  })
+
+  it('hands the live postal-code count to the series', async () => {
+    // The running month has no other source for it: no snapshot yet after a
+    // fresh deploy, and no derivation ever.
+    await fn({})
+    expect(mockSeries).toHaveBeenCalledWith(expect.any(Date), 29)
   })
 })

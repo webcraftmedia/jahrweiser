@@ -390,6 +390,7 @@
       "error": "Die Kanäle konnten nicht geladen werden.",
       "intro": "Über diese Links trittst du unseren Telegram-Kanälen bei. Bitte gib sie nicht öffentlich weiter — wer den Link hat, kann beitreten.",
       "join": "Beitreten",
+      "join-channel": "{name} beitreten",
       "title": "Telegram-Kanäle"
     }
   }

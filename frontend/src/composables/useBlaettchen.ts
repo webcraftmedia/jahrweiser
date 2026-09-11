@@ -68,17 +68,50 @@ export function useBlaettchen() {
   const { locale } = useI18n()
 
   /**
-   * A publication date for reading. Noon rather than midnight: `2025-12-24`
-   * parses as UTC, and formatting that instant west of Greenwich would show
-   * the 23rd.
+   * The issue's day as a Date. Noon rather than midnight: `2025-12-24` parses
+   * as UTC, and formatting that instant west of Greenwich would show the 23rd.
    */
+  function atNoon(date: string): Date {
+    return new Date(`${date}T12:00:00`)
+  }
+
+  /** A publication date, written out — for anything that is read, not scanned. */
   function formatDate(date: string): string {
-    return new Date(`${date}T12:00:00`).toLocaleDateString(locale.value, {
+    return atNoon(date).toLocaleDateString(locale.value, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
     })
   }
 
-  return { issues, contact, hasIssues, isLoading, loadError, load, urlFor, formatDate }
+  /**
+   * The same date with an abbreviated month ("24. Dez. 2025"), for the chip in
+   * a list row.
+   *
+   * The month name was the one part long enough to decide whether a row fits a
+   * phone: "1. Mai 2026" left the button on the line, "24. Dezember 2025"
+   * pushed it onto its own — which is why the archive looked ragged rather
+   * than merely tight. Abbreviating it makes the width of a row independent of
+   * which month an issue appeared in. Screen readers keep the long form: it is
+   * the `aria-label` that is read out, and there nothing is cramped.
+   */
+  function formatDateShort(date: string): string {
+    return atNoon(date).toLocaleDateString(locale.value, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  return {
+    issues,
+    contact,
+    hasIssues,
+    isLoading,
+    loadError,
+    load,
+    urlFor,
+    formatDate,
+    formatDateShort,
+  }
 }

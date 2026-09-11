@@ -5,7 +5,8 @@
 
   // Shared with the icon rail, which already loaded the list to decide whether
   // to show its entry at all — reusing it avoids a second request.
-  const { issues, contact, isLoading, loadError, load, urlFor, formatDate } = useBlaettchen()
+  const { issues, contact, isLoading, loadError, load, urlFor, formatDate, formatDateShort } =
+    useBlaettchen()
 
   // Force a refresh: issues are dropped into the directory on the server
   // without a restart, so a visit to this page should show what is there now,
@@ -19,7 +20,10 @@
 </script>
 
 <template>
-  <div class="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-6">
+  <div class="w-full max-w-3xl mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-6">
+    <!-- Held to reading width, like /telegram: the archive is a column of short
+         rows, and stretching it across a desktop window only moves the button
+         away from the issue it opens. -->
     <h1 class="text-2xl font-display text-navy dark:text-ivory">
       {{ $t('pages.blaettchen.title') }}
     </h1>
@@ -29,7 +33,7 @@
          address is configured rather than offering a dead link. -->
     <div
       v-if="contact"
-      class="animate-fade-slide-up bg-sienna/5 dark:bg-sienna/10 rounded shadow-lg p-6 border-2 border-sienna/30 dark:border-sienna/40"
+      class="animate-fade-slide-up bg-sienna/5 dark:bg-sienna/10 rounded shadow-lg p-4 sm:p-6 border-2 border-sienna/30 dark:border-sienna/40"
     >
       <h2 class="mb-2 font-display text-lg text-navy dark:text-ivory">
         {{ $t('pages.blaettchen.contribute.title') }}
@@ -46,7 +50,7 @@
     </div>
 
     <div
-      class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
+      class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-4 sm:p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <p class="mb-4 text-sm font-body text-navy/70 dark:text-ivory/70">
         {{ $t('pages.blaettchen.intro') }}
@@ -69,44 +73,35 @@
         {{ $t('pages.blaettchen.empty') }}
       </p>
 
+      <!-- `compact`: an issue is identified by its number and date, both short
+           and both formulaic, so the entry stays one line on every screen
+           instead of letting a long month name push the button onto its own. -->
       <ul v-else class="space-y-3">
-        <li
+        <ListEntryCard
           v-for="issue in issues"
           :key="issue.file"
-          class="flex flex-wrap items-center justify-between gap-3 border-b border-navy/5 dark:border-poster-darkBorder/50 pb-3 last:border-b-0 last:pb-0"
+          compact
+          :title="$t('pages.blaettchen.issue', { number: issue.number })"
+          :description="issue.title"
+          :href="urlFor(issue)"
+          :action="$t('pages.blaettchen.open')"
+          :aria-label="
+            $t('pages.blaettchen.open-issue', {
+              number: issue.number,
+              date: formatDate(issue.date),
+            })
+          "
         >
-          <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="font-medium font-body text-navy dark:text-ivory">
-                {{ $t('pages.blaettchen.issue', { number: issue.number }) }}
-              </span>
-              <span
-                class="inline-block rounded px-2 py-0.5 text-xs font-medium bg-navy/10 dark:bg-poster-darkBorder text-navy/70 dark:text-ivory/70"
-              >
-                <time :datetime="issue.date">{{ formatDate(issue.date) }}</time>
-              </span>
-            </div>
-            <p v-if="issue.title" class="text-sm font-body text-navy/60 dark:text-poster-darkMuted">
-              {{ issue.title }}
-            </p>
-          </div>
-          <!-- Opens the PDF in the browser's viewer; noopener/noreferrer so the
-               new tab cannot reach back into this one. -->
-          <a
-            :href="urlFor(issue)"
-            target="_blank"
-            rel="noopener noreferrer"
-            :aria-label="
-              $t('pages.blaettchen.open-issue', {
-                number: issue.number,
-                date: formatDate(issue.date),
-              })
-            "
-            class="shrink-0 text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-sm px-4 py-2 transition-all"
-          >
-            {{ $t('pages.blaettchen.open') }}
-          </a>
-        </li>
+          <template #badge>
+            <!-- Never wraps and never shrinks: a date broken across two lines
+                 costs more height than the few pixels it saves. -->
+            <span
+              class="inline-block shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium bg-navy/10 dark:bg-poster-darkBorder text-navy/70 dark:text-ivory/70"
+            >
+              <time :datetime="issue.date">{{ formatDateShort(issue.date) }}</time>
+            </span>
+          </template>
+        </ListEntryCard>
       </ul>
     </div>
   </div>

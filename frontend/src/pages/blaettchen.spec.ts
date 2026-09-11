@@ -97,6 +97,28 @@ describe('Page: Blaettchen', () => {
     ])
   })
 
+  it('keeps an issue on one line whatever its month is called', async () => {
+    // The bug this replaces: `flex-wrap` dropped the button onto its own line
+    // as soon as the date got long, so "Mai" rows and "Dezember" rows looked
+    // different. The row must not wrap, and the date must not break either.
+    const wrapper = await mountLoaded()
+    const row = wrapper.findAll('li')[1]!
+    expect(row.find('div').classes()).not.toContain('flex-col')
+    expect(row.find('div').classes()).toContain('items-center')
+    const chip = row.find('time').element.parentElement
+    expect(chip?.className).toContain('whitespace-nowrap')
+    expect(chip?.className).toContain('shrink-0')
+  })
+
+  it('shortens the month in the row, keeping the day and the year', async () => {
+    const wrapper = await mountLoaded()
+    // The December issue is the telling one — May is short in every locale.
+    const text = wrapper.findAll('time')[1]!.text()
+    expect(text).toContain('23')
+    expect(text).toContain('2023')
+    expect(text).not.toContain('December')
+  })
+
   it('renders the optional title only when present', async () => {
     const wrapper = await mountLoaded()
     const rows = wrapper.findAll('li')

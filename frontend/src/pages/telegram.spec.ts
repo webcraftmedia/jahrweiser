@@ -82,6 +82,26 @@ describe('Page: Telegram', () => {
     expect(rows[1]!.text()).toContain('pages.telegram.badge.public')
   })
 
+  it('draws every channel as its own card', async () => {
+    // On a wide screen the join button drifted a thousand pixels from the name
+    // it belonged to, with only a hairline between one channel and the next.
+    // The border is what says "this belongs together".
+    const wrapper = await mountLoaded()
+    const rows = wrapper.findAll('li')
+    expect(rows).toHaveLength(2)
+    expect(rows.every((row) => row.classes().includes('border-2'))).toBe(true)
+  })
+
+  it('gives every join link a label of its own', async () => {
+    // Four links reading "Beitreten" are useless in a screen reader's link
+    // list. That the labels really differ needs the actual translations; here
+    // we only prove that every link carries one.
+    const wrapper = await mountLoaded()
+    const labels = wrapper.findAll('li a').map((a) => a.attributes('aria-label'))
+    expect(labels).toHaveLength(2)
+    expect(labels.every((label) => (label ?? '').length > 0)).toBe(true)
+  })
+
   it('renders the optional description only when present', async () => {
     const wrapper = await mountLoaded()
     const rows = wrapper.findAll('li')

@@ -14,6 +14,14 @@ import type { Page } from '@playwright/test'
 // edits below don't leak between runs.
 const ALICE = 'alice@example.com'
 
+// The one test that deliberately empties a name gets a user of its own. The
+// seed runs once per file, not per test, so clearing Alice's name would leave
+// the next test — which opens the form expecting it pre-filled — waiting for a
+// value that nobody is going to write. That test then only passed on a retry,
+// because a retry restarts the worker and re-runs the seed, which is exactly
+// what made it look like a timing flake.
+const BOB = 'bob@example.com'
+
 test.beforeAll(() => {
   runSeedReset()
   runSeedDemo()
@@ -65,7 +73,7 @@ test.describe('full-stack profile', () => {
   })
 
   test('saving a blank name clears the stored name', async ({ page }) => {
-    await loginViaMagicLink(page, ALICE)
+    await loginViaMagicLink(page, BOB)
     const res = await page.context().request.post('/api/me/profile', {
       data: { firstName: '', lastName: '', postalCode: '' },
     })

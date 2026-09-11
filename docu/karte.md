@@ -282,13 +282,32 @@ it either way.
   is what makes city postal codes visible at all: 10115 Berlin is a few hundred
   metres across and vanishes at country scale. Dots and type are divided by the
   zoom so they keep their size on screen while the map grows under them.
-- **Labels** — the member counts are placed first, largest first, skipping
-  whatever would collide. Place names take what is left, each tried below its
-  dot, then above, then to either side, at increasing distance: a town with
-  members has a mark sitting on it, and a single fixed position would silence
-  exactly the name a reader most wants. Because the type keeps its size on
-  screen it _shrinks_ in map units as the map grows, which is what makes a
-  village's name appear as soon as somebody zooms in far enough for it to fit.
+- **Merged dots** — zoomed out, neighbouring postal codes are closer together
+  than their dots are wide. Those dots become **one dot carrying the sum**,
+  merged transitively (A over B over C is one dot, or A and C would still be
+  covering each other) and repeatedly, since each merge makes the survivor
+  bigger. It sits at the members' weighted centre, and grows and colours like
+  any other dot of that number — which does mean a merged dot can be a step
+  darker than either area under it: the dot encodes the number it shows.
+
+  Before this, one circle simply landed on top of another and the label pass
+  dropped whichever number lost, so the map said "2" where three members live
+  with nothing to say anything was missing. Nothing here decides a scale: zoom
+  in, the dots shrink in map units, and the codes come apart on their own. The
+  areas and the table stay one per postal code — the dot is a mark on the map,
+  not the datum.
+
+- **Labels** — every member count is drawn. There used to be a pass that dropped
+  a count whose box covered one already placed; merging the dots made it
+  unreachable, because the radius floor holds a label of `digits` digits inside
+  a dot of `0.32·digits + 0.42` ems while the box it needs is `0.31·digits +
+0.25` wide — a number is always strictly inside its own dot. Place names take
+  what is left, each tried below its dot, then above, then to either side, at
+  increasing distance: a town with members has a mark sitting on it, and a
+  single fixed position would silence exactly the name a reader most wants.
+  Because the type keeps its size on screen it _shrinks_ in map units as the map
+  grows, which is what makes a village's name appear as soon as somebody zooms
+  in far enough for it to fit.
 - **Table** — the same numbers as a screen-reader-only table. SVG circles are
   nothing to a screen reader, and the legend alone does not carry the values.
 - **No tooltip.** There was one; it said the postal code and the count, both of

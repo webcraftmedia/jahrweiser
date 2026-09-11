@@ -78,6 +78,20 @@ export interface PlaceFile {
   places: [number, number, number, string][]
 }
 
+/**
+ * What `GET /api/map/postal-code` answers — "does the map know this code, and
+ * which place is it?". The settings form asks while the member types, so it can
+ * name the town back at them instead of only refusing what is wrong.
+ */
+export interface PostalCodeLookup {
+  /** True when the geometry holds an area for this code. */
+  known: boolean
+  /** The five digits, or null when the input is not a German postal code. */
+  plz: string | null
+  /** The place the code names, or null when it is not known. */
+  ort: string | null
+}
+
 /** One place label, as the map endpoint hands it to the client. */
 export interface MapPlace {
   name: string

@@ -64,10 +64,18 @@ const VIEWBOX_WIDTH = 12_000
 const DEFAULT_TOLERANCE = 1
 
 /**
- * The silhouette carries no detail worth keeping (6 ≈ 320 m), and at the zoom
- * levels where that would show, the national border is off screen anyway.
+ * Simplification tolerance for the silhouette (3 ≈ 160 m).
+ *
+ * Coarser than the areas, because the silhouette is *context* and not a shape
+ * anyone reads a value off. It used to be 6 ≈ 320 m on the grounds that the
+ * national border is off screen at the zoom where that would show — which is
+ * true of the border and false of the coast: the coast is where the silhouette
+ * and the postal-code areas are drawn on top of each other, and 320 m of
+ * simplification is most of why they visibly disagree there. They come from
+ * different data and will never coincide exactly (see docu/karte.md), but the
+ * part of the gap that is ours to fix is this number. It costs 13 kB.
  */
-const OUTLINE_TOLERANCE = 6
+const OUTLINE_TOLERANCE = 3
 
 /** Rings below this (in square viewBox units, ≈ 0.5 km²) are not islands. */
 const MIN_OUTLINE_AREA = 200
@@ -337,9 +345,24 @@ function segmentDistance(p: Point, a: Point, b: Point): number {
 }
 
 /**
+ * A quantised point as one number, so it can key a Map. x < 12.000 and
+ * y < 20.000 by construction, which fits comfortably either side of the shift.
+ */
+function pointKey(point: Point): number {
+  return point[0] * 65536 + point[1]
+}
+
+/**
  * Douglas–Peucker on an open point sequence. Iterative with an explicit stack:
  * the recursive form degrades to one frame per vertex on a coastline-shaped
  * input, and some of these rings carry tens of thousands of them.
+ *
+ * **Symmetric under reversal**, and that is load-bearing, not a nicety: two
+ * neighbouring postal codes walk the border they share in opposite directions,
+ * and the whole topology stage below rests on both getting the same answer for
+ * it. Douglas–Peucker is symmetric except where two vertices are exactly
+ * equally far from the chord — on a 53 m integer grid that happens — so the tie
+ * is broken by the coordinate rather than by which end we started from.
  */
 function simplifyOpen(points: Point[], tolerance: number): Point[] {
   if (points.length < 3) return points
@@ -353,7 +376,10 @@ function simplifyOpen(points: Point[], tolerance: number): Point[] {
     let index = -1
     for (let i = from + 1; i < to; i++) {
       const distance = segmentDistance(points[i], points[from], points[to])
-      if (distance > maxDistance) {
+      if (
+        distance > maxDistance ||
+        (index !== -1 && distance === maxDistance && pointKey(points[i]) < pointKey(points[index]))
+      ) {
         maxDistance = distance
         index = i
       }
@@ -392,6 +418,111 @@ function simplifyRing(ring: Ring, tolerance: number): Ring {
   const closed = dedupe(ring)
   if (closed.length < 4) return closed
   return dedupe(simplifyOpen([...closed, closed[0]], tolerance))
+}
+
+// --- topology --------------------------------------------------------------
+
+/**
+ * Simplifying every polygon on its own tears the map apart.
+ *
+ * A border two postal codes share is then simplified *twice*, independently:
+ * Douglas–Peucker picks a different subset of vertices for each, and each may
+ * stray up to the tolerance from the true line — in opposite directions. What
+ * the reader sees is a wedge of page colour between two areas that touch in
+ * reality, up to twice the tolerance wide, widest where the kept vertices are
+ * furthest apart. At 53 m that is a hundred metres of nothing, which at the
+ * zoom this map opens at is plainly visible.
+ *
+ * The fix is the one TopoJSON is built around: stop treating a polygon as a
+ * closed ring and treat the map as a planar graph. Cut every ring at the points
+ * where the graph branches, simplify each *arc* between two such points, and
+ * reassemble. A shared border is one arc, cut at the same two ends from both
+ * sides and simplified to the same vertices — so the two areas agree on it by
+ * construction, at any tolerance.
+ *
+ * The cost is that the rings have to be held in memory together instead of
+ * being emitted as they stream past; see the note on `--max-old-space-size` in
+ * docu/karte.md.
+ */
+
+/**
+ * The points where the planar graph branches — where an arc has to end.
+ *
+ * The criterion is the degree of the point in the union of all rings: a vertex
+ * in the middle of a border has exactly two distinct neighbours, whoever walks
+ * through it and in whichever direction. A third one means something else joins
+ * here — a second postal code, or the point where a shared border gives way to
+ * a coast one of them has to itself — and both sides have to cut there, or they
+ * will not be simplifying the same arc.
+ */
+function findJunctions(rings: Iterable<Ring>): Set<number> {
+  // Up to two distinct neighbours are remembered per point; the third makes it
+  // a junction, and the two entries are dropped again — for a country's worth
+  // of borders the maps are the tall thing in this script.
+  const firstNeighbour = new Map<number, number>()
+  const secondNeighbour = new Map<number, number>()
+  const junctions = new Set<number>()
+
+  const note = (point: number, neighbour: number): void => {
+    if (junctions.has(point)) return
+    const first = firstNeighbour.get(point)
+    if (first === undefined) {
+      firstNeighbour.set(point, neighbour)
+      return
+    }
+    if (first === neighbour) return
+    const second = secondNeighbour.get(point)
+    if (second === undefined) {
+      secondNeighbour.set(point, neighbour)
+      return
+    }
+    if (second === neighbour) return
+    junctions.add(point)
+    firstNeighbour.delete(point)
+    secondNeighbour.delete(point)
+  }
+
+  for (const ring of rings) {
+    const n = ring.length
+    if (n < 3) continue
+    for (let i = 0; i < n; i++) {
+      const point = pointKey(ring[i])
+      note(point, pointKey(ring[(i + 1) % n]))
+      note(point, pointKey(ring[(i + n - 1) % n]))
+    }
+  }
+  return junctions
+}
+
+/**
+ * Simplify a ring arc by arc, so that whoever else walks the same arc gets the
+ * same vertices back.
+ *
+ * A ring with no junction on it at all is an island — nobody shares anything
+ * with it, and it is simplified as the closed ring it is.
+ */
+function simplifyRingByArcs(ring: Ring, junctions: Set<number>, tolerance: number): Ring {
+  const cuts: number[] = []
+  for (let i = 0; i < ring.length; i++) {
+    if (junctions.has(pointKey(ring[i]))) cuts.push(i)
+  }
+  if (cuts.length === 0) return simplifyRing(ring, tolerance)
+
+  const out: Ring = []
+  for (let c = 0; c < cuts.length; c++) {
+    const from = cuts[c] as number
+    const to = cuts[(c + 1) % cuts.length] as number
+    const arc: Ring = [ring[from]]
+    for (let i = (from + 1) % ring.length; ; i = (i + 1) % ring.length) {
+      arc.push(ring[i])
+      if (i === to) break
+    }
+    // The closing point is the next arc's opening one; emitting it here would
+    // duplicate every junction.
+    const simplified = simplifyOpen(arc, tolerance)
+    for (let i = 0; i < simplified.length - 1; i++) out.push(simplified[i])
+  }
+  return dedupe(out)
 }
 
 // --- path emission ---------------------------------------------------------
@@ -564,6 +695,7 @@ const namesFile = arg('names')
 const boundaryFile = arg('boundary')
 const placesFile = arg('places')
 const tolerance = Number(arg('tolerance') ?? DEFAULT_TOLERANCE)
+const outlineTolerance = Number(arg('outline-tolerance') ?? OUTLINE_TOLERANCE)
 const root = path.resolve(import.meta.dirname, '..')
 
 const names = namesFile ? await loadPlaceNames(namesFile) : new Map<string, string>()
@@ -642,10 +774,29 @@ const quantise = (rings: Ring[]): Ring[] =>
     ),
   )
 
-// Pass 2: the artefacts. Merging by postal code rather than by feature — a code
+// Pass 2: the geometry. Merging by postal code rather than by feature — a code
 // can be several relations in OSM, and the map wants one shape per code.
+//
+// Held rather than emitted: the simplification below needs to know where the
+// borders *between* these rings run, which is not knowable one feature at a
+// time. See the topology section above.
 console.warn(`Reading ${input} (pass 2: geometry) …`)
-const areas: PlzAreaFile['areas'] = {}
+
+interface Collected {
+  /** Place name, filled in at the end. */
+  o: string
+  /** Quantised, not yet simplified: outer rings first, then holes. */
+  rings: Ring[]
+  /** Centroid of the largest body seen so far, and the total area. */
+  c: Point
+  s: number
+  /** The largest single body, to decide whose centroid to keep. */
+  largest: number
+}
+
+const collected = new Map<string, Collected>()
+let ringCount = 0
+let vertexCount = 0
 
 for await (const feature of streamFeatures(input)) {
   const plz = postcodeOf(feature)
@@ -654,46 +805,77 @@ for await (const feature of streamFeatures(input)) {
   const { outer: rawOuter, holes: rawHoles } = ringsOf(feature.geometry)
   const outer = quantise(rawOuter).filter((ring) => ring.length >= 3)
   const holes = quantise(rawHoles).filter((ring) => ring.length >= 3)
+  if (outer.length === 0 && holes.length === 0) continue
 
-  const simplified = [...outer, ...holes]
-    .map((ring) => simplifyRing(ring, tolerance))
-    .filter((ring) => ring.length >= 3)
-  // Everything collapsed: keep the unsimplified shape, so even the smallest
-  // city postal code still has a body to draw and to place a label on.
-  const rings = simplified.length > 0 ? simplified : outer
-  if (rings.length === 0) continue
-
-  const d = rings.map(ringToPath).join('')
-  const [cx, cy] = centroidOf(outer.length > 0 ? outer : rings)
+  const [cx, cy] = centroidOf(outer.length > 0 ? outer : holes)
   const size = outer.reduce((sum, ring) => sum + Math.abs(signedArea(ring)), 0)
+  ringCount += outer.length + holes.length
+  for (const ring of [...outer, ...holes]) vertexCount += ring.length
 
-  const existing = areas[plz]
+  const existing = collected.get(plz)
   if (existing) {
-    // Another relation for the same code: append the shape, keep the bigger
-    // body's centroid, add up the size.
-    areas[plz] = {
-      o: existing.o,
-      d: existing.d + d,
-      c: size > existing.s ? [Math.round(cx), Math.round(cy)] : existing.c,
-      s: Math.round(existing.s + size),
+    existing.rings.push(...outer, ...holes)
+    existing.s += size
+    if (size > existing.largest) {
+      existing.largest = size
+      existing.c = [cx, cy]
     }
     continue
   }
-  areas[plz] = {
+  collected.set(plz, {
     o: names.get(plz) ?? '',
-    d,
-    c: [Math.round(cx), Math.round(cy)],
-    s: Math.round(size),
+    rings: [...outer, ...holes],
+    c: [cx, cy],
+    s: size,
+    largest: size,
+  })
+}
+
+console.warn(`  ${collected.size} postal codes · ${ringCount} rings · ${vertexCount} vertices`)
+
+// The planar graph, before anything is thrown away. Every ring of every postal
+// code goes in: a hole in one area is the outer ring of another, and a border
+// is only shared if both sides cut it in the same places.
+console.warn('Finding junctions …')
+const junctions = findJunctions(
+  (function* () {
+    for (const area of collected.values()) yield* area.rings
+  })(),
+)
+console.warn(`  ${junctions.size} junctions`)
+
+console.warn(`Simplifying arcs (tolerance ${tolerance}) …`)
+const areas: PlzAreaFile['areas'] = {}
+let keptVertices = 0
+
+for (const [plz, area] of collected) {
+  const simplified = area.rings
+    .map((ring) => simplifyRingByArcs(ring, junctions, tolerance))
+    .filter((ring) => ring.length >= 3)
+  // Everything collapsed: keep the unsimplified shape, so even the smallest
+  // city postal code still has a body to draw and to place a label on.
+  const rings = simplified.length > 0 ? simplified : area.rings
+  if (rings.length === 0) continue
+  for (const ring of rings) keptVertices += ring.length
+
+  areas[plz] = {
+    o: area.o,
+    d: rings.map(ringToPath).join(''),
+    c: [Math.round(area.c[0]), Math.round(area.c[1])],
+    s: Math.round(area.s),
   }
 }
 
 const named = Object.values(areas).filter((area) => area.o).length
-console.warn(`  ${Object.keys(areas).length} postal codes, ${named} with a place name`)
+console.warn(
+  `  ${Object.keys(areas).length} postal codes, ${named} with a place name` +
+    ` · ${keptVertices} of ${vertexCount} vertices kept`,
+)
 
 // Filled with the even-odd rule, so an enclave inside the country cuts itself
 // out without anyone having to say which ring is a hole.
 const outlinePath = quantise(boundaryRings)
-  .map((ring) => simplifyRing(ring, OUTLINE_TOLERANCE))
+  .map((ring) => simplifyRing(ring, outlineTolerance))
   // Slivers left by a coast that did not quite meet the land border.
   .filter((ring) => ring.length >= 3 && Math.abs(signedArea(ring)) >= MIN_OUTLINE_AREA)
   .map(ringToPath)

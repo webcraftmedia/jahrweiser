@@ -69,7 +69,27 @@ exports[`Header > renders 1`] = `
             <p data-v-c970699f="" class="text-xs font-medium text-navy/60 dark:text-poster-darkMuted uppercase tracking-wider">components.Header.welcome</p>
             <p data-v-c970699f="" class="mt-1 text-sm font-semibold text-navy dark:text-ivory truncate">Test</p>
           </div><!-- Menu Items -->
-          <nav data-v-c970699f="" class="py-2"><a data-v-c970699f="" href="/admin" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.admin</a><a data-v-c970699f="" href="/settings" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.settings</a><button data-v-c970699f="" class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.logout-label</button></nav><!-- Calendar Filter (mobile) -->
+          <nav data-v-c970699f="" class="py-2">
+            <!-- The same sections the icon rail offers, as text. The rail is a
+                 row of unlabelled icons at the bottom edge; whoever does not
+                 read it as navigation looks for the menu, and has to find them
+                 there. One list, one source (useAppSections), so the two can
+                 never disagree about what exists. --><a data-v-c970699f="" href="/" aria-label="components.AppIconRail.calendar" aria-current="page" class="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150 text-sienna dark:text-sienna-light"><svg data-v-c970699f="" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 16 16" class="nuxt-icon nuxt-icon--fill menu-icon shrink-0" aria-hidden="true">
+                <rect width="13" height="11.5" x="1.5" y="3" rx="1.5"></rect>
+                <path d="M1.5 6.5h13M5 1.5V4M11 1.5V4"></path>
+              </svg> components.AppIconRail.calendar
+              <!-- Same marker as on the rail, and as there it is never the only
+                   thing saying it — the link's accessible name does too. -->
+              <!--v-if-->
+            </a><a data-v-c970699f="" href="/karte" aria-label="components.AppIconRail.map" class="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150 text-navy dark:text-ivory"><svg data-v-c970699f="" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 16 16" class="nuxt-icon nuxt-icon--fill menu-icon shrink-0" aria-hidden="true">
+                <path d="m1.5 3.5 4.25-1.75 4.5 2L14.5 2v10l-4.25 1.75-4.5-2L1.5 13.5zM5.75 1.75v10M10.25 3.75v10"></path>
+              </svg> components.AppIconRail.map
+              <!-- Same marker as on the rail, and as there it is never the only
+                   thing saying it — the link's accessible name does too. -->
+              <!--v-if-->
+            </a>
+            <div data-v-c970699f="" class="my-2 border-t border-navy/10 dark:border-poster-darkBorder"></div><a data-v-c970699f="" href="/admin" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.admin</a><a data-v-c970699f="" href="/settings" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.settings</a><button data-v-c970699f="" class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.logout-label</button>
+          </nav><!-- Calendar Filter (mobile) -->
           <!--v-if-->
           <!-- Legal Links & Version -->
           <div data-v-c970699f="" class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"><a data-v-c970699f="" href="https://www.webcraft-media.de/#!impressum" class="hover:text-sienna transition-colors">components.Footer.imprint</a><a data-v-c970699f="" href="https://www.webcraft-media.de/#!datenschutz" class="hover:text-sienna transition-colors">components.Footer.privacy-policy</a><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button data-v-c970699f="" class="ml-auto hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer" title="components.Footer.changelog"> v0.0.0-test</button></div><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->

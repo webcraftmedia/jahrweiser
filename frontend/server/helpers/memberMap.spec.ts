@@ -7,6 +7,7 @@ import {
   buildMapPayload,
   loadPlaces,
   loadPlzAreas,
+  lookupPostalCode,
   normalisePostalCode,
   PLACE_FILE_KEY,
   placesIn,
@@ -69,6 +70,34 @@ describe('normalisePostalCode', () => {
 
   it.each([null, undefined])('handles %s', (input) => {
     expect(normalisePostalCode(input)).toBeNull()
+  })
+})
+
+describe('lookupPostalCode', () => {
+  // The single definition of "valid postal code": what the settings form
+  // accepts, what the map's gate opens for, and what the rail's marker means.
+  it('names the place behind a code the geometry knows', () => {
+    expect(lookupPostalCode('64673', geometry())).toStrictEqual({
+      plz: '64673',
+      ort: 'Zwingenberg',
+    })
+  })
+
+  it('normalises before it looks up', () => {
+    expect(lookupPostalCode('D-64673', geometry())).toMatchObject({ plz: '64673' })
+  })
+
+  it.each([
+    ['99999', 'five digits that match no area'],
+    ['1010', 'four digits'],
+    ['CH-8001', 'a foreign code'],
+    ['', 'nothing'],
+  ])('refuses %s (%s)', (input) => {
+    expect(lookupPostalCode(input, geometry())).toBeNull()
+  })
+
+  it.each([null, undefined])('handles %s', (input) => {
+    expect(lookupPostalCode(input, geometry())).toBeNull()
   })
 })
 

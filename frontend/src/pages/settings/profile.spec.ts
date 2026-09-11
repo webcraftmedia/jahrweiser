@@ -23,23 +23,63 @@ mockNuxtImport('useUserSession', () => () => ({
 
 const PROFILE = { firstName: 'Erika', lastName: 'Musterfrau', postalCode: '12345' }
 
-function serving(profile: unknown, save: 'ok' | { statusMessage?: string } = 'ok') {
-  mock$fetch.mockImplementation((_url: string, opts?: { method?: string }) => {
-    if (opts?.method === 'POST') {
-      if (save === 'ok') return Promise.resolve({})
-      return Promise.reject(Object.assign(new Error('boom'), { data: save }))
-    }
-    return profile instanceof Error ? Promise.reject(profile) : Promise.resolve(profile)
-  })
+/** The postal codes the map knows in these tests, and the places they name. */
+const KNOWN: Record<string, string> = { '12345': 'Musterstadt', '54321': 'Andernorts' }
+
+interface ServeOptions {
+  save?: 'ok' | { statusMessage?: string }
+  /** Make the postal-code lookup itself fail, rather than answer "unknown". */
+  lookupFails?: boolean
 }
 
-/** Mount and wait for the profile to arrive — the page renders before it does. */
+function serving(profile: unknown, options: ServeOptions = {}) {
+  const { save = 'ok', lookupFails = false } = options
+  mock$fetch.mockImplementation(
+    (url: string, opts?: { method?: string; query?: { plz?: string } }) => {
+      if (url === '/api/map/postal-code') {
+        if (lookupFails) return Promise.reject(new Error('offline'))
+        const plz = opts?.query?.plz ?? ''
+        const ort = KNOWN[plz]
+        return Promise.resolve({ known: Boolean(ort), plz: ort ? plz : null, ort: ort ?? null })
+      }
+      if (opts?.method === 'POST') {
+        if (save === 'ok') return Promise.resolve({})
+        return Promise.reject(Object.assign(new Error('boom'), { data: save }))
+      }
+      return profile instanceof Error ? Promise.reject(profile) : Promise.resolve(profile)
+    },
+  )
+}
+
+/** Wait out the debounce and the lookup behind it. */
+async function settled(wrapper: { text: () => string }) {
+  await vi.waitFor(() => {
+    expect(wrapper.text()).not.toContain('pages.settings.profile.postalCode-checking')
+  })
+  await nextTick()
+}
+
+/**
+ * Mount and wait for the profile to arrive — the page renders before it does —
+ * and for the postal code it brought to be checked. Both have settled by the
+ * time a member could touch the form, so the tests start where they do.
+ */
 async function mountPage() {
   const wrapper = await mountSuspended(Page, { route: '/settings/profile' })
   await vi.waitFor(() => {
     expect(wrapper.text()).not.toContain('pages.settings.loading')
   })
+  await settled(wrapper)
   return wrapper
+}
+
+/**
+ * Let a settled promise and the render it causes run. Used where the point is
+ * that *nothing* changes — `vi.waitFor` cannot wait for an absence.
+ */
+async function flush() {
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  await nextTick()
 }
 
 function fields(wrapper: Awaited<ReturnType<typeof mountPage>>) {
@@ -57,6 +97,8 @@ describe('Page: Profil-Einstellungen', () => {
     mockUserName.value = 'Erika Musterfrau'
     mockRefreshSession.mockResolvedValue(undefined)
     serving(PROFILE)
+    // useState is shared between mounts; the rail's marker would leak.
+    useState<boolean | null>('member-map-has-plz', () => null).value = null
   })
 
   it('says it is loading before the profile arrives', async () => {
@@ -167,7 +209,7 @@ describe('Page: Profil-Einstellungen', () => {
   })
 
   it("surfaces the server's reason when the save is rejected", async () => {
-    serving(PROFILE, { statusMessage: 'Contact not found' })
+    serving(PROFILE, { save: { statusMessage: 'Contact not found' } })
     const wrapper = await mountPage()
     await fields(wrapper).first.setValue('Erika Maria')
     await wrapper.find('form').trigger('submit')
@@ -178,7 +220,7 @@ describe('Page: Profil-Einstellungen', () => {
   })
 
   it('falls back to the generic message when the server gives no reason', async () => {
-    serving(PROFILE, {})
+    serving(PROFILE, { save: {} })
     const wrapper = await mountPage()
     await fields(wrapper).first.setValue('Erika Maria')
     await wrapper.find('form').trigger('submit')
@@ -195,5 +237,218 @@ describe('Page: Profil-Einstellungen', () => {
       '/api/me/profile',
       expect.objectContaining({ method: 'POST' }),
     )
+  })
+
+  describe('postal-code validation', () => {
+    // The map is the only consumer of this field, and it can only draw codes it
+    // has geometry for — so the map's own data is what the form checks against.
+    it('confirms a code the map knows, with the place it names', async () => {
+      const wrapper = await mountPage()
+      expect(mock$fetch).toHaveBeenCalledWith('/api/map/postal-code', { query: { plz: '12345' } })
+      expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+        'pages.settings.profile.postalCode-known',
+      )
+      expect(wrapper.find('#settings-postalCode').attributes('aria-invalid')).toBeUndefined()
+    })
+
+    it('refuses to save a code that is not five digits, without asking', async () => {
+      const wrapper = await mountPage()
+      await fields(wrapper).postal.setValue('123')
+      await settled(wrapper)
+      expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+        'pages.settings.profile.postalCode-format',
+      )
+      expect(fields(wrapper).submit.attributes('disabled')).toBeDefined()
+      // The shape is decidable here; a request for it would be a round trip
+      // spent on something the browser already knows.
+      expect(mock$fetch).not.toHaveBeenCalledWith('/api/map/postal-code', {
+        query: { plz: '123' },
+      })
+    })
+
+    it('refuses to save five digits the map has no area for', async () => {
+      // The mistake a format check cannot catch, and the whole reason the check
+      // goes to the map rather than to a regex.
+      const wrapper = await mountPage()
+      await fields(wrapper).postal.setValue('99999')
+      await settled(wrapper)
+      expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+        'pages.settings.profile.postalCode-unknown',
+      )
+      expect(wrapper.find('#settings-postalCode').attributes('aria-invalid')).toBe('true')
+      expect(fields(wrapper).submit.attributes('disabled')).toBeDefined()
+    })
+
+    it('blocks the name fields too while the code is wrong', async () => {
+      // Saving would post the bad code along and be refused; there is no way to
+      // change the name past a code the endpoint will not take.
+      const wrapper = await mountPage()
+      await fields(wrapper).postal.setValue('99999')
+      await fields(wrapper).first.setValue('Erika Maria')
+      await settled(wrapper)
+      expect(fields(wrapper).submit.attributes('disabled')).toBeDefined()
+    })
+
+    it('asks once for a code that was typed digit by digit', async () => {
+      const wrapper = await mountPage()
+      for (const value of ['5', '54', '543', '5432', '54321']) {
+        await fields(wrapper).postal.setValue(value)
+      }
+      await settled(wrapper)
+      const asked = mock$fetch.mock.calls.filter(([url]) => url === '/api/map/postal-code')
+      // One for the code the profile arrived with, one for what was typed.
+      expect(asked).toHaveLength(2)
+      expect(asked[1]).toStrictEqual(['/api/map/postal-code', { query: { plz: '54321' } }])
+    })
+
+    it('ignores an answer that was overtaken by a newer one', async () => {
+      // Answers can arrive out of order. The one for a half-typed code landing
+      // after the one for the finished code would report the field as wrong
+      // while it is right — and the member could not save a correct code.
+      const pending: {
+        plz: string
+        resolve: (v: unknown) => void
+        reject: (e: unknown) => void
+      }[] = []
+      mock$fetch.mockImplementation((url: string, opts?: { query?: { plz?: string } }) => {
+        if (url !== '/api/map/postal-code') return Promise.resolve(PROFILE)
+        return new Promise((resolve, reject) => {
+          pending.push({ plz: opts?.query?.plz ?? '', resolve, reject })
+        })
+      })
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const wrapper = await mountSuspended(Page, { route: '/settings/profile' })
+      await vi.waitFor(() => {
+        expect(wrapper.text()).not.toContain('pages.settings.loading')
+      })
+
+      /** Type a code and wait for its request to be on the wire. */
+      async function type(value: string) {
+        const expected = pending.length + 1
+        await wrapper.find('#settings-postalCode').setValue(value)
+        await vi.waitFor(() => {
+          expect(pending).toHaveLength(expected)
+        })
+      }
+
+      await vi.waitFor(() => {
+        expect(pending).toHaveLength(1) // the code the profile arrived with
+      })
+      await type('54321')
+      pending[1]!.resolve({ known: true, plz: '54321', ort: 'Andernorts' })
+      await vi.waitFor(() => {
+        expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+          'pages.settings.profile.postalCode-known',
+        )
+      })
+
+      // Both ways a stale answer can come back: with a verdict, and with a
+      // failure. Neither may touch a field that has moved on.
+      pending[0]!.resolve({ known: false, plz: null, ort: null })
+      await flush()
+      expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+        'pages.settings.profile.postalCode-known',
+      )
+
+      await type('11111')
+      await type('54321')
+      pending[3]!.resolve({ known: true, plz: '54321', ort: 'Andernorts' })
+      await vi.waitFor(() => {
+        expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+          'pages.settings.profile.postalCode-known',
+        )
+      })
+      pending[2]!.reject(new Error('offline'))
+      await flush()
+      expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+        'pages.settings.profile.postalCode-known',
+      )
+      error.mockRestore()
+    })
+
+    it('drops a pending lookup when the page is left', async () => {
+      // Leaving mid-keystroke would otherwise fire a request into a component
+      // that is gone, and write its answer into a ref nothing reads any more.
+      const wrapper = await mountPage()
+      await fields(wrapper).postal.setValue('54321')
+      wrapper.unmount()
+      const before = mock$fetch.mock.calls.length
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      expect(mock$fetch).toHaveBeenCalledTimes(before)
+    })
+
+    it('lets the member save when the check itself is unavailable', async () => {
+      // A flaky lookup must not lock the form. The endpoint that stores the
+      // value validates it regardless, so nothing bad gets through this way.
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      serving(PROFILE, { lookupFails: true })
+      const wrapper = await mountPage()
+      await fields(wrapper).first.setValue('Erika Maria')
+      expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+        'pages.settings.profile.postalCode-unchecked',
+      )
+      expect(fields(wrapper).submit.attributes('disabled')).toBeUndefined()
+      error.mockRestore()
+    })
+
+    it('marks the field when the server is the one to refuse the code', async () => {
+      // Reachable when the lookup was unavailable and the save was not — the
+      // rejection belongs at the field, not in a line under the button.
+      serving(PROFILE, { save: { statusMessage: 'invalid-postal-code' } })
+      const wrapper = await mountPage()
+      await fields(wrapper).postal.setValue('54321')
+      await settled(wrapper)
+      await wrapper.find('form').trigger('submit')
+      await vi.waitFor(() => {
+        expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+          'pages.settings.profile.postalCode-unknown',
+        )
+      })
+      // Not also a generic failure under the button: one rejection, one message.
+      expect(wrapper.text()).not.toContain('pages.settings.profile.error')
+    })
+  })
+
+  describe('the map marker in the icon rail', () => {
+    // Point 2 of the brief: the rail's dot has to answer to the save, not to
+    // the next full page load — the member is looking straight at it.
+    const marker = () => useState<boolean | null>('member-map-has-plz', () => null)
+
+    it('clears once a postal code has been stored', async () => {
+      marker().value = false
+      const wrapper = await mountPage()
+      await fields(wrapper).postal.setValue('54321')
+      await settled(wrapper)
+      await wrapper.find('form').trigger('submit')
+      await vi.waitFor(() => {
+        expect(wrapper.text()).toContain('pages.settings.profile.saved')
+      })
+      expect(marker().value).toBe(true)
+    })
+
+    it('appears again when the code is deleted', async () => {
+      marker().value = true
+      const wrapper = await mountPage()
+      await fields(wrapper).postal.setValue('')
+      await settled(wrapper)
+      await wrapper.find('form').trigger('submit')
+      await vi.waitFor(() => {
+        expect(wrapper.text()).toContain('pages.settings.profile.saved')
+      })
+      expect(marker().value).toBe(false)
+    })
+
+    it('is left alone when the save failed', async () => {
+      marker().value = false
+      serving(PROFILE, { save: { statusMessage: 'Contact not found' } })
+      const wrapper = await mountPage()
+      await fields(wrapper).postal.setValue('54321')
+      await settled(wrapper)
+      await wrapper.find('form').trigger('submit')
+      await vi.waitFor(() => {
+        expect(wrapper.text()).toContain('Contact not found')
+      })
+      expect(marker().value).toBe(false)
+    })
   })
 })

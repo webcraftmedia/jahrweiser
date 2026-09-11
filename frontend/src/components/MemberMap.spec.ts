@@ -106,12 +106,93 @@ describe('Component: MemberMap', () => {
     expect(wrapper.findAll('.labels text').map((t) => t.text())).toStrictEqual(['5', '3', '2'])
   })
 
-  it('drops a label that would cover one already placed, largest count first', async () => {
-    // Two postal codes on top of each other: the bigger number is the one that
-    // gets drawn, the other stays in the table.
-    const wrapper = await mount([area('64673', 3), area('10115', 9)])
-    expect(wrapper.findAll('.labels text').map((t) => t.text())).toStrictEqual(['9'])
-    expect(wrapper.find('table').text()).toContain('64673')
+  describe('dots that would cover each other', () => {
+    // Zoomed out to the country, neighbouring postal codes are closer together
+    // than their dots are wide. One circle used to land on top of another and
+    // the label pass dropped whichever number lost — so the map said "2" where
+    // three members live, with nothing to say anything was missing.
+    it('merges them into one dot carrying the sum', async () => {
+      const wrapper = await mount([area('64673', 3), area('10115', 9)])
+      expect(wrapper.findAll('.dots circle')).toHaveLength(1)
+      expect(wrapper.findAll('.labels text').map((t) => t.text())).toStrictEqual(['12'])
+    })
+
+    it('leaves the shapes and the table one per postal code', async () => {
+      // The dot is a mark on the map, not the datum. Nothing is summarised away
+      // for a reader who never sees the map.
+      const wrapper = await mount([area('64673', 3), area('10115', 9)])
+      expect(wrapper.findAll('.areas path')).toHaveLength(2)
+      const table = wrapper.find('table').text()
+      expect(table).toContain('64673')
+      expect(table).toContain('10115')
+    })
+
+    it('grows and colours the merged dot like any other dot of that count', async () => {
+      const merged = await mount([area('64673', 3), area('10115', 9)])
+      const alone = await mount([area('64673', 12)])
+      expect(merged.find('.dots circle').attributes('r')).toBe(
+        alone.find('.dots circle').attributes('r'),
+      )
+      expect(merged.find('.dots circle').classes()).toStrictEqual(
+        alone.find('.dots circle').classes(),
+      )
+    })
+
+    // Whether two dots overlap depends on the zoom, and the opening zoom is
+    // fitted to the areas themselves — so every case here needs one postal code
+    // far enough away to keep the map opened wide.
+    const FAR = area('10115', 1, { cx: 3600, cy: 4200 })
+
+    it('merges transitively, so nothing is left overlapping', async () => {
+      // A over B and B over C has to become one dot: leaving A and C apart
+      // would leave them covering each other, which is the bug.
+      const wrapper = await mount([
+        area('64673', 1, { cx: 500, cy: 500 }),
+        area('64625', 1, { cx: 560, cy: 500 }),
+        area('64678', 1, { cx: 620, cy: 500 }),
+        FAR,
+      ])
+      expect(wrapper.findAll('.dots circle')).toHaveLength(2)
+      expect(wrapper.findAll('.labels text').map((t) => t.text())).toStrictEqual(['3', '1'])
+    })
+
+    it('puts the merged dot where most of the members are', async () => {
+      const wrapper = await mount([
+        area('64673', 9, { cx: 500, cy: 500 }),
+        area('64625', 1, { cx: 560, cy: 500 }),
+        FAR,
+      ])
+      // Sorted biggest first, so the merged one is the first circle.
+      const cx = Number(wrapper.find('.dots circle').attributes('cx'))
+      expect(cx).toBeGreaterThan(500)
+      // A tenth of the way, not halfway.
+      expect(cx).toBeLessThan(510)
+    })
+
+    it('leaves postal codes that do not overlap alone', async () => {
+      const wrapper = await mount([
+        area('64673', 3, { cx: 400, cy: 400 }),
+        area('10115', 5, { cx: 2900, cy: 900 }),
+      ])
+      expect(wrapper.findAll('.dots circle')).toHaveLength(2)
+      expect(wrapper.findAll('.labels text').map((t) => t.text())).toStrictEqual(['5', '3'])
+    })
+
+    it('comes apart again on the way in', async () => {
+      // Nothing here decides a scale: the dots keep their size on screen, so
+      // they shrink in map units as the map grows and the overlap stops.
+      const wrapper = await mount([
+        area('64673', 1, { cx: 500, cy: 500 }),
+        area('64625', 1, { cx: 560, cy: 500 }),
+        FAR,
+      ])
+      expect(wrapper.findAll('.dots circle')).toHaveLength(2)
+      for (let i = 0; i < 6; i++) {
+        await wrapper.find('button[title="components.MemberMap.zoom-in"]').trigger('click')
+      }
+      expect(wrapper.findAll('.dots circle')).toHaveLength(3)
+      expect(wrapper.findAll('.labels text').map((t) => t.text())).toStrictEqual(['1', '1', '1'])
+    })
   })
 
   describe('framing', () => {

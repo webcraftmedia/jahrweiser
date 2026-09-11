@@ -34,7 +34,7 @@
     "cli:dav:purge-auth-xprops": "npx tsx cli/dav-purge-auth-xprops.ts",
     "cli:migrate:calendar-tags": "npx tsx cli/migrate-calendar-tags.ts",
     "cli:backup": "npx tsx cli/backup.ts",
-    "map:build": "npx tsx scripts/build-map-data.ts",
+    "map:build": "node --max-old-space-size=8192 --import tsx scripts/build-map-data.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "npx tsx scripts/db-migrate.ts",
     "db:push": "drizzle-kit push",

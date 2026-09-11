@@ -18,12 +18,38 @@ vi.mock('../../helpers/dav', () => ({
 }))
 vi.mock('../../db', () => ({ useDb: () => mockDb }))
 
+const mockLoadPlzAreas = vi.fn()
+vi.mock('../../helpers/memberMap', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  loadPlzAreas: () => mockLoadPlzAreas(),
+}))
+
+const GEOMETRY = {
+  viewBox: '0 0 4000 5000',
+  outline: 'M0 0l1 0z',
+  areas: new Map([['64653', { o: 'Lorsch', d: 'M0 0l1 0z', c: [1, 2] as [number, number], s: 9 }]]),
+}
+
 const fn = handler as unknown as (e: unknown) => Promise<unknown>
 
 function vcard(lines: string[]): ICAL.Component {
   return new ICAL.Component(
     ICAL.parse(['BEGIN:VCARD', 'VERSION:4.0', ...lines, 'END:VCARD'].join('\r\n')),
   )
+}
+
+/** Post the default profile with a different postal code. */
+function sending(postalCode: string): void {
+  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+    (v as (d: unknown) => unknown)({ firstName: 'Alicia', lastName: 'Wonder', postalCode }),
+  )
+}
+
+/** A contact that is ready to be written to. */
+function contactExists(card = vcard(['UID:u1', 'EMAIL:anna@example.com'])): ICAL.Component {
+  mockFindUserByEmail.mockResolvedValue({ user: { href: '/a.vcf', props: {} }, vcard: card })
+  queueDbResults({})
+  return card
 }
 
 describe('profile.post', () => {
@@ -33,13 +59,8 @@ describe('profile.post', () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'Anna Mustermann', email: 'anna@example.com', role: 'user' },
     })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
-      (v as (d: unknown) => unknown)({
-        firstName: 'Alicia',
-        lastName: 'Wonder',
-        postalCode: '64653',
-      }),
-    )
+    mockLoadPlzAreas.mockResolvedValue(GEOMETRY)
+    sending('64653')
     mockSaveUser.mockResolvedValue({ ok: true })
   })
 
@@ -86,22 +107,67 @@ describe('profile.post', () => {
   it('clears the sidecar copy when the postal code is removed', async () => {
     // Null, not '': the map counts rows by postal code and an empty string
     // would be a group of its own.
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
-      (v as (d: unknown) => unknown)({ firstName: 'Alicia', lastName: 'Wonder', postalCode: '' }),
-    )
-    const card = vcard(['UID:u1', 'EMAIL:anna@example.com', 'ADR:;;;;;64653;'])
-    mockFindUserByEmail.mockResolvedValue({ user: { href: '/a.vcf', props: {} }, vcard: card })
-    queueDbResults({})
+    sending('')
+    const card = contactExists(vcard(['UID:u1', 'EMAIL:anna@example.com', 'ADR:;;;;;64653;']))
     await fn({})
     expect(firstDbCall('set')).toStrictEqual([{ displayName: 'Alicia Wonder', postalCode: null }])
     expect(card.toString()).toContain('ADR:;;;;;;')
   })
 
   it('fills in a missing uid on legacy contacts', async () => {
-    const card = vcard(['EMAIL:anna@example.com'])
-    mockFindUserByEmail.mockResolvedValue({ user: { href: '/a.vcf', props: {} }, vcard: card })
-    queueDbResults({})
+    const card = contactExists(vcard(['EMAIL:anna@example.com']))
     await fn({})
     expect(card.getFirstPropertyValue('uid')).toBe('u1')
+  })
+
+  describe('postal-code validation', () => {
+    // The map is the only consumer of this field, so the map's own geometry is
+    // what decides — a format check passes five digits that place nobody.
+    it.each([
+      ['no area matches it', '99999'],
+      ['it is too short', '646'],
+      ['it is a house number', '12'],
+      ['it is a foreign code', 'CH-8001'],
+    ])('refuses a postal code because %s', async (_case, postalCode) => {
+      sending(postalCode)
+      contactExists()
+      await expect(fn({})).rejects.toThrow('invalid-postal-code')
+    })
+
+    it('refuses before DAV is touched, so nothing is half written', async () => {
+      sending('99999')
+      contactExists()
+      await expect(fn({})).rejects.toThrow('invalid-postal-code')
+      expect(mockFindUserByEmail).not.toHaveBeenCalled()
+      expect(mockSaveUser).not.toHaveBeenCalled()
+    })
+
+    it('stores the normalised five digits, not what was typed', async () => {
+      // Otherwise "D-64653" and "64 653" are two spellings of one place, and
+      // the aggregate has to unpick them on every request.
+      sending(' D-64653 ')
+      const card = contactExists()
+      await expect(fn({})).resolves.toMatchObject({ postalCode: '64653' })
+      expect(card.toString()).toContain('ADR:;;;;;64653;')
+      expect(firstDbCall('set')).toStrictEqual([
+        { displayName: 'Alicia Wonder', postalCode: '64653' },
+      ])
+    })
+
+    it('falls back to the format when the artefact was never built', async () => {
+      // A deployment without map data has no map; it must not also have an
+      // unusable profile form — see docu/karte.md.
+      mockLoadPlzAreas.mockResolvedValue(null)
+      sending('99999')
+      contactExists()
+      await expect(fn({})).resolves.toMatchObject({ postalCode: '99999' })
+    })
+
+    it('still insists on five digits without the artefact', async () => {
+      mockLoadPlzAreas.mockResolvedValue(null)
+      sending('646')
+      contactExists()
+      await expect(fn({})).rejects.toThrow('invalid-postal-code')
+    })
   })
 })

@@ -310,6 +310,86 @@
   /** Big shapes first, so a city that sits inside a large area lands on top. */
   const painted = computed(() => [...props.areas].sort((a, b) => b.size - a.size))
 
+  /**
+   * A dot on the map: one postal code, or several whose dots would have covered
+   * each other at this zoom.
+   */
+  interface Mark {
+    /** The postal codes behind it — the key, and nothing the reader sees. */
+    key: string
+    cx: number
+    cy: number
+    count: number
+  }
+
+  /**
+   * The dots, with the overlapping ones merged into one that carries the sum.
+   *
+   * Zoomed out to the country, neighbouring postal codes are closer together
+   * than their dots are wide. Drawing them anyway put one circle on top of
+   * another and the label pass then dropped whichever number lost — so the map
+   * showed "2" where three members live, and the reader had no way to tell that
+   * anything was missing. A merged dot says 3, and grows and colours like any
+   * other dot carrying 3.
+   *
+   * Merging is by overlap and transitive: A over B and B over C is one dot,
+   * because leaving A and C separate would leave them overlapping again. Each
+   * merge makes the surviving dot bigger, which can bring it over a fourth, so
+   * the passes repeat until one changes nothing. Nothing here is a *decision*
+   * about scale — zoom in and the dots shrink in map units, the overlaps stop,
+   * and the codes come apart again on their own.
+   *
+   * What this does not touch is the areas: the shapes stay one per postal code,
+   * as does the table underneath. The dot is a mark on the map, not the datum.
+   */
+  const marks = computed<Mark[]>(() => {
+    // Biggest first, so a cluster forms around the postal code that dominates
+    // it rather than around whichever one the data happens to list first.
+    let current = [...props.areas]
+      .sort((a, b) => b.count - a.count || a.plz.localeCompare(b.plz))
+      .map((area) => ({ plz: [area.plz], cx: area.cx, cy: area.cy, count: area.count }))
+
+    for (;;) {
+      const next: typeof current = []
+      let merged = false
+      for (const mark of current) {
+        const host = next.find(
+          (other) =>
+            Math.hypot(other.cx - mark.cx, other.cy - mark.cy) <
+            radius(other.count) + radius(mark.count),
+        )
+        if (!host) {
+          next.push({ ...mark, plz: [...mark.plz] })
+          continue
+        }
+        // Weighted by members, so the dot sits where most of them are rather
+        // than halfway to a postal code that contributed one.
+        const total = host.count + mark.count
+        host.cx = (host.cx * host.count + mark.cx * mark.count) / total
+        host.cy = (host.cy * host.count + mark.cy * mark.count) / total
+        host.count = total
+        host.plz.push(...mark.plz)
+        merged = true
+      }
+      current = next
+      if (!merged) break
+    }
+
+    return (
+      current
+        .map((mark) => ({
+          // Sorted, so the key does not depend on the order the merges happened
+          // in — Vue would otherwise re-create every dot on a step of zoom.
+          key: [...mark.plz].sort().join(' '),
+          cx: mark.cx,
+          cy: mark.cy,
+          count: mark.count,
+        }))
+        // Biggest first: a small dot next to a large one stays on top of it.
+        .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
+    )
+  })
+
   /** Place names are context, so they are set smaller than the numbers. */
   const placeFontSize = computed(() => 10.5 * unit.value)
 
@@ -372,39 +452,33 @@
    * What actually gets written on the map, in one pass so that everything
    * competes for the same space.
    *
-   * The order is the priority: the member dots hold their ground, their numbers
-   * come next, and place names take what is left. Everything is measured in map
-   * units at the current zoom — and since the type keeps its size on screen, it
+   * The order is the priority: the member dots hold their ground, numbers and
+   * all, and place names take what is left. Everything is measured in map units
+   * at the current zoom — and since the type keeps its size on screen, it
    * *shrinks* in map units as the map grows, which is what makes a village's
    * name appear as soon as somebody zooms in far enough for it to fit.
    */
   const layout = computed(() => {
-    const size = fontSize.value
     const placeSize = placeFontSize.value
 
     // The dots are placed by the data, not by this; they only block.
-    const blocked: Rect[] = props.areas.map((area) => {
-      const r = radius(area.count)
-      return { x: area.cx - r, y: area.cy - r, w: 2 * r, h: 2 * r }
+    const blocked: Rect[] = marks.value.map((mark) => {
+      const r = radius(mark.count)
+      return { x: mark.cx - r, y: mark.cy - r, w: 2 * r, h: 2 * r }
     })
 
-    // Digits are narrower than the em they sit in; 0.62 is close enough for a
-    // box that only has to decide whether two labels touch.
-    const counts: MapArea[] = []
-    const countBoxes: Rect[] = []
-    for (const area of [...props.areas].sort((a, b) => b.count - a.count)) {
-      const width = size * (0.62 * String(area.count).length + 0.5)
-      const rect = { x: area.cx - width / 2, y: area.cy - size * 0.6, w: width, h: size * 1.2 }
-      if (countBoxes.some((other) => overlaps(rect, other))) continue
-      countBoxes.push(rect)
-      counts.push(area)
-    }
+    // Every number is drawn: there used to be a pass here that dropped a count
+    // whose box covered one already placed, and merging the dots made it
+    // unreachable. The radius floor holds a label of `digits` digits inside a
+    // dot of `0.32·digits + 0.42` ems while the box it needs is
+    // `0.31·digits + 0.25` wide and 0.6 tall — so a number always sits strictly
+    // inside its own dot, and dots no longer overlap.
 
     // Only what is on screen may take up space; an off-screen village must not
     // spend a slot a visible one could have had.
     const half = visible.value.w / 2
     const halfHeight = visible.value.h / 2
-    const taken = [...blocked, ...countBoxes]
+    const taken = [...blocked]
     const places: PlacedLabel[] = []
     for (const place of props.places ?? []) {
       if (Math.abs(place.x - view.value.cx) > half) continue
@@ -416,7 +490,7 @@
       if (places.length >= MAX_PLACE_LABELS) break
     }
 
-    return { counts, places }
+    return { places }
   })
 
   /**
@@ -502,12 +576,12 @@
 
         <g class="dots">
           <circle
-            v-for="area in painted"
-            :key="area.plz"
-            :class="`step-${stepFor(area.count)}`"
-            :cx="area.cx"
-            :cy="area.cy"
-            :r="radius(area.count)"
+            v-for="mark in marks"
+            :key="mark.key"
+            :class="`step-${stepFor(mark.count)}`"
+            :cx="mark.cx"
+            :cy="mark.cy"
+            :r="radius(mark.count)"
           />
         </g>
 
@@ -515,15 +589,15 @@
              readable over any step of the ramp without a box around it. -->
         <g class="labels" :style="{ fontSize: `${fontSize}px` }" aria-hidden="true">
           <text
-            v-for="area in layout.counts"
-            :key="area.plz"
-            :class="`step-${stepFor(area.count)}`"
-            :x="area.cx"
-            :y="area.cy"
+            v-for="mark in marks"
+            :key="mark.key"
+            :class="`step-${stepFor(mark.count)}`"
+            :x="mark.cx"
+            :y="mark.cy"
             text-anchor="middle"
             dominant-baseline="central"
           >
-            {{ area.count }}
+            {{ mark.count }}
           </text>
         </g>
       </svg>
@@ -678,16 +752,19 @@
   .areas path {
     fill: var(--fill);
     fill-rule: evenodd;
-    /* A hairline in the surface colour keeps two neighbouring areas apart —
-       the 2 px gap a stacked mark would get, at map scale. */
-    stroke: #faf5eb;
-    stroke-width: 1;
+    /* Drawn in the step's own ink rather than in the surface colour. A hairline
+       the colour of the page separates two neighbours only where there is page
+       behind it — and three villages that share borders, all at the same count
+       and therefore the same fill, ran together into one blob. The ink of a step
+       is the colour its numbers were contrast-checked against, so the edge is
+       legible on every step of the ramp and in both modes, without a second
+       palette to keep in sync. */
+    stroke: var(--ink);
+    stroke-opacity: 0.55;
+    stroke-width: 1.25;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
     opacity: 0.85;
-  }
-  .is-dark .areas path {
-    stroke: #2a2520;
   }
 
   .dots circle {

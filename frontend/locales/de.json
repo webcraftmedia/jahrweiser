@@ -5,7 +5,7 @@
       "calendar": "Kalender",
       "label": "Hauptnavigation",
       "map": "Karte",
-      "map-incomplete": "Karte — deine Postleitzahl fehlt noch",
+      "map-incomplete": "Karte — deine Postleitzahl fehlt oder ist ungültig",
       "telegram": "Telegram-Kanäle"
     },
     "Footer": {
@@ -266,7 +266,7 @@
       "error": "Die Karte konnte nicht geladen werden. Bitte später erneut versuchen.",
       "locked": {
         "cta": "Postleitzahl hinterlegen",
-        "text": "Die Karte zeigt, wo unsere Mitglieder wohnen — sichtbar wird sie, sobald du selbst eine Postleitzahl hinterlegt hast. Was du hier durchscheinen siehst, sind Beispielwerte.",
+        "text": "Die Karte zeigt, wo unsere Mitglieder wohnen — sichtbar wird sie, sobald du selbst eine gültige Postleitzahl hinterlegt hast. Was du hier durchscheinen siehst, sind Beispielwerte.",
         "title": "Karte freischalten"
       },
       "map-label": "Mitglieder je Postleitzahl, {located} verortet",
@@ -366,8 +366,13 @@
         "intro": "Verwalte hier deine persönlichen Angaben.",
         "lastName": "Nachname",
         "postalCode": "Postleitzahl",
+        "postalCode-checking": "Wird geprüft …",
+        "postalCode-format": "Eine deutsche Postleitzahl besteht aus fünf Ziffern.",
         "postalCode-hint": "Deine Postleitzahl erscheint anonym und zusammengefasst — also ohne Namen — auf der Karte, die zeigt, woher unsere Gemeinschaft kommt. Die Karte ist ausschließlich für die Community sichtbar und nicht öffentlich; angezeigt wird sie dir, sobald du selbst eine Postleitzahl hinterlegt hast.",
+        "postalCode-known": "{plz} — {ort}",
         "postalCode-placeholder": "z. B. 64673",
+        "postalCode-unchecked": "Die Postleitzahl lässt sich gerade nicht prüfen — du kannst trotzdem speichern.",
+        "postalCode-unknown": "Diese Postleitzahl kennt die Karte nicht. Bitte prüfe deine Eingabe.",
         "save": "Speichern",
         "saved": "Gespeichert.",
         "saving": "Wird gespeichert..."

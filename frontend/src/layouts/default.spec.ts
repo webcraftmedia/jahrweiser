@@ -61,7 +61,11 @@ describe('Layout: Default', () => {
 
   it('hides the icon rail while signed out', async () => {
     const html = await (await renderSuspended(Layout, { route: '/' })).html()
-    expect(html).not.toContain('AppIconRail')
+    // The rail's own landmark, not the word: the header's burger menu lists the
+    // same sections and borrows their labels from the rail's translations. That
+    // menu is `v-show`n away for a signed-out visitor, and — unlike the rail —
+    // fetches nothing, so it is harmless there. The rail is the thing that must
+    // not mount: it asks three endpoints, and a 401 forces a logout.
     expect(html).not.toContain('aria-label="components.AppIconRail.label"')
   })
 

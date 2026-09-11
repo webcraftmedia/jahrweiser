@@ -53,11 +53,22 @@ describe('map/members.get', () => {
     ['the member has no postal code', [{ postalCode: null }]],
     ['their postal code is empty', [{ postalCode: '  ' }]],
     ['they are not in the sidecar yet', []],
+    // The gate is "can the map place you", not "is the column filled" — a code
+    // nobody can draw buys no more of the aggregate than an empty one.
+    ['their postal code is not five digits', [{ postalCode: '1234' }]],
+    ['their postal code matches no area', [{ postalCode: '99999' }]],
   ])('refuses with no data at all when %s', async (_case, rows) => {
     // The blurred preview the page shows is invented on the client. Sending
     // the real aggregate and blurring it in CSS would be no protection at all.
     queueDbResults(rows)
     await expect(fn({})).rejects.toThrow('postal-code-required')
+  })
+
+  it('opens for a code a DAV client wrote in a decorated form', async () => {
+    // "D-64673" is the same place as "64673" and is normalised everywhere else;
+    // the gate must not be the one place that reads it as a stranger.
+    queueDbResults([{ postalCode: 'D-64673' }], [{ postalCode: '64673', count: 1 }], [{ count: 1 }])
+    await expect(fn({})).resolves.toMatchObject({ located: 1, unlocated: 0 })
   })
 
   it('aggregates once the member is on the map themselves', async () => {

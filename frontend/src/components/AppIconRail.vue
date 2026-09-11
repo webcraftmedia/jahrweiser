@@ -1,98 +1,21 @@
 <script setup lang="ts">
-  import IconBlaettchen from '~/assets/icon-blaettchen.svg'
-  import IconCalendar from '~/assets/icon-calendar.svg'
-  import IconMap from '~/assets/icon-map.svg'
-  import IconTelegram from '~/assets/icon-telegram.svg'
-
   /**
    * Top-level navigation, icons only. Rendered twice by the default layout: as
    * a narrow rail beside the content on desktop, as a bottom bar on mobile
    * (thumb reach, and the calendar keeps the full width on small screens).
+   *
+   * The entries themselves come from useAppSections(), which the burger menu
+   * reads too — on a phone the same sections are offered as text there.
    */
   const props = defineProps<{ orientation: 'vertical' | 'horizontal' }>()
 
-  const { t } = useI18n()
   const route = useRoute()
-  const { hasChannels, load: loadChannels } = useTelegramChannels()
-  const { hasIssues, load: loadIssues } = useBlaettchen()
-  const { hasPostalCode, loadStatus } = useMemberMap()
+  const { sections: items, load } = useAppSections()
 
-  // Both entries only exist when there is something behind them. Loaded here
-  // rather than on the pages so the rail can decide before anyone clicks. The
-  // map status is the same idea for a different decision — whether to mark the
-  // map as incomplete — and is a single-row lookup, not the map data.
-  onMounted(() => {
-    void loadChannels()
-    void loadIssues()
-    void loadStatus()
-  })
-
-  interface RailItem {
-    to: string
-    label: string
-    icon: unknown
-    /** True while this item's section is open. */
-    isActive: (path: string) => boolean
-    /** Marks the entry as needing something from the member before it works. */
-    warn?: boolean
-  }
-
-  /**
-   * The calendar owns `/` plus the dated permalinks it pushes into the URL
-   * (/2026/09, /2026/09/event/<id>) — see the route pattern in pages/index.vue.
-   * The pattern stays deliberately flat — a single bounded `\d{4}` followed by
-   * a separator — so there is nothing for a backtracking engine to chew on.
-   */
-  function isCalendarPath(path: string): boolean {
-    return path === '/' || /^\/\d{4}(\/|$)/.test(path)
-  }
-
-  const items = computed<RailItem[]>(() => [
-    {
-      to: '/',
-      label: t('components.AppIconRail.calendar'),
-      icon: IconCalendar,
-      isActive: isCalendarPath,
-    },
-    // Hidden while no issue has been published — and equally when they could
-    // not be read at all, same reasoning as Telegram below.
-    ...(hasIssues.value
-      ? [
-          {
-            to: '/blaettchen',
-            label: t('components.AppIconRail.blaettchen'),
-            icon: IconBlaettchen,
-            isActive: (path: string) => path === '/blaettchen',
-          },
-        ]
-      : []),
-    // Hidden when no invitations are configured — and equally when they could
-    // not be read at all, so a broken config never offers members a link into
-    // an error page. The endpoint still logs and answers 500 for the operator.
-    ...(hasChannels.value
-      ? [
-          {
-            to: '/telegram',
-            label: t('components.AppIconRail.telegram'),
-            icon: IconTelegram,
-            isActive: (path: string) => path === '/telegram',
-          },
-        ]
-      : []),
-    // Always offered, unlike the two above: the map exists for every member,
-    // it just cannot show anything until they have given their own postal
-    // code. The marker says so before the click rather than after it.
-    {
-      to: '/karte',
-      label:
-        hasPostalCode.value === false
-          ? t('components.AppIconRail.map-incomplete')
-          : t('components.AppIconRail.map'),
-      icon: IconMap,
-      isActive: (path: string) => path === '/karte',
-      warn: hasPostalCode.value === false,
-    },
-  ])
+  // The rail owns the loading: it is mounted for signed-in members only and on
+  // every page, so the lists are there before anyone clicks. The header renders
+  // on the login page too and must not fetch — see useAppSections().
+  onMounted(load)
 
   const isVertical = computed(() => props.orientation === 'vertical')
 </script>
@@ -110,8 +33,8 @@
       v-for="item in items"
       :key="item.to"
       :to="item.to"
-      :title="item.label"
-      :aria-label="item.label"
+      :title="item.accessibleLabel"
+      :aria-label="item.accessibleLabel"
       :aria-current="item.isActive(route.path) ? 'page' : undefined"
       :class="[
         item.isActive(route.path)

@@ -116,6 +116,34 @@
 
           <!-- Menu Items -->
           <nav class="py-2">
+            <!-- The same sections the icon rail offers, as text. The rail is a
+                 row of unlabelled icons at the bottom edge; whoever does not
+                 read it as navigation looks for the menu, and has to find them
+                 there. One list, one source (useAppSections), so the two can
+                 never disagree about what exists. -->
+            <NuxtLink
+              v-for="section in sections"
+              :key="section.to"
+              :to="section.to"
+              :aria-label="section.accessibleLabel"
+              :aria-current="section.isActive(route.path) ? 'page' : undefined"
+              class="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
+              :class="
+                section.isActive(route.path)
+                  ? 'text-sienna dark:text-sienna-light'
+                  : 'text-navy dark:text-ivory'
+              "
+              @click="toggleMobileMenu"
+            >
+              <component :is="section.icon" class="menu-icon shrink-0" aria-hidden="true" />
+              {{ section.label }}
+              <!-- Same marker as on the rail, and as there it is never the only
+                   thing saying it — the link's accessible name does too. -->
+              <span v-if="section.warn" class="menu-warn ml-auto" aria-hidden="true" />
+            </NuxtLink>
+
+            <div class="my-2 border-t border-navy/10 dark:border-poster-darkBorder" />
+
             <NuxtLink
               v-if="user?.role === 'admin'"
               to="/admin"
@@ -220,6 +248,12 @@
 
   const { user, loggedIn, clear: clearSession } = useUserSession()
   const { legend, hiddenCalendars, toggleCalendar } = useCalendarFilter()
+  // Read only, never loaded here: the header renders on the login page too, and
+  // a request from a signed-out visitor is a 401, which
+  // src/plugins/auth-redirect.ts turns into a forced logout. The icon rail —
+  // mounted for signed-in members on every page — does the fetching.
+  const { sections } = useAppSections()
+  const route = useRoute()
   const mobileMenuOpen = ref(false)
   const { openChangelog: triggerChangelog } = useChangelog()
 
@@ -289,6 +323,27 @@
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+  }
+
+  /* Section icons in the mobile menu. Held back like the rail's, and for the
+     same reason — nuxt-svgo forces `fill: currentColor` onto every shape, so
+     without this the icon collapses into a silhouette of itself. */
+  .menu-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill-opacity: 0.45;
+  }
+
+  /* The rail's warning dot, in a list rather than on an icon: no ring needed,
+     nothing overlaps it here. */
+  .menu-warn {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: #d97706;
+  }
+  :is(.dark .menu-warn) {
+    background: #f59e0b;
   }
 
   /* Nav link hover underline */

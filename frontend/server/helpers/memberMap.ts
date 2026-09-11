@@ -98,6 +98,25 @@ export function normalisePostalCode(value: string | null | undefined): string | 
   return digits.length === 5 ? digits : null
 }
 
+/**
+ * Resolve a stored or typed postal code to the area it names, or null.
+ *
+ * This is the single definition of "valid postal code" in the app: five digits
+ * that the geometry actually knows. The settings form refuses anything else,
+ * the map's gate opens for nothing else, and the rail's marker means exactly
+ * this and nothing else — a code that is merely *present* is no use to a member
+ * whose point the map cannot draw.
+ */
+export function lookupPostalCode(
+  value: string | null | undefined,
+  geometry: LoadedAreas,
+): { plz: string; ort: string } | null {
+  const plz = normalisePostalCode(value)
+  if (!plz) return null
+  const area = geometry.areas.get(plz)
+  return area ? { plz, ort: area.o } : null
+}
+
 /** One row of the `GROUP BY postal_code` the endpoint runs. */
 export interface PostalCodeCount {
   postalCode: string | null

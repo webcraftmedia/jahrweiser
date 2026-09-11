@@ -6,6 +6,7 @@ import {
   mockCalendarEndpoints,
   mockMapEndpoints,
   navigateClientSide,
+  railLink,
 } from './helpers/api-mocks'
 
 test.describe('Karte', () => {
@@ -18,7 +19,7 @@ test.describe('Karte', () => {
     await mockMapEndpoints(page)
     await navigateClientSide(page, '/')
 
-    await page.locator('nav a[href="/karte"]').first().click()
+    await railLink(page, '/karte').click()
     await expect(page).toHaveURL(/\/karte$/)
 
     // One shape per postal code, and the numbers on top of them.
@@ -64,11 +65,48 @@ test.describe('Karte', () => {
       .toBe(0)
   })
 
+  test.describe('on a phone', () => {
+    test.use({ viewport: { width: 375, height: 667 } })
+
+    test('offers the sections in the burger menu as well as in the bar', async ({ page }) => {
+      // The bottom bar is a row of unlabelled icons. Whoever does not read it
+      // as navigation looks in the menu, and has to find the sections there.
+      await mockMapEndpoints(page)
+      await navigateClientSide(page, '/')
+
+      await page.locator('[aria-controls="navbar-mobile"]').click()
+      const menu = page.locator('#navbar-mobile')
+      await expect(menu).toHaveClass(/menu-open/)
+      for (const section of ['Kalender', 'Blättchen', 'Telegram-Kanäle', 'Karte']) {
+        await expect(menu.getByRole('link', { name: section, exact: true })).toBeVisible()
+      }
+
+      await menu.getByRole('link', { name: 'Karte', exact: true }).click()
+      await expect(page).toHaveURL(/\/karte$/)
+      // Opening a section closes the menu behind it.
+      await expect(menu).not.toHaveClass(/menu-open/)
+    })
+
+    test('marks the map in the menu too while the postal code is missing', async ({ page }) => {
+      await mockMapEndpoints(page, { locked: true })
+      await navigateClientSide(page, '/')
+
+      await page.locator('[aria-controls="navbar-mobile"]').click()
+      const entry = page.locator('#navbar-mobile a[href="/karte"]')
+      await expect(entry.locator('.menu-warn')).toBeVisible()
+      // The dot is decorative; the accessible name is what carries the state.
+      await expect(entry).toHaveAttribute(
+        'aria-label',
+        'Karte — deine Postleitzahl fehlt oder ist ungültig',
+      )
+    })
+  })
+
   test.describe('without a postal code', () => {
     test('marks the rail entry', async ({ page }) => {
       await mockMapEndpoints(page, { locked: true })
       await navigateClientSide(page, '/')
-      await expect(page.locator('nav a[href="/karte"] .rail-warn').first()).toBeVisible()
+      await expect(railLink(page, '/karte').locator('.rail-warn')).toBeVisible()
     })
 
     test('shows a blurred preview and points at the settings', async ({ page }) => {

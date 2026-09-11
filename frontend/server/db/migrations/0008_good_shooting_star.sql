@@ -1,0 +1,1 @@
+ALTER TABLE `metrics_daily` ADD `with_postal_code` int;

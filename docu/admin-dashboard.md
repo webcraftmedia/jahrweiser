@@ -1,8 +1,8 @@
 # Admin overview (/admin)
 
-Five current numbers as tiles — members, newsletter subscribers, people who
-opted out, Telegram channels, Blättchen issues — plus a twelve-month curve for
-the two that move: membership and the newsletter.
+Six current numbers as tiles — members, members the map can place, newsletter
+subscribers, people who opted out, Telegram channels, Blättchen issues — plus a
+twelve-month curve for the two that move: membership and the newsletter.
 
 ## What is measured, and what is reconstructed
 
@@ -41,10 +41,28 @@ Its two limits, both understating the past:
 Once a month has a snapshot, the measurement replaces the reconstruction and
 the line turns solid.
 
+**Postal codes have no reconstruction at all** — and that is a third case, not
+a weaker version of the two above. `users.postal_code` was backfilled from DAV
+in a single sync run, so `updated_at` says when the mirror was written, not when
+somebody entered their code. There is no biased-but-usable inference to fall
+back on, so `metrics_daily.with_postal_code` is nullable and the series carries
+`null` for every month before the measurement: the line simply starts where the
+measurements start, and the card says so. Rows written before the metric existed
+keep that `null` too, which is why the column is nullable rather than
+`NOT NULL DEFAULT 0` — a zero would read as "nobody had a postal code".
+
+What counts is the **map's** definition, not "the column is filled": five digits
+that the geometry actually knows. A code the map cannot place puts nobody on it,
+`/api/map/status` already refuses for it, and the same aggregate
+(`GROUP BY postal_code`) feeds both — so the tile and the map's `located` cannot
+drift apart. Without the geometry artefact the count falls back to the format
+check, the same fallback the status endpoint makes.
+
 ## Where the numbers come from
 
-`metrics_daily` holds one row per day: members, newsletter subscribed and
-unsubscribed, Telegram channels, Blättchen issues.
+`metrics_daily` holds one row per day: members, members with a usable postal
+code, newsletter subscribed and unsubscribed, Telegram channels, Blättchen
+issues.
 
 It is written at the end of every **sync run** — the cron already hits
 `POST /api/admin/sync-now` every ten minutes, and the row is keyed by the day
@@ -54,7 +72,8 @@ and swallowed: it must never make a cron run look like a failed sync.
 
 `GET /api/admin/metrics` (admin-only) merges the two sources: measured values
 where a snapshot exists for that month, the derivation before that, and `null`
-for newsletter months that were never measured.
+wherever neither exists — which for the postal-code figure means every month
+without a snapshot, since it has no derivation.
 
 ## The charts
 
@@ -65,13 +84,18 @@ Membership and newsletter are **separate charts on purpose**: they are
 different measures, and putting them on one plot would need a second y-axis,
 which is the single most misleading thing a chart can do.
 
+Postal-code coverage, by the same argument, belongs **in** the member chart: it
+is a subset of the member count, measured in the same unit and on the same
+scale, so one y-axis carries both — and the gap between the two lines is the
+open address work, which is the thing an operator actually wants to see.
+
 Series colours were validated with the dataviz palette checker against both
 surfaces (worst adjacent colour-vision ΔE 13.7 light / 13.8 dark):
 
 | Series | Light | Dark |
 | --- | --- | --- |
 | Members / opted out | `sienna #c2410c` | `sienna-light #ea580c` |
-| Subscribers | `craft #0d9488` | `craft #0d9488` |
+| Subscribers / with postal code | `craft #0d9488` | `craft #0d9488` |
 
 Green against orange was the obvious first choice and was rejected: under
 deuteranopia the pair collapses to ΔE 1.7 — indistinguishable.

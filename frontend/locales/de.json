@@ -90,12 +90,14 @@
           "members": "Mitglieder-Entwicklung",
           "month": "Monat",
           "newsletter": "Newsletter-Entwicklung",
-          "newsletter-derived-note": "Gestrichelt: aus dem heutigen Stand und dem Zeitpunkt der letzten Änderung je Person rekonstruiert, nicht gemessen. Wer abbestellt und später wieder bestellt hat, fehlt darin — der ältere Teil der Kurve zeigt daher eher zu wenige Abbestellungen."
+          "newsletter-derived-note": "Gestrichelt: aus dem heutigen Stand und dem Zeitpunkt der letzten Änderung je Person rekonstruiert, nicht gemessen. Wer abbestellt und später wieder bestellt hat, fehlt darin — der ältere Teil der Kurve zeigt daher eher zu wenige Abbestellungen.",
+          "plz-note": "Die PLZ-Kurve beginnt dort, wo die Messung begonnen hat: für frühere Monate wurde die Zahl nie erhoben und lässt sich auch nicht nachträglich ermitteln. Gezählt wird nur eine Postleitzahl, die die Karte auch kennt."
         },
         "error": "Die Kennzahlen konnten nicht geladen werden.",
         "tile": {
           "blaettchen": "Blättchen-Ausgaben",
           "members": "Mitglieder",
+          "plz": "Mit PLZ",
           "subscribed": "Newsletter-Abos",
           "telegram": "Telegram-Kanäle",
           "unsubscribed": "Abbestellt"

@@ -13,6 +13,8 @@
     derived: boolean
     newsletterSubscribed: number
     newsletterUnsubscribed: number
+    /** null = not measured that month; see the server-side type. */
+    withPostalCode: number | null
   }
 
   interface MetricsResponse {
@@ -22,6 +24,7 @@
       newsletterUnsubscribed: number
       telegramChannels: number
       blaettchenIssues: number
+      withPostalCode: number
     }
     months: MetricsMonth[]
   }
@@ -37,6 +40,7 @@
       newsletterUnsubscribed: 0,
       telegramChannels: 0,
       blaettchenIssues: 0,
+      withPostalCode: 0,
     },
     months: [],
   }
@@ -73,11 +77,21 @@
 
   const labels = computed(() => metrics.value.months.map((m) => monthLabel(m.month)))
 
+  /**
+   * Members and, against them, how many of them the map can place. The gap
+   * between the two lines is the open address work — which is the whole reason
+   * the second series sits in this chart rather than in one of its own.
+   */
   const memberSeries = computed<ChartSeries[]>(() => [
     {
       tone: 'members',
       label: t('pages.admin.dashboard.tile.members'),
       values: metrics.value.months.map((m) => m.members),
+    },
+    {
+      tone: 'postal',
+      label: t('pages.admin.dashboard.tile.plz'),
+      values: metrics.value.months.map((m) => m.withPostalCode),
     },
   ])
 
@@ -105,8 +119,19 @@
     return firstMeasured === -1 ? months.length : firstMeasured
   })
 
+  /**
+   * Whether the postal-code line starts later than the chart does — i.e. there
+   * are months in the window that predate the measurement. The note explaining
+   * the gap is worth showing exactly then.
+   */
+  const postalStartsLate = computed(() => {
+    const months = metrics.value.months
+    return months.length > 0 && months[0]!.withPostalCode === null
+  })
+
   const tiles = computed(() => [
     { key: 'members', value: metrics.value.current.members },
+    { key: 'plz', value: metrics.value.current.withPostalCode },
     { key: 'subscribed', value: metrics.value.current.newsletterSubscribed },
     { key: 'unsubscribed', value: metrics.value.current.newsletterUnsubscribed },
     { key: 'telegram', value: metrics.value.current.telegramChannels },
@@ -116,6 +141,7 @@
   function tileLabel(key: string): string {
     return {
       members: t('pages.admin.dashboard.tile.members'),
+      plz: t('pages.admin.dashboard.tile.plz'),
       subscribed: t('pages.admin.dashboard.tile.subscribed'),
       unsubscribed: t('pages.admin.dashboard.tile.unsubscribed'),
       telegram: t('pages.admin.dashboard.tile.telegram'),
@@ -145,9 +171,9 @@
     </p>
 
     <template v-else>
-      <!-- The five current numbers. No chart where a chart would only decorate
+      <!-- The six current numbers. No chart where a chart would only decorate
            a single-digit figure. -->
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <div v-for="tile in tiles" :key="tile.key" :class="[cardClass, 'p-4']">
           <p class="text-xs font-body text-navy/60 dark:text-poster-darkMuted">
             {{ tileLabel(tile.key) }}
@@ -171,6 +197,12 @@
           class="mt-3 text-xs font-body text-navy/60 dark:text-poster-darkMuted"
         >
           {{ $t('pages.admin.dashboard.chart.derived-note') }}
+        </p>
+        <p
+          v-if="postalStartsLate"
+          class="mt-2 text-xs font-body text-navy/60 dark:text-poster-darkMuted"
+        >
+          {{ $t('pages.admin.dashboard.chart.plz-note') }}
         </p>
       </div>
 

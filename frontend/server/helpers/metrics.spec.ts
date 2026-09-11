@@ -445,6 +445,42 @@ describe('buildMonthlySeries', () => {
     expect(series.every((month) => month.withPostalCode === null)).toBe(true)
   })
 
+  it('takes the running month’s postal-code count from the live number', async () => {
+    // What the dashboard showed before this: a tile saying 3 above a chart
+    // whose newest point was empty, because no sync had written a snapshot yet.
+    queueDbResults([user('2025-09-01')], [])
+    const series = await buildMonthlySeries(NOW, 3)
+    expect(series[11]).toMatchObject({ month: '2026-09', withPostalCode: 3 })
+    expect(series[10]!.withPostalCode).toBeNull()
+  })
+
+  it('does not carry the live count into earlier months', async () => {
+    // It says something about today, not about March.
+    queueDbResults([], [])
+    const series = await buildMonthlySeries(NOW, 3)
+    expect(series.slice(0, 11).every((month) => month.withPostalCode === null)).toBe(true)
+  })
+
+  it('prefers the live count over the running month’s snapshot', async () => {
+    // The snapshot is up to ten minutes old; the live count is now.
+    queueDbResults(
+      [],
+      [
+        {
+          day: '2026-09-08',
+          members: 12,
+          newsletterSubscribed: 10,
+          newsletterUnsubscribed: 2,
+          telegramChannels: 0,
+          blaettchenIssues: 0,
+          withPostalCode: 5,
+        },
+      ],
+    )
+    const series = await buildMonthlySeries(NOW, 7)
+    expect(series[11]).toMatchObject({ members: 12, withPostalCode: 7 })
+  })
+
   it('keeps it empty for a snapshot taken before the metric existed', async () => {
     queueDbResults(
       [],

@@ -253,8 +253,18 @@ export async function recordDailyMetrics(config: MetricsConfig, now = new Date()
  * started. The reconstruction is marked as such (`derived`) rather than passed
  * off as a measurement: it carries known biases, all of which fade as the
  * curve approaches today.
+ *
+ * `liveWithPostalCode` is the count as of right now, for the month that is
+ * still running. The other series get their current month from the derivation,
+ * which is exact for the present — for the postal code there is no derivation
+ * at all, so without this the newest point would stay empty until the next
+ * sync writes a snapshot, and on an installation whose cron never fires it
+ * would stay empty for good while the tile above it shows the number.
  */
-export async function buildMonthlySeries(now = new Date()): Promise<MetricsMonth[]> {
+export async function buildMonthlySeries(
+  now = new Date(),
+  liveWithPostalCode: number | null = null,
+): Promise<MetricsMonth[]> {
   const db = useDb()
   const months = monthKeys(METRICS_MONTHS, now)
   const windowStart = monthEnd(months[0]!)
@@ -285,6 +295,8 @@ export async function buildMonthlySeries(now = new Date()): Promise<MetricsMonth
 
   return months.map((month, index) => {
     const snapshot = measured.get(month)
+    // The running month, counted now rather than whenever the last sync was.
+    const live = index === months.length - 1 ? liveWithPostalCode : null
     return {
       month,
       // The derivations are built from the same month list, so index-for-index.
@@ -296,10 +308,12 @@ export async function buildMonthlySeries(now = new Date()): Promise<MetricsMonth
       newsletterUnsubscribed: snapshot
         ? snapshot.newsletterUnsubscribed
         : derivedNewsletter.unsubscribed[index]!,
-      // Measured or nothing. A snapshot from before the metric existed carries
-      // null itself, so both gaps — no snapshot, and a snapshot without the
-      // figure — end up as the same "not measured" the chart draws as a gap.
-      withPostalCode: snapshot ? snapshot.withPostalCode : null,
+      // Measured or nothing — but the live count wins for the running month,
+      // where it is the fresher of the two measurements. A snapshot from
+      // before the metric existed carries null itself, so both gaps — no
+      // snapshot, and a snapshot without the figure — end up as the same
+      // "not measured" the chart draws as a gap.
+      withPostalCode: live ?? snapshot?.withPostalCode ?? null,
     }
   })
 }

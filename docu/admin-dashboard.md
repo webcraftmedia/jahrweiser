@@ -51,6 +51,13 @@ measurements start, and the card says so. Rows written before the metric existed
 keep that `null` too, which is why the column is nullable rather than
 `NOT NULL DEFAULT 0` — a zero would read as "nobody had a postal code".
 
+The **running month is the exception**: it is counted live when the dashboard
+asks, not taken from a snapshot. The other series get their current month from
+the derivation, which is exact for the present; the postal-code count has no
+derivation, so without this the newest point would sit empty until the next
+sync — and on an installation whose cron never fires (any dev machine) it would
+sit empty for good, right underneath a tile showing the number.
+
 What counts is the **map's** definition, not "the column is filled": five digits
 that the geometry actually knows. A code the map cannot place puts nobody on it,
 `/api/map/status` already refuses for it, and the same aggregate

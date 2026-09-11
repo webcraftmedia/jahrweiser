@@ -19,8 +19,11 @@ export default defineEventHandler(async (event): Promise<MetricsResponse> => {
   }
 
   const config = useRuntimeConfig()
+  const current = await collectCurrentMetrics(config)
   return {
-    current: await collectCurrentMetrics(config),
-    months: await buildMonthlySeries(),
+    current,
+    // The postal-code count is already in hand, and the running month has no
+    // other source for it — see `buildMonthlySeries`.
+    months: await buildMonthlySeries(new Date(), current.withPostalCode),
   }
 })

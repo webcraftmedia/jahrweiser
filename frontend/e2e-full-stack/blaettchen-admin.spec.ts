@@ -139,7 +139,15 @@ test.describe('admin: publishing the Blättchen', () => {
 
     await page.goto('/blaettchen')
     await preparePage(page)
-    await expect(page.locator('li time')).toContainText(['18. November 2026', '1. September 2026'])
+    // The chip abbreviates the month so that a row fits one line on a phone
+    // whatever the month is called; the spoken label keeps it written out.
+    // This is the only suite with the real translations, so it is the only
+    // place the two can be checked against each other.
+    await expect(page.locator('li time')).toContainText(['18. Nov. 2026', '1. Sept. 2026'])
+    await expect(page.locator('li a[href^="/api/blaettchen/"]').first()).toHaveAttribute(
+      'aria-label',
+      /18\. November 2026/,
+    )
 
     // 5. Deleting takes two clicks and really removes the file.
     await page.goto('/admin/blaettchen')

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.13.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.13.0...v1.13.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* **frontend:** fix navigation console errors ([#386](https://github.com/webcraftmedia/jahrweiser/issues/386)) ([8c3f181](https://github.com/webcraftmedia/jahrweiser/commit/8c3f181412c9426b9267dee75f909058fd383f81))
+* **frontend:** mobile optimization tg & blaettchen ([#385](https://github.com/webcraftmedia/jahrweiser/issues/385)) ([1be0bb6](https://github.com/webcraftmedia/jahrweiser/commit/1be0bb6bb7f9c46aed9aefca9c297636793df059))
+* **frontend:** statistics for plz ([#383](https://github.com/webcraftmedia/jahrweiser/issues/383)) ([9716d34](https://github.com/webcraftmedia/jahrweiser/commit/9716d3484813efd65acf397702e41f23ddb80828))
+
 ## [1.13.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.12.1...v1.13.0) (2026-09-11)
 
 

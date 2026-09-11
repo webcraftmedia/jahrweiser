@@ -194,6 +194,49 @@ export async function mockMapEndpoints(page: Page, { locked = false } = {}) {
   )
 }
 
+/**
+ * The profile form's endpoints: the stored profile, the postal-code lookup it
+ * checks against while typing, and the save.
+ *
+ * The lookup answers for `KNOWN_POSTAL_CODES` and refuses everything else —
+ * which is the map's own rule, reduced to what a test needs. `saveFails` mocks
+ * the 400 the endpoint answers for a code it will not store.
+ */
+export const KNOWN_POSTAL_CODES: Record<string, string> = {
+  '64673': 'Zwingenberg',
+  '64625': 'Bensheim',
+}
+
+export async function mockProfileEndpoints(
+  page: Page,
+  { postalCode = '', saveFails = false } = {},
+) {
+  await page.route('**/api/me/profile', async (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({
+        status: saveFails ? 400 : 200,
+        contentType: 'application/json',
+        body: JSON.stringify(saveFails ? { statusMessage: 'invalid-postal-code' } : {}),
+      })
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ firstName: 'Test', lastName: 'User', postalCode }),
+    })
+  })
+
+  await page.route('**/api/map/postal-code*', async (route) => {
+    const plz = new URL(route.request().url()).searchParams.get('plz') ?? ''
+    const ort = KNOWN_POSTAL_CODES[plz]
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ known: Boolean(ort), plz: ort ? plz : null, ort: ort ?? null }),
+    })
+  })
+}
+
 export async function loginAs(page: Page, user: typeof DEFAULT_USER) {
   // Mock session endpoint — returns authenticated user
   await page.route('**/api/_auth/session', async (route) =>

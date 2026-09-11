@@ -38,7 +38,7 @@ function serving(profile: unknown, options: ServeOptions = {}) {
     (url: string, opts?: { method?: string; query?: { plz?: string } }) => {
       if (url === '/api/map/postal-code') {
         if (lookupFails) return Promise.reject(new Error('offline'))
-        const plz = String(opts?.query?.plz ?? '')
+        const plz = opts?.query?.plz ?? ''
         const ort = KNOWN[plz]
         return Promise.resolve({ known: Boolean(ort), plz: ort ? plz : null, ort: ort ?? null })
       }
@@ -49,6 +49,14 @@ function serving(profile: unknown, options: ServeOptions = {}) {
       return profile instanceof Error ? Promise.reject(profile) : Promise.resolve(profile)
     },
   )
+}
+
+/** Wait out the debounce and the lookup behind it. */
+async function settled(wrapper: { text: () => string }) {
+  await vi.waitFor(() => {
+    expect(wrapper.text()).not.toContain('pages.settings.profile.postalCode-checking')
+  })
+  await nextTick()
 }
 
 /**
@@ -65,11 +73,12 @@ async function mountPage() {
   return wrapper
 }
 
-/** Wait out the debounce and the lookup behind it. */
-async function settled(wrapper: { text: () => string }) {
-  await vi.waitFor(() => {
-    expect(wrapper.text()).not.toContain('pages.settings.profile.postalCode-checking')
-  })
+/**
+ * Let a settled promise and the render it causes run. Used where the point is
+ * that *nothing* changes — `vi.waitFor` cannot wait for an absence.
+ */
+async function flush() {
+  await new Promise((resolve) => setTimeout(resolve, 0))
   await nextTick()
 }
 
@@ -290,6 +299,82 @@ describe('Page: Profil-Einstellungen', () => {
       // One for the code the profile arrived with, one for what was typed.
       expect(asked).toHaveLength(2)
       expect(asked[1]).toStrictEqual(['/api/map/postal-code', { query: { plz: '54321' } }])
+    })
+
+    it('ignores an answer that was overtaken by a newer one', async () => {
+      // Answers can arrive out of order. The one for a half-typed code landing
+      // after the one for the finished code would report the field as wrong
+      // while it is right — and the member could not save a correct code.
+      const pending: {
+        plz: string
+        resolve: (v: unknown) => void
+        reject: (e: unknown) => void
+      }[] = []
+      mock$fetch.mockImplementation((url: string, opts?: { query?: { plz?: string } }) => {
+        if (url !== '/api/map/postal-code') return Promise.resolve(PROFILE)
+        return new Promise((resolve, reject) => {
+          pending.push({ plz: opts?.query?.plz ?? '', resolve, reject })
+        })
+      })
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const wrapper = await mountSuspended(Page, { route: '/settings/profile' })
+      await vi.waitFor(() => {
+        expect(wrapper.text()).not.toContain('pages.settings.loading')
+      })
+
+      /** Type a code and wait for its request to be on the wire. */
+      async function type(value: string) {
+        const expected = pending.length + 1
+        await wrapper.find('#settings-postalCode').setValue(value)
+        await vi.waitFor(() => {
+          expect(pending).toHaveLength(expected)
+        })
+      }
+
+      await vi.waitFor(() => {
+        expect(pending).toHaveLength(1) // the code the profile arrived with
+      })
+      await type('54321')
+      pending[1]!.resolve({ known: true, plz: '54321', ort: 'Andernorts' })
+      await vi.waitFor(() => {
+        expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+          'pages.settings.profile.postalCode-known',
+        )
+      })
+
+      // Both ways a stale answer can come back: with a verdict, and with a
+      // failure. Neither may touch a field that has moved on.
+      pending[0]!.resolve({ known: false, plz: null, ort: null })
+      await flush()
+      expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+        'pages.settings.profile.postalCode-known',
+      )
+
+      await type('11111')
+      await type('54321')
+      pending[3]!.resolve({ known: true, plz: '54321', ort: 'Andernorts' })
+      await vi.waitFor(() => {
+        expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+          'pages.settings.profile.postalCode-known',
+        )
+      })
+      pending[2]!.reject(new Error('offline'))
+      await flush()
+      expect(wrapper.find('#settings-postalCode-state').text()).toBe(
+        'pages.settings.profile.postalCode-known',
+      )
+      error.mockRestore()
+    })
+
+    it('drops a pending lookup when the page is left', async () => {
+      // Leaving mid-keystroke would otherwise fire a request into a component
+      // that is gone, and write its answer into a ref nothing reads any more.
+      const wrapper = await mountPage()
+      await fields(wrapper).postal.setValue('54321')
+      wrapper.unmount()
+      const before = mock$fetch.mock.calls.length
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      expect(mock$fetch).toHaveBeenCalledTimes(before)
     })
 
     it('lets the member save when the check itself is unavailable', async () => {

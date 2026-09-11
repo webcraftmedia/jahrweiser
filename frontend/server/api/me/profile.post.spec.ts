@@ -27,9 +27,7 @@ vi.mock('../../helpers/memberMap', async (importOriginal) => ({
 const GEOMETRY = {
   viewBox: '0 0 4000 5000',
   outline: 'M0 0l1 0z',
-  areas: new Map([
-    ['64653', { o: 'Lorsch', d: 'M0 0l1 0z', c: [1, 2] as [number, number], s: 9 }],
-  ]),
+  areas: new Map([['64653', { o: 'Lorsch', d: 'M0 0l1 0z', c: [1, 2] as [number, number], s: 9 }]]),
 }
 
 const fn = handler as unknown as (e: unknown) => Promise<unknown>

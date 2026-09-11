@@ -68,7 +68,7 @@ describe('map/postal-code.get', () => {
   })
 
   it('refuses something that is not a postal code at all', async () => {
-    await expect(asking('x'.repeat(17))).rejects.toThrow()
+    await expect(asking('x'.repeat(17))).rejects.toThrow(/17|16|too big|String/i)
   })
 
   it('fails loudly when the artefact was never built', async () => {

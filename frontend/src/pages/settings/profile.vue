@@ -43,7 +43,7 @@
   /** The place the code names, once the map has confirmed one. */
   const postalOrt = ref('')
 
-  let lookupTimer: ReturnType<typeof setTimeout> | null = null
+  let lookupTimer: ReturnType<typeof setTimeout> | undefined
   /**
    * Only the newest lookup may write the state. Answers can overtake each
    * other, and the one for "6462" arriving after the one for "64625" would
@@ -73,7 +73,7 @@
     postalOrt.value = ''
     // Invalidates whatever is in flight, and cancels whatever is pending.
     lookupSeq += 1
-    if (lookupTimer) clearTimeout(lookupTimer)
+    clearTimeout(lookupTimer)
     if (!code) {
       postalState.value = 'empty'
       return
@@ -90,7 +90,7 @@
   })
 
   onBeforeUnmount(() => {
-    if (lookupTimer) clearTimeout(lookupTimer)
+    clearTimeout(lookupTimer)
   })
 
   /**

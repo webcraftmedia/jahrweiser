@@ -84,6 +84,10 @@ describe('Header', () => {
     mockCalendarFilter.legend.value = []
     mockCalendarFilter.hiddenCalendars.value = new Set()
     mockChangelogShouldOpen.value = false
+    // useState is shared between mounts; the map marker would leak into the
+    // next test. Unknown is the state the header starts in — the icon rail is
+    // what fetches, and it is not mounted here.
+    useState<boolean | null>('member-map-has-plz', () => null).value = null
   })
 
   it('renders', async () => {
@@ -150,8 +154,56 @@ describe('Header', () => {
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
     expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
     // Click the admin NuxtLink in mobile menu
-    await wrapper.find('#navbar-mobile nav a').trigger('click')
+    await wrapper.find('#navbar-mobile a[href="/admin"]').trigger('click')
     expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
+  })
+
+  describe('sections in the mobile menu', () => {
+    // The icon rail is a row of unlabelled icons at the bottom edge of a phone.
+    // Whoever does not read that as navigation looks in the burger menu, and
+    // has to find the same sections there — see useAppSections().
+    it('lists the sections above the account links', async () => {
+      const wrapper = await mountSuspended(Component)
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      const links = wrapper.findAll('#navbar-mobile nav a').map((a) => a.attributes('href'))
+      // Nothing was loaded in this mount, so only the two unconditional
+      // sections are there — Blättchen and Telegram appear once their lists do.
+      expect(links).toStrictEqual(['/', '/karte', '/admin', '/settings'])
+    })
+
+    it('names every section, rather than leaving the icon to say it', async () => {
+      const wrapper = await mountSuspended(Component)
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      expect(wrapper.find('#navbar-mobile a[href="/karte"]').text()).toBe(
+        'components.AppIconRail.map',
+      )
+    })
+
+    it('closes the menu when a section is opened', async () => {
+      const wrapper = await mountSuspended(Component)
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      await wrapper.find('#navbar-mobile a[href="/karte"]').trigger('click')
+      expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
+    })
+
+    it('carries the map marker, and says what it means', async () => {
+      useState<boolean | null>('member-map-has-plz', () => null).value = false
+      const wrapper = await mountSuspended(Component)
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      const map = wrapper.find('#navbar-mobile a[href="/karte"]')
+      expect(map.find('.menu-warn').exists()).toBe(true)
+      // The dot is decorative; the state lives in the accessible name.
+      expect(map.attributes('aria-label')).toBe('components.AppIconRail.map-incomplete')
+    })
+
+    it('drops the marker once the map can place the member', async () => {
+      useState<boolean | null>('member-map-has-plz', () => null).value = true
+      const wrapper = await mountSuspended(Component)
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      const map = wrapper.find('#navbar-mobile a[href="/karte"]')
+      expect(map.find('.menu-warn').exists()).toBe(false)
+      expect(map.attributes('aria-label')).toBe('components.AppIconRail.map')
+    })
   })
 
   it('closes mobile menu when clicking backdrop', async () => {
@@ -169,11 +221,11 @@ describe('Header', () => {
     // Open mobile menu
     await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
     expect(wrapper.find('#navbar-mobile').classes()).toContain('menu-open')
-    // Admin link should not be present; Settings link should be the only nav link.
+    // Admin link should not be present; Settings is the only account link left,
+    // and the sections above it are unaffected by the role.
     expect(wrapper.find('#navbar-mobile a[href="/admin"]').exists()).toBe(false)
-    const mobileLinks = wrapper.findAll('#navbar-mobile nav a')
-    expect(mobileLinks).toHaveLength(1)
-    expect(mobileLinks[0]!.attributes('href')).toBe('/settings')
+    const mobileLinks = wrapper.findAll('#navbar-mobile nav a').map((a) => a.attributes('href'))
+    expect(mobileLinks).toStrictEqual(['/', '/karte', '/settings'])
     // Logout button should still be present
     expect(wrapper.find('#navbar-mobile nav button').exists()).toBe(true)
   })

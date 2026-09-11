@@ -29,7 +29,7 @@ const querySchema = z.object({
 export default defineEventHandler(async (event): Promise<PostalCodeLookup> => {
   await requireUserSession(event)
 
-  const { plz } = await getValidatedQuery(event, querySchema.parse)
+  const { plz } = querySchema.parse(getQuery(event))
   const geometry = await loadPlzAreas()
   if (!geometry) {
     // No artefact in this deployment — see docu/karte.md. The form treats a

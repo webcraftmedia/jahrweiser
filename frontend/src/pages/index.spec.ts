@@ -1433,20 +1433,24 @@ describe('Page: Index', () => {
   it('redirects / to /YYYY/MM on mount via history.replaceState', async () => {
     mockRoute.path = '/'
     await mount({ route: '/' })
-    expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+    expect(replaceStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2025/01')
   })
 
   it('redirects URL beyond past limit to earliest allowed month', async () => {
     // System time is 2025-01-15, earliest allowed month is December 2024
     mockRoute.path = '/2024/10'
     await mount({ route: '/2024/10' })
-    expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2024/12')
+    expect(replaceStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2024/12')
   })
 
   it('does not redirect when URL already has year/month params', async () => {
     replaceStateSpy.mockClear()
     await mount()
-    expect(replaceStateSpy).not.toHaveBeenCalledWith(null, '', expect.stringMatching(/^\/\d{4}\//))
+    expect(replaceStateSpy).not.toHaveBeenCalledWith(
+      expect.any(Object),
+      '',
+      expect.stringMatching(/^\/\d{4}\//),
+    )
   })
 
   it('navigatePeriod updates URL via history.pushState', async () => {
@@ -1454,7 +1458,25 @@ describe('Page: Index', () => {
     pushStateSpy.mockClear()
     const navButtons = wrapper.findAll('.cv-header-nav button')
     await navButtons[3]!.trigger('click') // next month (view-toggle, ‹, today, ›)
-    expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/02')
+    expect(pushStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2025/02')
+  })
+
+  it('carries the router’s history state over when it rewrites the URL', async () => {
+    // The month buttons change the address bar without the router, to keep the
+    // page (and its fetched events) alive. `history.state` is not ours to drop
+    // while doing so: vue-router keeps its scroll position and its
+    // back/forward bookkeeping there, and clearing it is what the
+    // VUE_ROUTER_R0121 warning in the console was about.
+    const wrapper = await mount()
+    window.history.replaceState({ current: '/2025/01', position: 7 }, '', '/2025/01')
+    pushStateSpy.mockClear()
+    const navButtons = wrapper.findAll('.cv-header-nav button')
+    await navButtons[3]!.trigger('click')
+    expect(pushStateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ current: '/2025/01', position: 7 }),
+      '',
+      '/2025/02',
+    )
   })
 
   it('navigateToToday updates URL via history.pushState', async () => {
@@ -1464,7 +1486,7 @@ describe('Page: Index', () => {
     await navButtons[3]!.trigger('click') // next month (view-toggle, ‹, today, ›)
     pushStateSpy.mockClear()
     await navButtons[2]!.trigger('click') // today
-    expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+    expect(pushStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2025/01')
   })
 
   it('updates calendar on popstate (browser back/forward)', async () => {
@@ -1530,7 +1552,7 @@ describe('Page: Index', () => {
       title: 'Test',
     })
     await vi.waitFor(() => {
-      expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01/event/event-1')
+      expect(pushStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2025/01/event/event-1')
     })
   })
 
@@ -1544,7 +1566,7 @@ describe('Page: Index', () => {
       title: 'Test',
     })
     await vi.waitFor(() => {
-      expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01/event/event-1/3')
+      expect(pushStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2025/01/event/event-1/3')
     })
   })
 
@@ -1565,7 +1587,7 @@ describe('Page: Index', () => {
     const modal = document.getElementById('default-modal')!
     modal.click()
     await nextTick()
-    expect(pushStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+    expect(pushStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2025/01')
   })
 
   it('popstate from event URL back to month URL closes modal', async () => {
@@ -1723,7 +1745,7 @@ describe('Page: Index', () => {
     mockRoute.path = '/2025/01/event/nonexistent'
     await mount({ route: '/2025/01/event/nonexistent' })
     await vi.waitFor(() => {
-      expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+      expect(replaceStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2025/01')
     })
   })
 
@@ -1742,7 +1764,7 @@ describe('Page: Index', () => {
       title: 'Test',
     })
     await vi.waitFor(() => {
-      expect(replaceStateSpy).toHaveBeenCalledWith(null, '', '/2025/01')
+      expect(replaceStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2025/01')
     })
     consoleSpy.mockRestore()
   })

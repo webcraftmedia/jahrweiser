@@ -328,6 +328,28 @@
     return Temporal.PlainDate.from({ year: Number(m[1]), month: Number(m[2]), day: 1 })
   }
 
+  /**
+   * Rewrite the address bar without going through the router.
+   *
+   * Month navigation and the event modal change the URL for what is still the
+   * same view — a `router.push` would tear the page down and rebuild it, and
+   * the calendar would lose the events it just fetched. So the History API it
+   * is, with one condition: `history.state` is where vue-router keeps its own
+   * bookkeeping (`back`, `forward`, `current`, `position`, scroll), and
+   * passing `null` there wipes it. That is what the VUE_ROUTER_R0121 warning
+   * in the console was about, and with it goes the router's scroll
+   * restoration and its idea of which way a back/forward step went. Carrying
+   * the existing state over costs nothing and keeps both intact.
+   */
+  function rewriteUrl(url: string, mode: 'push' | 'replace' = 'push'): void {
+    const state = { ...window.history.state }
+    if (mode === 'replace') {
+      window.history.replaceState(state, '', url)
+      return
+    }
+    window.history.pushState(state, '', url)
+  }
+
   function eventPath(year: number, month: number, eventId: string, occurrence?: number) {
     const base = `${monthPath(year, month)}/event/${eventId}`
     return occurrence != null ? `${base}/${occurrence}` : base
@@ -448,7 +470,7 @@
     // Clear events BEFORE navigation so Schedule-X has nothing cached to render
     eventsService.set([])
     calendarControls.setDate(next)
-    window.history.pushState(null, '', monthPath(next.year, next.month))
+    rewriteUrl(monthPath(next.year, next.month))
     applyFutureClassRepeatedly()
   }
 
@@ -457,7 +479,7 @@
     currentDate.value = now
     eventsService.set([])
     calendarControls.setDate(now)
-    window.history.pushState(null, '', monthPath(now.year, now.month))
+    rewriteUrl(monthPath(now.year, now.month))
     scrollToDay()
     applyFutureClassRepeatedly()
   }
@@ -636,7 +658,7 @@
     window.addEventListener('popstate', onPopState)
     document.addEventListener('mousemove', onMouseMove)
     if (!parsedDate || initialDate !== parsedDate) {
-      window.history.replaceState(null, '', monthPath(initialDate.year, initialDate.month))
+      rewriteUrl(monthPath(initialDate.year, initialDate.month), 'replace')
     }
   })
   onUnmounted(() => {
@@ -979,7 +1001,7 @@
       })
     } else {
       const d = currentDate.value
-      window.history.replaceState(null, '', monthPath(d.year, d.month))
+      rewriteUrl(monthPath(d.year, d.month), 'replace')
     }
   })
   onUnmounted(() => {
@@ -1002,7 +1024,7 @@
     modal.value?.close()
     if (parseEventFromPath(window.location.pathname)) {
       const d = currentDate.value
-      window.history.pushState(null, '', monthPath(d.year, d.month))
+      rewriteUrl(monthPath(d.year, d.month))
     }
   }
 
@@ -1017,7 +1039,7 @@
       const d = currentDate.value
       const url = eventPath(d.year, d.month, id, occurrence)
       if (window.location.pathname !== url) {
-        window.history.pushState(null, '', url)
+        rewriteUrl(url)
       }
       const eventData = await api('/api/event', {
         method: 'POST',
@@ -1033,7 +1055,7 @@
       console.error(error)
       modal.value?.close()
       const d = currentDate.value
-      window.history.replaceState(null, '', monthPath(d.year, d.month))
+      rewriteUrl(monthPath(d.year, d.month), 'replace')
     } finally {
       eventLoading.value = false
     }

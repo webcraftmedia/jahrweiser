@@ -636,8 +636,13 @@ describe('Component: MemberMap', () => {
       try {
         const country = await mount(wide)
         vi.advanceTimersByTime(300)
-        const [far] = (country.emitted('viewport') ?? [[]])[0] as [{ levels: BoundaryLevel[] }]
+        const [far] = (country.emitted('viewport') ?? [[]])[0] as [
+          { levels: BoundaryLevel[]; perPixel: number },
+        ]
         expect(far.levels).toStrictEqual(['state'])
+        // How fine the borders have to be is a question only the map can answer:
+        // it is the one that knows how many map units go into a pixel.
+        expect(far.perPixel).toBeGreaterThan(0)
 
         const near = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
         vi.advanceTimersByTime(300)

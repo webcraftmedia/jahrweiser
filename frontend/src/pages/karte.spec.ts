@@ -27,6 +27,7 @@ function serving(options: { map?: unknown } = {}) {
       return map instanceof Error ? Promise.reject(map) : Promise.resolve(map)
     }
     if (url === '/api/map/outline') return Promise.resolve(OUTLINE)
+    if (url === '/api/map/places') return Promise.resolve([])
     return Promise.resolve({})
   })
 }
@@ -126,5 +127,30 @@ describe('Page: Karte', () => {
     expect(wrapper.find('[role="alert"]').text()).toContain('pages.karte.error')
     expect(wrapper.find('svg').exists()).toBe(false)
     consoleSpy.mockRestore()
+  })
+
+  it('fetches the names and the borders for whatever the map has brought on screen', async () => {
+    // The map decides which administrative levels its scale has room for; the
+    // page only passes that on.
+    vi.useFakeTimers()
+    try {
+      const wrapper = await mountLoaded()
+      await wrapper.findComponent({ name: 'MemberMap' }).vm.$emit('viewport', {
+        minX: 0,
+        minY: 0,
+        maxX: 100,
+        maxY: 100,
+        levels: ['state'],
+      })
+      await vi.waitFor(() => {
+        expect(mock$fetch).toHaveBeenCalledWith('/api/map/places', expect.anything())
+        expect(mock$fetch).toHaveBeenCalledWith(
+          '/api/map/boundaries',
+          expect.objectContaining({ query: expect.objectContaining({ levels: 'state' }) }),
+        )
+      })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

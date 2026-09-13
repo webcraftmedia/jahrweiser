@@ -1,4 +1,14 @@
-import type { MapArea, MapPayload, MapPlace, PlaceFile, PlzAreaFile } from '../../shared/map'
+import type {
+  BoundaryFile,
+  BoundaryLevel,
+  MapArea,
+  MapBoundaryLabel,
+  MapBoundaryLayer,
+  MapPayload,
+  MapPlace,
+  PlaceFile,
+  PlzAreaFile,
+} from '../../shared/map'
 
 /**
  * The member map's server side: it holds the geometry for all ~8.200 German
@@ -54,12 +64,73 @@ export async function loadPlaces(): Promise<PlaceFile['places'] | null> {
   return placeCache
 }
 
+/** Where the administrative borders live, next to the areas. */
+export const BOUNDARY_FILE_KEY = 'map/boundaries.json'
+
+/** The border artefact, parsed once and kept. */
+let boundaryCache: BoundaryFile | null = null
+
+/** Read the border artefact. Null when it has not been generated. */
+export async function loadBoundaries(): Promise<BoundaryFile | null> {
+  if (boundaryCache) return boundaryCache
+  const raw = await useStorage('assets:server').getItem<BoundaryFile>(BOUNDARY_FILE_KEY)
+  if (!raw?.levels) return null
+  // What comes off disk is data, not a value the type system watched being
+  // built: an artefact generated before a level existed, or by a run that was
+  // given no Kreis input, simply has no key for it. Filled in once here, so
+  // that no reader has to ask.
+  const stored = raw.levels as Partial<BoundaryFile['levels']>
+  boundaryCache = {
+    ...raw,
+    levels: {
+      state: stored.state ?? { arcs: [], labels: [] },
+      district: stored.district ?? { arcs: [], labels: [] },
+    },
+  }
+  return boundaryCache
+}
+
 /** A rectangle in viewBox units. */
 export interface MapBox {
   minX: number
   minY: number
   maxX: number
   maxY: number
+}
+
+/**
+ * The borders of one administrative level that reach into `box`.
+ *
+ * The unit is the arc, not the area, so the answer is exactly the ink the view
+ * needs: an arc is in or out by its own bounding box, and the ones that survive
+ * are concatenated into a single path — a border is stroked, never filled, so
+ * nothing depends on where one arc ends and the next begins.
+ *
+ * Both lists are sorted longest/largest first in the artefact, which is what
+ * makes the limits safe: an answer that hits one drops the specks, not the line
+ * that crosses the whole view.
+ */
+export function boundaryLayerIn(
+  level: BoundaryFile['levels'][BoundaryLevel],
+  box: MapBox,
+  limit: number,
+  labelLimit: number,
+): MapBoundaryLayer {
+  const arcs: string[] = []
+  for (const [minX, minY, maxX, maxY, d] of level.arcs) {
+    if (maxX < box.minX || minX > box.maxX || maxY < box.minY || minY > box.maxY) continue
+    arcs.push(d)
+    if (arcs.length >= limit) break
+  }
+
+  const labels: MapBoundaryLabel[] = []
+  for (const [x, y, size, name] of level.labels) {
+    if (x < box.minX || x > box.maxX || y < box.minY || y > box.maxY) continue
+    labels.push({ name, x, y, size })
+    if (labels.length >= labelLimit) break
+  }
+
+  return { d: arcs.join(''), labels }
 }
 
 /**
@@ -85,6 +156,7 @@ export function placesIn(places: PlaceFile['places'], box: MapBox, limit: number
 export function resetPlzAreaCache(): void {
   cache = null
   placeCache = null
+  boundaryCache = null
 }
 
 /**

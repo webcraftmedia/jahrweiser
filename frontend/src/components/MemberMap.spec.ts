@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import MemberMap from './MemberMap.vue'
 
-import type { MapArea, MapPlace } from '~~/shared/map'
+import type { BoundaryLevel, MapArea, MapBoundaryLayer, MapPlace } from '~~/shared/map'
 
 const OUTLINE = { viewBox: '0 0 4000 5000', d: 'M0 0l4000 0 0 5000-4000 0z' }
 
@@ -478,5 +478,123 @@ describe('Component: MemberMap', () => {
   it('survives a viewBox it cannot read', async () => {
     const wrapper = await mount([area('64673', 1)], { outline: { viewBox: '', d: '' } })
     expect(wrapper.find('svg').exists()).toBe(true)
+  })
+
+  describe('where the reader is', () => {
+    const BORDERS: Partial<Record<BoundaryLevel, MapBoundaryLayer>> = {
+      state: {
+        d: 'M0 0l4000 0',
+        labels: [{ name: 'Hessen', x: 2000, y: 2500, size: 2_000_000 }],
+      },
+      district: {
+        d: 'M0 100l4000 0',
+        labels: [{ name: 'Kreis Bergstraße', x: 2000, y: 2500, size: 120_000 }],
+      },
+    }
+
+    /** Two far-apart areas open the map on the whole country. */
+    const wide = [area('a', 1, { cx: 100, cy: 100 }), area('b', 1, { cx: 3900, cy: 4900 })]
+
+    async function zoomed(clicks: number, props: Record<string, unknown> = {}) {
+      const wrapper = await mount(wide, { boundaries: BORDERS, ...props })
+      for (let i = 0; i < clicks; i++) {
+        await wrapper.find('button[aria-label="components.MemberMap.zoom-in"]').trigger('click')
+      }
+      return wrapper
+    }
+
+    const opacity = (
+      wrapper: { find: (s: string) => { attributes: (a: string) => string | undefined } },
+      selector: string,
+    ): number => Number((wrapper.find(selector).attributes('style') ?? '').replace(/\D+/g, '') || 0)
+
+    it('draws the Bundesland borders at every scale — sixteen lines are not clutter', async () => {
+      const wrapper = await zoomed(0)
+      expect(wrapper.find('.map-state').attributes('d')).toBe(BORDERS.state?.d)
+    })
+
+    it('keeps the Kreis borders invisible at country scale and brings them in as the map grows', async () => {
+      // A Kreis border says nothing at 600 km across and is the only thing that
+      // says where you are once the silhouette has left the screen.
+      expect(opacity(await zoomed(0), '.map-district')).toBe(0)
+      expect(opacity(await zoomed(4), '.map-district')).toBeGreaterThan(0)
+    })
+
+    it('hands the naming down the ladder: first the Bundesland, then the Kreis', async () => {
+      const country = await zoomed(0)
+      expect(country.find('.state-names text').text()).toBe('HESSEN')
+      expect(country.findAll('.district-names text')).toHaveLength(0)
+
+      const close = await zoomed(6)
+      expect(opacity(close, '.state-names')).toBe(0)
+      expect(close.find('.district-names text').text()).toBe('Kreis Bergstraße')
+    })
+
+    it('asks only for the levels the scale has room for', async () => {
+      vi.useFakeTimers()
+      try {
+        const country = await mount(wide)
+        vi.advanceTimersByTime(300)
+        const [far] = (country.emitted('viewport') ?? [[]])[0] as [{ levels: BoundaryLevel[] }]
+        expect(far.levels).toStrictEqual(['state'])
+
+        const near = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
+        vi.advanceTimersByTime(300)
+        const [close] = (near.emitted('viewport') ?? [[]])[0] as [{ levels: BoundaryLevel[] }]
+        expect(close.levels).toStrictEqual(['state', 'district'])
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('leaves a name off rather than setting it too small for its own area', async () => {
+      // A Kreis the size of a city, seen from the whole country: the name would
+      // have to be a smudge two pixels tall, which reads as a rendering fault.
+      const wrapper = await zoomed(0, {
+        boundaries: {
+          ...BORDERS,
+          state: { d: '', labels: [{ name: 'Bremen', x: 2000, y: 2500, size: 40 }] },
+        },
+      })
+      expect(wrapper.findAll('.state-names text')).toHaveLength(0)
+    })
+
+    it('drops a Kreis name whose place is taken rather than moving it off its area', async () => {
+      // A name shifted aside to dodge a dot would be pointing at the wrong
+      // Kreis, which is worse than a missing name.
+      const wrapper = await zoomed(6, {
+        areas: [area('64673', 88, { cx: 2000, cy: 2500 })],
+      })
+      expect(wrapper.findAll('.district-names text')).toHaveLength(0)
+    })
+
+    it.each([
+      ['is not on screen', { name: 'Weit weg', x: 39000, y: 49000, size: 120_000 }],
+      [
+        'would have to be set too small for its own Kreis',
+        { name: 'Kreis Winzig', x: 2000, y: 2500, size: 4 },
+      ],
+    ])('leaves out a Kreis name that %s', async (_case, label) => {
+      const wrapper = await zoomed(6, {
+        boundaries: { ...BORDERS, district: { d: 'M0 0l1 1', labels: [label] } },
+      })
+      expect(wrapper.findAll('.district-names text')).toHaveLength(0)
+    })
+
+    it('ignores a name that is not on screen', async () => {
+      const wrapper = await zoomed(0, {
+        boundaries: {
+          state: { d: '', labels: [{ name: 'Weit weg', x: 39000, y: 49000, size: 2_000_000 }] },
+        },
+      })
+      expect(wrapper.findAll('.state-names text')).toHaveLength(0)
+    })
+
+    it('draws nothing administrative when the artefact was never built', async () => {
+      const wrapper = await mount(wide)
+      expect(wrapper.find('.map-state').exists()).toBe(false)
+      expect(wrapper.find('.map-district').exists()).toBe(false)
+      expect(wrapper.findAll('.state-names text')).toHaveLength(0)
+    })
   })
 })

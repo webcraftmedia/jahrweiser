@@ -63,6 +63,25 @@ export const MOCK_MAP = {
   max: 7,
 }
 
+/**
+ * The administrative borders the map orients by. Both levels, so the staging in
+ * MemberMap.vue has something to fade in and out of.
+ */
+export const MOCK_BORDERS = {
+  state: {
+    d: 'M0 2000l4000 0',
+    labels: [{ name: 'Hessen', x: 700, y: 700, size: 1_500_000 }],
+  },
+  district: {
+    d: 'M0 2100l4000 0',
+    // At the centre the map actually opens on — which is not the centre of the
+    // mocked members: the fitted rectangle is taller than the map allows that
+    // close to its top edge, so it is pushed down. Anywhere else and the name
+    // is simply off screen once it would appear.
+    labels: [{ name: 'Kreis Bergstraße', x: 1700, y: 2040, size: 90_000 }],
+  },
+}
+
 export const MOCK_PLACES = [
   { name: 'Zwingenberg', x: 500, y: 500, rank: 7291 },
   { name: 'Bensheim', x: 2900, y: 900, rank: 40000 },
@@ -193,6 +212,14 @@ export async function mockMapEndpoints(page: Page, { locked = false } = {}) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(locked ? [] : MOCK_PLACES),
+    }),
+  )
+
+  await page.route('**/api/map/boundaries*', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(locked ? {} : MOCK_BORDERS),
     }),
   )
 }

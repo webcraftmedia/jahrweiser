@@ -58,6 +58,22 @@ export interface MapOutline {
   d: string
 }
 
+/**
+ * The projection the whole map lives in, recorded so a later run can put new
+ * geometry into the *same* coordinate system without re-reading the half a
+ * gigabyte of postal-code input the extent was originally fitted to.
+ *
+ * Mercator x/y → viewBox units is `[(x - x0) * k, (y0 - y) * k]`.
+ */
+export interface MapProjection {
+  /** Mercator x of the left edge. */
+  x0: number
+  /** Mercator y of the top edge. */
+  y0: number
+  /** viewBox units per Mercator unit. */
+  k: number
+}
+
 /** The artefact `scripts/build-map-data.ts` writes to `server/assets/map/`. */
 export interface PlzAreaFile {
   viewBox: string
@@ -65,7 +81,66 @@ export interface PlzAreaFile {
   outline: string
   /** Keyed by postal code. */
   areas: Record<string, { o: string; d: string; c: [number, number]; s: number }>
+  /** Absent in artefacts built before the administrative borders landed. */
+  proj?: MapProjection
 }
+
+/**
+ * The administrative levels the map draws borders for, coarsest first.
+ *
+ * Not the OSM numbers (`admin_level` 4 and 6) anywhere but in the build script:
+ * what the client asks for is a level of *orientation*, and the day a level is
+ * added for a different country the number would be wrong, not the name.
+ */
+export const BOUNDARY_LEVELS = ['state', 'district'] as const
+export type BoundaryLevel = (typeof BOUNDARY_LEVELS)[number]
+
+/**
+ * One stretch of administrative border: a bounding box and the path itself.
+ *
+ * The unit is the *arc*, not the area — borders are stroked and never filled, so
+ * the border two districts share may be stored once instead of twice. In OSM it
+ * literally is one way, carried by both relations, so deduplicating it by way id
+ * costs nothing and buys three things: half the artefact, a box to cull against,
+ * and the guarantee that the two neighbours cannot disagree about where their
+ * common border runs (the sliver problem the postal-code areas needed a whole
+ * topology stage for — see docu/karte.md).
+ */
+export type BoundaryArc = [minX: number, minY: number, maxX: number, maxY: number, d: string]
+
+/** The artefact holding the administrative borders. */
+export interface BoundaryFile {
+  viewBox: string
+  proj: MapProjection
+  levels: Record<
+    BoundaryLevel,
+    {
+      /** Longest first, so a truncated answer drops the least visible lines. */
+      arcs: BoundaryArc[]
+      /** `[x, y, size, name]`, largest first. */
+      labels: [number, number, number, string][]
+    }
+  >
+}
+
+/** One administrative name on the map. */
+export interface MapBoundaryLabel {
+  name: string
+  x: number
+  y: number
+  /** The area's size in square viewBox units — decides who gets the space. */
+  size: number
+}
+
+/** What one level contributes to the current view. */
+export interface MapBoundaryLayer {
+  /** Every arc in view, joined into a single path. */
+  d: string
+  labels: MapBoundaryLabel[]
+}
+
+/** What `GET /api/map/boundaries` answers: one layer per level asked for. */
+export type MapBoundaries = Partial<Record<BoundaryLevel, MapBoundaryLayer>>
 
 /**
  * Towns, villages and Stadtteile, so the map reads as a place and not as a

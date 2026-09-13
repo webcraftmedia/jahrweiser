@@ -1,5 +1,12 @@
 <script setup lang="ts">
-  import type { MapArea, MapOutline, MapPlace } from '~~/shared/map'
+  import type {
+    BoundaryLevel,
+    MapArea,
+    MapBoundaryLabel,
+    MapBoundaryLayer,
+    MapOutline,
+    MapPlace,
+  } from '~~/shared/map'
 
   import { MAP_ATTRIBUTION } from '~~/shared/map'
 
@@ -28,6 +35,12 @@
     /** Towns and villages to name, most important first. */
     places?: MapPlace[]
     /**
+     * Bundesland and Kreis borders for the current view. Which of them are
+     * worth having is decided here and asked for through `viewport` — see the
+     * staging below.
+     */
+    boundaries?: Partial<Record<BoundaryLevel, MapBoundaryLayer>>
+    /**
      * A preview with made-up numbers, shown blurred to members who have not
      * given their own postal code. Skips the tooltip, the controls and the data
      * table: there is nothing behind it to look at more closely.
@@ -38,11 +51,12 @@
   }>()
 
   /**
-   * The rectangle now on screen, so whoever owns the data can fetch the place
-   * names for it. Debounced — a drag would otherwise emit on every frame.
+   * The rectangle now on screen and the administrative levels it has room for,
+   * so whoever owns the data can fetch the names and borders for it. Debounced
+   * — a drag would otherwise emit on every frame.
    */
   const emit = defineEmits<{
-    viewport: [{ minX: number; minY: number; maxX: number; maxY: number }]
+    viewport: [{ minX: number; minY: number; maxX: number; maxY: number; levels: BoundaryLevel[] }]
   }>()
 
   const { t } = useI18n()
@@ -265,6 +279,115 @@
     zoomBy(event.deltaY < 0 ? 1.2 : 1 / 1.2, pointAt(event))
   }
 
+  // --- orientation ---------------------------------------------------------
+
+  /**
+   * Where the reader is, rather than what the data says.
+   *
+   * The country silhouette answers that in the opening view and stops answering
+   * it the moment anyone zooms in: three postal codes and a few village names
+   * on an empty page could be anywhere in Germany. So the same job is handed
+   * down the administrative ladder as the map grows — Bundesland, then Kreis —
+   * and each layer appears at the scale where its areas are big enough to read
+   * and disappears before they are so big that the reader is inside one.
+   *
+   * The trigger is the width of the view relative to the whole country, which
+   * is a scale and not a zoom step: it means the same thing on a phone and on
+   * a wall screen, where the same zoom level shows quite different amounts of
+   * map. Germany is about 640 km across, so 0.25 is roughly a 160 km view.
+   *
+   * Nothing here is a switch the reader has to find. A layer that is noise at
+   * this scale is not offered and then hidden; it is simply not yet drawn.
+   */
+  const STAGE = {
+    /** Kreis borders, over 180 → 100 km. */
+    districtBorder: { off: 0.28, on: 0.16 },
+    /** Kreis names, once their borders are solid: 100 → 65 km. */
+    districtName: { off: 0.16, on: 0.1 },
+    /** Bundesland names, out over the band the Kreise come in on. */
+    stateName: { off: 0.16, on: 0.28 },
+  }
+
+  /**
+   * Fetched a little before it is drawn: a layer that is asked for at the
+   * moment it becomes visible arrives into a view that has already started
+   * fading it in, and pops.
+   */
+  const PREFETCH = 1.25
+
+  /** The view's width as a share of the whole country. */
+  const span = computed(() => view.value.w / full.value.width)
+
+  /** 0 at `off`, 1 at `on`, linear between — `on` may lie either side. */
+  function staged({ off, on }: { off: number; on: number }): number {
+    return Math.max(0, Math.min(1, (span.value - off) / (on - off)))
+  }
+
+  const districtBorderOpacity = computed(() => staged(STAGE.districtBorder))
+  const districtNameOpacity = computed(() => staged(STAGE.districtName))
+  const stateNameOpacity = computed(() => staged(STAGE.stateName))
+
+  /** Which levels are worth asking the server for at this scale. */
+  const levelsInView = computed<BoundaryLevel[]>(() => {
+    const levels: BoundaryLevel[] = ['state']
+    if (span.value < STAGE.districtBorder.off * PREFETCH) levels.push('district')
+    return levels
+  })
+
+  /** Below this on screen a name is a smudge, not a word. */
+  const MIN_LABEL_PX = 8.5
+
+  /**
+   * The type size a name may have if it is to sit inside its own area — and 0
+   * when it cannot.
+   *
+   * √area is the side of the square of the same area: a fair stand-in for the
+   * room a name has in a shape nobody has measured the width of, and it is why
+   * a Kreis name appears as the map grows without anything deciding at which
+   * zoom it should. A name that would have to be set smaller than it can be
+   * read is not set at all — the alternative is a grey smudge that looks like
+   * a rendering fault.
+   */
+  function nameSize(name: string, size: number, nominal: number, perCharacter: number): number {
+    const room = Math.sqrt(Math.max(size, 0)) * 0.85
+    const wanted = Math.min(nominal, room / (perCharacter * name.length + 0.4))
+    return wanted < MIN_LABEL_PX * unit.value ? 0 : wanted
+  }
+
+  /** One administrative name, ready to draw. */
+  interface AreaLabel {
+    label: MapBoundaryLabel
+    size: number
+  }
+
+  /** Only what is on screen may take up space — and be paid for in layout. */
+  function onScreen(point: { x: number; y: number }): boolean {
+    return (
+      Math.abs(point.x - view.value.cx) <= visible.value.w / 2 &&
+      Math.abs(point.y - view.value.cy) <= visible.value.h / 2
+    )
+  }
+
+  /**
+   * The Bundesland names, set as large as their own area allows.
+   *
+   * No collision handling: there are sixteen of them, they are pale enough to
+   * be read through, and they are drawn *under* everything that carries a value
+   * — which is what a name at this size has to be, background and not mark.
+   */
+  const stateLabels = computed<AreaLabel[]>(() =>
+    // Not gated on the opacity: kept in the DOM while it fades, so the fade is
+    // a fade and not a disappearance. They take no space from anything.
+    (props.boundaries?.state?.labels ?? [])
+      .filter(onScreen)
+      .map((label) => ({
+        label,
+        // Tracked out by a quarter em, so every character costs a quarter more.
+        size: nameSize(label.name, label.size, 26 * unit.value, 0.72),
+      }))
+      .filter((entry) => entry.size > 0),
+  )
+
   // --- marks ---------------------------------------------------------------
 
   /** Label size in viewBox units — about 13 px, whatever the zoom. */
@@ -407,11 +530,22 @@
     a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 
   interface PlacedLabel {
-    place: MapPlace
+    /** Anything with a name and a point — a town, or a Kreis. */
+    place: { name: string; x: number; y: number }
     x: number
     y: number
     anchor: 'middle' | 'start' | 'end'
     rect: Rect
+  }
+
+  /** What a name of `size` needs, in map units, at `perCharacter` per letter. */
+  function labelRect(
+    label: { name: string; x: number; y: number },
+    size: number,
+    perCharacter: number,
+  ): Rect {
+    const width = size * (perCharacter * label.name.length + 0.4)
+    return { x: label.x - width / 2, y: label.y - size * 0.6, w: width, h: size * 1.2 }
   }
 
   /**
@@ -474,15 +608,31 @@
     // `0.31·digits + 0.25` wide and 0.6 tall — so a number always sits strictly
     // inside its own dot, and dots no longer overlap.
 
+    const taken = [...blocked]
+
+    // The Kreis names go first, and that is the whole point of them: a reader
+    // who cannot tell where they are is not helped by the name of the next
+    // village along. They sit at their own label point or nowhere — a Kreis
+    // name shifted aside to dodge a village would be pointing at the wrong
+    // area, which is worse than missing.
+    const districts: (PlacedLabel & { size: number })[] = []
+    if (districtNameOpacity.value > 0) {
+      for (const label of props.boundaries?.district?.labels ?? []) {
+        if (!onScreen(label)) continue
+        const size = nameSize(label.name, label.size, 12 * unit.value, 0.55)
+        if (size === 0) continue
+        const rect = labelRect(label, size, 0.55)
+        if (taken.some((other) => overlaps(rect, other))) continue
+        taken.push(rect)
+        districts.push({ place: label, x: label.x, y: label.y, anchor: 'middle', rect, size })
+      }
+    }
+
     // Only what is on screen may take up space; an off-screen village must not
     // spend a slot a visible one could have had.
-    const half = visible.value.w / 2
-    const halfHeight = visible.value.h / 2
-    const taken = [...blocked]
     const places: PlacedLabel[] = []
     for (const place of props.places ?? []) {
-      if (Math.abs(place.x - view.value.cx) > half) continue
-      if (Math.abs(place.y - view.value.cy) > halfHeight) continue
+      if (!onScreen(place)) continue
       const label = placeLabel(place, placeSize, taken)
       if (!label) continue
       taken.push(label.rect)
@@ -490,7 +640,7 @@
       if (places.length >= MAX_PLACE_LABELS) break
     }
 
-    return { places }
+    return { places, districts }
   })
 
   /**
@@ -509,6 +659,7 @@
           maxX: current.cx + visible.value.w / 2,
           minY: current.cy - visible.value.h / 2,
           maxY: current.cy + visible.value.h / 2,
+          levels: levelsInView.value,
         })
       }, 250)
     },
@@ -552,6 +703,36 @@
         <!-- The country, recessive: it orients, it carries no value. -->
         <path class="map-country" :d="outline.d" />
 
+        <!-- The same job at the next two scales down, faded in as the country
+             leaves the screen. Under the areas and under the dots: this is
+             where the reader is, not what the map says. -->
+        <path
+          v-if="boundaries?.district"
+          class="map-district"
+          :style="{ opacity: districtBorderOpacity }"
+          :d="boundaries.district.d"
+        />
+        <path v-if="boundaries?.state" class="map-state" :d="boundaries.state.d" />
+
+        <g
+          v-if="stateLabels.length > 0"
+          class="state-names"
+          :style="{ opacity: stateNameOpacity }"
+          aria-hidden="true"
+        >
+          <text
+            v-for="entry in stateLabels"
+            :key="entry.label.name"
+            :x="entry.label.x"
+            :y="entry.label.y"
+            :style="{ fontSize: `${entry.size}px` }"
+            text-anchor="middle"
+            dominant-baseline="central"
+          >
+            {{ entry.label.name.toLocaleUpperCase('de-DE') }}
+          </text>
+        </g>
+
         <g class="areas">
           <path
             v-for="area in painted"
@@ -559,6 +740,28 @@
             :class="`step-${stepFor(area.count)}`"
             :d="area.d"
           />
+        </g>
+
+        <!-- The Kreis, named where its own label point is. Above the areas,
+             unlike its border: this is the line of text the reader is looking
+             for when the silhouette has gone. -->
+        <g
+          v-if="layout.districts.length > 0"
+          class="district-names"
+          :style="{ opacity: districtNameOpacity }"
+          aria-hidden="true"
+        >
+          <text
+            v-for="entry in layout.districts"
+            :key="entry.place.name"
+            :x="entry.x"
+            :y="entry.y"
+            :style="{ fontSize: `${entry.size}px` }"
+            text-anchor="middle"
+            dominant-baseline="central"
+          >
+            {{ entry.place.name }}
+          </text>
         </g>
 
         <!-- Towns and villages, recessive: they say where this is, nothing more. -->
@@ -747,6 +950,85 @@
   }
   .is-dark .map-country {
     stroke: rgb(250 245 235 / 0.28);
+  }
+
+  /* The administrative ladder, all three rungs in the same ink as the country
+     and told apart by weight and by strike: the Bundesland heavier than the
+     country it sits in — it is the one doing the orienting at that scale — and
+     the Kreis lighter and dashed. Two channels rather than one, so the two
+     levels stay distinguishable for a reader who cannot tell a 1.4 px line from
+     a 0.8 px one, which on a high-density screen is most readers.
+
+     Never filled, and drawn once: the artefact holds each border as an arc that
+     belongs to exactly one level (see docu/karte.md), so no stretch of line is
+     painted twice and no dash rides on top of a solid. */
+  .map-state,
+  .map-district,
+  .state-names,
+  .district-names {
+    /* The staging is a ramp, but a click of the zoom button is a jump of 1.6 —
+       wide enough to cross a whole band at once. The transition is what keeps
+       that from reading as a layer switching on. */
+    transition: opacity 250ms ease-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .map-state,
+    .map-district,
+    .state-names,
+    .district-names {
+      transition: none;
+    }
+  }
+
+  .map-state,
+  .map-district {
+    fill: none;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .map-state {
+    stroke: rgb(30 41 59 / 0.45);
+    stroke-width: 1.4;
+  }
+  .map-district {
+    stroke: rgb(30 41 59 / 0.35);
+    stroke-width: 0.8;
+    stroke-dasharray: 4 2;
+  }
+  .is-dark .map-state {
+    stroke: rgb(250 245 235 / 0.42);
+  }
+  .is-dark .map-district {
+    stroke: rgb(250 245 235 / 0.32);
+  }
+
+  /* Set into the country rather than onto it: pale enough to read the map
+     through, tracked out the way an area label is, and always under everything
+     that carries a number. */
+  .state-names text {
+    fill: rgb(30 41 59 / 0.3);
+    font-weight: 600;
+    letter-spacing: 0.25em;
+  }
+  .is-dark .state-names text {
+    fill: rgb(250 245 235 / 0.26);
+  }
+
+  /* The Kreis name is a label, not a wash: it wears a halo of the surface
+     colour so it stays legible where it crosses a border or an area. */
+  .district-names text {
+    fill: rgb(30 41 59 / 0.66);
+    font-weight: 600;
+    paint-order: stroke;
+    stroke: #faf5eb;
+    stroke-width: 3;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .is-dark .district-names text {
+    fill: rgb(250 245 235 / 0.66);
+    stroke: #1a1714;
   }
 
   .areas path {

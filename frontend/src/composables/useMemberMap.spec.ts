@@ -9,6 +9,10 @@ stubApi(mock$fetch)
 
 const OUTLINE = { viewBox: '0 0 4000 5000', d: 'M0 0z' }
 const PLACES = [{ name: 'Zwingenberg', x: 500, y: 500, rank: 7291 }]
+const BORDERS = {
+  state: { d: 'M0 0l100 0', labels: [{ name: 'Hessen', x: 500, y: 500, size: 900 }] },
+  district: { d: 'M0 10l100 0', labels: [] },
+}
 const VIEW = { minX: 400, minY: 400, maxX: 600, maxY: 600 }
 const PAYLOAD = {
   areas: [{ plz: '64673', ort: 'Zwingenberg', count: 3, d: 'M0 0z', cx: 1, cy: 2, size: 900 }],
@@ -28,6 +32,7 @@ function serving(options: { map?: unknown; status?: unknown } = {}) {
     if (url === '/api/map/status') return Promise.resolve(status)
     if (url === '/api/map/places') return Promise.resolve(PLACES)
     if (url === '/api/map/outline') return Promise.resolve(OUTLINE)
+    if (url === '/api/map/boundaries') return Promise.resolve(BORDERS)
     return Promise.resolve({})
   })
 }
@@ -49,7 +54,9 @@ describe('useMemberMap', () => {
     state.loadError.value = false
     state.loaded.value = false
     state.places.value = []
+    state.boundaries.value = {}
     useState<unknown>('member-map-place-box', () => null).value = null
+    useState<unknown>('member-map-boundary-box', () => ({})).value = {}
     useState('member-map-status-loaded', () => false).value = false
     useState<Promise<void> | null>('member-map-status-inflight', () => null).value = null
     serving()
@@ -153,6 +160,79 @@ describe('useMemberMap', () => {
       serving()
       await loadPlaces(VIEW)
       expect(places.value).toStrictEqual(PLACES)
+      consoleSpy.mockRestore()
+    })
+  })
+
+  describe('administrative borders', () => {
+    const calls = () => mock$fetch.mock.calls.filter(([url]) => url === '/api/map/boundaries')
+
+    it('asks only for the levels the map said it had room for', async () => {
+      const { boundaries, loadBoundaries } = useMemberMap()
+      await loadBoundaries(VIEW, ['state'])
+      const [, options] = calls()[0] ?? []
+      expect((options as { query: { levels: string } }).query.levels).toBe('state')
+      expect(boundaries.value.state).toStrictEqual(BORDERS.state)
+      expect(boundaries.value.district).toBeUndefined()
+    })
+
+    it('asks for a region bigger than the view, but a smaller one than the names get', async () => {
+      // A name is a few bytes and a Kreis border a few hundred: the margin that
+      // buys panning without a request is worth less here.
+      const { loadBoundaries, loadPlaces } = useMemberMap()
+      await loadBoundaries(VIEW, ['state'])
+      await loadPlaces(VIEW)
+      const borderBox = (calls()[0]?.[1] as { query: typeof VIEW }).query
+      const [, placeOptions] =
+        mock$fetch.mock.calls.find(([url]) => url === '/api/map/places') ?? []
+      const placeBox = (placeOptions as { query: typeof VIEW }).query
+      expect(borderBox.minX).toBeLessThan(VIEW.minX)
+      expect(borderBox.minX).toBeGreaterThan(placeBox.minX)
+    })
+
+    it('holds each level on its own region', async () => {
+      // The Bundesländer were fetched for the country and still answer; the
+      // Kreise are only wanted now, and only they are asked for.
+      const { loadBoundaries } = useMemberMap()
+      await loadBoundaries(VIEW, ['state'])
+      await loadBoundaries(VIEW, ['state', 'district'])
+      expect(calls()).toHaveLength(2)
+      expect((calls()[1]?.[1] as { query: { levels: string } }).query.levels).toBe('district')
+    })
+
+    it('asks again once it has been zoomed in far enough past the last answer', async () => {
+      // Both layers are capped answers to a rectangle, so a much smaller one
+      // can legitimately hold more than the last reply carried.
+      const { loadBoundaries } = useMemberMap()
+      await loadBoundaries(VIEW, ['state'])
+      await loadBoundaries({ minX: 495, minY: 495, maxX: 505, maxY: 505 }, ['state'])
+      expect(calls()).toHaveLength(2)
+    })
+
+    it('says nothing again while the view stays inside what was fetched', async () => {
+      const { loadBoundaries } = useMemberMap()
+      await loadBoundaries(VIEW, ['state'])
+      await loadBoundaries({ minX: 420, minY: 420, maxX: 590, maxY: 590 }, ['state'])
+      expect(calls()).toHaveLength(1)
+    })
+
+    it('takes an empty layer for a level the artefact was built without', async () => {
+      mock$fetch.mockResolvedValue({})
+      const { boundaries, loadBoundaries } = useMemberMap()
+      await loadBoundaries(VIEW, ['district'])
+      expect(boundaries.value.district).toStrictEqual({ d: '', labels: [] })
+    })
+
+    it('keeps the map usable when the borders cannot be fetched', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mock$fetch.mockRejectedValue(new Error('500'))
+      const { boundaries, loadBoundaries } = useMemberMap()
+      await loadBoundaries(VIEW, ['state'])
+      expect(boundaries.value.state).toBeUndefined()
+      // The region is given back, so the next view tries again.
+      serving()
+      await loadBoundaries(VIEW, ['state'])
+      expect(boundaries.value.state).toStrictEqual(BORDERS.state)
       consoleSpy.mockRestore()
     })
   })

@@ -44,6 +44,23 @@ test.describe('Karte', () => {
       .toBeLessThan(Number(opened?.split(' ')[2]))
   })
 
+  test('hands the orientation down the ladder as it is zoomed in', async ({ page }) => {
+    // Zoomed out, the Bundesland is what says where this is; zoomed in, the
+    // Kreis takes over. Neither is a switch the reader has to find.
+    await mockMapEndpoints(page)
+    await navigateClientSide(page, '/karte')
+
+    // Asserted by its path rather than by visibility: a border is a stroke on
+    // a shape of no area, which Playwright reads as hidden.
+    await expect(page.locator('.map-state')).toHaveAttribute('d', /^M/)
+    await expect(page.locator('.state-names text')).toHaveText('HESSEN')
+
+    const zoomIn = page.getByRole('button', { name: 'Karte vergrößern' })
+    for (let i = 0; i < 4; i++) await zoomIn.click()
+
+    await expect(page.locator('.district-names text')).toHaveText('Kreis Bergstraße')
+  })
+
   test('writes the names of the places it has room for', async ({ page }) => {
     await mockMapEndpoints(page)
     await navigateClientSide(page, '/karte')

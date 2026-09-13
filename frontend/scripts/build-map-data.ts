@@ -19,6 +19,9 @@
  *            ("Munich", "Nuremberg"), and this is where the German ones are.
  *   --boundary  The German boundary relation as Overpass answers it (ODbL),
  *            from `rel(51477);out geom;`. Optional; without it, no silhouette.
+ *   --states / --districts  The `admin_level=4` and `admin_level=6` relations
+ *            with `out geom` (ODbL). Optional; without them the map has no
+ *            Bundesland and Kreis borders to orient by.
  *
  * Output:
  *   server/assets/map/plz-areas.json  — the coordinate system, the country
@@ -26,6 +29,12 @@
  *       silhouette plus the handful of areas that actually have members in
  *       them, which is why the full set never has to be small.
  *   server/assets/map/places.json     — towns and villages, for the labels.
+ *   server/assets/map/boundaries.json — Bundesland and Kreis borders as arcs,
+ *       each with its bounding box, so the endpoint can answer a view.
+ *
+ * `--only-borders` rebuilds the last of those alone, reusing the coordinate
+ * system recorded in `plz-areas.json` — the two data sets age independently and
+ * a full run is half a gigabyte of input.
  *
  * Coordinates are projected once here (spherical Mercator) and quantised to
  * whole viewBox units, so the runtime never does trigonometry and the path data
@@ -42,7 +51,14 @@ import { createReadStream } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import type { PlaceFile, PlzAreaFile } from '../shared/map'
+import type {
+  BoundaryArc,
+  BoundaryFile,
+  BoundaryLevel,
+  MapProjection,
+  PlaceFile,
+  PlzAreaFile,
+} from '../shared/map'
 
 /**
  * Width of the coordinate system. 12.000 units across Germany ≈ 53 m per unit.
@@ -52,6 +68,16 @@ import type { PlaceFile, PlzAreaFile } from '../shared/map'
  * and zooms in from there. At 53 m a vertex is under a pixel at four times that
  * zoom; at the 160 m an all-Germany view would justify, borders go visibly
  * blocky as soon as anyone looks closer.
+ *
+ * It is also the floor under everything below. **No tolerance, however small,
+ * buys detail past this number**, and the map can be zoomed well past it: at the
+ * deepest zoom (three kilometres across) one unit is some twenty pixels, so
+ * every boundary is a staircase of that step and any real feature narrower than
+ * 53 m — the corridor to an exclave, say — collapses into a single line. Raising
+ * it is a decision about *every* payload on this map: measured on the
+ * administrative borders, doubling it costs 37 % more path data and quadrupling
+ * it 76 %, for a staircase that is still five pixels at the deepest zoom. See
+ * docu/karte.md.
  */
 const VIEWBOX_WIDTH = 12_000
 
@@ -77,6 +103,42 @@ const DEFAULT_TOLERANCE = 1
  */
 const OUTLINE_TOLERANCE = 3
 
+/**
+ * Simplification tolerance for the administrative borders: **none**.
+ *
+ * Zero is not "off" — Douglas–Peucker with a tolerance of 0 still drops every
+ * vertex that lies *exactly* on the line between the two it would be judged
+ * against, which after quantisation is a great many of them. What it cannot do
+ * is move a line: the result passes through precisely the points the input did.
+ * That is the whole point of the number, and it took two wrong answers to get
+ * to it.
+ *
+ * **3 ≈ 160 m** was argued from the silhouette — a reference line, not a shape
+ * anyone measures. But Douglas–Peucker knows nothing about the feature it is
+ * cutting, and where a whole shape is only a few tolerances across, that *is*
+ * the shape: the interlocking Hessen / Baden-Württemberg enclaves around
+ * Ober-Laudenbach are about a kilometre wide and came out a knot of spikes.
+ *
+ * **1 ≈ 53 m**, the grid itself, was the obvious retreat and still wrong,
+ * because the objection is not the size of the tolerance but the algorithm:
+ * **Douglas–Peucker does not preserve topology.** Measured on those same
+ * enclaves, the input has *no* self-intersections at any stage — lon/lat,
+ * projected, quantised — and the simplified arcs have eight, five of them
+ * inside a single arc. A border that crosses itself is wrong at every zoom, and
+ * no tolerance above zero rules it out.
+ *
+ * What is left at zero is the grid: 10 crossings in the state layer and 58 in
+ * the district layer, country-wide, where two borders pass within 53 m of each
+ * other and swap sides when rounded. Those need a finer coordinate system, not
+ * a different tolerance.
+ *
+ * The cost is real — 30 → 67 kB brotli for the largest request either layer
+ * ever answers — and it is spent where it can be seen: unlike the silhouette,
+ * these borders are still drawn at the deepest zoom the map allows, three
+ * kilometres across, where one grid unit is some twenty pixels.
+ */
+const BORDER_TOLERANCE = 0
+
 /** Rings below this (in square viewBox units, ≈ 0.5 km²) are not islands. */
 const MIN_OUTLINE_AREA = 200
 
@@ -100,14 +162,17 @@ function arg(name: string): string | undefined {
 // --- reading ---------------------------------------------------------------
 
 /**
- * Yield the members of the input's `features` array one at a time.
+ * Yield the members of the input's `features` array one at a time — or of
+ * whatever other top-level array is named, which is how the district boundaries
+ * are read: Overpass calls its array `elements` and answers a query for all of
+ * Germany's Kreise with a few hundred megabytes of it.
  *
  * A hand-rolled scanner rather than a streaming-JSON dependency: all it has to
  * do is find the array and then count braces, minding that a brace inside a
  * string is not a brace. The consumed prefix is dropped after every feature, so
  * the buffer never holds more than one feature plus one chunk.
  */
-async function* streamFeatures(file: string): AsyncGenerator<Feature> {
+async function* streamElements<T>(file: string, arrayKey = 'features'): AsyncGenerator<T> {
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Pfad kommt vom Entwickler auf der Kommandozeile, nicht aus einer Anfrage
   const stream = createReadStream(file, { encoding: 'utf8', highWaterMark: 1 << 20 })
   let buffer = ''
@@ -125,7 +190,7 @@ async function* streamFeatures(file: string): AsyncGenerator<Feature> {
     buffer += chunk as string
 
     if (!inArray) {
-      const key = buffer.indexOf('"features"')
+      const key = buffer.indexOf(`"${arrayKey}"`)
       if (key === -1) continue
       const open = buffer.indexOf('[', key)
       if (open === -1) continue
@@ -391,14 +456,25 @@ function simplifyOpen(points: Point[], tolerance: number): Point[] {
   return points.filter((_, i) => keep[i] === 1)
 }
 
-/** Drop repeated vertices — quantisation collapses many of them onto each other. */
-function dedupe(ring: Ring): Ring {
+/**
+ * Drop repeated vertices — quantisation collapses many of them onto each other.
+ * Keeps an open line open, which is what the administrative borders need: an
+ * arc that happens to start and end at the same point is a way around an
+ * enclave, and closing it away would leave a gap in the line.
+ */
+function collapse(line: Ring): Ring {
   const out: Ring = []
-  for (const point of ring) {
+  for (const point of line) {
     const last = out[out.length - 1]
     if (last?.[0] === point[0] && last[1] === point[1]) continue
     out.push(point)
   }
+  return out
+}
+
+/** As `collapse`, and the closing vertex goes too — rings carry it implicitly. */
+function dedupe(ring: Ring): Ring {
+  const out = collapse(ring)
   while (
     out.length > 1 &&
     out[0][0] === out[out.length - 1][0] &&
@@ -409,6 +485,83 @@ function dedupe(ring: Ring): Ring {
   return out
 }
 
+/** Do these two segments properly cross? Touching and collinear do not count. */
+function segmentsCross(p1: Point, p2: Point, p3: Point, p4: Point): boolean {
+  const side = (o: Point, a: Point, b: Point): number =>
+    (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+  const d1 = side(p3, p4, p1)
+  const d2 = side(p3, p4, p2)
+  const d3 = side(p1, p2, p3)
+  const d4 = side(p1, p2, p4)
+  // A zero means an endpoint lies on the other segment: two arcs meeting at a
+  // junction, or three collinear points. Neither is a crossing.
+  if (d1 === 0 || d2 === 0 || d3 === 0 || d4 === 0) return false
+  return d1 > 0 !== d2 > 0 && d3 > 0 !== d4 > 0
+}
+
+/**
+ * Does this line cross *itself*? The one thing simplification must never
+ * produce, and the one thing Douglas–Peucker does not rule out.
+ *
+ * DP guarantees that no vertex strays further than the tolerance from the line
+ * it replaces — it says nothing about the result staying simple. Where a
+ * boundary doubles back on itself within the tolerance (a meander, a corridor,
+ * the interlocking enclaves at Ober-Laudenbach) the shortcut can jump the line
+ * to the wrong side of itself, and what the reader sees is a spike or a bow tie.
+ * Measured on the administrative borders, the input had no self-intersections at
+ * any stage and the simplified arcs had eight; on the postal-code areas the
+ * committed artefact carried 192, in 138 of 8.175 areas, the median one
+ * enclosing some 370 m.
+ *
+ * So the tolerance is not asked to be small enough to be safe — the result is
+ * checked, and whatever fails keeps the geometry it came in with. Quadratic in
+ * the vertex count, which is why it is applied per *arc* (a few dozen vertices)
+ * rather than per ring.
+ */
+function selfIntersects(points: Point[], closed: boolean): boolean {
+  // A closed ring carries the segment back to its first point; an open one does
+  // not. `dedupe` has already dropped the repeated closing vertex.
+  const count = closed ? points.length : points.length - 1
+  if (count < 4) return false
+  for (let i = 0; i < count; i++) {
+    const a1 = points[i]
+    const a2 = points[(i + 1) % points.length]
+    // From i + 2: neighbouring segments share an endpoint by construction.
+    for (let j = i + 2; j < count; j++) {
+      // The first and the final segment of a ring are neighbours as well.
+      if (closed && i === 0 && j === count - 1) continue
+      if (segmentsCross(a1, a2, points[j], points[(j + 1) % points.length])) return true
+    }
+  }
+  return false
+}
+
+/** Vertices per window — see `simplifyRing`. */
+const REPAIR_WINDOW = 256
+
+/**
+ * Simplify an open line as far as the tolerance allows *without tying it in a
+ * knot*, halving the tolerance until the result comes out simple.
+ *
+ * Refusing to simplify at all would be the obvious answer and is a bad one: the
+ * geometry it falls back to is some ten times denser than what the tolerance
+ * would have kept, so a handful of knots along the coast cost more than every
+ * other vertex on it put together — measured, 51 kB against 34. A knot is a
+ * local accident of one shortcut, and it almost always survives only the
+ * coarsest step.
+ *
+ * Zero is the floor and needs no check: it drops none but the exactly collinear
+ * vertices, so it cannot move a line and cannot create a crossing the input did
+ * not already have.
+ */
+function simplifySafely(points: Point[], tolerance: number): Point[] {
+  for (let t = tolerance; t > 0; t = Math.floor(t / 2)) {
+    const simplified = simplifyOpen(points, t)
+    if (!selfIntersects(simplified, false)) return simplified
+  }
+  return simplifyOpen(points, 0)
+}
+
 /**
  * Simplify a closed ring. The ring is cut at its first vertex and treated as an
  * open line, which keeps that vertex fixed — good enough here, and it avoids the
@@ -417,7 +570,23 @@ function dedupe(ring: Ring): Ring {
 function simplifyRing(ring: Ring, tolerance: number): Ring {
   const closed = dedupe(ring)
   if (closed.length < 4) return closed
-  return dedupe(simplifyOpen([...closed, closed[0]], tolerance))
+
+  // Simplified in windows rather than in one piece, because the check below can
+  // only answer "this came out knotted" for the whole stretch it is given, and
+  // whatever fails keeps every vertex it had. A coastline-long stretch means one
+  // knot anywhere reverts the entire coast: measured, 356 kB against 34. The
+  // window costs one forced vertex at each end — for the German silhouette,
+  // twenty-seven of them.
+  const out: Ring = []
+  for (let start = 0; start < closed.length; start += REPAIR_WINDOW) {
+    const stop = Math.min(start + REPAIR_WINDOW, closed.length)
+    // Each window ends on the next one's first vertex, the last one on the
+    // ring's — so the pieces meet and the ring closes.
+    const window = [...closed.slice(start, stop), closed[stop % closed.length]]
+    const kept = simplifySafely(window, tolerance)
+    for (let i = 0; i < kept.length - 1; i++) out.push(kept[i])
+  }
+  return dedupe(out)
 }
 
 // --- topology --------------------------------------------------------------
@@ -517,9 +686,13 @@ function simplifyRingByArcs(ring: Ring, junctions: Set<number>, tolerance: numbe
       arc.push(ring[i])
       if (i === to) break
     }
+    // The decision needs no coordination with the neighbour that walks this
+    // same arc from the other end: Douglas–Peucker is symmetric under reversal
+    // (see `simplifyOpen`) and so is a crossing, so both sides back off to the
+    // same tolerance independently and still agree on the border.
+    const simplified = simplifySafely(arc, tolerance)
     // The closing point is the next arc's opening one; emitting it here would
     // duplicate every junction.
-    const simplified = simplifyOpen(arc, tolerance)
     for (let i = 0; i < simplified.length - 1; i++) out.push(simplified[i])
   }
   return dedupe(out)
@@ -532,19 +705,25 @@ function appendNumber(out: string, value: number): string {
   return value < 0 ? out + String(value) : `${out} ${value}`
 }
 
-/** One ring as an `M`-relative-`l`-`z` subpath. */
-function ringToPath(ring: Ring): string {
-  if (ring.length < 3) return ''
-  let d = `M${ring[0][0]} ${ring[0][1]}l`
-  let [px, py] = ring[0]
-  for (let i = 1; i < ring.length; i++) {
-    const [x, y] = ring[i]
+/** One open polyline as an `M`-relative-`l` subpath — a border, not a body. */
+function lineToPath(line: Ring): string {
+  if (line.length < 2) return ''
+  let d = `M${line[0][0]} ${line[0][1]}l`
+  let [px, py] = line[0]
+  for (let i = 1; i < line.length; i++) {
+    const [x, y] = line[i]
     d = appendNumber(d, x - px)
     d = appendNumber(d, y - py)
     px = x
     py = y
   }
-  return `${d}z`
+  return d
+}
+
+/** One ring as an `M`-relative-`l`-`z` subpath. */
+function ringToPath(ring: Ring): string {
+  if (ring.length < 3) return ''
+  return `${lineToPath(ring)}z`
 }
 
 // --- silhouette ------------------------------------------------------------
@@ -641,11 +820,34 @@ function isInside(point: Point, rings: Ring[]): boolean {
  * way lies inside the full relation — territorial waters included, which is
  * exactly the test for "is this stretch of coast German".
  */
+/**
+ * The ways an Overpass answer marks `maritime=yes` — the territorial-sea arcs,
+ * twelve nautical miles out, which every coastal administrative boundary
+ * carries and none of them should be drawn with.
+ *
+ * Several files may be named, comma-separated: the national relation and the
+ * administrative levels are separate queries, and a way is maritime for all of
+ * them or for none. Empty when nothing was supplied.
+ */
+async function loadMaritimeWays(files: string | undefined): Promise<Set<number>> {
+  const maritime = new Set<number>()
+  for (const file of (files ?? '').split(',').filter(Boolean)) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- Pfad kommt vom Entwickler auf der Kommandozeile, nicht aus einer Anfrage
+    const tagged = JSON.parse(await readFile(file, 'utf8')) as {
+      elements: { type: string; id: number; tags?: Record<string, string> }[]
+    }
+    for (const way of tagged.elements) {
+      if (way.type === 'way' && way.tags?.maritime === 'yes') maritime.add(way.id)
+    }
+  }
+  return maritime
+}
+
 async function loadBoundary(
   file: string,
-  tagsFile: string | undefined,
+  maritime: Set<number>,
   coastFile: string | undefined,
-): Promise<Ring[]> {
+): Promise<{ rings: Ring[]; ways: Set<number> }> {
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Pfad kommt vom Entwickler auf der Kommandozeile, nicht aus einer Anfrage
   const data = JSON.parse(await readFile(file, 'utf8')) as {
     elements: { type: string; members?: BoundaryWay[] }[]
@@ -655,21 +857,17 @@ async function loadBoundary(
   ).filter((member) => member.type === 'way' && member.geometry)
   if (members.length === 0) throw new Error(`No boundary relation with members in ${file}`)
 
-  const maritime = new Set<number>()
-  if (tagsFile) {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- Pfad kommt vom Entwickler auf der Kommandozeile, nicht aus einer Anfrage
-    const tagged = JSON.parse(await readFile(tagsFile, 'utf8')) as {
-      elements: { type: string; id: number; tags?: Record<string, string> }[]
-    }
-    for (const way of tagged.elements) {
-      if (way.type === 'way' && way.tags?.maritime === 'yes') maritime.add(way.id)
-    }
+  // Which ways the silhouette already draws. The state layer subtracts them, so
+  // no stretch of border is drawn by two layers at once.
+  const ways = new Set<number>()
+  for (const member of members) {
+    if (member.ref !== undefined) ways.add(member.ref)
   }
 
   const landLines = members
     .filter((member) => member.ref === undefined || !maritime.has(member.ref))
     .map(toLine)
-  if (!coastFile || maritime.size === 0) return stitchRings(landLines)
+  if (!coastFile || maritime.size === 0) return { rings: stitchRings(landLines), ways }
 
   // The full outline, territorial waters and all — only ever used to decide
   // which of the downloaded coast belongs to this country.
@@ -685,7 +883,136 @@ async function loadBoundary(
     .filter((line) => line.length >= 2 && isInside(line[Math.floor(line.length / 2)], territorial))
   console.warn(`  coast: ${coastLines.length} ways inside the country`)
 
-  return stitchRings([...landLines, ...coastLines])
+  return { rings: stitchRings([...landLines, ...coastLines]), ways }
+}
+
+// --- administrative borders ------------------------------------------------
+
+/**
+ * Bundesland and Kreis borders, so that a reader who has zoomed past the point
+ * where the country silhouette is on screen can still tell where they are.
+ *
+ * Stored as **arcs, deduplicated by OSM way id** rather than as one shape per
+ * area, which is what makes this cheap. A border two Kreise share is a single
+ * way carried by both relations: one copy in the artefact, one line on screen,
+ * and — unlike the postal-code areas, which needed a whole topology stage for
+ * this (see docu/karte.md) — no way for two neighbours to end up disagreeing
+ * about where their common border runs, because there is only ever one of it.
+ *
+ * The levels are stored as a *partition*, not as three complete networks: the
+ * state layer leaves out the ways the silhouette already draws, the district
+ * layer leaves out the ways the state layer draws. Nothing is ever painted
+ * twice, and because the coarser layers are always on screen when a finer one
+ * is, no network looks torn. See the visibility staging in MemberMap.vue.
+ */
+interface AdminMember {
+  type: string
+  ref?: number
+  role: string
+  lat?: number
+  lon?: number
+  geometry?: { lat: number; lon: number }[]
+}
+
+interface AdminRelation {
+  type: string
+  tags?: Record<string, string>
+  members?: AdminMember[]
+}
+
+/**
+ * A German administrative relation, as opposed to a neighbouring country's.
+ *
+ * Overpass answers `rel(area.de)` with everything that has a member inside
+ * Germany, and a Dutch or Polish district that shares a way with the border has
+ * one. German relations carry the official keys — `de:regionalschluessel`,
+ * `de:amtlicher_gemeindeschluessel` — or an ISO code naming the country, and
+ * nobody else's do. A tag test rather than a point-in-country test: the latter
+ * would be thousands of ray casts against the whole national outline, for a
+ * question the data already answers.
+ */
+function isGerman(tags: Record<string, string> | undefined): boolean {
+  if (!tags) return false
+  if ((tags['ISO3166-2'] ?? '').startsWith('DE-')) return true
+  return Object.keys(tags).some((key) => key.startsWith('de:'))
+}
+
+/** One administrative level, still in lon/lat. */
+interface AdminLevel {
+  /** The border ways this level is the first to draw, by way id. */
+  arcs: Map<number, Ring>
+  /** Every way of the level, so a finer one can subtract them. */
+  ways: Set<number>
+  /** One per area: what to write on the map, and where. */
+  labels: { name: string; rings: Ring[]; anchor: Point | null }[]
+  /** Relations dropped as belonging to another country. */
+  foreign: number
+}
+
+/**
+ * Read one `admin_level` as Overpass returns it with `out geom`.
+ *
+ * Streamed for the same reason the postal codes are: all of Germany's Kreise
+ * with their geometry is a hundred megabytes and more, and this way the peak is
+ * one relation rather than the whole answer plus its parsed form.
+ */
+async function loadAdminLevel(
+  file: string,
+  maritime: Set<number>,
+  covered: Set<number>,
+): Promise<AdminLevel> {
+  const level: AdminLevel = { arcs: new Map(), ways: new Set(), labels: [], foreign: 0 }
+  // Ways Overpass gave no id for cannot be deduplicated against anything; they
+  // still need a key of their own.
+  let anonymous = 0
+
+  for await (const relation of streamElements<AdminRelation>(file, 'elements')) {
+    if (relation.type !== 'relation') continue
+    const name = (relation.tags?.name ?? '').trim()
+    if (!name) continue
+    if (!isGerman(relation.tags)) {
+      level.foreign += 1
+      continue
+    }
+
+    const land = (relation.members ?? []).filter(
+      (member) =>
+        member.type === 'way' &&
+        member.geometry &&
+        (member.ref === undefined || !maritime.has(member.ref)),
+    )
+    for (const member of land) {
+      const id = member.ref ?? (anonymous -= 1)
+      level.ways.add(id)
+      if (covered.has(id) || level.arcs.has(id)) continue
+      level.arcs.set(id, toLine(member))
+    }
+
+    // Where the name goes. The `label` member is the role OSM has for exactly
+    // this question and beats any centroid; `admin_centre` deliberately does
+    // not stand in for it, since that is the seat *town* and already carries
+    // its own name on the map.
+    const anchor = (relation.members ?? []).find(
+      (member) => member.type === 'node' && member.role === 'label',
+    )
+    level.labels.push({
+      name,
+      // The body the label is sized and, failing an anchor, placed by — from
+      // *every* way, the maritime ones included. They are dropped from the ink
+      // because a territorial-sea arc looks like a rendering fault, but without
+      // them a coastal outline no longer closes and the shoelace formula reads
+      // the chord across the gap as the coast: Schleswig-Holstein came out at
+      // a seventh of its area and lost its name to the fit rule.
+      rings: stitchRings(
+        (relation.members ?? [])
+          .filter((member) => member.type === 'way' && member.geometry)
+          .map(toLine),
+      ),
+      anchor:
+        anchor?.lon !== undefined && anchor.lat !== undefined ? [anchor.lon, anchor.lat] : null,
+    })
+  }
+  return level
 }
 
 // --- main ------------------------------------------------------------------
@@ -694,22 +1021,51 @@ const input = arg('in') ?? '/tmp/plz.geojson'
 const namesFile = arg('names')
 const boundaryFile = arg('boundary')
 const placesFile = arg('places')
+const statesFile = arg('states')
+const districtsFile = arg('districts')
 const tolerance = Number(arg('tolerance') ?? DEFAULT_TOLERANCE)
 const outlineTolerance = Number(arg('outline-tolerance') ?? OUTLINE_TOLERANCE)
+const borderTolerance = Number(arg('border-tolerance') ?? BORDER_TOLERANCE)
 const root = path.resolve(import.meta.dirname, '..')
 
-const names = namesFile ? await loadPlaceNames(namesFile) : new Map<string, string>()
-console.warn(namesFile ? `Place names: ${names.size} postal codes` : 'No place names supplied')
+const areasPath = path.join(root, 'server/assets/map/plz-areas.json')
+const placesPath = path.join(root, 'server/assets/map/places.json')
+const bordersPath = path.join(root, 'server/assets/map/boundaries.json')
 
-const boundaryRings = boundaryFile
-  ? await loadBoundary(boundaryFile, arg('boundary-tags'), arg('coast'))
-  : []
-if (boundaryFile) console.warn(`Boundary: ${boundaryRings.length} rings`)
+/**
+ * Rebuild only the administrative borders, reusing the coordinate system the
+ * committed artefact already records.
+ *
+ * The two data sets age independently — a Kreisreform has nothing to do with
+ * the postal codes — and a full run costs half a gigabyte of download and eight
+ * gigabytes of heap. Anything that would change the projection is exactly what
+ * this mode refuses to do, so the borders cannot come out in a coordinate
+ * system the rest of the map does not share.
+ */
+const bordersOnly = process.argv.includes('--only-borders')
+
+const names =
+  namesFile && !bordersOnly ? await loadPlaceNames(namesFile) : new Map<string, string>()
+if (!bordersOnly) {
+  console.warn(namesFile ? `Place names: ${names.size} postal codes` : 'No place names supplied')
+}
+
+// Shared by the silhouette and by every administrative level: the
+// territorial-sea arcs belong to none of them.
+const maritime = await loadMaritimeWays(arg('boundary-tags'))
+
+const boundary = boundaryFile
+  ? await loadBoundary(boundaryFile, maritime, arg('coast'))
+  : { rings: [] as Ring[], ways: new Set<number>() }
+if (boundaryFile) console.warn(`Boundary: ${boundary.rings.length} rings`)
 
 const altNamesFile = arg('altnames')
-const germanNames = altNamesFile ? await loadGermanNames(altNamesFile) : new Map<number, string>()
-const rawPlaces = placesFile ? await loadPlaces(placesFile, germanNames) : []
-if (placesFile) console.warn(`Places: ${rawPlaces.length} (${germanNames.size} German names)`)
+const germanNames =
+  altNamesFile && !bordersOnly ? await loadGermanNames(altNamesFile) : new Map<number, string>()
+const rawPlaces = placesFile && !bordersOnly ? await loadPlaces(placesFile, germanNames) : []
+if (placesFile && !bordersOnly) {
+  console.warn(`Places: ${rawPlaces.length} (${germanNames.size} German names)`)
+}
 
 const postcodeOf = (feature: Feature): string =>
   (
@@ -719,60 +1075,85 @@ const postcodeOf = (feature: Feature): string =>
     ''
   ).trim()
 
-// Pass 1: the bounding box the projection is fitted to.
-console.warn(`Reading ${input} (pass 1: extent) …`)
-let minX = Infinity
-let minY = Infinity
-let maxX = -Infinity
-let maxY = -Infinity
-let featureCount = 0
+/**
+ * The coordinate system. Either measured from the input (pass 1), or taken from
+ * the artefact that already holds it, and then it must not be recomputed:
+ * a viewBox that disagrees with the committed one by a single unit would draw
+ * today's borders a few hundred metres off yesterday's areas.
+ */
+let proj: MapProjection
+let viewBox: string
+let height: number
 
-const stretch = (rings: Ring[]): void => {
-  for (const ring of rings) {
-    for (const [lon, lat] of ring) {
-      const [x, y] = mercator(lon, lat)
-      if (x < minX) minX = x
-      if (x > maxX) maxX = x
-      if (y < minY) minY = y
-      if (y > maxY) maxY = y
+if (bordersOnly) {
+  const existing = JSON.parse(await readFile(areasPath, 'utf8')) as PlzAreaFile
+  if (!existing.proj) {
+    throw new Error(
+      `${areasPath} carries no projection — run the full build once before --only-borders`,
+    )
+  }
+  proj = existing.proj
+  viewBox = existing.viewBox
+  height = Number(viewBox.split(/\s+/)[3])
+  console.warn(`Reusing the committed coordinate system · viewBox ${viewBox}`)
+} else {
+  // Pass 1: the bounding box the projection is fitted to.
+  console.warn(`Reading ${input} (pass 1: extent) …`)
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  let featureCount = 0
+
+  const stretch = (rings: Ring[]): void => {
+    for (const ring of rings) {
+      for (const [lon, lat] of ring) {
+        const [x, y] = mercator(lon, lat)
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+        if (y < minY) minY = y
+        if (y > maxY) maxY = y
+      }
     }
   }
-}
 
-for await (const feature of streamFeatures(input)) {
-  if (!postcodeOf(feature)) continue
-  featureCount += 1
-  const { outer, holes } = ringsOf(feature.geometry)
-  stretch([...outer, ...holes])
-}
-// The silhouette has to fit in the same box, or the coast gets cut off at the
-// edge of the viewBox wherever it reaches past the outermost postal code.
-stretch(boundaryRings)
+  for await (const feature of streamElements<Feature>(input)) {
+    if (!postcodeOf(feature)) continue
+    featureCount += 1
+    const { outer, holes } = ringsOf(feature.geometry)
+    stretch([...outer, ...holes])
+  }
+  // The silhouette has to fit in the same box, or the coast gets cut off at the
+  // edge of the viewBox wherever it reaches past the outermost postal code.
+  stretch(boundary.rings)
 
-if (featureCount === 0) throw new Error(`No usable features in ${input}`)
+  if (featureCount === 0) throw new Error(`No usable features in ${input}`)
 
-const scale = VIEWBOX_WIDTH / (maxX - minX)
-const height = Math.ceil((maxY - minY) * scale)
-const viewBox = `0 0 ${VIEWBOX_WIDTH} ${height}`
-// Mercator's x is the longitude in radians, so an arc length taken from it is
-// the one at the equator. What matters is the ground resolution where the map
-// actually is, which is that times the cosine of the middle latitude.
-const middleLatitude = 2 * Math.atan(Math.exp((minY + maxY) / 2)) - Math.PI / 2
-const metresPerUnit = Math.round(
-  ((maxX - minX) * 6371000 * Math.cos(middleLatitude)) / VIEWBOX_WIDTH,
-)
-console.warn(`  ${featureCount} features · viewBox ${viewBox} · 1 unit ≈ ${metresPerUnit} m`)
-
-/** Project → viewBox units → whole numbers. */
-const quantise = (rings: Ring[]): Ring[] =>
-  rings.map((ring) =>
-    dedupe(
-      ring.map(([lon, lat]): Point => {
-        const [x, y] = mercator(lon, lat)
-        return [Math.round((x - minX) * scale), Math.round((maxY - y) * scale)]
-      }),
-    ),
+  // The administrative levels are deliberately *not* stretched to: they lie
+  // inside the country by construction, and letting them widen the box would
+  // move every coordinate in the other two artefacts.
+  const scale = VIEWBOX_WIDTH / (maxX - minX)
+  height = Math.ceil((maxY - minY) * scale)
+  viewBox = `0 0 ${VIEWBOX_WIDTH} ${height}`
+  proj = { x0: minX, y0: maxY, k: scale }
+  // Mercator's x is the longitude in radians, so an arc length taken from it is
+  // the one at the equator. What matters is the ground resolution where the map
+  // actually is, which is that times the cosine of the middle latitude.
+  const middleLatitude = 2 * Math.atan(Math.exp((minY + maxY) / 2)) - Math.PI / 2
+  const metresPerUnit = Math.round(
+    ((maxX - minX) * 6371000 * Math.cos(middleLatitude)) / VIEWBOX_WIDTH,
   )
+  console.warn(`  ${featureCount} features · viewBox ${viewBox} · 1 unit ≈ ${metresPerUnit} m`)
+}
+
+/** Project one lon/lat pair → viewBox units → whole numbers. */
+const project = ([lon, lat]: Point): Point => {
+  const [x, y] = mercator(lon, lat)
+  return [Math.round((x - proj.x0) * proj.k), Math.round((proj.y0 - y) * proj.k)]
+}
+
+/** The same for whole rings, closing vertex dropped. */
+const quantise = (rings: Ring[]): Ring[] => rings.map((ring) => dedupe(ring.map(project)))
 
 // Pass 2: the geometry. Merging by postal code rather than by feature — a code
 // can be several relations in OSM, and the map wants one shape per code.
@@ -780,7 +1161,6 @@ const quantise = (rings: Ring[]): Ring[] =>
 // Held rather than emitted: the simplification below needs to know where the
 // borders *between* these rings run, which is not knowable one feature at a
 // time. See the topology section above.
-console.warn(`Reading ${input} (pass 2: geometry) …`)
 
 interface Collected {
   /** Place name, filled in at the end. */
@@ -794,117 +1174,198 @@ interface Collected {
   largest: number
 }
 
-const collected = new Map<string, Collected>()
-let ringCount = 0
-let vertexCount = 0
-
-for await (const feature of streamFeatures(input)) {
-  const plz = postcodeOf(feature)
-  if (!plz) continue
-
-  const { outer: rawOuter, holes: rawHoles } = ringsOf(feature.geometry)
-  const outer = quantise(rawOuter).filter((ring) => ring.length >= 3)
-  const holes = quantise(rawHoles).filter((ring) => ring.length >= 3)
-  if (outer.length === 0 && holes.length === 0) continue
-
-  const [cx, cy] = centroidOf(outer.length > 0 ? outer : holes)
-  const size = outer.reduce((sum, ring) => sum + Math.abs(signedArea(ring)), 0)
-  ringCount += outer.length + holes.length
-  for (const ring of [...outer, ...holes]) vertexCount += ring.length
-
-  const existing = collected.get(plz)
-  if (existing) {
-    existing.rings.push(...outer, ...holes)
-    existing.s += size
-    if (size > existing.largest) {
-      existing.largest = size
-      existing.c = [cx, cy]
-    }
-    continue
-  }
-  collected.set(plz, {
-    o: names.get(plz) ?? '',
-    rings: [...outer, ...holes],
-    c: [cx, cy],
-    s: size,
-    largest: size,
-  })
-}
-
-console.warn(`  ${collected.size} postal codes · ${ringCount} rings · ${vertexCount} vertices`)
-
-// The planar graph, before anything is thrown away. Every ring of every postal
-// code goes in: a hole in one area is the outer ring of another, and a border
-// is only shared if both sides cut it in the same places.
-console.warn('Finding junctions …')
-const junctions = findJunctions(
-  (function* () {
-    for (const area of collected.values()) yield* area.rings
-  })(),
-)
-console.warn(`  ${junctions.size} junctions`)
-
-console.warn(`Simplifying arcs (tolerance ${tolerance}) …`)
-const areas: PlzAreaFile['areas'] = {}
-let keptVertices = 0
-
-for (const [plz, area] of collected) {
-  const simplified = area.rings
-    .map((ring) => simplifyRingByArcs(ring, junctions, tolerance))
-    .filter((ring) => ring.length >= 3)
-  // Everything collapsed: keep the unsimplified shape, so even the smallest
-  // city postal code still has a body to draw and to place a label on.
-  const rings = simplified.length > 0 ? simplified : area.rings
-  if (rings.length === 0) continue
-  for (const ring of rings) keptVertices += ring.length
-
-  areas[plz] = {
-    o: area.o,
-    d: rings.map(ringToPath).join(''),
-    c: [Math.round(area.c[0]), Math.round(area.c[1])],
-    s: Math.round(area.s),
-  }
-}
-
-const named = Object.values(areas).filter((area) => area.o).length
-console.warn(
-  `  ${Object.keys(areas).length} postal codes, ${named} with a place name` +
-    ` · ${keptVertices} of ${vertexCount} vertices kept`,
-)
-
-// Filled with the even-odd rule, so an enclave inside the country cuts itself
-// out without anyone having to say which ring is a hole.
-const outlinePath = quantise(boundaryRings)
-  .map((ring) => simplifyRing(ring, outlineTolerance))
-  // Slivers left by a coast that did not quite meet the land border.
-  .filter((ring) => ring.length >= 3 && Math.abs(signedArea(ring)) >= MIN_OUTLINE_AREA)
-  .map(ringToPath)
-  .join('')
-if (!boundaryFile) console.warn('No boundary supplied — the map will have no silhouette')
-
-// Projected into the same coordinate system, still ranked. Places outside the
-// box are impossible for German data, but a stray one must not be drawn onto
-// the edge of the map.
-const placeFile: PlaceFile = {
-  viewBox,
-  places: rawPlaces
-    .map(({ name, lon, lat, rank }): PlaceFile['places'][number] => {
-      const [x, y] = mercator(lon, lat)
-      return [Math.round((x - minX) * scale), Math.round((maxY - y) * scale), rank, name]
-    })
-    .filter(([x, y]) => x >= 0 && x <= VIEWBOX_WIDTH && y >= 0 && y <= height),
-}
-
-const areasPath = path.join(root, 'server/assets/map/plz-areas.json')
-const placesPath = path.join(root, 'server/assets/map/places.json')
+const kb = (value: string): string => `${Math.round(value.length / 1024)} kB`
 await mkdir(path.dirname(areasPath), { recursive: true })
 
-const areaFile: PlzAreaFile = { viewBox, outline: outlinePath, areas }
-const areaJson = JSON.stringify(areaFile)
-const placeJson = JSON.stringify(placeFile)
-await writeFile(areasPath, areaJson)
-await writeFile(placesPath, placeJson)
+if (!bordersOnly) {
+  console.warn(`Reading ${input} (pass 2: geometry) …`)
+  const collected = new Map<string, Collected>()
+  let ringCount = 0
+  let vertexCount = 0
 
-const kb = (value: string): string => `${Math.round(value.length / 1024)} kB`
-console.warn(`Wrote ${areasPath} (${kb(areaJson)}, outline ${kb(outlinePath)})`)
-console.warn(`Wrote ${placesPath} (${kb(placeJson)}, ${placeFile.places.length} places)`)
+  for await (const feature of streamElements<Feature>(input)) {
+    const plz = postcodeOf(feature)
+    if (!plz) continue
+
+    const { outer: rawOuter, holes: rawHoles } = ringsOf(feature.geometry)
+    const outer = quantise(rawOuter).filter((ring) => ring.length >= 3)
+    const holes = quantise(rawHoles).filter((ring) => ring.length >= 3)
+    if (outer.length === 0 && holes.length === 0) continue
+
+    const [cx, cy] = centroidOf(outer.length > 0 ? outer : holes)
+    const size = outer.reduce((sum, ring) => sum + Math.abs(signedArea(ring)), 0)
+    ringCount += outer.length + holes.length
+    for (const ring of [...outer, ...holes]) vertexCount += ring.length
+
+    const existing = collected.get(plz)
+    if (existing) {
+      existing.rings.push(...outer, ...holes)
+      existing.s += size
+      if (size > existing.largest) {
+        existing.largest = size
+        existing.c = [cx, cy]
+      }
+      continue
+    }
+    collected.set(plz, {
+      o: names.get(plz) ?? '',
+      rings: [...outer, ...holes],
+      c: [cx, cy],
+      s: size,
+      largest: size,
+    })
+  }
+
+  console.warn(`  ${collected.size} postal codes · ${ringCount} rings · ${vertexCount} vertices`)
+
+  // The planar graph, before anything is thrown away. Every ring of every postal
+  // code goes in: a hole in one area is the outer ring of another, and a border
+  // is only shared if both sides cut it in the same places.
+  console.warn('Finding junctions …')
+  const junctions = findJunctions(
+    (function* () {
+      for (const area of collected.values()) yield* area.rings
+    })(),
+  )
+  console.warn(`  ${junctions.size} junctions`)
+
+  console.warn(`Simplifying arcs (tolerance ${tolerance}) …`)
+  const areas: PlzAreaFile['areas'] = {}
+  let keptVertices = 0
+
+  for (const [plz, area] of collected) {
+    const simplified = area.rings
+      .map((ring) => simplifyRingByArcs(ring, junctions, tolerance))
+      .filter((ring) => ring.length >= 3)
+    // Everything collapsed: keep the unsimplified shape, so even the smallest
+    // city postal code still has a body to draw and to place a label on.
+    const rings = simplified.length > 0 ? simplified : area.rings
+    if (rings.length === 0) continue
+    for (const ring of rings) keptVertices += ring.length
+
+    areas[plz] = {
+      o: area.o,
+      d: rings.map(ringToPath).join(''),
+      c: [Math.round(area.c[0]), Math.round(area.c[1])],
+      s: Math.round(area.s),
+    }
+  }
+
+  const named = Object.values(areas).filter((area) => area.o).length
+  console.warn(
+    `  ${Object.keys(areas).length} postal codes, ${named} with a place name` +
+      ` · ${keptVertices} of ${vertexCount} vertices kept`,
+  )
+
+  // Filled with the even-odd rule, so an enclave inside the country cuts itself
+  // out without anyone having to say which ring is a hole.
+  const outlinePath = quantise(boundary.rings)
+    .map((ring) => simplifyRing(ring, outlineTolerance))
+    // Slivers left by a coast that did not quite meet the land border.
+    .filter((ring) => ring.length >= 3 && Math.abs(signedArea(ring)) >= MIN_OUTLINE_AREA)
+    .map(ringToPath)
+    .join('')
+  if (!boundaryFile) console.warn('No boundary supplied — the map will have no silhouette')
+
+  // Projected into the same coordinate system, still ranked. Places outside the
+  // box are impossible for German data, but a stray one must not be drawn onto
+  // the edge of the map.
+  const placeFile: PlaceFile = {
+    viewBox,
+    places: rawPlaces
+      .map(({ name, lon, lat, rank }): PlaceFile['places'][number] => {
+        const [x, y] = project([lon, lat])
+        return [x, y, rank, name]
+      })
+      .filter(([x, y]) => x >= 0 && x <= VIEWBOX_WIDTH && y >= 0 && y <= height),
+  }
+
+  const areaFile: PlzAreaFile = { viewBox, outline: outlinePath, areas, proj }
+  const areaJson = JSON.stringify(areaFile)
+  const placeJson = JSON.stringify(placeFile)
+  await writeFile(areasPath, areaJson)
+  await writeFile(placesPath, placeJson)
+
+  console.warn(`Wrote ${areasPath} (${kb(areaJson)}, outline ${kb(outlinePath)})`)
+  console.warn(`Wrote ${placesPath} (${kb(placeJson)}, ${placeFile.places.length} places)`)
+}
+
+// --- the administrative borders --------------------------------------------
+
+if (statesFile || districtsFile) {
+  /**
+   * The ways a coarser layer already draws. Seeded with the silhouette's, so the
+   * state layer does not put a second line on the national border, and grown by
+   * each level in turn.
+   */
+  const covered = new Set(boundary.ways)
+  const levels = {} as BoundaryFile['levels']
+
+  /** One arc: its box, so the endpoint can cull it, and its path. */
+  const toArc = (line: Ring): BoundaryArc | null => {
+    const simplified = simplifyOpen(collapse(line.map(project)), borderTolerance)
+    if (simplified.length < 2) return null
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+    for (const [x, y] of simplified) {
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (y < minY) minY = y
+      if (y > maxY) maxY = y
+    }
+    return [minX, minY, maxX, maxY, lineToPath(simplified)]
+  }
+
+  for (const [key, file] of [
+    ['state', statesFile],
+    ['district', districtsFile],
+  ] as const) {
+    if (!file) {
+      levels[key] = { arcs: [], labels: [] }
+      console.warn(`No ${key} boundaries supplied`)
+      continue
+    }
+
+    console.warn(`Reading ${file} (${key} borders) …`)
+    const level = await loadAdminLevel(file, maritime, covered)
+    for (const id of level.ways) covered.add(id)
+
+    const arcs = [...level.arcs.values()]
+      .map(toArc)
+      .filter((arc): arc is BoundaryArc => arc !== null)
+      // Longest first, by the extent of the box: an answer that hits its limit
+      // then drops the specks rather than the line across the whole view.
+      .sort((a, b) => b[2] - b[0] + (b[3] - b[1]) - (a[2] - a[0]) - (a[3] - a[1]))
+
+    const labels = level.labels
+      .map(({ name, rings, anchor }): BoundaryFile['levels'][BoundaryLevel]['labels'][number] => {
+        const quantised = quantise(rings).filter((ring) => ring.length >= 3)
+        const size = quantised.reduce((sum, ring) => sum + Math.abs(signedArea(ring)), 0)
+        const biggest = quantised.reduce(
+          (best, ring) => (Math.abs(signedArea(ring)) > Math.abs(signedArea(best)) ? ring : best),
+          quantised[0] ?? [],
+        )
+        const [x, y] = anchor ? project(anchor) : centroidOf([biggest])
+        return [Math.round(x), Math.round(y), Math.round(size), name]
+      })
+      // Biggest first, for the same reason as the arcs — and it is also the
+      // order the client hands out the space it has for names in.
+      .sort((a, b) => b[2] - a[2])
+
+    levels[key] = { arcs, labels }
+    console.warn(
+      `  ${level.arcs.size} new arcs of ${level.ways.size} ways · ${labels.length} names` +
+        (level.foreign > 0 ? ` · ${level.foreign} foreign relations dropped` : ''),
+    )
+  }
+
+  const borderFile: BoundaryFile = { viewBox, proj, levels }
+  const borderJson = JSON.stringify(borderFile)
+  await writeFile(bordersPath, borderJson)
+  console.warn(
+    `Wrote ${bordersPath} (${kb(borderJson)}` +
+      `, ${levels.state.arcs.length} state + ${levels.district.arcs.length} district arcs)`,
+  )
+}

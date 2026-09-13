@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import MemberMap from './MemberMap.vue'
 
-import type { MapArea, MapPlace } from '~~/shared/map'
+import type { BoundaryLevel, MapArea, MapBoundaryLayer, MapPlace } from '~~/shared/map'
 
 const OUTLINE = { viewBox: '0 0 4000 5000', d: 'M0 0l4000 0 0 5000-4000 0z' }
 
@@ -264,6 +264,107 @@ describe('Component: MemberMap', () => {
       expect(box(wrapper)).toStrictEqual(after)
     })
 
+    it('zooms by pinching, about the point between the fingers', async () => {
+      // `touch-action: none` is what keeps a drag across the map from scrolling
+      // the page, and it switches the browser's own pinch off along with it —
+      // so the map has to do this itself, or a phone could only zoom by button.
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const before = box(wrapper)
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 180, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 220, clientY: 200 })
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 140, clientY: 200 })
+      await svg.trigger('pointermove', { pointerId: 2, clientX: 260, clientY: 200 })
+      expect(box(wrapper).w).toBeLessThan(before.w)
+    })
+
+    it('zooms out again when the fingers come together', async () => {
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 100, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 300, clientY: 200 })
+      const spread = box(wrapper)
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 190, clientY: 200 })
+      await svg.trigger('pointermove', { pointerId: 2, clientX: 210, clientY: 200 })
+      expect(box(wrapper).w).toBeGreaterThan(spread.w)
+    })
+
+    it('pans when the two fingers travel together', async () => {
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const before = box(wrapper)
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 180, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 220, clientY: 200 })
+      // The gap stays the same, so nothing is scaled — only moved.
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 130, clientY: 170 })
+      await svg.trigger('pointermove', { pointerId: 2, clientX: 170, clientY: 170 })
+      const after = box(wrapper)
+      expect(after.w).toBeCloseTo(before.w, 5)
+      expect(after.x).toBeGreaterThan(before.x)
+      expect(after.y).toBeGreaterThan(before.y)
+    })
+
+    it('hands the gesture to the finger that is left rather than stopping dead', async () => {
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 180, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 220, clientY: 200 })
+      await svg.trigger('pointerup', { pointerId: 2 })
+      const before = box(wrapper)
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 130, clientY: 200 })
+      expect(box(wrapper).x).toBeGreaterThan(before.x)
+      expect(box(wrapper).w).toBeCloseTo(before.w, 5)
+    })
+
+    it('keeps pinching with the two fingers left of three', async () => {
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const svg = wrapper.find('svg')
+      for (const [id, x] of [
+        [1, 180],
+        [2, 220],
+        [3, 260],
+      ]) {
+        await svg.trigger('pointerdown', { button: 0, pointerId: id, clientX: x, clientY: 200 })
+      }
+      await svg.trigger('pointerup', { pointerId: 3 })
+      const before = box(wrapper)
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 120, clientY: 200 })
+      expect(box(wrapper).w).toBeLessThan(before.w)
+    })
+
+    it('leaves two fingers on the same spot alone', async () => {
+      // Nothing to scale by, and a zero gap would divide by nothing.
+      const wrapper = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 200, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 200, clientY: 200 })
+      const before = box(wrapper)
+      await svg.trigger('pointermove', { pointerId: 2, clientX: 200, clientY: 200 })
+      expect(box(wrapper)).toStrictEqual(before)
+    })
+
+    it('ignores a move from a pointer it never saw go down', async () => {
+      const wrapper = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
+      const before = box(wrapper)
+      await wrapper.find('svg').trigger('pointermove', { pointerId: 9, clientX: 50, clientY: 50 })
+      expect(box(wrapper)).toStrictEqual(before)
+    })
+
     it('ignores a drag with anything but the primary button', async () => {
       const wrapper = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
       const before = box(wrapper)
@@ -478,5 +579,139 @@ describe('Component: MemberMap', () => {
   it('survives a viewBox it cannot read', async () => {
     const wrapper = await mount([area('64673', 1)], { outline: { viewBox: '', d: '' } })
     expect(wrapper.find('svg').exists()).toBe(true)
+  })
+
+  describe('where the reader is', () => {
+    const BORDERS: Partial<Record<BoundaryLevel, MapBoundaryLayer>> = {
+      state: {
+        d: 'M0 0l4000 0',
+        labels: [{ name: 'Hessen', x: 2000, y: 2500, size: 2_000_000 }],
+      },
+      district: {
+        d: 'M0 100l4000 0',
+        labels: [{ name: 'Kreis Bergstraße', x: 2000, y: 2500, size: 120_000 }],
+      },
+    }
+
+    /** Two far-apart areas open the map on the whole country. */
+    const wide = [area('a', 1, { cx: 100, cy: 100 }), area('b', 1, { cx: 3900, cy: 4900 })]
+
+    async function zoomed(clicks: number, props: Record<string, unknown> = {}) {
+      const wrapper = await mount(wide, { boundaries: BORDERS, ...props })
+      for (let i = 0; i < clicks; i++) {
+        await wrapper.find('button[aria-label="components.MemberMap.zoom-in"]').trigger('click')
+      }
+      return wrapper
+    }
+
+    const opacity = (
+      wrapper: { find: (s: string) => { attributes: (a: string) => string | undefined } },
+      selector: string,
+    ): number => Number((wrapper.find(selector).attributes('style') ?? '').replace(/\D+/g, '') || 0)
+
+    it('draws the Bundesland borders at every scale — sixteen lines are not clutter', async () => {
+      const wrapper = await zoomed(0)
+      expect(wrapper.find('.map-state').attributes('d')).toBe(BORDERS.state?.d)
+    })
+
+    it('keeps the Kreis borders invisible at country scale and brings them in as the map grows', async () => {
+      // A Kreis border says nothing at 600 km across and is the only thing that
+      // says where you are once the silhouette has left the screen.
+      expect(opacity(await zoomed(0), '.map-district')).toBe(0)
+      expect(opacity(await zoomed(4), '.map-district')).toBeGreaterThan(0)
+    })
+
+    it('hands the naming down the ladder: first the Bundesland, then the Kreis', async () => {
+      const country = await zoomed(0)
+      expect(country.find('.state-names text').text()).toBe('HESSEN')
+      expect(country.findAll('.district-names text')).toHaveLength(0)
+
+      const close = await zoomed(6)
+      expect(opacity(close, '.state-names')).toBe(0)
+      expect(close.find('.district-names text').text()).toBe('Kreis Bergstraße')
+    })
+
+    it('asks only for the levels the scale has room for', async () => {
+      vi.useFakeTimers()
+      try {
+        const country = await mount(wide)
+        vi.advanceTimersByTime(300)
+        const [far] = (country.emitted('viewport') ?? [[]])[0] as [{ levels: BoundaryLevel[] }]
+        expect(far.levels).toStrictEqual(['state'])
+
+        const near = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
+        vi.advanceTimersByTime(300)
+        const [close] = (near.emitted('viewport') ?? [[]])[0] as [{ levels: BoundaryLevel[] }]
+        expect(close.levels).toStrictEqual(['state', 'district'])
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('leaves a name off rather than setting it too small for its own area', async () => {
+      // A Kreis the size of a city, seen from the whole country: the name would
+      // have to be a smudge two pixels tall, which reads as a rendering fault.
+      const wrapper = await zoomed(0, {
+        boundaries: {
+          ...BORDERS,
+          state: { d: '', labels: [{ name: 'Bremen', x: 2000, y: 2500, size: 40 }] },
+        },
+      })
+      expect(wrapper.findAll('.state-names text')).toHaveLength(0)
+    })
+
+    it('drops a Kreis name whose place is taken rather than moving it off its area', async () => {
+      // A name shifted aside to dodge a dot would be pointing at the wrong
+      // Kreis, which is worse than a missing name.
+      const wrapper = await zoomed(6, {
+        areas: [area('64673', 88, { cx: 2000, cy: 2500 })],
+      })
+      expect(wrapper.findAll('.district-names text')).toHaveLength(0)
+    })
+
+    it.each([
+      ['is not on screen', { name: 'Weit weg', x: 39000, y: 49000, size: 120_000 }],
+      [
+        'would have to be set too small for its own Kreis',
+        { name: 'Kreis Winzig', x: 2000, y: 2500, size: 4 },
+      ],
+    ])('leaves out a Kreis name that %s', async (_case, label) => {
+      const wrapper = await zoomed(6, {
+        boundaries: { ...BORDERS, district: { d: 'M0 0l1 1', labels: [label] } },
+      })
+      expect(wrapper.findAll('.district-names text')).toHaveLength(0)
+    })
+
+    it('stops naming Kreise before the map is a list of them', async () => {
+      // A view over the Ruhr is twenty Kreise deep before a single town would
+      // be written. The server sends them largest first, so the ones a reader
+      // is most likely inside of are the ones that survive.
+      const many = Array.from({ length: 20 }, (_, i) => ({
+        name: `K${i}`,
+        x: 1900 + i * 10,
+        y: 2400,
+        size: 5000,
+      }))
+      const wrapper = await zoomed(6, {
+        boundaries: { ...BORDERS, district: { d: 'M0 0l1 1', labels: many } },
+      })
+      expect(wrapper.findAll('.district-names text')).toHaveLength(16)
+    })
+
+    it('ignores a name that is not on screen', async () => {
+      const wrapper = await zoomed(0, {
+        boundaries: {
+          state: { d: '', labels: [{ name: 'Weit weg', x: 39000, y: 49000, size: 2_000_000 }] },
+        },
+      })
+      expect(wrapper.findAll('.state-names text')).toHaveLength(0)
+    })
+
+    it('draws nothing administrative when the artefact was never built', async () => {
+      const wrapper = await mount(wide)
+      expect(wrapper.find('.map-state').exists()).toBe(false)
+      expect(wrapper.find('.map-district').exists()).toBe(false)
+      expect(wrapper.findAll('.state-names text')).toHaveLength(0)
+    })
   })
 })

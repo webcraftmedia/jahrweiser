@@ -1,4 +1,11 @@
-import type { MapOutline, MapPayload, MapPlace } from '~~/shared/map'
+import type {
+  BoundaryLevel,
+  MapBoundaries,
+  MapBoundaryLayer,
+  MapOutline,
+  MapPayload,
+  MapPlace,
+} from '~~/shared/map'
 
 /** A rectangle of the map, in viewBox units. */
 export interface MapViewport {
@@ -8,10 +15,49 @@ export interface MapViewport {
   maxY: number
 }
 
-/** How much bigger than the visible view the fetched region is. */
+/** How much bigger than the visible view the fetched region of names is. */
 const PLACE_MARGIN = 0.6
+/**
+ * The same for the borders, and smaller on purpose: a name is a few bytes and a
+ * Kreis border is a few hundred, so the region that buys ordinary panning
+ * without a request is worth less here. At the scale the district layer appears
+ * this is some 70 kB of path data; at 0.6 it would be twice that, nearly all of
+ * it off screen.
+ */
+const BOUNDARY_MARGIN = 0.3
 /** Refetch once the view is this much smaller than what was fetched for. */
 const PLACE_DETAIL_FACTOR = 3
+
+/**
+ * Whether what was fetched for `known` still answers `view`.
+ *
+ * Two conditions, and the second is the one that is easy to forget: an answer
+ * is also stale when the view has been zoomed far enough *into* it, because
+ * both endpoints answer a rectangle with a capped number of things — so a
+ * smaller rectangle can legitimately contain more than the bigger one returned.
+ */
+function covers(known: MapViewport | null, view: MapViewport): boolean {
+  return (
+    known !== null &&
+    view.minX >= known.minX &&
+    view.maxX <= known.maxX &&
+    view.minY >= known.minY &&
+    view.maxY <= known.maxY &&
+    view.maxX - view.minX >= (known.maxX - known.minX) / PLACE_DETAIL_FACTOR
+  )
+}
+
+/** The region to fetch for a view: the view plus a margin on every side. */
+function grown(view: MapViewport, margin: number): MapViewport {
+  const width = view.maxX - view.minX
+  const height = view.maxY - view.minY
+  return {
+    minX: view.minX - width * margin,
+    maxX: view.maxX + width * margin,
+    minY: view.minY - height * margin,
+    maxY: view.maxY + height * margin,
+  }
+}
 
 /**
  * The member map's client state, shared between the icon rail and /karte.
@@ -67,23 +113,9 @@ export function useMemberMap() {
    */
   async function loadPlaces(view: MapViewport): Promise<void> {
     const known = placeBox.value
-    const covered =
-      known !== null &&
-      view.minX >= known.minX &&
-      view.maxX <= known.maxX &&
-      view.minY >= known.minY &&
-      view.maxY <= known.maxY &&
-      view.maxX - view.minX >= (known.maxX - known.minX) / PLACE_DETAIL_FACTOR
-    if (covered) return
+    if (covers(known, view)) return
 
-    const width = view.maxX - view.minX
-    const height = view.maxY - view.minY
-    const box: MapViewport = {
-      minX: view.minX - width * PLACE_MARGIN,
-      maxX: view.maxX + width * PLACE_MARGIN,
-      minY: view.minY - height * PLACE_MARGIN,
-      maxY: view.maxY + height * PLACE_MARGIN,
-    }
+    const box = grown(view, PLACE_MARGIN)
     // Claim the region before awaiting, so a burst of view changes does not
     // produce a burst of identical requests.
     placeBox.value = box
@@ -94,6 +126,49 @@ export function useMemberMap() {
       // A map without names is still a map. Logged, not surfaced.
       console.error(error)
       placeBox.value = known
+    }
+  }
+
+  /** The Bundesland and Kreis borders currently held, by level. */
+  const boundaries = useState<Partial<Record<BoundaryLevel, MapBoundaryLayer>>>(
+    'member-map-boundaries',
+    () => ({}),
+  )
+  /** The region each level was fetched for. */
+  const boundaryBox = useState<Partial<Record<BoundaryLevel, MapViewport>>>(
+    'member-map-boundary-box',
+    () => ({}),
+  )
+
+  /**
+   * The administrative borders for what is on screen.
+   *
+   * Which levels are worth having is the *map's* decision, not this one's: it
+   * knows its zoom, and a Kreis border is noise at country scale and the only
+   * thing that says where you are once the silhouette has left the screen. Per
+   * level, because they are wanted at different zooms — the state layer fetched
+   * for the whole country stays good while the district layer is refetched at
+   * every step in.
+   */
+  async function loadBoundaries(view: MapViewport, levels: BoundaryLevel[]): Promise<void> {
+    const wanted = levels.filter((level) => !covers(boundaryBox.value[level] ?? null, view))
+    if (wanted.length === 0) return
+
+    const box = grown(view, BOUNDARY_MARGIN)
+    const known = { ...boundaryBox.value }
+    for (const level of wanted) boundaryBox.value[level] = box
+    try {
+      const answer = await api<MapBoundaries>('/api/map/boundaries', {
+        query: { ...box, levels: wanted.join(',') },
+      })
+      for (const level of wanted) {
+        boundaries.value[level] = answer[level] ?? { d: '', labels: [] }
+      }
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: ohne Grenzen ist die Karte immer noch brauchbar
+    } catch (error) {
+      // A map without borders is still a map. Logged, not surfaced.
+      console.error(error)
+      boundaryBox.value = known
     }
   }
 
@@ -167,6 +242,8 @@ export function useMemberMap() {
     data,
     areas,
     places,
+    boundaries,
+    loadBoundaries,
     outline,
     hasPostalCode,
     isLocked,

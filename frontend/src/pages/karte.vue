@@ -1,11 +1,34 @@
 <script setup lang="ts">
+  import type { BoundaryLevel } from '~~/shared/map'
+
   definePageMeta({
     middleware: ['authenticated'],
   })
 
-  const { areas, data, places, outline, isLocked, isLoading, loaded, loadError, load, loadPlaces } =
-    useMemberMap()
+  const {
+    areas,
+    data,
+    places,
+    boundaries,
+    outline,
+    isLocked,
+    isLoading,
+    loaded,
+    loadError,
+    load,
+    loadPlaces,
+    loadBoundaries,
+  } = useMemberMap()
   const { t } = useI18n()
+
+  /**
+   * What the map now shows, and what it needs for it. The map decides which
+   * administrative levels its scale has room for; this only fetches them.
+   */
+  function onViewport(view: MapViewport & { levels: BoundaryLevel[] }): void {
+    void loadPlaces(view)
+    void loadBoundaries(view, view.levels)
+  }
 
   // Always refetched: someone joins, someone moves, someone finally fills in
   // their postal code — the map should show that, not what the rail happened to
@@ -89,8 +112,9 @@
           :outline="outline"
           :areas="areas"
           :places="places"
+          :boundaries="boundaries"
           :title="$t('pages.karte.map-label', { located: data!.located })"
-          @viewport="loadPlaces"
+          @viewport="onViewport"
         >
           <!-- Handed to the legend so the two share a line. Two lengths of the
                same sentence: on a phone the map is what the page is for, and a

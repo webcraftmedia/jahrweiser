@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   AREA_FILE_KEY,
+  BOUNDARY_FILE_KEY,
+  boundaryLayerIn,
   buildMapPayload,
+  loadBoundaries,
   loadPlaces,
   loadPlzAreas,
   lookupPostalCode,
@@ -15,7 +18,7 @@ import {
 } from './memberMap'
 
 import type { LoadedAreas } from './memberMap'
-import type { PlzAreaFile } from '../../shared/map'
+import type { BoundaryFile, PlzAreaFile } from '../../shared/map'
 
 const FILE: PlzAreaFile = {
   viewBox: '0 0 4000 5000',
@@ -256,4 +259,106 @@ describe('loadPlaces', () => {
     storageServing(value)
     await expect(loadPlaces()).resolves.toBeNull()
   })
+})
+
+/**
+ * Two arcs across the middle of the map and one in a far corner, plus the two
+ * names — sorted the way the build script emits them, longest and largest
+ * first, because both limits below lean on that.
+ */
+const BORDERS: BoundaryFile = {
+  viewBox: FILE.viewBox,
+  proj: { x0: 0.1, y0: 1, k: 1000 },
+  levels: {
+    state: {
+      arcs: [
+        [0, 0, 2000, 2000, 'M0 0l2000 2000'],
+        [3800, 4800, 3900, 4900, 'M3800 4800l100 100'],
+      ],
+      labels: [
+        [1000, 1000, 900000, 'Hessen'],
+        [3850, 4850, 400000, 'Sachsen'],
+      ],
+    },
+    district: {
+      arcs: [[100, 100, 300, 300, 'M100 100l200 200']],
+      labels: [[200, 200, 5000, 'Kreis Bergstraße']],
+    },
+  },
+}
+
+describe('boundaryLayerIn', () => {
+  const box = { minX: 0, minY: 0, maxX: 2500, maxY: 2500 }
+
+  it('answers with the arcs that reach into the rectangle, as one path', () => {
+    // Joined rather than handed over one by one: a border is stroked and never
+    // filled, so nothing depends on where one arc ends and the next begins.
+    expect(boundaryLayerIn(BORDERS.levels.state, box, 10, 10).d).toBe('M0 0l2000 2000')
+  })
+
+  it('keeps an arc that only reaches in — most of it is off screen either way', () => {
+    const layer = boundaryLayerIn(BORDERS.levels.state, { ...box, maxX: 10, maxY: 10 }, 10, 10)
+    expect(layer.d).toBe('M0 0l2000 2000')
+  })
+
+  it('names what has its label point inside', () => {
+    expect(boundaryLayerIn(BORDERS.levels.state, box, 10, 10).labels).toStrictEqual([
+      { name: 'Hessen', x: 1000, y: 1000, size: 900000 },
+    ])
+  })
+
+  it('stops at the limits — the artefact is sorted, so the specks go first', () => {
+    const whole = { minX: 0, minY: 0, maxX: 4000, maxY: 5000 }
+    expect(boundaryLayerIn(BORDERS.levels.state, whole, 1, 1)).toStrictEqual({
+      d: 'M0 0l2000 2000',
+      labels: [{ name: 'Hessen', x: 1000, y: 1000, size: 900000 }],
+    })
+  })
+
+  it('has nothing to say about an empty corner', () => {
+    const corner = { minX: 2600, minY: 2600, maxX: 2700, maxY: 2700 }
+    expect(boundaryLayerIn(BORDERS.levels.district, corner, 10, 10)).toStrictEqual({
+      d: '',
+      labels: [],
+    })
+  })
+})
+
+describe('loadBoundaries', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetPlzAreaCache()
+  })
+
+  it('reads the border artefact and keeps it', async () => {
+    const getItem = vi.fn().mockResolvedValue(BORDERS)
+    vi.mocked(globalThis.useStorage).mockReturnValue({ getItem })
+    const first = await loadBoundaries()
+    expect(first?.levels.state.arcs).toHaveLength(2)
+    await expect(loadBoundaries()).resolves.toBe(first)
+    expect(getItem).toHaveBeenCalledExactlyOnceWith(BOUNDARY_FILE_KEY)
+  })
+
+  it.each([
+    ['it has not been generated', null],
+    ['the file is there but empty', {}],
+  ])('answers null when %s', async (_case, value) => {
+    // A map without borders is still a map: the endpoint answers empty.
+    storageServing(value)
+    await expect(loadBoundaries()).resolves.toBeNull()
+  })
+
+  it.each(['state', 'district'] as const)(
+    'fills in the %s level when the artefact was built without it',
+    async (missing) => {
+      // An artefact from a run that was given no Kreis input simply has no key
+      // for it. Answered here rather than asked about by every reader.
+      const levels = Object.fromEntries(
+        Object.entries(BORDERS.levels).filter(([level]) => level !== missing),
+      )
+      storageServing({ ...BORDERS, levels })
+      const loaded = await loadBoundaries()
+      expect(loaded?.levels[missing]).toStrictEqual({ arcs: [], labels: [] })
+    },
+  )
 })

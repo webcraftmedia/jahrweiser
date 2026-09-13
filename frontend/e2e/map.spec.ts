@@ -44,6 +44,23 @@ test.describe('Karte', () => {
       .toBeLessThan(Number(opened?.split(' ')[2]))
   })
 
+  test('hands the orientation down the ladder as it is zoomed in', async ({ page }) => {
+    // Zoomed out, the Bundesland is what says where this is; zoomed in, the
+    // Kreis takes over. Neither is a switch the reader has to find.
+    await mockMapEndpoints(page)
+    await navigateClientSide(page, '/karte')
+
+    // Asserted by its path rather than by visibility: a border is a stroke on
+    // a shape of no area, which Playwright reads as hidden.
+    await expect(page.locator('.map-state')).toHaveAttribute('d', /^M/)
+    await expect(page.locator('.state-names text')).toHaveText('HESSEN')
+
+    const zoomIn = page.getByRole('button', { name: 'Karte vergrößern' })
+    for (let i = 0; i < 4; i++) await zoomIn.click()
+
+    await expect(page.locator('.district-names text')).toHaveText('Kreis Bergstraße')
+  })
+
   test('writes the names of the places it has room for', async ({ page }) => {
     await mockMapEndpoints(page)
     await navigateClientSide(page, '/karte')
@@ -66,7 +83,41 @@ test.describe('Karte', () => {
   })
 
   test.describe('on a phone', () => {
-    test.use({ viewport: { width: 375, height: 667 } })
+    test.use({ viewport: { width: 375, height: 667 }, hasTouch: true })
+
+    test('zooms by pinching, not only by the buttons', async ({ page }) => {
+      // `touch-action: none` keeps a drag across the map from scrolling the
+      // page, and switches the browser's own pinch off with it — so the map
+      // implements the gesture, and this is the only test that exercises it
+      // through real touch events rather than synthesised pointer ones.
+      await mockMapEndpoints(page)
+      await navigateClientSide(page, '/karte')
+      const svg = page.locator('svg[role="img"]')
+      await expect(svg).toBeVisible()
+      const width = async () => Number((await svg.getAttribute('viewBox'))!.split(' ')[2])
+      const before = await width()
+
+      const frame = (await svg.boundingBox())!
+      const x = frame.x + frame.width / 2
+      const y = frame.y + frame.height / 2
+      const cdp = await page.context().newCDPSession(page)
+      const touch = (gaps: number[], type: string) =>
+        cdp.send('Input.dispatchTouchEvent', {
+          type,
+          touchPoints: gaps.flatMap((gap, index) => [
+            { x: x - gap, y, id: index * 2 },
+            { x: x + gap, y, id: index * 2 + 1 },
+          ]),
+        })
+
+      await touch([20], 'touchStart')
+      for (const gap of [40, 70, 110]) {
+        await touch([gap], 'touchMove')
+        await page.waitForTimeout(50)
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+      await expect.poll(width).toBeLessThan(before)
+    })
 
     test('offers the sections in the burger menu as well as in the bar', async ({ page }) => {
       // The bottom bar is a row of unlabelled icons. Whoever does not read it

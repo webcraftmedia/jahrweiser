@@ -94,31 +94,40 @@ const DEFAULT_TOLERANCE = 1
 const OUTLINE_TOLERANCE = 3
 
 /**
- * Simplification tolerance for the administrative borders — the areas', not the
- * silhouette's, and at the floor for the same two reasons they are.
+ * Simplification tolerance for the administrative borders: **none**.
  *
- * It was 3 ≈ 160 m, argued from the silhouette: a reference line, not a shape
- * anyone measures. Both halves of that argument turned out to be wrong here.
+ * Zero is not "off" — Douglas–Peucker with a tolerance of 0 still drops every
+ * vertex that lies *exactly* on the line between the two it would be judged
+ * against, which after quantisation is a great many of them. What it cannot do
+ * is move a line: the result passes through precisely the points the input did.
+ * That is the whole point of the number, and it took two wrong answers to get
+ * to it.
  *
- * **Small features are destroyed, not coarsened.** Douglas–Peucker knows nothing
- * about the feature it is cutting — it drops any vertex within the tolerance of
- * the chord, and where a whole shape is only a few tolerances across, that is
- * the shape. The interlocking Hessen / Baden-Württemberg enclaves around
- * Ober-Laudenbach are about a kilometre wide and came out as a knot of spikes
- * and crossings: correct by the letter of the algorithm, and unrecognisable.
+ * **3 ≈ 160 m** was argued from the silhouette — a reference line, not a shape
+ * anyone measures. But Douglas–Peucker knows nothing about the feature it is
+ * cutting, and where a whole shape is only a few tolerances across, that *is*
+ * the shape: the interlocking Hessen / Baden-Württemberg enclaves around
+ * Ober-Laudenbach are about a kilometre wide and came out a knot of spikes.
  *
- * **And it is worst where it is most visible.** Unlike the silhouette, these
- * borders are still on screen at the deepest zoom the map allows — three
- * kilometres across, where 160 m is some thirty pixels of a line drawn in the
- * wrong place. A *long* border crossing that view is exactly the arc a
- * size-scaled tolerance would have kept coarse.
+ * **1 ≈ 53 m**, the grid itself, was the obvious retreat and still wrong,
+ * because the objection is not the size of the tolerance but the algorithm:
+ * **Douglas–Peucker does not preserve topology.** Measured on those same
+ * enclaves, the input has *no* self-intersections at any stage — lon/lat,
+ * projected, quantised — and the simplified arcs have eight, five of them
+ * inside a single arc. A border that crosses itself is wrong at every zoom, and
+ * no tolerance above zero rules it out.
  *
- * At 1 the borders run at the resolution of the grid they were quantised to and
- * of the postal-code areas they are drawn over, so there is no second number to
- * justify. It costs 12 kB brotli on the state layer and 13 kB on the largest
- * Kreis request (30 → 42 kB).
+ * What is left at zero is the grid: 10 crossings in the state layer and 58 in
+ * the district layer, country-wide, where two borders pass within 53 m of each
+ * other and swap sides when rounded. Those need a finer coordinate system, not
+ * a different tolerance.
+ *
+ * The cost is real — 30 → 67 kB brotli for the largest request either layer
+ * ever answers — and it is spent where it can be seen: unlike the silhouette,
+ * these borders are still drawn at the deepest zoom the map allows, three
+ * kilometres across, where one grid unit is some twenty pixels.
  */
-const BORDER_TOLERANCE = 1
+const BORDER_TOLERANCE = 0
 
 /** Rings below this (in square viewBox units, ≈ 0.5 km²) are not islands. */
 const MIN_OUTLINE_AREA = 200

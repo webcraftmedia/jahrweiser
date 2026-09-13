@@ -191,37 +191,47 @@ shoelace formula then reads the chord across the gap as the coast —
 Schleswig-Holstein came out at a seventh of its area and lost its name to the
 fit rule.
 
-#### Why they are simplified at the floor, not at the silhouette's tolerance
+#### Why they are not simplified at all
 
-`BORDER_TOLERANCE` is **1 ≈ 53 m**, the quantisation grid and the postal-code
-areas' tolerance — not the silhouette's 3. It started at 3 on the silhouette's
-argument (a reference line, not a shape anyone measures) and both halves of that
-turned out to be wrong here.
+`BORDER_TOLERANCE` is **0**, and that is not "simplification off": Douglas–Peucker
+at a tolerance of zero still drops every vertex lying _exactly_ on the line
+between the two it is judged against, which after quantisation is a great many
+of them (the district layer keeps 344.000 of its segments, against 470.000
+input vertices). What it cannot do is move a line. The result passes through
+precisely the points the input did.
 
-**Douglas–Peucker destroys small features rather than coarsening them.** It drops
-any vertex within the tolerance of the chord, and where a whole shape is only a
-few tolerances across, that _is_ the shape. The interlocking Hessen /
-Baden-Württemberg enclaves around Ober-Laudenbach are about a kilometre wide and
-came out of a 160 m tolerance as a knot of spikes and crossings — correct by the
-letter of the algorithm, and unrecognisable on screen.
+It took two wrong answers to get there, and both are worth keeping, because both
+sound right.
 
-**And the damage is worst where the layer is most visible.** Unlike the
-silhouette, these borders are still drawn at the deepest zoom the map allows —
-three kilometres across, where 160 m is some thirty pixels of line in the wrong
-place. That also rules out the obvious cheaper fix, a tolerance scaled to the
-arc's own size: it would keep the full 160 m on exactly the long arcs that cross
-that view.
+**3 ≈ 160 m, the silhouette's tolerance.** Argued the same way: a reference line,
+not a shape anyone measures. But Douglas–Peucker knows nothing about the feature
+it is cutting, and where a whole shape is only a few tolerances across, that _is_
+the shape. The interlocking Hessen / Baden-Württemberg enclaves around
+Ober-Laudenbach are about a kilometre wide and came out a knot of spikes.
 
-Worth knowing for the next person who reads a tangle as a bug: **crossings are
-not a simplification metric here.** Counting proper segment intersections
-country-wide gives ~20 in the state layer and ~130 in the district layer at
-_every_ tolerance — they are places where the 53 m quantisation itself makes two
-nearly-touching borders swap sides, and the count does not fall as the tolerance
-does. The thing that changes with the tolerance is whether features smaller than
-it survive at all.
+**1 ≈ 53 m, the grid itself.** The obvious retreat, and still wrong — because the
+objection is not the size of the tolerance but the algorithm. **Douglas–Peucker
+does not preserve topology.** Measured on those same enclaves: the input has
+_zero_ self-intersections at every stage — lon/lat, projected, quantised — and
+the simplified arcs have **eight**, five of them inside a single arc. A border
+that crosses itself is wrong at every zoom, and no tolerance above zero rules it
+out. (Counting crossings country-wide says the same: 23 / 74 at tolerance 3,
+20 / 132 at 1 — the number does not fall with the tolerance, because it is not
+what the tolerance controls.)
 
-The whole of it costs 12 kB brotli on the state layer and 13 kB on the largest
-Kreis request (30 → 42 kB), and takes the artefact from 929 kB to 1.195 kB.
+What remains at zero is the grid: **10 crossings in the state layer and 58 in the
+district layer**, country-wide, where two borders pass within 53 m of each other
+and swap sides when rounded. Those want a finer coordinate system, not a
+different tolerance, and at 12.000 units across Germany they are what is on
+offer.
+
+The cost is real and is spent deliberately: the largest request either layer ever
+answers goes from 30 to **67 kB brotli**, and the artefact from 929 kB to
+2.277 kB. Unlike the silhouette, these borders are still drawn at the deepest
+zoom the map allows — three kilometres across, where one grid unit is some twenty
+pixels — so this is the layer where geometry is worth paying for. If the wide
+views ever need to be cheaper, the answer is two resolutions in the artefact with
+the endpoint picking by box size, not a coarser single one.
 
 ### Regenerating
 
@@ -261,10 +271,10 @@ npm run map:build -- --in /tmp/plz.geojson --names /tmp/geonames/DE.txt \
   --states /tmp/de-states.json --districts /tmp/de-districts.json
 ```
 
-`--tolerance <units>` overrides the simplification of the areas and
-`--border-tolerance` that of the administrative borders (both default to 1, the
-quantisation grid itself; `--outline-tolerance` is the silhouette's 3, and the
-only one of the three that may be coarse — see above). The run takes some
+`--tolerance <units>` overrides the simplification of the areas (default 1, the
+quantisation grid itself), `--border-tolerance` that of the administrative
+borders (default 0, see above) and `--outline-tolerance` that of the silhouette
+(default 3, the only one of the three that may be coarse). The run takes some
 minutes: the postal-code input is
 half a gigabyte of pretty-printed JSON, past the point where `JSON.parse` can
 take it in one bite, so it is streamed and read twice — once for the extent the
@@ -274,6 +284,13 @@ hundred megabytes and is streamed for the same reason.
 `--boundary-tags` takes a comma-separated list because the maritime ways come
 from two queries (the national relation, and the administrative levels); a way
 is maritime for all of them or for none.
+
+**Restart the dev server after any rebuild.** All three artefacts are parsed
+**once per process** and then kept (`loadPlzAreas`, `loadPlaces`,
+`loadBoundaries` in `server/helpers/memberMap.ts`) — they never change at
+runtime, which is exactly why the cache is there. HMR does not help: the JSON
+changed, the module holding it did not. Reloading the browser gets a fresh
+request and the same stale answer.
 
 **Refreshing only the borders.** A Kreisreform has nothing to do with the postal
 codes, and the two data sets age independently:

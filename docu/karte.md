@@ -191,6 +191,38 @@ shoelace formula then reads the chord across the gap as the coast —
 Schleswig-Holstein came out at a seventh of its area and lost its name to the
 fit rule.
 
+#### Why they are simplified at the floor, not at the silhouette's tolerance
+
+`BORDER_TOLERANCE` is **1 ≈ 53 m**, the quantisation grid and the postal-code
+areas' tolerance — not the silhouette's 3. It started at 3 on the silhouette's
+argument (a reference line, not a shape anyone measures) and both halves of that
+turned out to be wrong here.
+
+**Douglas–Peucker destroys small features rather than coarsening them.** It drops
+any vertex within the tolerance of the chord, and where a whole shape is only a
+few tolerances across, that _is_ the shape. The interlocking Hessen /
+Baden-Württemberg enclaves around Ober-Laudenbach are about a kilometre wide and
+came out of a 160 m tolerance as a knot of spikes and crossings — correct by the
+letter of the algorithm, and unrecognisable on screen.
+
+**And the damage is worst where the layer is most visible.** Unlike the
+silhouette, these borders are still drawn at the deepest zoom the map allows —
+three kilometres across, where 160 m is some thirty pixels of line in the wrong
+place. That also rules out the obvious cheaper fix, a tolerance scaled to the
+arc's own size: it would keep the full 160 m on exactly the long arcs that cross
+that view.
+
+Worth knowing for the next person who reads a tangle as a bug: **crossings are
+not a simplification metric here.** Counting proper segment intersections
+country-wide gives ~20 in the state layer and ~130 in the district layer at
+_every_ tolerance — they are places where the 53 m quantisation itself makes two
+nearly-touching borders swap sides, and the count does not fall as the tolerance
+does. The thing that changes with the tolerance is whether features smaller than
+it survive at all.
+
+The whole of it costs 12 kB brotli on the state layer and 13 kB on the largest
+Kreis request (30 → 42 kB), and takes the artefact from 929 kB to 1.195 kB.
+
 ### Regenerating
 
 Downloads, none of them automated — the artefacts are committed, so this runs
@@ -229,8 +261,11 @@ npm run map:build -- --in /tmp/plz.geojson --names /tmp/geonames/DE.txt \
   --states /tmp/de-states.json --districts /tmp/de-districts.json
 ```
 
-`--tolerance <units>` overrides the simplification (default 1, i.e. the
-quantisation grid itself). The run takes some minutes: the postal-code input is
+`--tolerance <units>` overrides the simplification of the areas and
+`--border-tolerance` that of the administrative borders (both default to 1, the
+quantisation grid itself; `--outline-tolerance` is the silhouette's 3, and the
+only one of the three that may be coarse — see above). The run takes some
+minutes: the postal-code input is
 half a gigabyte of pretty-printed JSON, past the point where `JSON.parse` can
 take it in one bite, so it is streamed and read twice — once for the extent the
 projection is fitted to, once for the geometry. The Kreis answer is another

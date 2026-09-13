@@ -94,14 +94,31 @@ const DEFAULT_TOLERANCE = 1
 const OUTLINE_TOLERANCE = 3
 
 /**
- * Simplification tolerance for the administrative borders (3 ≈ 160 m).
+ * Simplification tolerance for the administrative borders — the areas', not the
+ * silhouette's, and at the floor for the same two reasons they are.
  *
- * The silhouette's, and for the same reason: these are reference lines, not
- * shapes anyone measures. Finer would be spent on a Kreis border following a
- * stream bed, which is detail nobody orients by and which the Kreis layer would
- * pay for several thousand times over.
+ * It was 3 ≈ 160 m, argued from the silhouette: a reference line, not a shape
+ * anyone measures. Both halves of that argument turned out to be wrong here.
+ *
+ * **Small features are destroyed, not coarsened.** Douglas–Peucker knows nothing
+ * about the feature it is cutting — it drops any vertex within the tolerance of
+ * the chord, and where a whole shape is only a few tolerances across, that is
+ * the shape. The interlocking Hessen / Baden-Württemberg enclaves around
+ * Ober-Laudenbach are about a kilometre wide and came out as a knot of spikes
+ * and crossings: correct by the letter of the algorithm, and unrecognisable.
+ *
+ * **And it is worst where it is most visible.** Unlike the silhouette, these
+ * borders are still on screen at the deepest zoom the map allows — three
+ * kilometres across, where 160 m is some thirty pixels of a line drawn in the
+ * wrong place. A *long* border crossing that view is exactly the arc a
+ * size-scaled tolerance would have kept coarse.
+ *
+ * At 1 the borders run at the resolution of the grid they were quantised to and
+ * of the postal-code areas they are drawn over, so there is no second number to
+ * justify. It costs 12 kB brotli on the state layer and 13 kB on the largest
+ * Kreis request (30 → 42 kB).
  */
-const BORDER_TOLERANCE = 3
+const BORDER_TOLERANCE = 1
 
 /** Rings below this (in square viewBox units, ≈ 0.5 km²) are not islands. */
 const MIN_OUTLINE_AREA = 200

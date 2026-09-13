@@ -21,10 +21,12 @@ const BORDERS: BoundaryFile = {
   levels: {
     state: {
       arcs: [[0, 0, 2000, 2000, 'M0 0l2000 2000']],
+      coarse: [[0, 0, 2000, 2000, 'M0 0l2000 2000z']],
       labels: [[1000, 1000, 900000, 'Hessen']],
     },
     district: {
       arcs: [[100, 100, 300, 300, 'M100 100l200 200']],
+      coarse: [[100, 100, 300, 300, 'M100 100l200 200z']],
       labels: [[200, 200, 5000, 'Kreis Bergstraße']],
     },
   },
@@ -58,6 +60,22 @@ describe('map/boundaries.get', () => {
         labels: [{ name: 'Kreis Bergstraße', x: 200, y: 200, size: 5000 }],
       },
     })
+  })
+
+  it.each([
+    ['a view that resolves every vertex', '1', 'M0 0l2000 2000'],
+    ['a view zoomed out past what the detail can show', '30', 'M0 0l2000 2000z'],
+  ])('picks the resolution for %s', async (_case, perPixel, expected) => {
+    // The client is the only party that knows how big a pixel is, so it says.
+    vi.mocked(globalThis.getQuery).mockReturnValue({
+      minX: '0',
+      minY: '0',
+      maxX: '3000',
+      maxY: '3000',
+      levels: 'state',
+      perPixel,
+    })
+    expect((await fn({})).state?.d).toBe(expected)
   })
 
   it('answers only the levels the view has room for', async () => {

@@ -120,6 +120,69 @@ Coordinates are projected once at build time (spherical Mercator) and quantised
 to whole viewBox units — 12.000 units across Germany, about 53 m each — so
 nothing is projected at runtime and the path data stays short.
 
+### The 53 m grid is the floor, and the map zooms past it
+
+No tolerance, however small, buys detail below one unit, and `MAX_ZOOM` lets the
+map reach a three-kilometre frame — where **one unit is some twenty pixels**. Two
+things follow, and both look like bugs until they are recognised:
+
+- every boundary is a **staircase** of 53 m steps, and
+- any real feature narrower than that **collapses**. The Hessen exclave at
+  Ober-Laudenbach is reached by a corridor narrower than the grid, so its two
+  sides round onto the same coordinates and the corridor is drawn as one line
+  joining two shapes. Measured there: 83 vertices lie closer than a grid unit to
+  a _different_ boundary way.
+
+This was verified rather than assumed: the raw OSM ways, projected but unrounded,
+carry no crossings and no staircase at that zoom — the 53 m rounding alone
+produces both. It has always been true of the postal-code areas; the border lines
+merely made it visible, being strokes on an empty page rather than edges of a
+filled shape.
+
+Left as it is, deliberately. The alternatives were measured and both cost more
+than the defect:
+
+- **A finer grid** (`VIEWBOX_WIDTH` 12.000 → 24.000 or 48.000) puts ~40 % resp.
+  ~80 % on _every_ payload of this map, the aggregate included — and at 13 m the
+  staircase is still five pixels at the deepest zoom.
+- **Less zoom** (`MAX_ZOOM` down from 200) costs nothing but takes away the view
+  a member most wants; the grid would only stop showing at around 20 km across.
+
+So the map is schematic below roughly ten kilometres, and honest about it here.
+
+### Why nothing is simplified into a knot
+
+Douglas–Peucker guarantees that no vertex strays further than the tolerance from
+the line it replaces. It guarantees **nothing about the result staying simple**,
+and where a boundary doubles back on itself within the tolerance — a meander, a
+corridor, the interlocking Hessen / Baden-Württemberg enclaves at Ober-Laudenbach
+— the shortcut can jump the line to the wrong side of itself. What the reader
+sees is a spike or a bow tie.
+
+This is not a matter of picking a smaller tolerance. Measured on those enclaves,
+the input has no self-intersections at any stage (lon/lat, projected, quantised)
+and the simplified arcs had eight at tolerance 1, five of them inside a single
+arc. So the result is **checked instead**: `simplifySafely` halves the tolerance
+until the piece comes out simple, and zero is the floor — it drops none but the
+exactly collinear vertices, so it cannot move a line at all.
+
+Backing off beats refusing. Refusing to simplify a knotted stretch falls back on
+geometry some ten times denser than the tolerance would have kept, and for the
+silhouette that measured **51 kB against 34**; backing off costs 42 kB. Two
+granularities matter for the same reason: the postal-code areas are checked per
+**arc** (they have to agree with their neighbour, and Douglas–Peucker is
+symmetric under reversal, so both sides back off to the same tolerance without
+coordinating), the silhouette in **windows of 256 vertices** — a whole-ring check
+makes one knot anywhere revert the entire coast, which measured 356 kB.
+
+What this buys, country-wide: the silhouette went from 34 self-intersections to
+**8**, the postal-code areas from 192 in 138 areas to **141 in 85**. It does not
+reach zero, and the reason is structural: the check sees one arc or one window at
+a time, and what is left crosses _between_ two of them. Closing that needs a
+global pass over the assembled geometry with a spatial index, reverting the arcs
+involved and repeating — worth knowing, not yet worth doing for a defect this
+size in a filled shape.
+
 ### Why the borders meet
 
 Simplifying each postal code on its own tears the map apart, and it took a

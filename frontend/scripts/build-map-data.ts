@@ -68,6 +68,16 @@ import type {
  * and zooms in from there. At 53 m a vertex is under a pixel at four times that
  * zoom; at the 160 m an all-Germany view would justify, borders go visibly
  * blocky as soon as anyone looks closer.
+ *
+ * It is also the floor under everything below. **No tolerance, however small,
+ * buys detail past this number**, and the map can be zoomed well past it: at the
+ * deepest zoom (three kilometres across) one unit is some twenty pixels, so
+ * every boundary is a staircase of that step and any real feature narrower than
+ * 53 m — the corridor to an exclave, say — collapses into a single line. Raising
+ * it is a decision about *every* payload on this map: measured on the
+ * administrative borders, doubling it costs 37 % more path data and quadrupling
+ * it 76 %, for a staircase that is still five pixels at the deepest zoom. See
+ * docu/karte.md.
  */
 const VIEWBOX_WIDTH = 12_000
 
@@ -475,6 +485,83 @@ function dedupe(ring: Ring): Ring {
   return out
 }
 
+/** Do these two segments properly cross? Touching and collinear do not count. */
+function segmentsCross(p1: Point, p2: Point, p3: Point, p4: Point): boolean {
+  const side = (o: Point, a: Point, b: Point): number =>
+    (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+  const d1 = side(p3, p4, p1)
+  const d2 = side(p3, p4, p2)
+  const d3 = side(p1, p2, p3)
+  const d4 = side(p1, p2, p4)
+  // A zero means an endpoint lies on the other segment: two arcs meeting at a
+  // junction, or three collinear points. Neither is a crossing.
+  if (d1 === 0 || d2 === 0 || d3 === 0 || d4 === 0) return false
+  return d1 > 0 !== d2 > 0 && d3 > 0 !== d4 > 0
+}
+
+/**
+ * Does this line cross *itself*? The one thing simplification must never
+ * produce, and the one thing Douglas–Peucker does not rule out.
+ *
+ * DP guarantees that no vertex strays further than the tolerance from the line
+ * it replaces — it says nothing about the result staying simple. Where a
+ * boundary doubles back on itself within the tolerance (a meander, a corridor,
+ * the interlocking enclaves at Ober-Laudenbach) the shortcut can jump the line
+ * to the wrong side of itself, and what the reader sees is a spike or a bow tie.
+ * Measured on the administrative borders, the input had no self-intersections at
+ * any stage and the simplified arcs had eight; on the postal-code areas the
+ * committed artefact carried 192, in 138 of 8.175 areas, the median one
+ * enclosing some 370 m.
+ *
+ * So the tolerance is not asked to be small enough to be safe — the result is
+ * checked, and whatever fails keeps the geometry it came in with. Quadratic in
+ * the vertex count, which is why it is applied per *arc* (a few dozen vertices)
+ * rather than per ring.
+ */
+function selfIntersects(points: Point[], closed: boolean): boolean {
+  // A closed ring carries the segment back to its first point; an open one does
+  // not. `dedupe` has already dropped the repeated closing vertex.
+  const count = closed ? points.length : points.length - 1
+  if (count < 4) return false
+  for (let i = 0; i < count; i++) {
+    const a1 = points[i]
+    const a2 = points[(i + 1) % points.length]
+    // From i + 2: neighbouring segments share an endpoint by construction.
+    for (let j = i + 2; j < count; j++) {
+      // The first and the final segment of a ring are neighbours as well.
+      if (closed && i === 0 && j === count - 1) continue
+      if (segmentsCross(a1, a2, points[j], points[(j + 1) % points.length])) return true
+    }
+  }
+  return false
+}
+
+/** Vertices per window — see `simplifyRing`. */
+const REPAIR_WINDOW = 256
+
+/**
+ * Simplify an open line as far as the tolerance allows *without tying it in a
+ * knot*, halving the tolerance until the result comes out simple.
+ *
+ * Refusing to simplify at all would be the obvious answer and is a bad one: the
+ * geometry it falls back to is some ten times denser than what the tolerance
+ * would have kept, so a handful of knots along the coast cost more than every
+ * other vertex on it put together — measured, 51 kB against 34. A knot is a
+ * local accident of one shortcut, and it almost always survives only the
+ * coarsest step.
+ *
+ * Zero is the floor and needs no check: it drops none but the exactly collinear
+ * vertices, so it cannot move a line and cannot create a crossing the input did
+ * not already have.
+ */
+function simplifySafely(points: Point[], tolerance: number): Point[] {
+  for (let t = tolerance; t > 0; t = Math.floor(t / 2)) {
+    const simplified = simplifyOpen(points, t)
+    if (!selfIntersects(simplified, false)) return simplified
+  }
+  return simplifyOpen(points, 0)
+}
+
 /**
  * Simplify a closed ring. The ring is cut at its first vertex and treated as an
  * open line, which keeps that vertex fixed — good enough here, and it avoids the
@@ -483,7 +570,23 @@ function dedupe(ring: Ring): Ring {
 function simplifyRing(ring: Ring, tolerance: number): Ring {
   const closed = dedupe(ring)
   if (closed.length < 4) return closed
-  return dedupe(simplifyOpen([...closed, closed[0]], tolerance))
+
+  // Simplified in windows rather than in one piece, because the check below can
+  // only answer "this came out knotted" for the whole stretch it is given, and
+  // whatever fails keeps every vertex it had. A coastline-long stretch means one
+  // knot anywhere reverts the entire coast: measured, 356 kB against 34. The
+  // window costs one forced vertex at each end — for the German silhouette,
+  // twenty-seven of them.
+  const out: Ring = []
+  for (let start = 0; start < closed.length; start += REPAIR_WINDOW) {
+    const stop = Math.min(start + REPAIR_WINDOW, closed.length)
+    // Each window ends on the next one's first vertex, the last one on the
+    // ring's — so the pieces meet and the ring closes.
+    const window = [...closed.slice(start, stop), closed[stop % closed.length]]
+    const kept = simplifySafely(window, tolerance)
+    for (let i = 0; i < kept.length - 1; i++) out.push(kept[i])
+  }
+  return dedupe(out)
 }
 
 // --- topology --------------------------------------------------------------
@@ -583,9 +686,13 @@ function simplifyRingByArcs(ring: Ring, junctions: Set<number>, tolerance: numbe
       arc.push(ring[i])
       if (i === to) break
     }
+    // The decision needs no coordination with the neighbour that walks this
+    // same arc from the other end: Douglas–Peucker is symmetric under reversal
+    // (see `simplifyOpen`) and so is a crossing, so both sides back off to the
+    // same tolerance independently and still agree on the border.
+    const simplified = simplifySafely(arc, tolerance)
     // The closing point is the next arc's opening one; emitting it here would
     // duplicate every junction.
-    const simplified = simplifyOpen(arc, tolerance)
     for (let i = 0; i < simplified.length - 1; i++) out.push(simplified[i])
   }
   return dedupe(out)

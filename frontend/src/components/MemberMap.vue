@@ -92,8 +92,14 @@
   /**
    * How far in the map can be zoomed, as a multiple of the country view. At 200
    * the frame is about three kilometres across — close enough to see which side
-   * of a village a postal code ends on, and about where the simplification the
-   * geometry was built with starts to show.
+   * of a village a postal code ends on.
+   *
+   * It is also well past what the geometry resolves. The coordinate system is
+   * 12.000 units across Germany, about 53 m, which at this zoom is some twenty
+   * pixels: boundaries read as a staircase of that step, and a real feature
+   * narrower than it — the corridor to an exclave — has collapsed into a single
+   * line. Deliberately left as it is; the alternatives are a finer grid at some
+   * 40 to 80 % on every payload, or taking the zoom away. See docu/karte.md.
    */
   const MAX_ZOOM = 200
   /** One press of a zoom button. */

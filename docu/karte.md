@@ -515,6 +515,14 @@ Sixteen state borders are never clutter, so that layer simply stays. The Kreis
 **line** arrives well before the Kreis **name**: a border tells you that you have
 crossed something, and at 150 km across there is no room to say what.
 
+**Country and Bundesland are drawn at one weight**, because they are one line:
+the national border _is_ the outer edge of the state network, the stretch of it
+that happens to have no German neighbour. Drawing the inner stretches heavier
+(it was 1.4 px against 1.0) split a single class of line in two, and the country
+came out looking like the lesser of them. The Kreise stay apart by **strike**
+rather than by weight — a dash is legible where half a pixel is not, and it
+survives a reader who cannot tell 1.4 px from 0.8.
+
 The two sets of names hand over across a deliberately **narrow** band — narrower
 than one press of the zoom button, which is a factor of 1.6. Type at a third of
 its opacity is not a label that is arriving, it is a smudge; crossing the band

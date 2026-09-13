@@ -108,6 +108,25 @@ export type BoundaryLevel = (typeof BOUNDARY_LEVELS)[number]
  */
 export type BoundaryArc = [minX: number, minY: number, maxX: number, maxY: number, d: string]
 
+/**
+ * How coarse the second copy of every border is, in viewBox units (4 ≈ 212 m).
+ *
+ * A wide view cannot show 53 m of detail and pays dearly for carrying it:
+ * Firefox spends **45 ms** parsing the full state layer against 3 ms for this
+ * one, blocking the main thread every time the map is zoomed out far enough to
+ * fetch the country. Nine times fewer vertices, and at the scale it is served
+ * at, not a pixel of difference.
+ */
+export const COARSE_TOLERANCE = 4
+
+/**
+ * Above this many viewBox units per CSS pixel, the coarse copy is the one to
+ * send: its error is then under a pixel. The client knows this number — it is
+ * the scale it draws at — so the resolution follows the *screen* and not a
+ * guess about how big one is.
+ */
+export const COARSE_ABOVE = COARSE_TOLERANCE
+
 /** The artefact holding the administrative borders. */
 export interface BoundaryFile {
   viewBox: string
@@ -117,6 +136,8 @@ export interface BoundaryFile {
     {
       /** Longest first, so a truncated answer drops the least visible lines. */
       arcs: BoundaryArc[]
+      /** The same borders at `COARSE_TOLERANCE`, for views that cannot show more. */
+      coarse: BoundaryArc[]
       /** `[x, y, size, name]`, largest first. */
       labels: [number, number, number, string][]
     }

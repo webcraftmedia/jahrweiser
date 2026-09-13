@@ -51,6 +51,8 @@ import { createReadStream } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
+import { COARSE_TOLERANCE } from '../shared/map'
+
 import type {
   BoundaryArc,
   BoundaryFile,
@@ -1302,8 +1304,8 @@ if (statesFile || districtsFile) {
   const levels = {} as BoundaryFile['levels']
 
   /** One arc: its box, so the endpoint can cull it, and its path. */
-  const toArc = (line: Ring): BoundaryArc | null => {
-    const simplified = simplifyOpen(collapse(line.map(project)), borderTolerance)
+  const toArc = (line: Ring, cut: number): BoundaryArc | null => {
+    const simplified = simplifySafely(collapse(line.map(project)), cut)
     if (simplified.length < 2) return null
     let minX = Infinity
     let minY = Infinity
@@ -1323,7 +1325,7 @@ if (statesFile || districtsFile) {
     ['district', districtsFile],
   ] as const) {
     if (!file) {
-      levels[key] = { arcs: [], labels: [] }
+      levels[key] = { arcs: [], coarse: [], labels: [] }
       console.warn(`No ${key} boundaries supplied`)
       continue
     }
@@ -1332,12 +1334,29 @@ if (statesFile || districtsFile) {
     const level = await loadAdminLevel(file, maritime, covered)
     for (const id of level.ways) covered.add(id)
 
-    const arcs = [...level.arcs.values()]
-      .map(toArc)
-      .filter((arc): arc is BoundaryArc => arc !== null)
-      // Longest first, by the extent of the box: an answer that hits its limit
-      // then drops the specks rather than the line across the whole view.
-      .sort((a, b) => b[2] - b[0] + (b[3] - b[1]) - (a[2] - a[0]) - (a[3] - a[1]))
+    /**
+     * The same borders twice: as they are, and thinned for the views that
+     * cannot show the difference.
+     *
+     * Not an optimisation of the payload so much as of the *parse*. A wide view
+     * fetches a whole country's worth of border, and Firefox spends 45 ms
+     * turning that path into geometry against 3 ms for the coarse one — a
+     * blocked main thread every time the map is zoomed out, which is exactly
+     * where it was reported as lag. Nine times fewer vertices, no visible
+     * difference at the scale it is sent for, and the choice is the client's,
+     * which is the only party that knows how big a pixel is.
+     */
+    const drawn = [...level.arcs.values()]
+    const at = (cut: number): BoundaryArc[] =>
+      drawn
+        .map((line) => toArc(line, cut))
+        .filter((arc): arc is BoundaryArc => arc !== null)
+        // Longest first, by the extent of the box: an answer that hits its limit
+        // then drops the specks rather than the line across the whole view.
+        .sort((a, b) => b[2] - b[0] + (b[3] - b[1]) - (a[2] - a[0]) - (a[3] - a[1]))
+
+    const arcs = at(borderTolerance)
+    const coarse = at(COARSE_TOLERANCE)
 
     const labels = level.labels
       .map(({ name, rings, anchor }): BoundaryFile['levels'][BoundaryLevel]['labels'][number] => {
@@ -1354,9 +1373,12 @@ if (statesFile || districtsFile) {
       // order the client hands out the space it has for names in.
       .sort((a, b) => b[2] - a[2])
 
-    levels[key] = { arcs, labels }
+    levels[key] = { arcs, coarse, labels }
+    const vertices = (list: BoundaryArc[]): number =>
+      list.reduce((sum, arc) => sum + (arc[4].match(/-?\d+/g) ?? []).length / 2, 0)
     console.warn(
       `  ${level.arcs.size} new arcs of ${level.ways.size} ways · ${labels.length} names` +
+        ` · ${vertices(arcs)} vertices, ${vertices(coarse)} coarse` +
         (level.foreign > 0 ? ` · ${level.foreign} foreign relations dropped` : ''),
     )
   }

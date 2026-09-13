@@ -25,9 +25,9 @@
    * What the map now shows, and what it needs for it. The map decides which
    * administrative levels its scale has room for; this only fetches them.
    */
-  function onViewport(view: MapViewport & { levels: BoundaryLevel[] }): void {
+  function onViewport(view: MapViewport & { levels: BoundaryLevel[]; perPixel: number }): void {
     void loadPlaces(view)
-    void loadBoundaries(view, view.levels)
+    void loadBoundaries(view, view.levels, view.perPixel)
   }
 
   // Always refetched: someone joins, someone moves, someone finally fills in

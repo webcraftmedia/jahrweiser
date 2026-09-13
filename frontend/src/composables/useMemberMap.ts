@@ -7,6 +7,8 @@ import type {
   MapPlace,
 } from '~~/shared/map'
 
+import { COARSE_ABOVE } from '~~/shared/map'
+
 /** A rectangle of the map, in viewBox units. */
 export interface MapViewport {
   minX: number
@@ -134,8 +136,12 @@ export function useMemberMap() {
     'member-map-boundaries',
     () => ({}),
   )
-  /** The region each level was fetched for. */
-  const boundaryBox = useState<Partial<Record<BoundaryLevel, MapViewport>>>(
+  /**
+   * The region each level was fetched for, and at which resolution — a view
+   * that has zoomed in past what the coarse copy can show needs the fine one
+   * even where the region it was given still covers it.
+   */
+  const boundaryBox = useState<Partial<Record<BoundaryLevel, MapViewport & { coarse: boolean }>>>(
     'member-map-boundary-box',
     () => ({}),
   )
@@ -150,16 +156,24 @@ export function useMemberMap() {
    * for the whole country stays good while the district layer is refetched at
    * every step in.
    */
-  async function loadBoundaries(view: MapViewport, levels: BoundaryLevel[]): Promise<void> {
-    const wanted = levels.filter((level) => !covers(boundaryBox.value[level] ?? null, view))
+  async function loadBoundaries(
+    view: MapViewport,
+    levels: BoundaryLevel[],
+    perPixel: number,
+  ): Promise<void> {
+    const coarse = perPixel > COARSE_ABOVE
+    const wanted = levels.filter((level) => {
+      const held = boundaryBox.value[level]
+      return held?.coarse !== coarse || !covers(held, view)
+    })
     if (wanted.length === 0) return
 
-    const box = grown(view, BOUNDARY_MARGIN)
+    const box = { ...grown(view, BOUNDARY_MARGIN), coarse }
     const known = { ...boundaryBox.value }
     for (const level of wanted) boundaryBox.value[level] = box
     try {
       const answer = await api<MapBoundaries>('/api/map/boundaries', {
-        query: { ...box, levels: wanted.join(',') },
+        query: { ...box, perPixel, levels: wanted.join(',') },
       })
       for (const level of wanted) {
         boundaries.value[level] = answer[level] ?? { d: '', labels: [] }

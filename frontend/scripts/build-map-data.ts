@@ -864,10 +864,17 @@ async function loadAdminLevel(
     )
     level.labels.push({
       name,
-      // The body the label is sized and, failing an anchor, placed by. Built
-      // from the land ways only — a coastal Kreis whose sea-side arcs were just
-      // dropped no longer closes, and a polygon centroid does not mind.
-      rings: stitchRings(land.map(toLine)),
+      // The body the label is sized and, failing an anchor, placed by — from
+      // *every* way, the maritime ones included. They are dropped from the ink
+      // because a territorial-sea arc looks like a rendering fault, but without
+      // them a coastal outline no longer closes and the shoelace formula reads
+      // the chord across the gap as the coast: Schleswig-Holstein came out at
+      // a seventh of its area and lost its name to the fit rule.
+      rings: stitchRings(
+        (relation.members ?? [])
+          .filter((member) => member.type === 'way' && member.geometry)
+          .map(toLine),
+      ),
       anchor:
         anchor?.lon !== undefined && anchor.lat !== undefined ? [anchor.lon, anchor.lat] : null,
     })

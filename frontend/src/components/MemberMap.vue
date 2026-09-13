@@ -300,12 +300,19 @@
    * this scale is not offered and then hidden; it is simply not yet drawn.
    */
   const STAGE = {
-    /** Kreis borders, over 180 → 100 km. */
+    /** Kreis borders, over 180 → 100 km: the line comes well before the name. */
     districtBorder: { off: 0.28, on: 0.16 },
-    /** Kreis names, once their borders are solid: 100 → 65 km. */
-    districtName: { off: 0.16, on: 0.1 },
-    /** Bundesland names, out over the band the Kreise come in on. */
-    stateName: { off: 0.16, on: 0.28 },
+    /**
+     * The handover between the two sets of names, over 120 → 98 km.
+     *
+     * Deliberately a narrow band, and narrower than one press of the zoom
+     * button: type at a third of its opacity is not a label that is arriving,
+     * it is a smudge. Crossing the band in one step reads as a handover; sitting
+     * in the middle of it reads as a fault.
+     */
+    districtName: { off: 0.19, on: 0.155 },
+    /** The Bundesland names go the other way over roughly the same stretch. */
+    stateName: { off: 0.155, on: 0.24 },
   }
 
   /**
@@ -519,6 +526,9 @@
   /** Beyond this the map is a wall of names and no longer a map. */
   const MAX_PLACE_LABELS = 70
 
+  /** The same for the Kreise, which are far larger and so far fewer. */
+  const MAX_DISTRICT_LABELS = 16
+
   interface Rect {
     x: number
     y: number
@@ -610,7 +620,17 @@
 
     const taken = [...blocked]
 
-    // The Kreis names go first, and that is the whole point of them: a reader
+    // The Bundesland name is set under everything and placed by nothing, but it
+    // still holds its ground: a village name printed across it leaves two
+    // unreadable words instead of one legible one, and the village has eighty
+    // other places to be.
+    if (stateNameOpacity.value > 0) {
+      for (const entry of stateLabels.value) {
+        taken.push(labelRect(entry.label, entry.size, 0.72))
+      }
+    }
+
+    // The Kreis names go next, and that is the whole point of them: a reader
     // who cannot tell where they are is not helped by the name of the next
     // village along. They sit at their own label point or nowhere — a Kreis
     // name shifted aside to dodge a village would be pointing at the wrong
@@ -625,6 +645,10 @@
         if (taken.some((other) => overlaps(rect, other))) continue
         taken.push(rect)
         districts.push({ place: label, x: label.x, y: label.y, anchor: 'middle', rect, size })
+        // The server sends them largest first, so this keeps the Kreise a
+        // reader is most likely inside of. Without it, a view over the Ruhr is
+        // twenty names deep before a single town is written.
+        if (districts.length >= MAX_DISTRICT_LABELS) break
       }
     }
 

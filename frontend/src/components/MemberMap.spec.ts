@@ -581,6 +581,22 @@ describe('Component: MemberMap', () => {
       expect(wrapper.findAll('.district-names text')).toHaveLength(0)
     })
 
+    it('stops naming Kreise before the map is a list of them', async () => {
+      // A view over the Ruhr is twenty Kreise deep before a single town would
+      // be written. The server sends them largest first, so the ones a reader
+      // is most likely inside of are the ones that survive.
+      const many = Array.from({ length: 20 }, (_, i) => ({
+        name: `K${i}`,
+        x: 1900 + i * 10,
+        y: 2400,
+        size: 5000,
+      }))
+      const wrapper = await zoomed(6, {
+        boundaries: { ...BORDERS, district: { d: 'M0 0l1 1', labels: many } },
+      })
+      expect(wrapper.findAll('.district-names text')).toHaveLength(16)
+    })
+
     it('ignores a name that is not on screen', async () => {
       const wrapper = await zoomed(0, {
         boundaries: {

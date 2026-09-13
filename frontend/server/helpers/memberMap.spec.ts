@@ -353,8 +353,9 @@ describe('loadBoundaries', () => {
     async (missing) => {
       // An artefact from a run that was given no Kreis input simply has no key
       // for it. Answered here rather than asked about by every reader.
-      const levels = { ...BORDERS.levels }
-      delete levels[missing]
+      const levels = Object.fromEntries(
+        Object.entries(BORDERS.levels).filter(([level]) => level !== missing),
+      )
       storageServing({ ...BORDERS, levels })
       const loaded = await loadBoundaries()
       expect(loaded?.levels[missing]).toStrictEqual({ arcs: [], labels: [] })

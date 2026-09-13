@@ -234,12 +234,12 @@
   })
 
   /**
-   * Where an event landed, in viewBox units. `offsetX/Y` rather than a fresh
-   * measurement: it is already relative to the element, and the size of that
-   * element is something this component is told about, not something it should
-   * go and ask for on every wheel tick.
+   * Where a point on the element is, in viewBox units. Taken from offsets into
+   * the element rather than from a fresh measurement: the size of that element
+   * is something this component is told about, not something it should go and
+   * ask for on every wheel tick.
    */
-  function pointAt(event: WheelEvent): { x: number; y: number } {
+  function mapPoint(offsetX: number, offsetY: number): { x: number; y: number } {
     const size = frame.value ?? { width: NOMINAL_WIDTH, height: NOMINAL_WIDTH }
     const perPixel = unit.value
     const h = view.value.w * (full.value.height / full.value.width)
@@ -247,24 +247,99 @@
     const marginX = (size.width - view.value.w / perPixel) / 2
     const marginY = (size.height - h / perPixel) / 2
     return {
-      x: view.value.cx - view.value.w / 2 + (event.offsetX - marginX) * perPixel,
-      y: view.value.cy - h / 2 + (event.offsetY - marginY) * perPixel,
+      x: view.value.cx - view.value.w / 2 + (offsetX - marginX) * perPixel,
+      y: view.value.cy - h / 2 + (offsetY - marginY) * perPixel,
     }
   }
 
   const dragging = ref(false)
   let dragFrom: { x: number; y: number; cx: number; cy: number } | null = null
 
+  /**
+   * Every pointer currently down on the map. One is a drag, two are a pinch.
+   *
+   * The map has to do this itself: `touch-action: none` is what keeps a drag
+   * across the map from scrolling the page, and it switches off the browser's
+   * own pinch along with it. Without this, a phone could only zoom by the
+   * buttons — on the one device where reaching for a button is the awkward way
+   * to do it.
+   */
+  const pointers = new Map<number, { x: number; y: number }>()
+
+  /**
+   * The previous pinch sample: the gap between the fingers, the point between
+   * them, and where the element sits on the page.
+   *
+   * Each move is measured against this rather than against the start of the
+   * gesture, so the two things a pinch does — spread to zoom, travel to pan —
+   * come out as one continuous motion and neither has to be told about the
+   * other. The element's position is read once when the gesture begins: the
+   * page is laid out to fit and does not scroll under it.
+   */
+  let pinch: { gap: number; x: number; y: number; left: number; top: number } | null = null
+
+  function beginPinch(): void {
+    const [first, second] = [...pointers.values()]
+    const rect = svg.value!.getBoundingClientRect()
+    pinch = {
+      gap: Math.hypot(first.x - second.x, first.y - second.y),
+      x: (first.x + second.x) / 2,
+      y: (first.y + second.y) / 2,
+      left: rect.left,
+      top: rect.top,
+    }
+    // A second finger ends whatever the first one was dragging.
+    dragging.value = false
+    dragFrom = null
+  }
+
+  /** Pan with whichever pointer is still down, from wherever it now is. */
+  function beginDrag(from: { x: number; y: number }): void {
+    dragging.value = true
+    dragFrom = { x: from.x, y: from.y, cx: view.value.cx, cy: view.value.cy }
+  }
+
   function onPointerDown(event: PointerEvent): void {
     if (props.decorative || event.button !== 0) return
-    dragging.value = true
-    dragFrom = { x: event.clientX, y: event.clientY, cx: view.value.cx, cy: view.value.cy }
-    // So a drag that starts on the map keeps receiving moves once the pointer
-    // has left it.
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    // So a gesture that starts on the map keeps receiving moves once the
+    // pointer has left it.
     ;(event.currentTarget as SVGSVGElement).setPointerCapture(event.pointerId)
+    if (pointers.size >= 2) {
+      beginPinch()
+      return
+    }
+    beginDrag({ x: event.clientX, y: event.clientY })
   }
 
   function onPointerMove(event: PointerEvent): void {
+    const held = pointers.get(event.pointerId)
+    if (held) {
+      held.x = event.clientX
+      held.y = event.clientY
+    }
+
+    if (pinch && pointers.size >= 2) {
+      const [first, second] = [...pointers.values()]
+      const gap = Math.hypot(first.x - second.x, first.y - second.y)
+      const x = (first.x + second.x) / 2
+      const y = (first.y + second.y) / 2
+      // Zoom about the point between the fingers — a pinch aimed at a village
+      // should end up looking at that village and not at the middle of the
+      // frame. A gap of nothing is two fingers on the same spot: no scale.
+      if (gap > 0 && pinch.gap > 0) {
+        zoomBy(gap / pinch.gap, mapPoint(x - pinch.left, y - pinch.top))
+      }
+      // And follow the pair as it travels, so a pinch that drifts also pans.
+      framed.value = clamp({
+        cx: view.value.cx - (x - pinch.x) * unit.value,
+        cy: view.value.cy - (y - pinch.y) * unit.value,
+        w: view.value.w,
+      })
+      pinch = { ...pinch, gap, x, y }
+      return
+    }
+
     if (!dragFrom) return
     const perPixel = unit.value
     framed.value = clamp({
@@ -274,7 +349,16 @@
     })
   }
 
-  function onPointerUp(): void {
+  function onPointerUp(event: PointerEvent): void {
+    pointers.delete(event.pointerId)
+    if (pointers.size < 2) pinch = null
+    // Lifting one of two fingers hands the gesture back to the other rather
+    // than stopping the map dead under it.
+    const [remaining] = [...pointers.values()]
+    if (remaining) {
+      beginDrag(remaining)
+      return
+    }
     dragging.value = false
     dragFrom = null
   }
@@ -282,7 +366,7 @@
   function onWheel(event: WheelEvent): void {
     if (props.decorative) return
     // The page is laid out to fit, so there is no scrolling to take away here.
-    zoomBy(event.deltaY < 0 ? 1.2 : 1 / 1.2, pointAt(event))
+    zoomBy(event.deltaY < 0 ? 1.2 : 1 / 1.2, mapPoint(event.offsetX, event.offsetY))
   }
 
   // --- orientation ---------------------------------------------------------

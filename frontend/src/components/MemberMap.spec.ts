@@ -264,6 +264,107 @@ describe('Component: MemberMap', () => {
       expect(box(wrapper)).toStrictEqual(after)
     })
 
+    it('zooms by pinching, about the point between the fingers', async () => {
+      // `touch-action: none` is what keeps a drag across the map from scrolling
+      // the page, and it switches the browser's own pinch off along with it —
+      // so the map has to do this itself, or a phone could only zoom by button.
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const before = box(wrapper)
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 180, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 220, clientY: 200 })
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 140, clientY: 200 })
+      await svg.trigger('pointermove', { pointerId: 2, clientX: 260, clientY: 200 })
+      expect(box(wrapper).w).toBeLessThan(before.w)
+    })
+
+    it('zooms out again when the fingers come together', async () => {
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 100, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 300, clientY: 200 })
+      const spread = box(wrapper)
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 190, clientY: 200 })
+      await svg.trigger('pointermove', { pointerId: 2, clientX: 210, clientY: 200 })
+      expect(box(wrapper).w).toBeGreaterThan(spread.w)
+    })
+
+    it('pans when the two fingers travel together', async () => {
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const before = box(wrapper)
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 180, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 220, clientY: 200 })
+      // The gap stays the same, so nothing is scaled — only moved.
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 130, clientY: 170 })
+      await svg.trigger('pointermove', { pointerId: 2, clientX: 170, clientY: 170 })
+      const after = box(wrapper)
+      expect(after.w).toBeCloseTo(before.w, 5)
+      expect(after.x).toBeGreaterThan(before.x)
+      expect(after.y).toBeGreaterThan(before.y)
+    })
+
+    it('hands the gesture to the finger that is left rather than stopping dead', async () => {
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 180, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 220, clientY: 200 })
+      await svg.trigger('pointerup', { pointerId: 2 })
+      const before = box(wrapper)
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 130, clientY: 200 })
+      expect(box(wrapper).x).toBeGreaterThan(before.x)
+      expect(box(wrapper).w).toBeCloseTo(before.w, 5)
+    })
+
+    it('keeps pinching with the two fingers left of three', async () => {
+      const wrapper = await mount([
+        area('64673', 3, { cx: 1000, cy: 1000 }),
+        area('10115', 5, { cx: 1400, cy: 1600 }),
+      ])
+      const svg = wrapper.find('svg')
+      for (const [id, x] of [
+        [1, 180],
+        [2, 220],
+        [3, 260],
+      ]) {
+        await svg.trigger('pointerdown', { button: 0, pointerId: id, clientX: x, clientY: 200 })
+      }
+      await svg.trigger('pointerup', { pointerId: 3 })
+      const before = box(wrapper)
+      await svg.trigger('pointermove', { pointerId: 1, clientX: 120, clientY: 200 })
+      expect(box(wrapper).w).toBeLessThan(before.w)
+    })
+
+    it('leaves two fingers on the same spot alone', async () => {
+      // Nothing to scale by, and a zero gap would divide by nothing.
+      const wrapper = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
+      const svg = wrapper.find('svg')
+      await svg.trigger('pointerdown', { button: 0, pointerId: 1, clientX: 200, clientY: 200 })
+      await svg.trigger('pointerdown', { button: 0, pointerId: 2, clientX: 200, clientY: 200 })
+      const before = box(wrapper)
+      await svg.trigger('pointermove', { pointerId: 2, clientX: 200, clientY: 200 })
+      expect(box(wrapper)).toStrictEqual(before)
+    })
+
+    it('ignores a move from a pointer it never saw go down', async () => {
+      const wrapper = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
+      const before = box(wrapper)
+      await wrapper.find('svg').trigger('pointermove', { pointerId: 9, clientX: 50, clientY: 50 })
+      expect(box(wrapper)).toStrictEqual(before)
+    })
+
     it('ignores a drag with anything but the primary button', async () => {
       const wrapper = await mount([area('64673', 3, { cx: 1000, cy: 1000 })])
       const before = box(wrapper)

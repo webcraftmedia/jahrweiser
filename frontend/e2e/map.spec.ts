@@ -83,7 +83,41 @@ test.describe('Karte', () => {
   })
 
   test.describe('on a phone', () => {
-    test.use({ viewport: { width: 375, height: 667 } })
+    test.use({ viewport: { width: 375, height: 667 }, hasTouch: true })
+
+    test('zooms by pinching, not only by the buttons', async ({ page }) => {
+      // `touch-action: none` keeps a drag across the map from scrolling the
+      // page, and switches the browser's own pinch off with it — so the map
+      // implements the gesture, and this is the only test that exercises it
+      // through real touch events rather than synthesised pointer ones.
+      await mockMapEndpoints(page)
+      await navigateClientSide(page, '/karte')
+      const svg = page.locator('svg[role="img"]')
+      await expect(svg).toBeVisible()
+      const width = async () => Number((await svg.getAttribute('viewBox'))!.split(' ')[2])
+      const before = await width()
+
+      const frame = (await svg.boundingBox())!
+      const x = frame.x + frame.width / 2
+      const y = frame.y + frame.height / 2
+      const cdp = await page.context().newCDPSession(page)
+      const touch = (gaps: number[], type: string) =>
+        cdp.send('Input.dispatchTouchEvent', {
+          type,
+          touchPoints: gaps.flatMap((gap, index) => [
+            { x: x - gap, y, id: index * 2 },
+            { x: x + gap, y, id: index * 2 + 1 },
+          ]),
+        })
+
+      await touch([20], 'touchStart')
+      for (const gap of [40, 70, 110]) {
+        await touch([gap], 'touchMove')
+        await page.waitForTimeout(50)
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+      await expect.poll(width).toBeLessThan(before)
+    })
 
     test('offers the sections in the burger menu as well as in the bar', async ({ page }) => {
       // The bottom bar is a row of unlabelled icons. Whoever does not read it

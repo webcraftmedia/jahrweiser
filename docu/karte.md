@@ -442,8 +442,19 @@ already sitting at 219.9 kB and the next feature of any size was going to break
 it either way.
 
 - **Framing** — the map opens on the extent the members cover plus a margin,
-  not on the whole country. Zoom by button or wheel, pan by dragging, out to the
-  country and in to about three kilometres across.
+  not on the whole country. Zoom by button, wheel or **pinch**, pan by dragging,
+  out to the country and in to about three kilometres across.
+
+  The pinch is the map's own, not the browser's. `touch-action: none` is what
+  keeps a drag across the map from scrolling the page, and it switches off the
+  browser's pinch along with it — without this a phone could only zoom by the
+  buttons, on the one device where reaching for a button is the awkward way to
+  do it. Every pointer down is tracked; two of them are a gesture, measured
+  against the _previous_ move rather than the start, so spreading to zoom and
+  travelling to pan come out as one motion without either having to know about
+  the other. Lifting one of two fingers hands the gesture to the one still down
+  rather than stopping the map dead.
+
 - **Orientation** — the country silhouette answers "where is this" in the
   opening view and stops answering it the moment anyone zooms in: three postal
   codes and a few village names on an empty page could be anywhere in Germany.

@@ -80,11 +80,12 @@ export async function loadBoundaries(): Promise<BoundaryFile | null> {
   // given no Kreis input, simply has no key for it. Filled in once here, so
   // that no reader has to ask.
   const stored = raw.levels as Partial<BoundaryFile['levels']>
+  const empty = { arcs: [], coarse: [], labels: [] }
   boundaryCache = {
     ...raw,
     levels: {
-      state: stored.state ?? { arcs: [], labels: [] },
-      district: stored.district ?? { arcs: [], labels: [] },
+      state: { ...empty, ...stored.state },
+      district: { ...empty, ...stored.district },
     },
   }
   return boundaryCache
@@ -115,9 +116,14 @@ export function boundaryLayerIn(
   box: MapBox,
   limit: number,
   labelLimit: number,
+  coarse = false,
 ): MapBoundaryLayer {
   const arcs: string[] = []
-  for (const [minX, minY, maxX, maxY, d] of level.arcs) {
+  // A view that cannot show 53 m of detail should not be made to parse it —
+  // see COARSE_ABOVE. An artefact built before the coarse copy existed has none,
+  // and answers with the geometry it does have.
+  const drawn = coarse && level.coarse.length > 0 ? level.coarse : level.arcs
+  for (const [minX, minY, maxX, maxY, d] of drawn) {
     if (maxX < box.minX || minX > box.maxX || maxY < box.minY || minY > box.maxY) continue
     arcs.push(d)
     if (arcs.length >= limit) break

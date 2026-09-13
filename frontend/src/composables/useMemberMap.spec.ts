@@ -169,7 +169,7 @@ describe('useMemberMap', () => {
 
     it('asks only for the levels the map said it had room for', async () => {
       const { boundaries, loadBoundaries } = useMemberMap()
-      await loadBoundaries(VIEW, ['state'])
+      await loadBoundaries(VIEW, ['state'], 1)
       const [, options] = calls()[0] ?? []
       expect((options as { query: { levels: string } }).query.levels).toBe('state')
       expect(boundaries.value.state).toStrictEqual(BORDERS.state)
@@ -180,7 +180,7 @@ describe('useMemberMap', () => {
       // A name is a few bytes and a Kreis border a few hundred: the margin that
       // buys panning without a request is worth less here.
       const { loadBoundaries, loadPlaces } = useMemberMap()
-      await loadBoundaries(VIEW, ['state'])
+      await loadBoundaries(VIEW, ['state'], 1)
       await loadPlaces(VIEW)
       const borderBox = (calls()[0]?.[1] as { query: typeof VIEW }).query
       const [, placeOptions] =
@@ -194,8 +194,8 @@ describe('useMemberMap', () => {
       // The Bundesländer were fetched for the country and still answer; the
       // Kreise are only wanted now, and only they are asked for.
       const { loadBoundaries } = useMemberMap()
-      await loadBoundaries(VIEW, ['state'])
-      await loadBoundaries(VIEW, ['state', 'district'])
+      await loadBoundaries(VIEW, ['state'], 1)
+      await loadBoundaries(VIEW, ['state', 'district'], 1)
       expect(calls()).toHaveLength(2)
       expect((calls()[1]?.[1] as { query: { levels: string } }).query.levels).toBe('district')
     })
@@ -204,34 +204,47 @@ describe('useMemberMap', () => {
       // Both layers are capped answers to a rectangle, so a much smaller one
       // can legitimately hold more than the last reply carried.
       const { loadBoundaries } = useMemberMap()
-      await loadBoundaries(VIEW, ['state'])
-      await loadBoundaries({ minX: 495, minY: 495, maxX: 505, maxY: 505 }, ['state'])
+      await loadBoundaries(VIEW, ['state'], 1)
+      await loadBoundaries({ minX: 495, minY: 495, maxX: 505, maxY: 505 }, ['state'], 1)
       expect(calls()).toHaveLength(2)
     })
 
     it('says nothing again while the view stays inside what was fetched', async () => {
       const { loadBoundaries } = useMemberMap()
-      await loadBoundaries(VIEW, ['state'])
-      await loadBoundaries({ minX: 420, minY: 420, maxX: 590, maxY: 590 }, ['state'])
+      await loadBoundaries(VIEW, ['state'], 1)
+      await loadBoundaries({ minX: 420, minY: 420, maxX: 590, maxY: 590 }, ['state'], 1)
       expect(calls()).toHaveLength(1)
     })
 
     it('takes an empty layer for a level the artefact was built without', async () => {
       mock$fetch.mockResolvedValue({})
       const { boundaries, loadBoundaries } = useMemberMap()
-      await loadBoundaries(VIEW, ['district'])
+      await loadBoundaries(VIEW, ['district'], 1)
       expect(boundaries.value.district).toStrictEqual({ d: '', labels: [] })
+    })
+
+    it('asks again when the view has zoomed past what the coarse copy can show', async () => {
+      // The region still covers the view, but the geometry in hand is the one
+      // for a scale that no longer applies.
+      const { loadBoundaries } = useMemberMap()
+      await loadBoundaries(VIEW, ['state'], 30)
+      expect((calls()[0]?.[1] as { query: { perPixel: number } }).query.perPixel).toBe(30)
+      await loadBoundaries(VIEW, ['state'], 1)
+      expect(calls()).toHaveLength(2)
+      // …and not again once it is the resolution already held.
+      await loadBoundaries(VIEW, ['state'], 1)
+      expect(calls()).toHaveLength(2)
     })
 
     it('keeps the map usable when the borders cannot be fetched', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       mock$fetch.mockRejectedValue(new Error('500'))
       const { boundaries, loadBoundaries } = useMemberMap()
-      await loadBoundaries(VIEW, ['state'])
+      await loadBoundaries(VIEW, ['state'], 1)
       expect(boundaries.value.state).toBeUndefined()
       // The region is given back, so the next view tries again.
       serving()
-      await loadBoundaries(VIEW, ['state'])
+      await loadBoundaries(VIEW, ['state'], 1)
       expect(boundaries.value.state).toStrictEqual(BORDERS.state)
       consoleSpy.mockRestore()
     })

@@ -56,7 +56,17 @@
    * — a drag would otherwise emit on every frame.
    */
   const emit = defineEmits<{
-    viewport: [{ minX: number; minY: number; maxX: number; maxY: number; levels: BoundaryLevel[] }]
+    viewport: [
+      {
+        minX: number
+        minY: number
+        maxX: number
+        maxY: number
+        levels: BoundaryLevel[]
+        /** viewBox units per CSS pixel — how fine the borders have to be. */
+        perPixel: number
+      },
+    ]
   }>()
 
   const { t } = useI18n()
@@ -774,6 +784,7 @@
           minY: current.cy - visible.value.h / 2,
           maxY: current.cy + visible.value.h / 2,
           levels: levelsInView.value,
+          perPixel: unit.value,
         })
       }, 250)
     },

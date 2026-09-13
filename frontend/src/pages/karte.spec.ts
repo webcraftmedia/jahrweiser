@@ -141,12 +141,15 @@ describe('Page: Karte', () => {
         maxX: 100,
         maxY: 100,
         levels: ['state'],
+        perPixel: 12,
       })
       await vi.waitFor(() => {
         expect(mock$fetch).toHaveBeenCalledWith('/api/map/places', expect.anything())
         expect(mock$fetch).toHaveBeenCalledWith(
           '/api/map/boundaries',
-          expect.objectContaining({ query: expect.objectContaining({ levels: 'state' }) }),
+          expect.objectContaining({
+            query: expect.objectContaining({ levels: 'state', perPixel: 12 }),
+          }),
         )
       })
     } finally {

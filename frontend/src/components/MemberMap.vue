@@ -967,8 +967,20 @@
 
   /* Not `.outline`: Tailwind ships a utility of that name, and an
      `outline-style: solid` on an SVG path draws a rectangle around its bounding
-     box — which is precisely the stray frame around the country it produced. */
-  .map-country {
+     box — which is precisely the stray frame around the country it produced.
+
+     The country and the Bundesländer are one weight, because they are one line:
+     the national border *is* the outer edge of the state network, the stretch of
+     it that happens to have no German neighbour. Drawing the inner stretches
+     heavier than the outer ones split a single class of line in two and read as
+     the country being the lesser of them. The Kreise stay apart, by strike
+     rather than by weight — a dash is legible where half a pixel is not.
+
+     Never filled, and drawn once: the artefact holds each border as an arc that
+     belongs to exactly one level (see docu/karte.md), so no stretch of line is
+     painted twice and no dash rides on top of a solid. */
+  .map-country,
+  .map-state {
     /* Drawn, not filled. A filled country covers the whole frame as soon as
        anyone zooms into it, and its rectangular edge then reads as two stray
        vertical lines down the sides of the map. */
@@ -978,20 +990,11 @@
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
   }
-  .is-dark .map-country {
+  .is-dark .map-country,
+  .is-dark .map-state {
     stroke: rgb(250 245 235 / 0.28);
   }
 
-  /* The administrative ladder, all three rungs in the same ink as the country
-     and told apart by weight and by strike: the Bundesland heavier than the
-     country it sits in — it is the one doing the orienting at that scale — and
-     the Kreis lighter and dashed. Two channels rather than one, so the two
-     levels stay distinguishable for a reader who cannot tell a 1.4 px line from
-     a 0.8 px one, which on a high-density screen is most readers.
-
-     Never filled, and drawn once: the artefact holds each border as an arc that
-     belongs to exactly one level (see docu/karte.md), so no stretch of line is
-     painted twice and no dash rides on top of a solid. */
   .map-state,
   .map-district,
   .state-names,
@@ -1010,24 +1013,14 @@
     }
   }
 
-  .map-state,
   .map-district {
     fill: none;
-    stroke-linejoin: round;
-    stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
-  }
-  .map-state {
-    stroke: rgb(30 41 59 / 0.45);
-    stroke-width: 1.4;
-  }
-  .map-district {
     stroke: rgb(30 41 59 / 0.35);
     stroke-width: 0.8;
     stroke-dasharray: 4 2;
-  }
-  .is-dark .map-state {
-    stroke: rgb(250 245 235 / 0.42);
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
   }
   .is-dark .map-district {
     stroke: rgb(250 245 235 / 0.32);

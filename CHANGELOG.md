@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.14.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.13.1...v1.14.0) (2026-09-13)
+
+
+### Features
+
+* **frontend:** map county lines ([#387](https://github.com/webcraftmedia/jahrweiser/issues/387)) ([fe554fe](https://github.com/webcraftmedia/jahrweiser/commit/fe554fe937306b13b7d02e782aaae21c0574846d))
+
+
+### Bug Fixes
+
+* **frontend:** better map performance ([#389](https://github.com/webcraftmedia/jahrweiser/issues/389)) ([76ab1a6](https://github.com/webcraftmedia/jahrweiser/commit/76ab1a6679471f73fc1c7c45761a0b571068ea17))
+
 ## [1.13.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.13.0...v1.13.1) (2026-09-11)
 
 

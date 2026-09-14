@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test'
+
 import type { Page } from '@playwright/test'
 
 interface MaildevMessage {
@@ -101,4 +103,23 @@ export function extractLoginTokenFromMail(message: MaildevMessage): string {
     throw new Error(`No login token found in mail body. Subject: ${message.subject}`)
   }
   return match[1]!
+}
+
+/**
+ * Opens a magic link and presses the confirmation button.
+ *
+ * Opening alone does nothing on purpose — see src/pages/login/[token].vue: the
+ * token is spent by the click, so that a mail scanner rendering the page
+ * cannot spend it first. Every test that logs in has to go through the same
+ * click a member does.
+ */
+export async function openLoginLink(page: Page, token: string, query = ''): Promise<void> {
+  await page.goto(`/login/${token}${query}`)
+  const confirm = page.getByRole('button', { name: 'Jetzt anmelden' })
+  // Explicitly, and never by retrying the click: the button stays disabled
+  // until the page has hydrated, and a second click on a single-use token
+  // would redeem it twice — the first POST wins, the second gets "already
+  // used" and the test would fail for a reason that is not the bug.
+  await expect(confirm).toBeEnabled({ timeout: 15_000 })
+  await confirm.click()
 }

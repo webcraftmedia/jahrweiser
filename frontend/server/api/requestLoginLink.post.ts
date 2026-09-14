@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { useDb } from '../db'
 import { loginTokens, userTags, users } from '../db/schema'
 import { createCardDAVAccount, findUserByEmail } from '../helpers/dav'
+import { isWithinLoginCooldown, markLoginRequested } from '../helpers/loginCooldown'
 import { sendLoginLink } from '../helpers/loginLink'
 import { isEmailNotFound, markEmailNotFound } from '../helpers/negativeCache'
 import { extractUserFromVCardData } from '../helpers/sync'
@@ -18,6 +19,21 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const db = useDb()
   const normalizedEmail = email.toLowerCase()
+
+  // Checked before anything that depends on the address existing, and fed for
+  // every address alike — see loginCooldown.ts. `cooldown: true` is the one
+  // answer this endpoint gives that is not "we may or may not have sent
+  // something": the caller demonstrably asked a moment ago, so telling them to
+  // look at the mail they already have leaks nothing and stops the loop of
+  // re-requesting, getting no mail, and clicking an older link that has since
+  // expired.
+  if (
+    config.LOGIN_RATE_LIMIT_MS > 0 &&
+    isWithinLoginCooldown(normalizedEmail, config.LOGIN_RATE_LIMIT_MS)
+  ) {
+    return { cooldown: true }
+  }
+  markLoginRequested(normalizedEmail)
 
   if (isEmailNotFound(normalizedEmail)) {
     return {}
@@ -76,12 +92,16 @@ export default defineEventHandler(async (event) => {
       .limit(1)
   )[0]
 
+  // The durable half of the same gate: the map above is per-process, this
+  // survives a restart. Reachable only when the map has no entry, i.e. for the
+  // first request after a restart, so it does not widen what the response says
+  // about who exists.
   if (
     config.LOGIN_RATE_LIMIT_MS > 0 &&
     recentToken &&
     Date.now() - recentToken.requestedAt.getTime() < config.LOGIN_RATE_LIMIT_MS
   ) {
-    return {}
+    return { cooldown: true }
   }
 
   await sendLoginLink(config, userRow, redirect)

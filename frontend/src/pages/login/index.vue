@@ -19,9 +19,15 @@
             />
           </svg>
           <span class="sr-only">{{ $t('pages.login.message.info') }}</span>
-          <h3 class="text-lg font-display">{{ $t('pages.login.message.title') }}</h3>
+          <h3 class="text-lg font-display">
+            {{ cooldown ? $t('pages.login.cooldown.title') : $t('pages.login.message.title') }}
+          </h3>
         </div>
-        <div class="mb-4 text-base font-body">
+        <div v-if="cooldown" class="mb-4 text-base font-body">
+          <p class="font-medium">{{ $t('pages.login.cooldown.text1') }}</p>
+          <p class="mt-2">{{ $t('pages.login.cooldown.text2') }}</p>
+        </div>
+        <div v-else class="mb-4 text-base font-body">
           <p class="font-medium">{{ $t('pages.login.message.text1') }}</p>
           <p class="mt-2">{{ $t('pages.login.message.text2') }}</p>
         </div>
@@ -147,6 +153,13 @@
   }
 
   const requestedLogin = ref(false)
+  /**
+   * The request hit the per-address cooldown, so no new mail went out. It gets
+   * its own message rather than the usual "check your inbox": that one sends
+   * people back to an older link, which by then is used or expired, and they
+   * loop.
+   */
+  const cooldown = ref(false)
   const emailError = ref(false)
   const sendError = ref(false)
   const loading = ref(false)
@@ -170,10 +183,11 @@
     sendError.value = false
     loading.value = true
     try {
-      await api('/api/requestLoginLink', {
+      const result = await api<{ cooldown?: boolean }>('/api/requestLoginLink', {
         method: 'POST',
         body: { email, ...(redirect ? { redirect } : {}) },
       })
+      cooldown.value = result.cooldown === true
       requestedLogin.value = true
       // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als sendError angezeigt
     } catch (error) {

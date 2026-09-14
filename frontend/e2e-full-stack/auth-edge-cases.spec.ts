@@ -14,6 +14,7 @@ import {
   getMailFor,
   preparePage,
   waitForMailFor,
+  openLoginLink,
 } from './helpers/maildev'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
@@ -76,7 +77,7 @@ test.describe('email change in DAV', () => {
     await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
     const mail = await waitForMailFor(oldEmail)
     const token = extractLoginTokenFromMail(mail)
-    await page.goto(`/login/${token}`)
+    await openLoginLink(page, token)
     await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
 
     // Confirm session works
@@ -132,7 +133,7 @@ test.describe('sliding session', () => {
     await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
     const mail = await waitForMailFor(email)
     const token = extractLoginTokenFromMail(mail)
-    await page.goto(`/login/${token}`)
+    await openLoginLink(page, token)
     await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
   }
 
@@ -250,7 +251,7 @@ test.describe('admin tag management', () => {
     await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
     const mail = await waitForMailFor(adminEmail)
     const token = extractLoginTokenFromMail(mail)
-    await page.goto(`/login/${token}`)
+    await openLoginLink(page, token)
     await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
 
     // Grant alice the 'sportgruppe' calendar via the admin API. Tags are

@@ -5,6 +5,7 @@ import {
   extractLoginTokenFromMail,
   preparePage,
   waitForMailFor,
+  openLoginLink,
 } from './helpers/maildev'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
@@ -44,7 +45,7 @@ async function loginViaMagicLink(page: import('@playwright/test').Page, email: s
 
   const mail = await waitForMailFor(email)
   const token = extractLoginTokenFromMail(mail)
-  await page.goto(`/login/${token}`)
+  await openLoginLink(page, token)
   await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
 }
 
@@ -148,7 +149,7 @@ test.describe('registration via link', () => {
     // 3. The verification email logs the new user in via the same magic link.
     const mail = await waitForMailFor(NEWCOMER)
     const loginToken = extractLoginTokenFromMail(mail)
-    await guest.goto(`/login/${loginToken}`)
+    await openLoginLink(guest, loginToken)
     await expect(guest).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
 
     // 4. The admin's list now reports one join for the link.

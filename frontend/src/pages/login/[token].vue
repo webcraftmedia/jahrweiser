@@ -9,8 +9,9 @@
         <h3 class="text-lg font-display mb-3">{{ $t('pages.login.token.title') }}</h3>
         <p class="mb-4 text-base font-body">{{ $t('pages.login.token.text') }}</p>
         <button
-          class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna bg-sienna text-ivory rounded hover:bg-sienna-dark hover:border-sienna-dark transition-colors"
+          class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna bg-sienna text-ivory rounded hover:bg-sienna-dark hover:border-sienna-dark transition-colors disabled:opacity-60 disabled:cursor-wait"
           type="button"
+          :disabled="!hydrated"
           @click="redeem"
         >
           {{ $t('pages.login.token.button') }}
@@ -95,6 +96,18 @@
 
   type State = 'idle' | 'pending' | 'error'
   const state = ref<State>('idle')
+
+  /**
+   * False until Vue has taken over the server-rendered markup. The button is
+   * disabled up to that point, because a click landing before hydration hits an
+   * element whose handler does not exist yet and is silently lost — the page
+   * then just sits there. On a slow phone that is a member tapping a dead
+   * button; in the e2e suite it was every login test timing out.
+   */
+  const hydrated = ref(false)
+  onMounted(() => {
+    hydrated.value = true
+  })
 
   /** Why it failed — see RedeemFailure in server/api/redeemLoginLink.post.ts. */
   const reason = ref<string | null>(null)

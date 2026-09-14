@@ -129,7 +129,9 @@ test.describe('Login Page', () => {
     await mockCalendarEndpoints(page)
 
     await page.goto('/login/valid-token-123')
-    await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
+    const confirm = page.getByRole('button', { name: 'Jetzt anmelden' })
+    await expect(confirm).toBeEnabled()
+    await confirm.click()
     await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
     await expect(page.locator('#navbar-desktop').getByText('Willkommen')).toBeVisible()
   })
@@ -155,7 +157,9 @@ test.describe('Login Page', () => {
     await mockCalendarEndpoints(page)
 
     await page.goto('/login/valid-token-123?redirect=/2025/03')
-    await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
+    const confirm = page.getByRole('button', { name: 'Jetzt anmelden' })
+    await expect(confirm).toBeEnabled()
+    await confirm.click()
     await expect(page).toHaveURL(/\/2025\/03$/, { timeout: 15_000 })
   })
 
@@ -169,7 +173,9 @@ test.describe('Login Page', () => {
     )
 
     await page.goto('/login/invalid-token')
-    await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
+    const confirm = page.getByRole('button', { name: 'Jetzt anmelden' })
+    await expect(confirm).toBeEnabled()
+    await confirm.click()
 
     await expect(page.getByText('Ein Fehler...')).toBeVisible()
   })

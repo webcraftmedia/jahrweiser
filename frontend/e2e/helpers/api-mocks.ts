@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test'
+
 import type { Page } from '@playwright/test'
 
 export const DEFAULT_USER = { name: 'Test User', email: 'test@example.com', role: 'user' }
@@ -291,8 +293,15 @@ export async function loginAs(page: Page, user: typeof DEFAULT_USER) {
 
   // Open the magic link and confirm it. The click is required, not incidental:
   // the page redeems on the button, never on load — see src/pages/login/[token].vue.
+  //
+  // `toBeEnabled` rather than waitForHydration() below: that button is disabled
+  // until the page has hydrated, which makes this an exact signal instead of a
+  // heuristic plus a 200 ms guess. Clicking earlier would be lost silently, and
+  // retrying is not an option on a single-use token.
   await page.goto('/login/test-token')
-  await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
+  const confirm = page.getByRole('button', { name: 'Jetzt anmelden' })
+  await expect(confirm).toBeEnabled()
+  await confirm.click()
 
   // Wait for redirect to home page
   await page.waitForURL('/', { timeout: 15_000 })

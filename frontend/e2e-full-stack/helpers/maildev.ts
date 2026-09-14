@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test'
+
 import type { Page } from '@playwright/test'
 
 interface MaildevMessage {
@@ -113,5 +115,11 @@ export function extractLoginTokenFromMail(message: MaildevMessage): string {
  */
 export async function openLoginLink(page: Page, token: string, query = ''): Promise<void> {
   await page.goto(`/login/${token}${query}`)
-  await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
+  const confirm = page.getByRole('button', { name: 'Jetzt anmelden' })
+  // Explicitly, and never by retrying the click: the button stays disabled
+  // until the page has hydrated, and a second click on a single-use token
+  // would redeem it twice — the first POST wins, the second gets "already
+  // used" and the test would fail for a reason that is not the bug.
+  await expect(confirm).toBeEnabled({ timeout: 15_000 })
+  await confirm.click()
 }

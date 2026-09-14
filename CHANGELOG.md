@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.14.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.0...v1.14.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* **frontend:** adjust login link duration(6h) ([#404](https://github.com/webcraftmedia/jahrweiser/issues/404)) ([5754ee6](https://github.com/webcraftmedia/jahrweiser/commit/5754ee6be6f6424ac9fbe9fc08711b824c984468))
+* **frontend:** fix color transition for mobile ([#402](https://github.com/webcraftmedia/jahrweiser/issues/402)) ([0a3adfa](https://github.com/webcraftmedia/jahrweiser/commit/0a3adfa2027075f19426269f3ff12aef9cd321ef))
+* **frontend:** fix sync ([#403](https://github.com/webcraftmedia/jahrweiser/issues/403)) ([18f1675](https://github.com/webcraftmedia/jahrweiser/commit/18f1675c76736063e09a4716485c9330d82329b0))
+* **frontend:** fix the browser height on mobile devices ([#400](https://github.com/webcraftmedia/jahrweiser/issues/400)) ([a2fb246](https://github.com/webcraftmedia/jahrweiser/commit/a2fb246ec52d22690a0fdf7b7df5099d654aaf23))
+
 ## [1.14.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.13.1...v1.14.0) (2026-09-13)
 
 

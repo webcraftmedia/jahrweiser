@@ -2,7 +2,7 @@
 
 exports[`Layout: Login > renders with default zoom (no inline style) 1`] = `
 "<div id="test-wrapper">
-  <div class="flex flex-col min-h-screen bg-ivory dark:bg-poster-dark relative">
+  <div data-v-36b225f3="" class="login-shell flex flex-col bg-ivory dark:bg-poster-dark relative">
     <!-- Hero variant (login page) -->
     <div data-v-c970699f="" class="pt-10 pb-4 flex justify-center px-4"><a data-v-c970699f="" href="/" class="flex items-center gap-2 md:gap-3"><svg data-v-c970699f="" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 72.8 72.8" class="nuxt-icon nuxt-icon--fill logo-hero logo-float">
           <defs>
@@ -53,8 +53,8 @@ exports[`Layout: Login > renders with default zoom (no inline style) 1`] = `
         <div data-v-c970699f=""><span data-v-c970699f="" class="font-display text-navy dark:text-ivory text-2xl md:text-3xl tracking-wide">Jahrweiser</span><span data-v-c970699f="" class="font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5">Bergstraße</span></div><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </a></div><!-- Backdrop (outside nav stacking context so it covers page content) -->
     <div data-v-c970699f="" class="md:hidden fixed inset-0 bg-navy/30 dark:bg-black/40 z-40" data-testid="mobile-backdrop" style="display: none;"></div><!-- Content -->
-    <div class="flex-1 flex items-start justify-center px-4"></div>
-    <footer data-v-4896eafd="" class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-1 shrink-0">
+    <div data-v-36b225f3="" class="flex-1 flex items-start justify-center px-4"></div>
+    <footer data-v-4896eafd="" data-v-36b225f3="" class="border-t-2 border-sienna/30 dark:border-sienna-dark/50 py-1 shrink-0">
       <div data-v-4896eafd="" class="max-w-screen-2xl mx-auto flex items-center justify-center md:justify-between text-sm text-navy/60 dark:text-ivory/60 px-2 2xl:px-0"><span data-v-4896eafd="" class="hidden md:inline">components.Footer.copyright <a data-v-4896eafd="" href="https://www.webcraft-media.de/" class="hover:text-sienna transition-colors">components.Footer.copyright-holder</a><!-- eslint-disable @intlify/vue-i18n/no-raw-text --> · <button data-v-4896eafd="" class="hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer" title="components.Footer.changelog"> v0.0.0-test</button><!-- eslint-enable @intlify/vue-i18n/no-raw-text --></span><!-- Main modal -->
         <div data-v-94fcd891="" id="changelog-modal" tabindex="-1" role="dialog" aria-modal="true" aria-hidden="true" style="display: none;" class="modal-hidden modal-overlay overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-[60] flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
           <div data-v-94fcd891="" class="relative p-4 w-full max-w-3xl mx-auto max-h-full">

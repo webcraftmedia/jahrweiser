@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-screen bg-ivory dark:bg-poster-dark relative">
+  <div class="app-shell flex flex-col bg-ivory dark:bg-poster-dark relative">
     <Header />
     <div class="content flex-1 overflow-y-auto flex flex-col">
       <!-- The rail sits outside the max-width container on purpose: it is app
@@ -39,6 +39,19 @@
 
 <style scoped>
   @reference "tailwindcss";
+
+  /* `dvh`, not `vh` (Tailwind's `h-screen`): on a phone `1vh` is 1% of the
+     *large* viewport — the height the page gets once the address bar has
+     scrolled away. With the bar on screen the shell is therefore taller than
+     what you can see and its bottom row (the horizontal AppIconRail plus the
+     footer) sits below the edge, unreachable: the scrolling happens inside
+     `.content`, not on the document. `dvh` follows the viewport that is
+     actually visible, so the rail stays put whether the bar is there or not. */
+  .app-shell {
+    height: 100vh; /* fallback: pre-2022 browsers without dvh */
+    height: 100dvh;
+  }
+
   .content {
     @apply mb-0;
   }

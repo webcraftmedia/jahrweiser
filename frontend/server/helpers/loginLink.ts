@@ -7,7 +7,20 @@ import { loginTokens } from '../db/schema'
 
 import { defaultParams, emailRenderer } from './email'
 
-export const LOGIN_TOKEN_TTL_MS = 30 * 60 * 1000
+/**
+ * How long a magic link stays redeemable.
+ *
+ * Not a guessing defence: the token is 32 random bytes, so even six hours of
+ * uninterrupted brute force are ~2^44 attempts against a 2^256 space. Widening
+ * the window buys an attacker 3.6 bits, which is nothing.
+ *
+ * What it does trade is the link's life as a bearer credential sitting in a
+ * mailbox — a forwarded mail, a shared device, a mail archive. Six hours is the
+ * span in which somebody who reads their mail in the evening can still use a
+ * link requested at lunchtime, which is the case this exists for; a day would
+ * start covering "somebody else opens that mailbox tomorrow".
+ */
+export const LOGIN_TOKEN_TTL_MS = 6 * 60 * 60 * 1000
 
 interface LoginLinkUser {
   uid: string

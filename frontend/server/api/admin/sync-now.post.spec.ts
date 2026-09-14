@@ -66,6 +66,16 @@ describe('sync-now.post', () => {
     consoleSpy.mockRestore()
   })
 
+  it('still measures when the sync fails, and still reports the failure', async () => {
+    // The measurement reads the sidecar, which is perfectly readable while DAV
+    // is unreachable. Tying it to a successful sync is what silently took the
+    // whole metrics series down for five days when the sync started throwing.
+    vi.mocked(globalThis.getHeader).mockReturnValue('Bearer test-sync-secret')
+    mockSync.mockRejectedValue(new Error('DAV unreachable'))
+    await expect(fn({})).rejects.toThrow('DAV unreachable')
+    expect(mockRecord).toHaveBeenCalledTimes(1)
+  })
+
   it('does not measure when the sync itself was refused', async () => {
     vi.mocked(globalThis.getHeader).mockReturnValue('Bearer wrong')
     await expect(fn({})).rejects.toThrow('Unauthorized')

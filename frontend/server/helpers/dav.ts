@@ -97,10 +97,31 @@ export function calendarLabel(calendar: { displayName?: unknown; url: string }):
  * Entries are trimmed, so a hand-written `"chor, vorstand"` grants access to
  * `vorstand` and not to `" vorstand"`, and blanks are dropped so an empty
  * property yields no tag rather than a single empty one.
+ *
+ * Repeats are dropped case-insensitively, because that is how the storage
+ * behind this list counts them: `user_tags` is keyed on (user_uid, tag) in a
+ * collation MariaDB 11 resolves to `utf8mb4_uca1400_ai_ci`, where `Chor` and
+ * `chor` are one key. A hand-edited `"chor, Chor"` would otherwise become an
+ * INSERT that collides with itself. The first spelling wins — DAV owns how a
+ * tag is written, and the mirror has no business picking a different one.
+ *
+ * That collation is accent-insensitive on top, which this does not fold:
+ * `Chor` and `Chör` survive here and collide in the database. The idempotent
+ * insert in sync.ts absorbs it — folding accents in a list of calendar keys
+ * would be a stronger claim about the data than the keys themselves make.
  */
 export function readAdminTags(vcard: ICAL.Component): string[] {
   const values = vcard.getFirstProperty(X_ADMIN_TAGS)?.getValues() as string[] | undefined
-  return (values ?? []).map((tag) => tag.trim()).filter((tag) => tag.length > 0)
+  const seen = new Set<string>()
+  return (values ?? [])
+    .map((tag) => tag.trim())
+    .filter((tag) => {
+      if (tag.length === 0) return false
+      const key = tag.toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
 }
 
 /**

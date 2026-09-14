@@ -279,9 +279,18 @@
       "unlocated-short": "{count} ohne Ort"
     },
     "login": {
+      "cooldown": {
+        "text1": "Wir haben dir gerade eben schon eine E-Mail geschickt — eine zweite geht nicht raus.",
+        "text2": "Nimm bitte den Link aus dieser E-Mail. Ist keine angekommen, versuch es in einer Minute noch einmal.",
+        "title": "Du hast eben schon einen Link angefordert"
+      },
       "error": {
+        "disabled": "Für dieses Konto ist die Anmeldung gesperrt. Sprich bitte mit deinem Obmann.",
+        "expired": "Dieser Link ist abgelaufen. Fordere dir auf der Login-Seite einfach einen neuen an.",
         "text": "Dein Code ist nicht mehr gültig.",
-        "title": "Ein Fehler..."
+        "title": "Ein Fehler...",
+        "unknown": "Diesen Link kennen wir nicht. Prüfe, ob die Adresse vollständig übernommen wurde, oder fordere dir einen neuen an.",
+        "used": "Dieser Link wurde bereits verwendet. Das kann auch der Virenscanner deines E-Mail-Postfachs gewesen sein, der ihn automatisch geöffnet hat — fordere dir bitte einen neuen an."
       },
       "form": {
         "button": "Einloggen",
@@ -305,7 +314,10 @@
         "title": "Prüfe dein Postfach"
       },
       "token": {
-        "loading": "Laden..."
+        "button": "Jetzt anmelden",
+        "loading": "Laden...",
+        "text": "Tippe auf „Jetzt anmelden“, um dich einzuloggen. Erst dieser Klick verbraucht deinen Link.",
+        "title": "Noch ein Klick"
       }
     },
     "register": {

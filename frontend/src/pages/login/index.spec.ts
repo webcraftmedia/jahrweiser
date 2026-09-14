@@ -5,7 +5,10 @@ import { stubApi } from '../../../test/helpers/stub-api'
 
 import Page from './index.vue'
 
-const mockNavigateTo = vi.hoisted(() => vi.fn())
+const { mockNavigateTo, mock$fetch } = vi.hoisted(() => ({
+  mockNavigateTo: vi.fn(),
+  mock$fetch: vi.fn(),
+}))
 const mockLoggedIn = ref(false)
 
 mockNuxtImport('useUserSession', () => () => ({
@@ -15,12 +18,13 @@ mockNuxtImport('useUserSession', () => () => ({
 
 mockNuxtImport('navigateTo', () => mockNavigateTo)
 
-stubApi(vi.fn().mockResolvedValue({}))
+stubApi(mock$fetch)
 
 describe('Page: Login', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockLoggedIn.value = false
+    mock$fetch.mockResolvedValue({})
   })
 
   it('renders login form', async () => {
@@ -42,6 +46,20 @@ describe('Page: Login', () => {
     await wrapper.find('form').trigger('submit')
 
     expect(wrapper.html()).toMatchSnapshot()
+  })
+
+  it('says no new mail went out when the request hit the cooldown', async () => {
+    // "Check your inbox" would be a lie here, and a costly one: it sends
+    // people back to the older link, which is by then used or expired.
+    mock$fetch.mockResolvedValue({ cooldown: true })
+    const wrapper = await mountSuspended(Page, { route: '/login' })
+
+    await wrapper.find('input').setValue('test@example.com')
+    await wrapper.find('form').trigger('submit')
+
+    expect(wrapper.text()).toContain('pages.login.cooldown.title')
+    expect(wrapper.text()).toContain('pages.login.cooldown.text1')
+    expect(wrapper.text()).not.toContain('pages.login.message.text1')
   })
 
   it('returns to login form on button click', async () => {

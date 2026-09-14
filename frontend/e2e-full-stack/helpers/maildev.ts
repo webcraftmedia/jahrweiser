@@ -102,3 +102,16 @@ export function extractLoginTokenFromMail(message: MaildevMessage): string {
   }
   return match[1]!
 }
+
+/**
+ * Opens a magic link and presses the confirmation button.
+ *
+ * Opening alone does nothing on purpose — see src/pages/login/[token].vue: the
+ * token is spent by the click, so that a mail scanner rendering the page
+ * cannot spend it first. Every test that logs in has to go through the same
+ * click a member does.
+ */
+export async function openLoginLink(page: Page, token: string, query = ''): Promise<void> {
+  await page.goto(`/login/${token}${query}`)
+  await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
+}

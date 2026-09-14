@@ -1,11 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Page: Login Token > renders loading state 1`] = `
+exports[`Page: Login Token > renders the confirmation step 1`] = `
 "<div id="test-wrapper">
   <div>
-    <!-- Loading dots -->
-    <div class="mt-8 animate-fade-slide-up">
-      <div role="status" class="flex items-center gap-2"><span class="loading-dot"></span><span class="loading-dot" style="animation-delay: 0.15s;"></span><span class="loading-dot" style="animation-delay: 0.3s;"></span><span class="sr-only">pages.login.token.loading</span></div>
+    <!-- Confirmation step. The link is NOT redeemed by opening this page — see
+         the comment in the script block. -->
+    <div class="w-full max-w-md mt-8 animate-fade-slide-up">
+      <div class="p-5 border-2 border-mustard/50 dark:border-mustard/30 rounded bg-mustard/10 dark:bg-mustard/5 text-navy dark:text-ivory">
+        <h3 class="text-lg font-display mb-3">pages.login.token.title</h3>
+        <p class="mb-4 text-base font-body">pages.login.token.text</p><button class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna bg-sienna text-ivory rounded hover:bg-sienna-dark hover:border-sienna-dark transition-colors" type="button">pages.login.token.button</button>
+      </div>
     </div>
   </div>
 </div>"

@@ -5,6 +5,7 @@ import {
   extractLoginTokenFromMail,
   preparePage,
   waitForMailFor,
+  openLoginLink,
 } from './helpers/maildev'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
@@ -39,7 +40,7 @@ async function loginViaMagicLink(page: Page, email: string): Promise<void> {
   await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
   const mail = await waitForMailFor(email)
   const token = extractLoginTokenFromMail(mail)
-  await page.goto(`/login/${token}`)
+  await openLoginLink(page, token)
   await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
 }
 

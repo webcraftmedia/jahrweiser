@@ -22,14 +22,27 @@ describe('redeemLoginLink.post', () => {
     )
   })
 
+  // Every rejection is a 401 with the same message; the `reason` is what the
+  // login page turns into a sentence somebody can act on. Asserting it here is
+  // the point — collapsing all four into one message is how a mail scanner ate
+  // a member's links for three months without anyone being able to tell.
   it('rejects an unknown token', async () => {
     queueDbResults([])
     await expect(fn({})).rejects.toThrow('Bad credentials')
+    queueDbResults([])
+    await expect(fn({})).rejects.toMatchObject({ data: { reason: 'unknown' } })
+  })
+
+  it('rejects a token that was already redeemed', async () => {
+    // Selected despite `consumed_at` being set, so this stays distinguishable
+    // from a token that never existed.
+    queueDbResults([{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: new Date() }])
+    await expect(fn({})).rejects.toMatchObject({ data: { reason: 'used' } })
   })
 
   it('rejects an expired token', async () => {
     queueDbResults([{ token: 'tok', userUid: 'u1', expiresAt: past, consumedAt: null }])
-    await expect(fn({})).rejects.toThrow('Bad credentials')
+    await expect(fn({})).rejects.toMatchObject({ data: { reason: 'expired' } })
   })
 
   it('rejects when the token has no matching user', async () => {
@@ -37,7 +50,7 @@ describe('redeemLoginLink.post', () => {
       [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
       [], // user lookup empty
     )
-    await expect(fn({})).rejects.toThrow('Bad credentials')
+    await expect(fn({})).rejects.toMatchObject({ data: { reason: 'disabled' } })
   })
 
   it('rejects when the user is soft-deleted', async () => {
@@ -45,7 +58,7 @@ describe('redeemLoginLink.post', () => {
       [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
       [{ uid: 'u1', deletedAt: new Date(), loginDisabled: false }],
     )
-    await expect(fn({})).rejects.toThrow('Bad credentials')
+    await expect(fn({})).rejects.toMatchObject({ data: { reason: 'disabled' } })
   })
 
   it('rejects when the user is login-disabled', async () => {
@@ -53,7 +66,7 @@ describe('redeemLoginLink.post', () => {
       [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
       [{ uid: 'u1', deletedAt: null, loginDisabled: true }],
     )
-    await expect(fn({})).rejects.toThrow('Bad credentials')
+    await expect(fn({})).rejects.toMatchObject({ data: { reason: 'disabled' } })
   })
 
   it('throws 500 when no session id is established', async () => {

@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { useDb } from '../db'
@@ -9,26 +9,39 @@ const bodySchema = z.object({
   token: z.string(),
 })
 
+/**
+ * Why a link cannot be redeemed. The client turns this into a sentence that
+ * tells somebody what to do next — "already used" and "expired" call for
+ * different reactions, and collapsing them into one message is what let a mail
+ * scanner eat a member's links for three months without anyone noticing.
+ *
+ * Not an enumeration risk: to see any of these you must already hold a
+ * 256-bit token, which tells you more than the reason ever could.
+ */
+export type RedeemFailure = 'unknown' | 'used' | 'expired' | 'disabled'
+
+function badLink(reason: RedeemFailure) {
+  return createError({ statusCode: 401, message: 'Bad credentials', data: { reason } })
+}
+
 export default defineEventHandler(async (event) => {
   const { token } = await readValidatedBody(event, bodySchema.parse)
   const db = useDb()
 
+  // Consumed rows are selected too, so "already used" stays distinguishable
+  // from "never existed".
   const tokenRow = (
-    await db
-      .select()
-      .from(loginTokens)
-      .where(and(eq(loginTokens.token, token), isNull(loginTokens.consumedAt)))
-      .limit(1)
+    await db.select().from(loginTokens).where(eq(loginTokens.token, token)).limit(1)
   )[0]
 
-  if (!tokenRow || tokenRow.expiresAt.getTime() < Date.now()) {
-    throw createError({ statusCode: 401, message: 'Bad credentials' })
-  }
+  if (!tokenRow) throw badLink('unknown')
+  if (tokenRow.consumedAt !== null) throw badLink('used')
+  if (tokenRow.expiresAt.getTime() < Date.now()) throw badLink('expired')
 
   const user = (await db.select().from(users).where(eq(users.uid, tokenRow.userUid)).limit(1))[0]
 
   if (user?.deletedAt !== null || user.loginDisabled) {
-    throw createError({ statusCode: 401, message: 'Bad credentials' })
+    throw badLink('disabled')
   }
 
   await db.update(loginTokens).set({ consumedAt: new Date() }).where(eq(loginTokens.token, token))

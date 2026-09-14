@@ -289,8 +289,10 @@ export async function loginAs(page: Page, user: typeof DEFAULT_USER) {
   // Mock calendar endpoints so the index page can load
   await mockCalendarEndpoints(page)
 
-  // Navigate to login with a test token — triggers onMounted flow
+  // Open the magic link and confirm it. The click is required, not incidental:
+  // the page redeems on the button, never on load — see src/pages/login/[token].vue.
   await page.goto('/login/test-token')
+  await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
 
   // Wait for redirect to home page
   await page.waitForURL('/', { timeout: 15_000 })

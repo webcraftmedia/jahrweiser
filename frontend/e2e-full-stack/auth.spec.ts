@@ -6,6 +6,7 @@ import {
   getMailFor,
   preparePage,
   waitForMailFor,
+  openLoginLink,
 } from './helpers/maildev'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
@@ -35,7 +36,7 @@ async function loginViaMagicLink(page: import('@playwright/test').Page, email: s
 
   const mail = await waitForMailFor(email)
   const token = extractLoginTokenFromMail(mail)
-  await page.goto(`/login/${token}`)
+  await openLoginLink(page, token)
   await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
 }
 
@@ -64,11 +65,11 @@ test.describe('full-stack auth', () => {
     const mail = await waitForMailFor(BOB)
     const token = extractLoginTokenFromMail(mail)
 
-    await page.goto(`/login/${token}`)
+    await openLoginLink(page, token)
     await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
 
     await page.context().clearCookies()
-    await page.goto(`/login/${token}`)
+    await openLoginLink(page, token)
     await expect(page.getByText('Ein Fehler...')).toBeVisible({ timeout: 10_000 })
   })
 

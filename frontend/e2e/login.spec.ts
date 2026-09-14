@@ -85,6 +85,29 @@ test.describe('Login Page', () => {
     await expect(page.getByRole('button', { name: 'Einloggen' })).toBeVisible()
   })
 
+  test('opening a magic link does not redeem it', async ({ page }) => {
+    // The regression this page was rebuilt for: corporate mail security opens
+    // incoming links in a headless browser, JavaScript and all. While the
+    // redemption sat in onMounted, that scan spent the single-use token before
+    // the member ever clicked — one member was locked out for three months.
+    // This test is that scanner: it renders, it does not click.
+    let redeemCalls = 0
+    await page.route('**/api/redeemLoginLink', async (route) => {
+      redeemCalls += 1
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({}),
+      })
+    })
+
+    await page.goto('/login/valid-token-123')
+    await expect(page.getByRole('button', { name: 'Jetzt anmelden' })).toBeVisible()
+    await page.waitForTimeout(1000)
+
+    expect(redeemCalls).toBe(0)
+  })
+
   test('valid token redirects to home page', async ({ page }) => {
     await page.route('**/api/_auth/session', async (route) =>
       route.fulfill({
@@ -106,6 +129,7 @@ test.describe('Login Page', () => {
     await mockCalendarEndpoints(page)
 
     await page.goto('/login/valid-token-123')
+    await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
     await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
     await expect(page.locator('#navbar-desktop').getByText('Willkommen')).toBeVisible()
   })
@@ -131,6 +155,7 @@ test.describe('Login Page', () => {
     await mockCalendarEndpoints(page)
 
     await page.goto('/login/valid-token-123?redirect=/2025/03')
+    await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
     await expect(page).toHaveURL(/\/2025\/03$/, { timeout: 15_000 })
   })
 
@@ -144,6 +169,7 @@ test.describe('Login Page', () => {
     )
 
     await page.goto('/login/invalid-token')
+    await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
 
     await expect(page.getByText('Ein Fehler...')).toBeVisible()
   })

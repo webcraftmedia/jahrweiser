@@ -2,7 +2,7 @@
 
 exports[`Layout: Default > renders with default zoom (no inline style) 1`] = `
 "<div id="test-wrapper">
-  <div data-v-19b56bd5="" class="flex flex-col h-screen bg-ivory dark:bg-poster-dark relative">
+  <div data-v-19b56bd5="" class="app-shell flex flex-col bg-ivory dark:bg-poster-dark relative">
     <!-- Hero variant (login page) -->
     <!-- Bar variant (default nav bar) -->
     <nav data-v-c970699f="" class="relative z-50 bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0">

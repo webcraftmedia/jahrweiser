@@ -15,7 +15,25 @@ The endpoint:
 - Fetches all VCards from DAV.
 - Upserts users, mirrors display name + admin tags, soft-deletes missing users,
   invalidates sessions on email change.
-- Returns JSON: `{added, updated, deleted, emailChanges, durationMs, skippedLocked}`.
+- Records the daily metrics snapshot (see `docu/admin-dashboard.md`). This runs
+  **even when the sync itself failed** — it reads the sidecar, which is fine
+  while DAV is unreachable — so a broken DAV no longer takes the dashboard
+  series down with it.
+- Returns JSON:
+  `{added, updated, deleted, emailChanges, tagFailures, durationMs, skippedLocked}`.
+
+`tagFailures > 0` means a contact's admin tags could not be mirrored. The sync
+deliberately carries on past that — the tags are a convenience, the member data
+is not — so this counter is the only place it surfaces. Details are in the app
+log (`pm2 logs`), prefixed `[sync] failed to mirror tags for`.
+
+`sync_state.last_synced_at` records the last *successful* run. A run that threw
+releases the lock but does not move the timestamp, so a sync that has been
+failing for days is visible there:
+
+```sql
+SELECT collection_url, last_synced_at, running_since FROM sync_state;
+```
 
 ## Host crontab example (Alpine)
 
@@ -34,11 +52,14 @@ SYNC_SECRET=<long-random-token>
 ```
 
 ```cron
-*/10 * * * * . /etc/jahrweiser-sync.env && curl -sS -X POST \
-  -H "Authorization: Bearer $SYNC_SECRET" \
-  https://app.example.com/api/admin/sync-now \
-  >> /var/log/jahrweiser-sync.log 2>&1
+*/10 * * * * . /etc/jahrweiser-sync.env && { date -Is; curl -sS --fail -X POST -H "Authorization: Bearer $SYNC_SECRET" https://app.example.com/api/admin/sync-now; echo; } >> /var/log/jahrweiser-sync.log 2>&1
 ```
+
+`--fail` and the redirection are not cosmetic. Without them a failing run is
+completely silent: `curl` prints the error body to stdout, cron mails stdout,
+and a host without an MTA drops the mail. That is how a sync returning 500
+every ten minutes went unnoticed for five days. `date -Is` makes the log
+readable as a history rather than a pile of JSON.
 
 ## Manual trigger
 

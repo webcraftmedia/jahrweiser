@@ -51,6 +51,12 @@ export async function softDeleteUser(email: string): Promise<void> {
   await getPool().query('UPDATE users SET deleted_at = NOW() WHERE email = ?', [email])
 }
 
+/** The mirrored admin tags of a contact, in the spelling the database holds. */
+export async function readUserTags(uid: string): Promise<string[]> {
+  const [rows] = await getPool().query('SELECT tag FROM user_tags WHERE user_uid = ?', [uid])
+  return (rows as { tag: string }[]).map((row) => row.tag).sort()
+}
+
 export async function closeDb(): Promise<void> {
   if (!pool) return
   await pool.end()

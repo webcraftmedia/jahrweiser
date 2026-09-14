@@ -412,6 +412,20 @@ describe('vCard calendar access helpers', () => {
       expect(readAdminTags(createMockVCard({}))).toStrictEqual([])
       expect(readAdminTags(createMockVCard({ adminTags: ',,' }))).toStrictEqual([])
     })
+
+    it('drops a repeat that differs only in case, keeping the first spelling', () => {
+      // `user_tags` is keyed on (user_uid, tag) in a `utf8mb4_unicode_ci`
+      // database, where these two are one key — a list that kept both would
+      // become an INSERT colliding with itself and abort the whole sync.
+      expect(readAdminTags(createMockVCard({ adminTags: 'Chor,chor,Vorstand' }))).toStrictEqual([
+        'Chor',
+        'Vorstand',
+      ])
+    })
+
+    it('drops a repeat that differs only in surrounding space', () => {
+      expect(readAdminTags(createMockVCard({ adminTags: 'chor, chor ' }))).toStrictEqual(['chor'])
+    })
   })
 
   describe('readCategories', () => {

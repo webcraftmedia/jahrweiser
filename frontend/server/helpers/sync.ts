@@ -20,6 +20,12 @@ export interface SyncResult {
   updated: number
   deleted: number
   emailChanges: number
+  /**
+   * Contacts whose admin tags could not be mirrored. The sync carries on past
+   * one — the tags are a convenience, the member data is not — so this is the
+   * only place it shows up. Anything above zero belongs in the cron log.
+   */
+  tagFailures: number
   durationMs: number
   skippedLocked: boolean
 }
@@ -91,21 +97,89 @@ async function acquireLock(
   return result[0].affectedRows > 0
 }
 
+/**
+ * Frees the lock. `lastSyncedAt` is null for a run that failed — the column
+ * records the last *successful* sync, and is the only thing that can tell an
+ * operator that DAV has not been reconciled in days.
+ */
 async function releaseLock(
   db: MySql2Database<typeof schema>,
   collectionUrl: string,
-  lastSyncedAt: Date,
+  lastSyncedAt: Date | null,
 ): Promise<void> {
   await db
     .update(syncState)
-    .set({ runningSince: null, lastSyncedAt })
+    .set(lastSyncedAt === null ? { runningSince: null } : { runningSince: null, lastSyncedAt })
     .where(eq(syncState.collectionUrl, collectionUrl))
+}
+
+/** Adds tag rows, treating one that is already there as nothing to do. */
+async function insertTags(
+  db: MySql2Database<typeof schema>,
+  userUid: string,
+  tags: string[],
+): Promise<void> {
+  await db
+    .insert(userTags)
+    .values(tags.map((tag) => ({ userUid, tag })))
+    // A no-op update: MySQL has no "on conflict do nothing" for this, and
+    // `INSERT IGNORE` would swallow unrelated errors too.
+    .onDuplicateKeyUpdate({ set: { userUid: sql`${userTags.userUid}` } })
+}
+
+/**
+ * Brings `user_tags` in line with the tags on a DAV contact.
+ *
+ * Removals go first, and that order is the whole point. `user_tags` is keyed on
+ * (user_uid, tag) in a database created `utf8mb4_unicode_ci`
+ * (infra/db/setup.sql), which MariaDB 11 resolves to `utf8mb4_uca1400_ai_ci`:
+ * `Flohmarkt`, `flohmarkt` and `flohmarkt ` are one key there — while the sets
+ * below, being JavaScript, hold them to be three. Renaming a tag by
+ * its spelling alone therefore yields an add and a remove that are the same row
+ * to the database: inserting first collides with the very row the delete was
+ * about to take away, and no later run can recover because the collision
+ * happens again every time.
+ *
+ * Deleting first makes the rename land in the order it actually is — the old
+ * row goes, the new spelling arrives — and keeps DAV's spelling authoritative
+ * rather than freezing whatever the mirror happened to see first.
+ *
+ * The insert stays idempotent on top of that: the same collation gap can be
+ * opened by rows this function never wrote, and a duplicate must cost nothing.
+ */
+async function mirrorTags(
+  db: MySql2Database<typeof schema>,
+  dav: Pick<DavUserSnapshot, 'uid' | 'tags'>,
+): Promise<void> {
+  const currentTagRows = await db
+    .select({ tag: userTags.tag })
+    .from(userTags)
+    .where(eq(userTags.userUid, dav.uid))
+  const currentTagSet = new Set(currentTagRows.map((r) => r.tag))
+  const davTagSet = new Set(dav.tags)
+  const toRemove = [...currentTagSet].filter((t) => !davTagSet.has(t))
+  const toAdd = dav.tags.filter((t) => !currentTagSet.has(t))
+
+  if (toRemove.length > 0) {
+    await db
+      .delete(userTags)
+      .where(and(eq(userTags.userUid, dav.uid), inArray(userTags.tag, toRemove)))
+  }
+  if (toAdd.length > 0) {
+    await insertTags(db, dav.uid, toAdd)
+  }
 }
 
 async function applyUserDiff(
   db: MySql2Database<typeof schema>,
   davSnapshots: DavUserSnapshot[],
-): Promise<{ added: number; updated: number; deleted: number; emailChanges: number }> {
+): Promise<{
+  added: number
+  updated: number
+  deleted: number
+  emailChanges: number
+  tagFailures: number
+}> {
   const davByUid = new Map(davSnapshots.map((u) => [u.uid, u]))
   const existing = await db.select().from(users)
   const existingByUid = new Map(existing.map((u) => [u.uid, u]))
@@ -114,6 +188,7 @@ async function applyUserDiff(
   let updated = 0
   let deleted = 0
   let emailChanges = 0
+  let tagFailures = 0
 
   for (const dav of davSnapshots) {
     const current = existingByUid.get(dav.uid)
@@ -125,62 +200,57 @@ async function applyUserDiff(
         postalCode: dav.postalCode,
         role: dav.role,
       })
-      if (dav.tags.length > 0) {
-        await db.insert(userTags).values(dav.tags.map((tag) => ({ userUid: dav.uid, tag })))
-      }
       // A login attempt before this user existed may have negative-cached the
       // address; clear it so they can log in immediately.
       clearEmailNotFound(dav.email)
       added += 1
-      continue
-    }
+    } else {
+      // role is MariaDB-authoritative — sync does NOT touch role on UPDATE,
+      // only on INSERT (where it seeds from X_ROLE for initial backfill).
+      const emailChanged = current.email !== dav.email
+      const nameChanged = current.displayName !== dav.displayName
+      const postalCodeChanged = current.postalCode !== dav.postalCode
+      const wasDeleted = current.deletedAt !== null
 
-    // role is MariaDB-authoritative — sync does NOT touch role on UPDATE,
-    // only on INSERT (where it seeds from X_ROLE for initial backfill).
-    const emailChanged = current.email !== dav.email
-    const nameChanged = current.displayName !== dav.displayName
-    const postalCodeChanged = current.postalCode !== dav.postalCode
-    const wasDeleted = current.deletedAt !== null
-
-    if (emailChanged || nameChanged || postalCodeChanged || wasDeleted) {
-      await db
-        .update(users)
-        .set({
-          email: dav.email,
-          displayName: dav.displayName,
-          postalCode: dav.postalCode,
-          deletedAt: null,
-        })
-        .where(eq(users.uid, dav.uid))
-      // New address (on email change) or a reactivated user may sit in the
-      // negative cache; clear it so login works without waiting out the TTL.
-      clearEmailNotFound(dav.email)
-      updated += 1
-      if (emailChanged) {
-        emailChanges += 1
+      if (emailChanged || nameChanged || postalCodeChanged || wasDeleted) {
         await db
-          .update(sessions)
-          .set({ revokedAt: new Date() })
-          .where(and(eq(sessions.userUid, dav.uid), isNull(sessions.revokedAt)))
-        await db.delete(loginTokens).where(eq(loginTokens.userUid, dav.uid))
+          .update(users)
+          .set({
+            email: dav.email,
+            displayName: dav.displayName,
+            postalCode: dav.postalCode,
+            deletedAt: null,
+          })
+          .where(eq(users.uid, dav.uid))
+        // New address (on email change) or a reactivated user may sit in the
+        // negative cache; clear it so login works without waiting out the TTL.
+        clearEmailNotFound(dav.email)
+        updated += 1
+        if (emailChanged) {
+          emailChanges += 1
+          await db
+            .update(sessions)
+            .set({ revokedAt: new Date() })
+            .where(and(eq(sessions.userUid, dav.uid), isNull(sessions.revokedAt)))
+          await db.delete(loginTokens).where(eq(loginTokens.userUid, dav.uid))
+        }
       }
     }
 
-    const currentTagRows = await db
-      .select({ tag: userTags.tag })
-      .from(userTags)
-      .where(eq(userTags.userUid, dav.uid))
-    const currentTagSet = new Set(currentTagRows.map((r) => r.tag))
-    const davTagSet = new Set(dav.tags)
-    const toAdd = dav.tags.filter((t) => !currentTagSet.has(t))
-    const toRemove = [...currentTagSet].filter((t) => !davTagSet.has(t))
-    if (toAdd.length > 0) {
-      await db.insert(userTags).values(toAdd.map((tag) => ({ userUid: dav.uid, tag })))
-    }
-    if (toRemove.length > 0) {
-      await db
-        .delete(userTags)
-        .where(and(eq(userTags.userUid, dav.uid), inArray(userTags.tag, toRemove)))
+    // One path for a new and an existing contact: for a new one the mirror
+    // starts empty, so the diff below degenerates to "insert everything" — the
+    // special case it used to have bought one saved SELECT and a second place
+    // for this bug to live.
+    //
+    // Mirroring admin tags is cosmetic next to everything above, so it is
+    // sealed off: before this, one bad tag row aborted the whole sync — member
+    // updates, soft-deletes and the daily metrics with it.
+    try {
+      await mirrorTags(db, dav)
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Tag-Spiegelung ist Beiwerk; ein Fehler hier darf den Sync nicht abbrechen
+    } catch (error) {
+      console.error(`[sync] failed to mirror tags for ${dav.uid}:`, error)
+      tagFailures += 1
     }
   }
 
@@ -199,7 +269,7 @@ async function applyUserDiff(
     deleted += 1
   }
 
-  return { added, updated, deleted, emailChanges }
+  return { added, updated, deleted, emailChanges, tagFailures }
 }
 
 export async function syncDavToSidecar(davConfig: DAV_CONFIG): Promise<SyncResult> {
@@ -220,7 +290,15 @@ export async function syncDavToSidecar(davConfig: DAV_CONFIG): Promise<SyncResul
 
   const acquired = await acquireLock(db, collectionUrl)
   if (!acquired) {
-    return { added: 0, updated: 0, deleted: 0, emailChanges: 0, durationMs: 0, skippedLocked: true }
+    return {
+      added: 0,
+      updated: 0,
+      deleted: 0,
+      emailChanges: 0,
+      tagFailures: 0,
+      durationMs: 0,
+      skippedLocked: true,
+    }
   }
 
   try {
@@ -236,7 +314,10 @@ export async function syncDavToSidecar(davConfig: DAV_CONFIG): Promise<SyncResul
 
     return { ...diff, durationMs: Date.now() - start, skippedLocked: false }
   } catch (err) {
-    await releaseLock(db, collectionUrl, new Date())
+    // The lock goes, the success timestamp does not: a run that threw has not
+    // synced anything, and stamping `last_synced_at` anyway is how a sync that
+    // had been failing for five days still looked healthy in the table.
+    await releaseLock(db, collectionUrl, null)
     throw err
   }
 }

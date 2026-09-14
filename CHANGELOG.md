@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.1...v1.14.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* **frontend:** fix magic link to protect from security scanners ([#405](https://github.com/webcraftmedia/jahrweiser/issues/405)) ([ca4f74b](https://github.com/webcraftmedia/jahrweiser/commit/ca4f74b68f7e1c7a389be41d23a898e563aff52d))
+
 ## [1.14.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.0...v1.14.1) (2026-09-14)
 
 

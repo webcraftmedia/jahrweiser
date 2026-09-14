@@ -98,12 +98,35 @@
 
 /* ===== Color Switch Transition ===== */
 
+/*
+ * A round div that is scaled away, rather than a `clip-path: circle()` that is
+ * shrunk. Gecko (Firefox, and Fenix on Android) animates only `transform`,
+ * `opacity` and a few filters on the compositor; a clip-path transition runs on
+ * the main thread and invalidates the whole viewport every frame — the fixed
+ * `body::before` paper noise and every image included. On a phone that drops
+ * the sweep to a handful of frames per second, so its edge is seen stepping
+ * across the page instead of gliding. Scaling is composited: nothing
+ * underneath is repainted at all.
+ *
+ * Size and position of the circle come from useColorMode.ts, which knows the
+ * anchor corner.
+ */
 .color-switch-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  transition: clip-path 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  /* The circle is deliberately wider than the viewport. */
+  overflow: hidden;
+}
+
+.color-switch-circle {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(1);
+  /* Promote the layer up front, so the first frame is not spent creating it. */
+  will-change: transform;
+  transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ===== Reduced Motion ===== */

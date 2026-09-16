@@ -391,10 +391,10 @@
    * and each layer appears at the scale where its areas are big enough to read
    * and disappears before they are so big that the reader is inside one.
    *
-   * The trigger is the width of the view relative to the whole country, which
-   * is a scale and not a zoom step: it means the same thing on a phone and on
-   * a wall screen, where the same zoom level shows quite different amounts of
-   * map. Germany is about 640 km across, so 0.25 is roughly a 160 km view.
+   * The trigger is how much of the country is on screen, which is a scale and
+   * not a zoom step: it means the same thing on a phone and on a wall screen,
+   * where the same zoom level shows quite different amounts of map — see
+   * `span`, which is where that claim is actually made good. Germany is about 640 km across, so 0.25 is roughly a 160 km view.
    *
    * Nothing here is a switch the reader has to find. A layer that is noise at
    * this scale is not offered and then hidden; it is simply not yet drawn.
@@ -422,8 +422,31 @@
    */
   const PREFETCH = 1.25
 
-  /** The view's width as a share of the whole country. */
-  const span = computed(() => view.value.w / full.value.width)
+  /**
+   * How much of the country is on screen, as a share of all of it.
+   *
+   * Measured on what is **visible** and by area, not on the requested view's
+   * width — and both halves of that were bugs.
+   *
+   * `preserveAspectRatio="meet"` fits the requested rectangle *inside* the box
+   * and fills the rest with map, so a window wider than the country's own
+   * proportions shows far more than was asked for: at 1920×1080 the view is
+   * 2,4 times wider on screen than `view.w`. Staging on `view.w` therefore put
+   * the Kreis layer on screen at 290 km across where it was meant to arrive at
+   * 180 — four times the border geometry, which is what the map was measured
+   * spending 3,5 seconds of main thread per pan on (see e2e/map.perf.spec.ts).
+   *
+   * By area rather than by width because that is what the cost scales with —
+   * the request, the vertices and the rasterising all grow with the rectangle,
+   * not with one of its sides. Normalising against the country's own area makes
+   * this identical to the old value whenever the window happens to match the
+   * map's proportions, so the thresholds below keep their meaning; a 16:9
+   * desktop comes out 1,55 times larger and a phone 1,10, which is exactly the
+   * "means the same thing on a phone and on a wall screen" the staging claims.
+   */
+  const span = computed(() =>
+    Math.sqrt((visible.value.w * visible.value.h) / (full.value.width * full.value.height)),
+  )
 
   /** 0 at `off`, 1 at `on`, linear between — `on` may lie either side. */
   function staged({ off, on }: { off: number; on: number }): number {
@@ -433,6 +456,45 @@
   const districtBorderOpacity = computed(() => staged(STAGE.districtBorder))
   const districtNameOpacity = computed(() => staged(STAGE.districtName))
   const stateNameOpacity = computed(() => staged(STAGE.stateName))
+
+  /** How long the fade in the stylesheet takes, plus a frame to land on. */
+  const FADE_MS = 300
+
+  /**
+   * Whether the Kreis border is in the **DOM** — a different question from
+   * whether it is visible, and worth its own answer.
+   *
+   * The layer is fetched a zoom step before it is drawn (`PREFETCH`) so that it
+   * is there when the fade starts, and it used to be rendered at `opacity: 0`
+   * for that whole step. That is not free: measured at the scale just above the
+   * fade, a Kreis path nobody can see cost **371 ms of main thread per pan**,
+   * more than doubling what panning cost there. Chromium does not skip a fully
+   * transparent path; it rasterises it and then composites nothing.
+   *
+   * Holding the *data* is what the prefetch is for. Holding the *element* was
+   * never part of it, so it goes — but not the instant the opacity reaches
+   * zero, or the last 250 ms of the fade would be an element vanishing at a
+   * third of its opacity. It leaves once the stylesheet is done with it.
+   */
+  const districtDrawn = ref(false)
+  let districtTimer: ReturnType<typeof setTimeout> | undefined
+  watch(
+    districtBorderOpacity,
+    (opacity) => {
+      clearTimeout(districtTimer)
+      if (opacity > 0) {
+        districtDrawn.value = true
+        return
+      }
+      districtTimer = setTimeout(() => {
+        districtDrawn.value = false
+      }, FADE_MS)
+    },
+    { immediate: true },
+  )
+  onBeforeUnmount(() => {
+    clearTimeout(districtTimer)
+  })
 
   /** Which levels are worth asking the server for at this scale. */
   const levelsInView = computed<BoundaryLevel[]>(() => {
@@ -832,7 +894,7 @@
              leaves the screen. Under the areas and under the dots: this is
              where the reader is, not what the map says. -->
         <path
-          v-if="boundaries?.district"
+          v-if="districtDrawn && boundaries?.district"
           class="map-district"
           :style="{ opacity: districtBorderOpacity }"
           :d="boundaries.district.d"

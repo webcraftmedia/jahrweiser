@@ -120,12 +120,46 @@ export type BoundaryArc = [minX: number, minY: number, maxX: number, maxY: numbe
 export const COARSE_TOLERANCE = 4
 
 /**
- * Above this many viewBox units per CSS pixel, the coarse copy is the one to
- * send: its error is then under a pixel. The client knows this number — it is
- * the scale it draws at — so the resolution follows the *screen* and not a
- * guess about how big one is.
+ * And a third copy between the two, at **one grid unit** — 53 m, the width of
+ * the quantisation the whole map is built on.
+ *
+ * Two stages turned out to be a cliff rather than a staircase. Between them
+ * sits a factor of nine in vertices, and it fell in exactly the wrong place:
+ * the Kreis layer fades in at a scale where `perPixel` is 2 to 4, so the layer
+ * became visible and nine times finer within one press of the zoom button.
+ * Measured there, panning cost **1,25 s of main thread** and dropped sixteen
+ * frames of fifty.
+ *
+ * The tolerance is not a compromise picked for size. It is the floor of what
+ * the coordinate system can express at all: every vertex is rounded to a whole
+ * unit, so no line can be truer than one unit anyway (see "The 53 m grid is the
+ * floor" in docu/karte.md). What this drops is detail the artefact only appears
+ * to have — and it drops two thirds of the vertices doing it.
  */
-export const COARSE_ABOVE = COARSE_TOLERANCE
+export const MEDIUM_TOLERANCE = 1
+
+/** The resolutions a border layer is stored at, finest first. */
+export const BOUNDARY_RESOLUTIONS = ['fine', 'medium', 'coarse'] as const
+export type BoundaryResolution = (typeof BOUNDARY_RESOLUTIONS)[number]
+
+/**
+ * Which copy a view drawing at `perPixel` viewBox units per CSS pixel should
+ * get: the coarsest whose error stays under one pixel.
+ *
+ * Each threshold is its own tolerance, which is what "under a pixel" means —
+ * a copy simplified to `t` units strays at most `t` units, so at `perPixel > t`
+ * that is less than a pixel on screen and there is nothing to see.
+ *
+ * The client is the only party that knows how big a pixel is, so it sends the
+ * number and both sides run this. A rule based on the requested box would have
+ * had to guess at a screen size and would be wrong on a phone and on a wall
+ * display alike.
+ */
+export function resolutionFor(perPixel: number): BoundaryResolution {
+  if (perPixel > COARSE_TOLERANCE) return 'coarse'
+  if (perPixel > MEDIUM_TOLERANCE) return 'medium'
+  return 'fine'
+}
 
 /** The artefact holding the administrative borders. */
 export interface BoundaryFile {
@@ -136,6 +170,12 @@ export interface BoundaryFile {
     {
       /** Longest first, so a truncated answer drops the least visible lines. */
       arcs: BoundaryArc[]
+      /**
+       * The same borders at `MEDIUM_TOLERANCE`. Optional: an artefact built
+       * before this stage existed has none, and the endpoint then falls back to
+       * the geometry it does have rather than answering with nothing.
+       */
+      medium?: BoundaryArc[]
       /** The same borders at `COARSE_TOLERANCE`, for views that cannot show more. */
       coarse: BoundaryArc[]
       /** `[x, y, size, name]`, largest first. */

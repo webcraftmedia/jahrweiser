@@ -51,8 +51,18 @@ import { createReadStream } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { COARSE_TOLERANCE } from '../shared/map'
+import { COARSE_TOLERANCE, MEDIUM_TOLERANCE } from '../shared/map'
 
+import {
+  collapse,
+  dedupe,
+  lineToPath,
+  pointKey,
+  REPAIR_WINDOW,
+  simplifySafely,
+} from './map/geometry'
+
+import type { Point, Ring } from './map/geometry'
 import type {
   BoundaryArc,
   BoundaryFile,
@@ -143,9 +153,6 @@ const BORDER_TOLERANCE = 0
 
 /** Rings below this (in square viewBox units, ≈ 0.5 km²) are not islands. */
 const MIN_OUTLINE_AREA = 200
-
-type Point = [number, number]
-type Ring = Point[]
 
 interface Feature {
   /** OSM calls it `postcode`; other exports of the same data use `plz`. */
@@ -399,171 +406,6 @@ function centroidOf(rings: Ring[]): Point {
   return [cx / (3 * area), cy / (3 * area)]
 }
 
-/** Perpendicular distance from `p` to the segment `a`–`b`. */
-function segmentDistance(p: Point, a: Point, b: Point): number {
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  if (dx === 0 && dy === 0) return Math.hypot(p[0] - a[0], p[1] - a[1])
-  const t = Math.max(
-    0,
-    Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)),
-  )
-  return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy))
-}
-
-/**
- * A quantised point as one number, so it can key a Map. x < 12.000 and
- * y < 20.000 by construction, which fits comfortably either side of the shift.
- */
-function pointKey(point: Point): number {
-  return point[0] * 65536 + point[1]
-}
-
-/**
- * Douglas–Peucker on an open point sequence. Iterative with an explicit stack:
- * the recursive form degrades to one frame per vertex on a coastline-shaped
- * input, and some of these rings carry tens of thousands of them.
- *
- * **Symmetric under reversal**, and that is load-bearing, not a nicety: two
- * neighbouring postal codes walk the border they share in opposite directions,
- * and the whole topology stage below rests on both getting the same answer for
- * it. Douglas–Peucker is symmetric except where two vertices are exactly
- * equally far from the chord — on a 53 m integer grid that happens — so the tie
- * is broken by the coordinate rather than by which end we started from.
- */
-function simplifyOpen(points: Point[], tolerance: number): Point[] {
-  if (points.length < 3) return points
-  const keep = new Uint8Array(points.length)
-  keep[0] = 1
-  keep[points.length - 1] = 1
-  const stack: [number, number][] = [[0, points.length - 1]]
-  while (stack.length > 0) {
-    const [from, to] = stack.pop() as [number, number]
-    let maxDistance = 0
-    let index = -1
-    for (let i = from + 1; i < to; i++) {
-      const distance = segmentDistance(points[i], points[from], points[to])
-      if (
-        distance > maxDistance ||
-        (index !== -1 && distance === maxDistance && pointKey(points[i]) < pointKey(points[index]))
-      ) {
-        maxDistance = distance
-        index = i
-      }
-    }
-    if (index === -1 || maxDistance <= tolerance) continue
-    keep[index] = 1
-    stack.push([from, index], [index, to])
-  }
-  return points.filter((_, i) => keep[i] === 1)
-}
-
-/**
- * Drop repeated vertices — quantisation collapses many of them onto each other.
- * Keeps an open line open, which is what the administrative borders need: an
- * arc that happens to start and end at the same point is a way around an
- * enclave, and closing it away would leave a gap in the line.
- */
-function collapse(line: Ring): Ring {
-  const out: Ring = []
-  for (const point of line) {
-    const last = out[out.length - 1]
-    if (last?.[0] === point[0] && last[1] === point[1]) continue
-    out.push(point)
-  }
-  return out
-}
-
-/** As `collapse`, and the closing vertex goes too — rings carry it implicitly. */
-function dedupe(ring: Ring): Ring {
-  const out = collapse(ring)
-  while (
-    out.length > 1 &&
-    out[0][0] === out[out.length - 1][0] &&
-    out[0][1] === out[out.length - 1][1]
-  ) {
-    out.pop()
-  }
-  return out
-}
-
-/** Do these two segments properly cross? Touching and collinear do not count. */
-function segmentsCross(p1: Point, p2: Point, p3: Point, p4: Point): boolean {
-  const side = (o: Point, a: Point, b: Point): number =>
-    (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
-  const d1 = side(p3, p4, p1)
-  const d2 = side(p3, p4, p2)
-  const d3 = side(p1, p2, p3)
-  const d4 = side(p1, p2, p4)
-  // A zero means an endpoint lies on the other segment: two arcs meeting at a
-  // junction, or three collinear points. Neither is a crossing.
-  if (d1 === 0 || d2 === 0 || d3 === 0 || d4 === 0) return false
-  return d1 > 0 !== d2 > 0 && d3 > 0 !== d4 > 0
-}
-
-/**
- * Does this line cross *itself*? The one thing simplification must never
- * produce, and the one thing Douglas–Peucker does not rule out.
- *
- * DP guarantees that no vertex strays further than the tolerance from the line
- * it replaces — it says nothing about the result staying simple. Where a
- * boundary doubles back on itself within the tolerance (a meander, a corridor,
- * the interlocking enclaves at Ober-Laudenbach) the shortcut can jump the line
- * to the wrong side of itself, and what the reader sees is a spike or a bow tie.
- * Measured on the administrative borders, the input had no self-intersections at
- * any stage and the simplified arcs had eight; on the postal-code areas the
- * committed artefact carried 192, in 138 of 8.175 areas, the median one
- * enclosing some 370 m.
- *
- * So the tolerance is not asked to be small enough to be safe — the result is
- * checked, and whatever fails keeps the geometry it came in with. Quadratic in
- * the vertex count, which is why it is applied per *arc* (a few dozen vertices)
- * rather than per ring.
- */
-function selfIntersects(points: Point[], closed: boolean): boolean {
-  // A closed ring carries the segment back to its first point; an open one does
-  // not. `dedupe` has already dropped the repeated closing vertex.
-  const count = closed ? points.length : points.length - 1
-  if (count < 4) return false
-  for (let i = 0; i < count; i++) {
-    const a1 = points[i]
-    const a2 = points[(i + 1) % points.length]
-    // From i + 2: neighbouring segments share an endpoint by construction.
-    for (let j = i + 2; j < count; j++) {
-      // The first and the final segment of a ring are neighbours as well.
-      if (closed && i === 0 && j === count - 1) continue
-      if (segmentsCross(a1, a2, points[j], points[(j + 1) % points.length])) return true
-    }
-  }
-  return false
-}
-
-/** Vertices per window — see `simplifyRing`. */
-const REPAIR_WINDOW = 256
-
-/**
- * Simplify an open line as far as the tolerance allows *without tying it in a
- * knot*, halving the tolerance until the result comes out simple.
- *
- * Refusing to simplify at all would be the obvious answer and is a bad one: the
- * geometry it falls back to is some ten times denser than what the tolerance
- * would have kept, so a handful of knots along the coast cost more than every
- * other vertex on it put together — measured, 51 kB against 34. A knot is a
- * local accident of one shortcut, and it almost always survives only the
- * coarsest step.
- *
- * Zero is the floor and needs no check: it drops none but the exactly collinear
- * vertices, so it cannot move a line and cannot create a crossing the input did
- * not already have.
- */
-function simplifySafely(points: Point[], tolerance: number): Point[] {
-  for (let t = tolerance; t > 0; t = Math.floor(t / 2)) {
-    const simplified = simplifyOpen(points, t)
-    if (!selfIntersects(simplified, false)) return simplified
-  }
-  return simplifyOpen(points, 0)
-}
-
 /**
  * Simplify a closed ring. The ring is cut at its first vertex and treated as an
  * open line, which keeps that vertex fixed — good enough here, and it avoids the
@@ -701,26 +543,6 @@ function simplifyRingByArcs(ring: Ring, junctions: Set<number>, tolerance: numbe
 }
 
 // --- path emission ---------------------------------------------------------
-
-/** `-3` needs no separator after the previous number; `3` does. */
-function appendNumber(out: string, value: number): string {
-  return value < 0 ? out + String(value) : `${out} ${value}`
-}
-
-/** One open polyline as an `M`-relative-`l` subpath — a border, not a body. */
-function lineToPath(line: Ring): string {
-  if (line.length < 2) return ''
-  let d = `M${line[0][0]} ${line[0][1]}l`
-  let [px, py] = line[0]
-  for (let i = 1; i < line.length; i++) {
-    const [x, y] = line[i]
-    d = appendNumber(d, x - px)
-    d = appendNumber(d, y - py)
-    px = x
-    py = y
-  }
-  return d
-}
 
 /** One ring as an `M`-relative-`l`-`z` subpath. */
 function ringToPath(ring: Ring): string {
@@ -1325,7 +1147,7 @@ if (statesFile || districtsFile) {
     ['district', districtsFile],
   ] as const) {
     if (!file) {
-      levels[key] = { arcs: [], coarse: [], labels: [] }
+      levels[key] = { arcs: [], medium: [], coarse: [], labels: [] }
       console.warn(`No ${key} boundaries supplied`)
       continue
     }
@@ -1335,16 +1157,24 @@ if (statesFile || districtsFile) {
     for (const id of level.ways) covered.add(id)
 
     /**
-     * The same borders twice: as they are, and thinned for the views that
-     * cannot show the difference.
+     * The same borders three times: as they are, and thinned twice for the
+     * views that cannot show the difference.
      *
-     * Not an optimisation of the payload so much as of the *parse*. A wide view
-     * fetches a whole country's worth of border, and Firefox spends 45 ms
-     * turning that path into geometry against 3 ms for the coarse one — a
-     * blocked main thread every time the map is zoomed out, which is exactly
-     * where it was reported as lag. Nine times fewer vertices, no visible
-     * difference at the scale it is sent for, and the choice is the client's,
-     * which is the only party that knows how big a pixel is.
+     * Not an optimisation of the payload so much as of the *parse* and, as it
+     * turned out, of the raster. A wide view fetches a whole country's worth of
+     * border and Firefox spends 45 ms turning that path into geometry against
+     * 3 ms for the coarse one — a blocked main thread every time the map is
+     * zoomed out. And every pan re-rasterises whatever is on screen, which at
+     * the scale the Kreis layer fades in measured 1,25 s of main thread.
+     *
+     * Two stages left a factor of nine between them, and the fade fell in the
+     * gap: the layer appeared and turned nine times finer inside one press of
+     * the zoom button. The middle one closes it. Its tolerance is the grid unit
+     * itself, so it drops only detail the quantisation never really carried —
+     * and with it two thirds of the vertices.
+     *
+     * The choice between them is the client's, which is the only party that
+     * knows how big a pixel is. See `resolutionFor` in shared/map.ts.
      */
     const drawn = [...level.arcs.values()]
     const at = (cut: number): BoundaryArc[] =>
@@ -1356,6 +1186,7 @@ if (statesFile || districtsFile) {
         .sort((a, b) => b[2] - b[0] + (b[3] - b[1]) - (a[2] - a[0]) - (a[3] - a[1]))
 
     const arcs = at(borderTolerance)
+    const medium = at(MEDIUM_TOLERANCE)
     const coarse = at(COARSE_TOLERANCE)
 
     const labels = level.labels
@@ -1373,12 +1204,12 @@ if (statesFile || districtsFile) {
       // order the client hands out the space it has for names in.
       .sort((a, b) => b[2] - a[2])
 
-    levels[key] = { arcs, coarse, labels }
+    levels[key] = { arcs, medium, coarse, labels }
     const vertices = (list: BoundaryArc[]): number =>
       list.reduce((sum, arc) => sum + (arc[4].match(/-?\d+/g) ?? []).length / 2, 0)
     console.warn(
       `  ${level.arcs.size} new arcs of ${level.ways.size} ways · ${labels.length} names` +
-        ` · ${vertices(arcs)} vertices, ${vertices(coarse)} coarse` +
+        ` · ${vertices(arcs)} vertices, ${vertices(medium)} medium, ${vertices(coarse)} coarse` +
         (level.foreign > 0 ? ` · ${level.foreign} foreign relations dropped` : ''),
     )
   }

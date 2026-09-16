@@ -1,6 +1,8 @@
 import type {
+  BoundaryArc,
   BoundaryFile,
   BoundaryLevel,
+  BoundaryResolution,
   MapArea,
   MapBoundaryLabel,
   MapBoundaryLayer,
@@ -80,7 +82,7 @@ export async function loadBoundaries(): Promise<BoundaryFile | null> {
   // given no Kreis input, simply has no key for it. Filled in once here, so
   // that no reader has to ask.
   const stored = raw.levels as Partial<BoundaryFile['levels']>
-  const empty = { arcs: [], coarse: [], labels: [] }
+  const empty = { arcs: [], medium: [], coarse: [], labels: [] }
   boundaryCache = {
     ...raw,
     levels: {
@@ -100,6 +102,24 @@ export interface MapBox {
 }
 
 /**
+ * The copy of a level to draw from, falling back towards the fine one.
+ *
+ * A view that cannot show 53 m of detail should not be made to parse it — but
+ * an artefact built before a stage existed simply has no list for it, and that
+ * must not turn into an empty map. Asking for `coarse` on such a file gets the
+ * next thing it does have, all the way down to `arcs`, which every artefact
+ * that holds any borders at all carries.
+ */
+function copyAt(
+  level: BoundaryFile['levels'][BoundaryLevel],
+  resolution: BoundaryResolution,
+): BoundaryArc[] {
+  if (resolution === 'coarse' && level.coarse.length > 0) return level.coarse
+  if (resolution !== 'fine' && level.medium && level.medium.length > 0) return level.medium
+  return level.arcs
+}
+
+/**
  * The borders of one administrative level that reach into `box`.
  *
  * The unit is the arc, not the area, so the answer is exactly the ink the view
@@ -116,13 +136,10 @@ export function boundaryLayerIn(
   box: MapBox,
   limit: number,
   labelLimit: number,
-  coarse = false,
+  resolution: BoundaryResolution = 'fine',
 ): MapBoundaryLayer {
   const arcs: string[] = []
-  // A view that cannot show 53 m of detail should not be made to parse it —
-  // see COARSE_ABOVE. An artefact built before the coarse copy existed has none,
-  // and answers with the geometry it does have.
-  const drawn = coarse && level.coarse.length > 0 ? level.coarse : level.arcs
+  const drawn = copyAt(level, resolution)
   for (const [minX, minY, maxX, maxY, d] of drawn) {
     if (maxX < box.minX || minX > box.maxX || maxY < box.minY || minY > box.maxY) continue
     arcs.push(d)

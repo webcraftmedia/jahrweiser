@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { BOUNDARY_LEVELS, COARSE_ABOVE } from '../../../shared/map'
+import { BOUNDARY_LEVELS, resolutionFor } from '../../../shared/map'
 import { boundaryLayerIn, loadBoundaries } from '../../helpers/memberMap'
 
 import type { MapBoundaries } from '../../../shared/map'
@@ -26,7 +26,8 @@ const querySchema = z.object({
   /**
    * viewBox units per CSS pixel, as the map is actually drawn. The client is
    * the only party that knows how big a pixel is, so it says — and the answer
-   * carries the coarse geometry when a finer one could not be seen.
+   * carries the coarsest copy whose error stays under a pixel. See
+   * `resolutionFor`.
    */
   perPixel: z.coerce.number().min(0).default(0),
   /** Which levels the view has room for — the client decides, by its zoom. */
@@ -60,10 +61,16 @@ export default defineEventHandler(async (event): Promise<MapBoundaries> => {
   // answer is enough.
   if (!boundaries) return {}
 
-  const coarse = query.perPixel > COARSE_ABOVE
+  const resolution = resolutionFor(query.perPixel)
   const answer: MapBoundaries = {}
   for (const level of query.levels) {
-    answer[level] = boundaryLayerIn(boundaries.levels[level], query, MAX_ARCS, MAX_LABELS, coarse)
+    answer[level] = boundaryLayerIn(
+      boundaries.levels[level],
+      query,
+      MAX_ARCS,
+      MAX_LABELS,
+      resolution,
+    )
   }
   return answer
 })

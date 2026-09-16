@@ -604,21 +604,117 @@ describe('Component: MemberMap', () => {
       return wrapper
     }
 
+    /**
+     * How visible a layer is, counting "not in the DOM" as not visible at all.
+     *
+     * The two are the same thing to a reader and deliberately not the same
+     * thing to the browser: a transparent path is still rasterised on every
+     * frame, so the Kreis border leaves the DOM once its fade is over. See
+     * `districtDrawn` in the component.
+     */
     const opacity = (
-      wrapper: { find: (s: string) => { attributes: (a: string) => string | undefined } },
+      wrapper: {
+        find: (s: string) => {
+          exists: () => boolean
+          attributes: (a: string) => string | undefined
+        }
+      },
       selector: string,
-    ): number => Number((wrapper.find(selector).attributes('style') ?? '').replace(/\D+/g, '') || 0)
+    ): number => {
+      const element = wrapper.find(selector)
+      if (!element.exists()) return 0
+      return Number((element.attributes('style') ?? '').replace(/\D+/g, '') || 0)
+    }
 
     it('draws the Bundesland borders at every scale — sixteen lines are not clutter', async () => {
       const wrapper = await zoomed(0)
       expect(wrapper.find('.map-state').attributes('d')).toBe(BORDERS.state?.d)
     })
 
+    /**
+     * Run the map in a window of a given size.
+     *
+     * Without this the component never learns one: `frame` is filled by a
+     * ResizeObserver, jsdom has none, and the fallback assumes the view fills
+     * the box exactly — which is the one case in which the staging cannot tell
+     * the old behaviour from the new one.
+     */
+    function withFrame(width: number, height: number): () => void {
+      const original = globalThis.ResizeObserver
+      globalThis.ResizeObserver = class {
+        callback: ResizeObserverCallback
+        constructor(callback: ResizeObserverCallback) {
+          this.callback = callback
+        }
+        observe(): void {
+          this.callback(
+            [{ contentRect: { width, height } }] as unknown as ResizeObserverEntry[],
+            this,
+          )
+        }
+        unobserve(): void {}
+        disconnect(): void {}
+      }
+      return () => {
+        globalThis.ResizeObserver = original
+      }
+    }
+
+    it('stages on what is on screen, not on the view it asked for', async () => {
+      // `preserveAspectRatio="meet"` fits the requested rectangle *inside* the
+      // box and fills the rest with map, so a 16:9 window shows half as much
+      // again of the country as one of the map's own proportions. Staging on
+      // the requested view brought the Kreis layer in over that extra width
+      // too — four times the border geometry, and the reason panning there cost
+      // seconds of main thread (e2e/map.perf.spec.ts).
+      const restoreSquare = withFrame(800, 1000) // the map's own 4:5
+      const fitted = await zoomed(3)
+      restoreSquare()
+
+      const restoreWide = withFrame(1600, 900)
+      const wide16by9 = await zoomed(3)
+      restoreWide()
+
+      expect(opacity(fitted, '.map-district')).toBeGreaterThan(0)
+      expect(wide16by9.find('.map-district').exists()).toBe(false)
+    })
+
     it('keeps the Kreis borders invisible at country scale and brings them in as the map grows', async () => {
       // A Kreis border says nothing at 600 km across and is the only thing that
       // says where you are once the silhouette has left the screen.
-      expect(opacity(await zoomed(0), '.map-district')).toBe(0)
-      expect(opacity(await zoomed(4), '.map-district')).toBeGreaterThan(0)
+      const country = await zoomed(0)
+      expect(opacity(country, '.map-district')).toBe(0)
+      // And invisible means absent, not transparent: the layer is fetched a
+      // zoom step before it is drawn, and a path at `opacity: 0` is rasterised
+      // on every frame regardless — measured at 371 ms of main thread per pan.
+      expect(country.find('.map-district').exists()).toBe(false)
+
+      const close = await zoomed(4)
+      expect(opacity(close, '.map-district')).toBeGreaterThan(0)
+      expect(close.find('.map-district').exists()).toBe(true)
+    })
+
+    it('holds the Kreis border in the DOM until its fade is over', async () => {
+      // Dropping it the moment the opacity reaches zero would take the last
+      // 250 ms of the fade with it — the layer would vanish at a third of its
+      // opacity instead of fading out.
+      vi.useFakeTimers()
+      try {
+        const wrapper = await zoomed(4)
+        expect(wrapper.find('.map-district').exists()).toBe(true)
+
+        const zoomOut = wrapper.find('button[aria-label="components.MemberMap.zoom-out"]')
+        for (let i = 0; i < 4; i++) await zoomOut.trigger('click')
+        expect(opacity(wrapper, '.map-district')).toBe(0)
+        // Still there, still fading.
+        expect(wrapper.find('.map-district').exists()).toBe(true)
+
+        vi.advanceTimersByTime(400)
+        await nextTick()
+        expect(wrapper.find('.map-district').exists()).toBe(false)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it('hands the naming down the ladder: first the Bundesland, then the Kreis', async () => {

@@ -74,14 +74,23 @@ function covers(known: MapViewport | null, view: MapViewport, detail: number): b
   )
 }
 
-/** Whatever `held` has for `levels`, as a fresh object — the rest is dropped. */
+/**
+ * `held` without the levels that are not in `levels`, as a fresh object.
+ *
+ * Reads what is *held* rather than what is wanted, which is the direction that
+ * has no dead branch in it: walking the wanted levels instead means asking
+ * whether each is present, and "wanted but not held" cannot happen — `state` is
+ * in every list `levelsInView` produces and is fetched before anything else, so
+ * there is no state of this map in which a wanted level is missing while an
+ * unwanted one is there.
+ */
 function onlyLevels<T>(
   held: Partial<Record<BoundaryLevel, T>>,
   levels: BoundaryLevel[],
 ): Partial<Record<BoundaryLevel, T>> {
   return Object.fromEntries(
-    levels.flatMap((level) => (held[level] === undefined ? [] : [[level, held[level]]])),
-  )
+    Object.entries(held).filter(([level]) => (levels as string[]).includes(level)),
+  ) as Partial<Record<BoundaryLevel, T>>
 }
 
 /** The region to fetch for a view: the view plus a margin on every side. */

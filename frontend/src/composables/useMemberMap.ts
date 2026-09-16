@@ -89,7 +89,7 @@ function onlyLevels<T>(
   levels: BoundaryLevel[],
 ): Partial<Record<BoundaryLevel, T>> {
   return Object.fromEntries(
-    Object.entries(held).filter(([level]) => levels.includes(level as BoundaryLevel)),
+    Object.entries(held).filter(([level]) => levels.includes(level)),
   ) as Partial<Record<BoundaryLevel, T>>
 }
 

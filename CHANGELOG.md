@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.2...v1.14.3) (2026-09-16)
+
+
+### Bug Fixes
+
+* **frontend:** fix map performance ([#407](https://github.com/webcraftmedia/jahrweiser/issues/407)) ([f974aff](https://github.com/webcraftmedia/jahrweiser/commit/f974aff062402110eea4216aa4920ce707be55c2))
+* **frontend:** rename frontend to app ([#409](https://github.com/webcraftmedia/jahrweiser/issues/409)) ([c07916e](https://github.com/webcraftmedia/jahrweiser/commit/c07916edb075bec3c29644e0b0eea4ce694ab320))
+
 ## [1.14.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.1...v1.14.2) (2026-09-14)
 
 

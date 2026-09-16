@@ -6,12 +6,12 @@ Three layers of tests:
 |---|---|---|
 | Unit | `npm run test:unit` | Pure helpers, Vue components, server helpers without DB |
 | E2E (mock) | `npm run test:e2e` | UI flows against mocked API responses (no backend needed) |
-| E2E (full-stack) | `npm run test:e2e:full-stack` | Real frontend hitting real Baikal + MariaDB + Maildev |
+| E2E (full-stack) | `npm run test:e2e:full-stack` | Real app hitting real Baikal + MariaDB + Maildev |
 
 ## Unit tests
 
 ```sh
-cd frontend
+cd app
 npm run test:unit
 ```
 
@@ -41,13 +41,13 @@ DAV sync, email delivery (via Maildev), and the cron endpoint.
 docker compose up -d
 
 # 2. Apply DB migrations
-cd frontend
+cd app
 npm run db:migrate
 
 # 3. Baikal is auto-provisioned at first container start (see docu/database.md, step 4).
 #    To force a clean re-provision: docker compose down -v && docker compose up -d
 
-# 4. Run the frontend in dev with env vars pointing at the local stack
+# 4. Run the app in dev with env vars pointing at the local stack
 DAV_URL=http://localhost:8088/dav.php \
   DAV_USERNAME=admin \
   DAV_PASSWORD=admin \

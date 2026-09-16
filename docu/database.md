@@ -29,7 +29,7 @@ login works before the next sync. See `docu/registration-links.md`.
 
 ## Local development
 
-1. Copy `frontend/.env.example` to `frontend/.env` and adjust as needed. The
+1. Copy `app/.env.example` to `app/.env` and adjust as needed. The
    defaults match the `docker-compose.yml` setup.
 
 2. Start the stack:
@@ -39,7 +39,7 @@ login works before the next sync. See `docu/registration-links.md`.
    ```
 
    This brings up MariaDB, Baikal (local DAV server), Maildev, the admin static
-   server, and the frontend. Wait for healthchecks to go green:
+   server, and the app. Wait for healthchecks to go green:
 
    ```sh
    docker compose ps
@@ -48,7 +48,7 @@ login works before the next sync. See `docu/registration-links.md`.
 3. Apply DB migrations (idempotent):
 
    ```sh
-   cd frontend
+   cd app
    npm run db:migrate
    ```
 
@@ -99,11 +99,11 @@ placeholders).
 
 ## Schema and migrations
 
-Schema lives in `frontend/server/db/schema/`. Each table is in its own file;
+Schema lives in `app/server/db/schema/`. Each table is in its own file;
 `index.ts` is the barrel.
 
 ```sh
-cd frontend
+cd app
 npm run db:generate        # diffs schema vs last snapshot, writes SQL into server/db/migrations
 npm run db:migrate         # applies pending SQL files
 npm run db:studio          # opens drizzle-studio in the browser

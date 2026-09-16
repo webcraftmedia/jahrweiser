@@ -20,15 +20,15 @@ else
   git pull
 fi
 
-## Frontend
-FRONTEND_ROOT=$PROJECT_ROOT/frontend
-FRONTEND_SERVICE=$PROJECT_ROOT/.github/webhooks/ecosystem.config.js
+## App
+APP_ROOT=$PROJECT_ROOT/app
+APP_SERVICE=$PROJECT_ROOT/.github/webhooks/ecosystem.config.js
 
-cd $FRONTEND_ROOT
+cd $APP_ROOT
 
 ### Stop service
-pm2 stop $FRONTEND_SERVICE
-pm2 delete $FRONTEND_SERVICE
+pm2 stop $APP_SERVICE
+pm2 delete $APP_SERVICE
 
 ### Config
 export TZ=UTC
@@ -43,4 +43,4 @@ npm run db:migrate
 npm run build
 
 ### Start service
-pm2 start $FRONTEND_SERVICE
+pm2 start $APP_SERVICE

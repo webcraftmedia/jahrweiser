@@ -12,7 +12,7 @@ every request.
 
 - The issues are written by and for the members and contain their names,
   photos, phone numbers and addresses. They are not published on the open web,
-  so `frontend/data/blaettchen/` is git-ignored and both endpoints sit behind
+  so `app/data/blaettchen/` is git-ignored and both endpoints sit behind
   `requireUserSession`.
 - The contact address for contributions is a private one. It lives in an
   environment variable and is served through the authenticated endpoint —
@@ -34,7 +34,7 @@ NN_YYYY-MM-DD[_Titel].pdf
 Examples:
 
 ```
-frontend/data/blaettchen/
+app/data/blaettchen/
   01_2023-06-06.pdf
   04_2023-12-23_Sonderausgabe Weihnachten.pdf
   12_2026-05-01.pdf
@@ -61,7 +61,7 @@ archive, and mount it into the container:
 
 ```yaml
 services:
-  frontend:
+  app:
     environment:
       - BLAETTCHEN_DIR=/var/lib/jahrweiser/blaettchen
       - BLAETTCHEN_CONTACT_EMAIL=redaktion@example.org

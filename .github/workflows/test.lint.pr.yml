@@ -29,12 +29,15 @@ jobs:
           # Configure which scopes are allowed (newline delimited).
           # Append a scope for each service here
           scopes: |
-            frontend
+            app
+            db
+            infra
             admin
             docu
             docker
-            release
+            deps
             workflow
+            release
             other
           # Configure that a scope must always be provided.
           requireScope: true

@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
 // Full-stack E2E config. Requires the docker-compose backend stack (mariadb,
-// baikal, maildev) to be running before tests start. The frontend itself is
+// baikal, maildev) to be running before tests start. The app itself is
 // spawned by Playwright's webServer below — defaults in nuxt.config.ts point
 // at localhost ports so the dev server picks up the right backends.
 

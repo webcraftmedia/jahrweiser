@@ -1,10 +1,10 @@
-name: "frontend:test:e2e full-stack against real backend"
+name: "app:test:e2e full-stack against real backend"
 
 on: push
 
 jobs:
   files-changed:
-    name: Detect File Changes - frontend-test-e2e-full-stack
+    name: Detect File Changes - app-test-e2e-full-stack
     runs-on: ubuntu-latest
     outputs:
       changes: ${{ steps.changes.outputs.filter }}
@@ -17,7 +17,7 @@ jobs:
           token: ${{ github.token }}
           filters: |
             filter:
-              - 'frontend/**/*'
+              - 'app/**/*'
               - 'infra/**/*'
               - 'docker-compose.yml'
               - 'docker-compose.override.yml'
@@ -26,11 +26,11 @@ jobs:
 
   e2e-full-stack:
     if: needs.files-changed.outputs.changes == 'true'
-    name: E2E Full-Stack - Frontend + Backend Stack
+    name: E2E Full-Stack - App + Backend Stack
     needs: files-changed
     runs-on: ubuntu-latest
     env:
-      WORKING_DIRECTORY: ./frontend
+      WORKING_DIRECTORY: ./app
       SYNC_SECRET: dev-sync-secret
     steps:
       - name: Checkout code
@@ -39,7 +39,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: frontend/.tool-versions
+          node-version-file: app/.tool-versions
 
       - name: Env File
         run: cp .env.example .env
@@ -53,9 +53,9 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: ${{env.WORKING_DIRECTORY}}
 
-      # Bring up only the backend services. The frontend is started by
+      # Bring up only the backend services. The app is started by
       # Playwright's webServer (npm run dev) so we don't need to build the
-      # frontend docker image in CI.
+      # app docker image in CI.
       - name: Start backend stack (mariadb + baikal + maildev)
         run: docker compose up -d mariadb baikal mailserver
 
@@ -88,7 +88,7 @@ jobs:
         if: always()
         with:
           name: playwright-report-full-stack
-          path: frontend/playwright-report/
+          path: app/playwright-report/
           retention-days: 30
 
       - name: Stack logs on failure

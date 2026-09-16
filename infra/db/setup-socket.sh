@@ -13,7 +13,7 @@
 #   DB_USER=jahrweiser
 #   DB_HOST_ACL=127.0.0.1   ACL host for the new user. The mysql2 driver
 #                           connects via TCP when DB_HOST=localhost in
-#                           frontend/.env, so '127.0.0.1' (not 'localhost')
+#                           app/.env, so '127.0.0.1' (not 'localhost')
 #                           is what Node will be authenticating from.
 #   SOCKET=/run/mysqld/mysqld.sock
 #   MYSQL_BIN=mariadb
@@ -60,4 +60,4 @@ SQL
 
 echo "[db-setup-socket] done."
 echo "[db-setup-socket] verify: $MYSQL_BIN -h 127.0.0.1 -u $DB_USER -p\"\$DB_PASSWORD\" -e 'SHOW DATABASES'"
-echo "[db-setup-socket] next: cd frontend && npm run db:migrate"
+echo "[db-setup-socket] next: cd app && npm run db:migrate"

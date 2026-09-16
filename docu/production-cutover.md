@@ -24,11 +24,11 @@ final purge step. The intermediate steps are zero-downtime.
    `infra/db/setup.sql` for the canonical SQL.
 
 2. Set `DB_HOST/PORT/USER/PASSWORD/NAME` and `SYNC_SECRET` in the deployment
-   environment (e.g., `frontend/.env` on the prod box). `SYNC_SECRET` should
+   environment (e.g., `app/.env` on the prod box). `SYNC_SECRET` should
    be a freshly generated random string; pin it in the crontab environment too.
 3. Deploy the new app version. **Do not** schedule the crontab yet.
 4. Migrations run automatically on deploy via `.github/webhooks/deploy.sh`.
-   For a manual run: `cd frontend && npm run db:migrate`.
+   For a manual run: `cd app && npm run db:migrate`.
 
 At this point the new code runs but the sidecar is empty. Login still falls
 through to DAV via the lazy-fallback path; it works exactly like before, just

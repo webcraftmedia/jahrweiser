@@ -62,7 +62,7 @@ per-row actions:
 Every admin can **see** all links and **deactivate** (revoke) any of them — so
 an abused link can be stopped by whoever notices it. **Copy, edit, reactivate
 and delete are reserved for the link's creator** (`created_by_uid`). The
-frontend only renders the owner-only buttons for the creator, and the
+client only renders the owner-only buttons for the creator, and the
 `update` / `reactivate` / `delete` endpoints re-check ownership server-side
 (403 for a different admin, 404 if the link is gone), so the UI gating is a
 convenience, not the security boundary. Copy is gated in the UI only — the

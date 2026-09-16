@@ -31,7 +31,7 @@ console.warn(`[baikal-bootstrap] waiting for Baikal at ${baseUrl} ...`)
 await waitForBaikal()
 console.warn('[baikal-bootstrap] Baikal is up; provisioning DAV admin user via docker compose exec')
 
-// We run from frontend/, compose is one dir up.
+// We run from app/, compose is one dir up.
 const composeCwd = resolve(process.cwd(), '..')
 
 try {

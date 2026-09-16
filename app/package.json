@@ -71,7 +71,7 @@
     "@nuxt/eslint": "^1.17.0",
     "@nuxt/test-utils": "^4.3.2",
     "@playwright/test": "^1.63.0",
-    "@size-limit/file": "^13.0.3",
+    "@size-limit/file": "^13.1.1",
     "@testing-library/vue": "^8.1.0",
     "@types/email-templates": "^10.0.4",
     "@types/node": "^26.5.1",

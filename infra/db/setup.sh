@@ -68,4 +68,4 @@ else
 fi
 
 echo "[db-setup] done."
-echo "[db-setup] next: cd frontend && npm run db:migrate"
+echo "[db-setup] next: cd app && npm run db:migrate"

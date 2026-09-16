@@ -48,7 +48,7 @@ openssl rand -hex 32
 
 ## 4) Prod-`.env` ergänzen
 
-In `frontend/.env` diese Zeilen anhängen (Werte aus Schritt 1 und 3 einsetzen):
+In `app/.env` diese Zeilen anhängen (Werte aus Schritt 1 und 3 einsetzen):
 
 ```
 DB_SOCKET=/run/mysqld/mysqld.sock
@@ -183,7 +183,7 @@ Wenn ein Nutzer den Newsletter haben soll, ohne sich selbst über `/settings`
 einzutragen:
 
 ```
-cd /var/www/localhost/htdocs/frontend
+cd /var/www/localhost/htdocs/app
 npm run cli:newsletter:subscribe -- nutzer@example.com
 # bzw.
 npm run cli:newsletter:unsubscribe -- nutzer@example.com
@@ -211,7 +211,7 @@ Erst NACHDEM mindestens ein Sync-Cron-Lauf geklappt hat und mehrere Logins
 ohne Auffälligkeit liefen. Backup der DAV-DB davor!
 
 ```
-cd /var/www/localhost/htdocs/frontend
+cd /var/www/localhost/htdocs/app
 ALLOW_PRODUCTION=1 I_HAVE_BACKED_UP_DAV=1 npm run cli:dav:purge-auth-xprops
 ```
 

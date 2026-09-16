@@ -39,7 +39,7 @@ list sits behind the login anyway.
    npm run cli:telegram:import -- /pfad/zur/datei.json
    ```
 
-   Run it from `frontend/`, so the CLI finds the `.env` next to it — on
+   Run it from `app/`, so the CLI finds the `.env` next to it — on
    production the DB connection goes through `DB_SOCKET`, and without those
    values the run falls back to TCP `localhost:3306` and dies with
    `ECONNREFUSED`. The first output line names the database it is writing to.

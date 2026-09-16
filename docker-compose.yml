@@ -32,11 +32,11 @@ services:
       timeout: 5s
       retries: 10
 
-  frontend:
+  app:
     # name the image so that it cannot be found in a DockerHub repository, otherwise it will not be built locally from the 'dockerfile' but pulled from there
     image: webcraftmedia/jahrweiser:local-production
     build:
-      context: ./frontend
+      context: ./app
       target: production
     ports:
       - 3000:3000

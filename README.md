@@ -2,6 +2,34 @@
 
 This repo is the calendar page for gg-g.info.
 
+## Aufbau
+
+| Verzeichnis | Inhalt |
+| ----------- | ------ |
+| `app/`      | Die Anwendung: Nuxt-Client (`src/`), Nitro-Server und DB (`server/`), CLI-Werkzeuge (`cli/`), Tests. Heißt nicht `frontend/`, weil unter `server/` mehr Dateien liegen als unter `src/`. |
+| `admin/`    | CalDavZAP/CardDavMATE, als Adressbuch-Oberfläche eingebunden |
+| `infra/`    | Baikal- und Datenbank-Einrichtung für Entwicklung und Produktion |
+| `docu/`     | Fachdokumentation, ein Dokument je Bereich |
+
+### Commit- und PR-Titel
+
+Conventional Commits, Scope verpflichtend — `.github/workflows/test.lint.pr.yml`
+prüft PR-Titel und führt die erlaubte Liste. Die Scopes schneiden nach dem, was
+ein Release riskant macht, nicht nach Fachbereichen:
+
+| Scope | Gilt für |
+| ----- | -------- |
+| `app` | alles unter `app/` |
+| `db` | Schema und Migrationen — der Scope, der sagt, ob ein Deploy migrieren muss |
+| `infra` | `infra/`, `docker-compose*`, `.github/webhooks/` |
+| `admin` | `admin/` |
+| `docu` | `docu/`, READMEs |
+| `docker` | Dockerfile und Image-Bau |
+| `deps` | Abhängigkeiten (Dependabot ist vom PR-Check ausgenommen, manuelle Bumps nicht) |
+| `workflow` | `.github/workflows/` |
+| `release` | release-please |
+| `other` | der ehrliche Rest |
+
 ## Ziele
 - Kalenderübesicht zu anstehenden Terminen
 - Nutzerverwaltung

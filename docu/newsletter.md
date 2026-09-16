@@ -14,7 +14,7 @@ eingetragen werden).
 
 ## Datenmodell
 
-Drei Spalten auf `users` (siehe `frontend/server/db/schema/users.ts`):
+Drei Spalten auf `users` (siehe `app/server/db/schema/users.ts`):
 
 | Spalte | Typ | Zweck |
 |---|---|---|
@@ -34,7 +34,7 @@ Während Phase 1 (Opt-in) lassen sich einzelne Nutzer per CLI eintragen, ohne
 dass sie selbst die Settings-Seite aufrufen müssen:
 
 ```sh
-cd frontend
+cd app
 npm run cli:newsletter:subscribe -- user@example.com
 npm run cli:newsletter:unsubscribe -- user@example.com
 ```

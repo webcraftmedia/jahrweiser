@@ -376,7 +376,7 @@ curl -sG "$OVP" --data-urlencode 'data=[out:json][timeout:600];rel["boundary"="a
 curl -sG "$OVP" --data-urlencode 'data=[out:json][timeout:900];area(3600051477)->.de;rel(area.de)["boundary"="administrative"]["admin_level"="6"];out geom;' -o /tmp/de-districts.json
 curl -sG "$OVP" --data-urlencode 'data=[out:json][timeout:600];area(3600051477)->.de;rel(area.de)["boundary"="administrative"]["admin_level"~"^(4|6)$"];way(r)["maritime"="yes"];out tags;' -o /tmp/de-maritime.json
 
-cd frontend
+cd app
 npm run map:build -- --in /tmp/plz.geojson --names /tmp/geonames/DE.txt \
   --places /tmp/gn-dump/DE.txt --altnames /tmp/gn-alt/DE.txt \
   --boundary /tmp/de-boundary.json --coast /tmp/de-coast.json \

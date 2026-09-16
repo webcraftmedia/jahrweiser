@@ -2,7 +2,7 @@
 --
 -- Creates the application database and a least-privileged user. Schema
 -- migrations (table creation) are NOT done here — they are run separately
--- via `npm run db:migrate` from the frontend directory.
+-- via `npm run db:migrate` from the app directory.
 --
 -- Placeholders ${DB_NAME}, ${DB_USER}, ${DB_PASSWORD} are intended for
 -- envsubst (see setup.sh). For manual use, replace them before running.

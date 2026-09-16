@@ -275,7 +275,9 @@ const BORDERS: BoundaryFile = {
         [0, 0, 2000, 2000, 'M0 0l2000 2000'],
         [3800, 4800, 3900, 4900, 'M3800 4800l100 100'],
       ],
-      // The same border with a vertex fewer, for views that cannot show it.
+      // The same border with a vertex fewer, twice over, for the views that
+      // cannot show it — the `z` and the `Z` only stand in for "thinner".
+      medium: [[0, 0, 2000, 2000, 'M0 0l2000 2000Z']],
       coarse: [[0, 0, 2000, 2000, 'M0 0l2000 2000z']],
       labels: [
         [1000, 1000, 900000, 'Hessen'],
@@ -284,6 +286,7 @@ const BORDERS: BoundaryFile = {
     },
     district: {
       arcs: [[100, 100, 300, 300, 'M100 100l200 200']],
+      medium: [[100, 100, 300, 300, 'M100 100l200 200Z']],
       coarse: [[100, 100, 300, 300, 'M100 100l200 200z']],
       labels: [[200, 200, 5000, 'Kreis Bergstraße']],
     },
@@ -310,15 +313,32 @@ describe('boundaryLayerIn', () => {
     ])
   })
 
-  it('hands out the coarse copy when the view cannot show the fine one', () => {
-    // Not a payload saving so much as a parse one: Firefox spends 45 ms turning
-    // the full state layer into geometry against 3 ms for this.
-    expect(boundaryLayerIn(BORDERS.levels.state, box, 10, 10, true).d).toBe('M0 0l2000 2000z')
+  it.each([
+    ['fine', 'M0 0l2000 2000'],
+    ['medium', 'M0 0l2000 2000Z'],
+    ['coarse', 'M0 0l2000 2000z'],
+  ] as const)('hands out the %s copy when that is what the view can show', (resolution, d) => {
+    // Not a payload saving so much as a parse and a raster one: Firefox spends
+    // 45 ms turning the full state layer into geometry against 3 ms for the
+    // coarse one, and every pan re-rasterises whatever is on screen.
+    expect(boundaryLayerIn(BORDERS.levels.state, box, 10, 10, resolution).d).toBe(d)
   })
 
   it('falls back to the fine geometry when an old artefact has no coarse copy', () => {
+    const level = { ...BORDERS.levels.state, medium: [], coarse: [] }
+    expect(boundaryLayerIn(level, box, 10, 10, 'coarse').d).toBe('M0 0l2000 2000')
+  })
+
+  it('falls back to the medium copy when an old artefact has no coarse one', () => {
+    // The stages were added one at a time, so an artefact may hold any prefix
+    // of them. Asking for the coarsest gets the coarsest that exists.
     const level = { ...BORDERS.levels.state, coarse: [] }
-    expect(boundaryLayerIn(level, box, 10, 10, true).d).toBe('M0 0l2000 2000')
+    expect(boundaryLayerIn(level, box, 10, 10, 'coarse').d).toBe('M0 0l2000 2000Z')
+  })
+
+  it('takes the fine copy for an artefact built before the medium stage', () => {
+    const level = { ...BORDERS.levels.state, medium: undefined }
+    expect(boundaryLayerIn(level, box, 10, 10, 'medium').d).toBe('M0 0l2000 2000')
   })
 
   it('stops at the limits — the artefact is sorted, so the specks go first', () => {
@@ -372,7 +392,12 @@ describe('loadBoundaries', () => {
       )
       storageServing({ ...BORDERS, levels })
       const loaded = await loadBoundaries()
-      expect(loaded?.levels[missing]).toStrictEqual({ arcs: [], coarse: [], labels: [] })
+      expect(loaded?.levels[missing]).toStrictEqual({
+        arcs: [],
+        medium: [],
+        coarse: [],
+        labels: [],
+      })
     },
   )
 })

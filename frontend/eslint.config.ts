@@ -129,14 +129,14 @@ export default withNuxt(
     // selbst übernimmt das Nuxts runtimeConfig, dort bleibt die Regel aktiv.
     // server/db ist die Ausnahme: dasselbe Modul wird vom Nitro-Server UND von den
     // CLI-Skripten importiert, wo es keinen runtimeConfig gibt.
-    files: ['*.config.ts', 'scripts/**', 'cli/**', 'e2e-full-stack/**', 'server/db/**'],
+    files: ['*.config.ts', 'scripts/**', 'cli/**', 'e2e/**', 'e2e-full-stack/**', 'server/db/**'],
     rules: {
       'n/no-process-env': 'off',
     },
   },
   {
-    // CLI-Tools und Test-Setup laufen ohne Event-Loop-Druck, synchrones I/O ist dort korrekt
-    files: ['cli/**', 'e2e-full-stack/**'],
+    // CLI-, Build- und Test-Ebene laufen ohne Event-Loop-Druck, synchrones I/O ist dort korrekt
+    files: ['cli/**', 'scripts/**', 'e2e/**', 'e2e-full-stack/**'],
     rules: {
       'n/no-sync': 'off',
     },

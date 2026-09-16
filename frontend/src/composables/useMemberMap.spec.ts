@@ -210,10 +210,47 @@ describe('useMemberMap', () => {
     })
 
     it('says nothing again while the view stays inside what was fetched', async () => {
+      // A pan, which is what the margin is bought for: same size, moved, and
+      // still inside the region the first answer covered.
       const { loadBoundaries } = useMemberMap()
       await loadBoundaries(VIEW, ['state'], 1)
-      await loadBoundaries({ minX: 420, minY: 420, maxX: 590, maxY: 590 }, ['state'], 1)
+      await loadBoundaries({ minX: 420, minY: 420, maxX: 620, maxY: 620 }, ['state'], 1)
       expect(calls()).toHaveLength(1)
+    })
+
+    it('refits the borders on a step of zoom the place names sit out', async () => {
+      // The two go stale for opposite reasons, and the borders for the more
+      // urgent one: a place answer is only ever too *coarse* — the names on
+      // screen stay right until the view has room for smaller ones — while a
+      // border answer becomes too *large*, and every arc it still holds for the
+      // region that has left the screen is rasterised on every single frame.
+      // So one notch of the wheel refits the border and costs the names
+      // nothing, which is the whole point of giving them separate factors.
+      const { loadBoundaries, loadPlaces } = useMemberMap()
+      await loadBoundaries(VIEW, ['state'], 1)
+      await loadPlaces(VIEW)
+
+      // VIEW zoomed by 1.2, the wheel's own step.
+      const zoomed = { minX: 416.7, minY: 416.7, maxX: 583.3, maxY: 583.3 }
+      await loadBoundaries(zoomed, ['state'], 1)
+      expect(calls()).toHaveLength(2)
+
+      await loadPlaces(zoomed)
+      expect(mock$fetch.mock.calls.filter(([url]) => url === '/api/map/places')).toHaveLength(1)
+    })
+
+    it('lets go of a level the map has stopped asking for', async () => {
+      // Half a megabyte of Kreis path used to sit in the DOM at `opacity: 0`
+      // all the way out to the country view. The map asks a zoom step ahead of
+      // drawing, so a level that has dropped off the list has been invisible
+      // for a while and there is no fade left to interrupt.
+      const { boundaries, loadBoundaries } = useMemberMap()
+      await loadBoundaries(VIEW, ['state', 'district'], 1)
+      expect(boundaries.value.district).toBeDefined()
+
+      await loadBoundaries(VIEW, ['state'], 1)
+      expect(boundaries.value.district).toBeUndefined()
+      expect(boundaries.value.state).toBeDefined()
     })
 
     it('takes an empty layer for a level the artefact was built without', async () => {
@@ -223,7 +260,7 @@ describe('useMemberMap', () => {
       expect(boundaries.value.district).toStrictEqual({ d: '', labels: [] })
     })
 
-    it('asks again when the view has zoomed past what the coarse copy can show', async () => {
+    it('asks again when the view has zoomed past what the copy in hand can show', async () => {
       // The region still covers the view, but the geometry in hand is the one
       // for a scale that no longer applies.
       const { loadBoundaries } = useMemberMap()
@@ -234,6 +271,21 @@ describe('useMemberMap', () => {
       // …and not again once it is the resolution already held.
       await loadBoundaries(VIEW, ['state'], 1)
       expect(calls()).toHaveLength(2)
+    })
+
+    it('stops at each of the three stages on the way in', async () => {
+      // Three, not two, and the middle one is the point: between the fine copy
+      // and the coarse one sits a factor of nine in vertices, and the Kreis
+      // layer used to fade in exactly across that cliff. Every step here is a
+      // request, because holding geometry for a scale that has passed is what
+      // the map pays for on every frame.
+      const { loadBoundaries } = useMemberMap()
+      for (const perPixel of [30, 2, 0.5]) await loadBoundaries(VIEW, ['state'], perPixel)
+      expect(calls()).toHaveLength(3)
+
+      // And the same view at the same scale asks for nothing.
+      await loadBoundaries(VIEW, ['state'], 0.5)
+      expect(calls()).toHaveLength(3)
     })
 
     it('keeps the map usable when the borders cannot be fetched', async () => {

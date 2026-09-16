@@ -55,8 +55,12 @@ test.describe('Karte', () => {
     await expect(page.locator('.map-state')).toHaveAttribute('d', /^M/)
     await expect(page.locator('.state-names text')).toHaveText('HESSEN')
 
+    // Six presses, not four: the staging measures how much of the country is
+    // on screen (see `span` in MemberMap.vue), and this window is wider than
+    // the map's own proportions, so it shows about half as much again as the
+    // requested view — which the Kreis names wait out.
     const zoomIn = page.getByRole('button', { name: 'Karte vergrößern' })
-    for (let i = 0; i < 4; i++) await zoomIn.click()
+    for (let i = 0; i < 6; i++) await zoomIn.click()
 
     await expect(page.locator('.district-names text')).toHaveText('Kreis Bergstraße')
   })

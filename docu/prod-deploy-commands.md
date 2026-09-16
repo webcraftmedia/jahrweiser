@@ -97,6 +97,15 @@ Der ruft intern auf:
 
 Bei Fehler bricht das Skript ab (`set -e`) — alte App bleibt unterm pm2 gestoppt.
 
+Der pm2-Prozess heißt **`jahrweiser-app`** (`pm2 logs jahrweiser-app`,
+`pm2 restart jahrweiser-app`). Bis zur Umbenennung des Verzeichnisses von
+`frontend/` nach `app/` hieß er `jahrweiser-frontend`; deploy.sh löscht den alten
+Namen vor dem Start mit, damit beim Übergang nicht der alte Prozess Port 3000
+hält, während der neue ihn binden will. Falls auf dem Host `pm2 startup`
+eingerichtet ist, muss nach dem ersten Deploy einmal `pm2 save` laufen — die
+gespeicherte Boot-Liste zeigt sonst weiter auf den alten Namen und den nicht
+mehr existierenden Pfad `frontend/.output/server/index.mjs`.
+
 
 ## 6) Initial-Sync (einmalig nach erstem erfolgreichen Deploy)
 

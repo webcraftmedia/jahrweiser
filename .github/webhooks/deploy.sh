@@ -30,6 +30,17 @@ cd $APP_ROOT
 pm2 stop $APP_SERVICE
 pm2 delete $APP_SERVICE
 
+# And the name the process had before the directory was renamed to `app/`.
+# Stopping by the *config* only ever matches the name the config carries today,
+# so a host still running the old process would keep it — holding port 3000
+# while the new one tries to bind it, which pm2 reports as a restart loop rather
+# than as a failed deploy.
+#
+# `|| true` is not decoration: unlike `pm2 stop <config>`, which exits 0 when
+# there is nothing to stop, `pm2 delete <name>` exits 1 for a name it does not
+# know — so without it every deploy after the first would abort on `set -e`.
+pm2 delete jahrweiser-frontend || true
+
 ### Config
 export TZ=UTC
 

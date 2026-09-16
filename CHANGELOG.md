@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.4](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.3...v1.14.4) (2026-09-16)
+
+
+### Bug Fixes
+
+* **infra:** fix pm2 name ([#415](https://github.com/webcraftmedia/jahrweiser/issues/415)) ([b46b738](https://github.com/webcraftmedia/jahrweiser/commit/b46b738a42c387c97d8d85e51e47f57f4043eb36))
+
 ## [1.14.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.2...v1.14.3) (2026-09-16)
 
 

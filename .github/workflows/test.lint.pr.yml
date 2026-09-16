@@ -27,7 +27,16 @@ jobs:
           #  fix
           #  feat
           # Configure which scopes are allowed (newline delimited).
-          # Append a scope for each service here
+          # Append a scope for each service here.
+          #
+          # They cut along what makes a release risky rather than along feature
+          # areas: `db` is the one that answers "does this deploy have to
+          # migrate", `infra` covers everything that is not the application
+          # itself. See the table in README.md.
+          #
+          # Note this check only *reports* unless "Validate PR title" is a
+          # required status check on master — `fix(backend)` and `fix(fontend)`
+          # are in the history from before it was.
           scopes: |
             app
             db

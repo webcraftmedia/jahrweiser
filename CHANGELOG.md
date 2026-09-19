@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.5](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.4...v1.14.5) (2026-09-19)
+
+
+### Bug Fixes
+
+* **app:** fix sidemenu to be sticky ([#417](https://github.com/webcraftmedia/jahrweiser/issues/417)) ([3a9e262](https://github.com/webcraftmedia/jahrweiser/commit/3a9e2621c6f393e5db5b04dd543c7aa70c9f2759))
+
 ## [1.14.4](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.3...v1.14.4) (2026-09-16)
 
 

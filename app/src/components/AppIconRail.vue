@@ -25,7 +25,7 @@
     :aria-label="$t('components.AppIconRail.label')"
     :class="
       isVertical
-        ? 'flex flex-col gap-1 shrink-0 w-14 py-3 border-r border-navy/10 dark:border-poster-darkBorder bg-ivory dark:bg-poster-darkCard'
+        ? 'flex flex-col gap-1 shrink-0 w-14 py-3 overflow-y-auto border-r border-navy/10 dark:border-poster-darkBorder bg-ivory dark:bg-poster-darkCard'
         : 'flex flex-row justify-around items-stretch shrink-0 w-full border-t border-navy/10 dark:border-poster-darkBorder bg-ivory dark:bg-poster-darkCard'
     "
   >

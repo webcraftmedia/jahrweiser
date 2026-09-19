@@ -102,19 +102,23 @@ exports[`Layout: Default > renders with default zoom (no inline style) 1`] = `
       </div>
     </nav><!-- Backdrop (outside nav stacking context so it covers page content) -->
     <div data-v-c970699f="" class="md:hidden fixed inset-0 bg-navy/30 dark:bg-black/40 z-40" data-testid="mobile-backdrop" style="display: none;"></div>
-    <div data-v-19b56bd5="" class="content flex-1 overflow-y-auto flex flex-col">
-      <!-- The rail sits outside the max-width container on purpose: it is app
-           chrome and hugs the viewport edge, while the content stays centred.
-           Keeping it out of that container also leaves the existing
-           \`flex-wrap\` row untouched — a sibling in there would wrap, since
-           pages/index.vue's \`.box\` is width:100%. -->
-      <!-- \`min-h-0\` on both wrappers: without it a flex item may not shrink
-           below its content, so a page that wants to *fit* the space it is
-           given (the map) is pushed past it into a scroll instead. Pages that
-           want to grow are unaffected — they overflow into \`.content\`, which
-           scrolls, exactly as before. -->
-      <div data-v-19b56bd5="" class="flex w-full min-h-0 flex-1">
-        <!--v-if-->
+    <!-- The rail sits outside the max-width container on purpose: it is app
+         chrome and hugs the viewport edge, while the content stays centred.
+         Keeping it out of that container also leaves the existing
+         \`flex-wrap\` row untouched — a sibling in there would wrap, since
+         pages/index.vue's \`.box\` is width:100%. -->
+    <!-- It also sits *beside* \`.content\` rather than inside it: \`.content\` is
+         the scroll container, and a rail within it scrolled out of view on a
+         long page (/blaettchen). As a sibling it is stretched to the row's
+         height, which is the viewport's, and stays put. -->
+    <!-- \`min-h-0\` on both wrappers: without it a flex item may not shrink
+         below its content, so a page that wants to *fit* the space it is
+         given (the map) is pushed past it into a scroll instead. Pages that
+         want to grow are unaffected — they overflow into \`.content\`, which
+         scrolls, exactly as before. -->
+    <div data-v-19b56bd5="" class="flex w-full min-h-0 flex-1">
+      <!--v-if-->
+      <div data-v-19b56bd5="" class="content flex-1 min-w-0 overflow-y-auto flex flex-col">
         <div data-v-19b56bd5="" class="max-w-screen-2xl flex flex-wrap justify-between mx-auto w-full min-h-0 flex-1"></div>
       </div>
     </div>

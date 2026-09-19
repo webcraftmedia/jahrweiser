@@ -136,8 +136,13 @@ test.describe('Admin Mobile Menu', () => {
     await page.locator('main button').first().click()
     await expect(drawer).not.toHaveClass(/-translate-x-full/)
 
-    // Click backdrop overlay
-    await page.locator('.bg-navy\\/60').click({ force: true })
+    // Click the backdrop beside the drawer, not at its centre: the backdrop
+    // covers the whole viewport, so its centre (187 of 375) lies under the
+    // 256 px drawer. A forced click there lands on whichever nav link happens
+    // to be at that height once the slide-in has finished — the test only ever
+    // passed because it usually fired mid-animation, while the drawer was
+    // still left of the point.
+    await page.locator('.bg-navy\\/60').click({ position: { x: 320, y: 333 } })
     await expect(drawer).toHaveClass(/-translate-x-full/)
   })
 })

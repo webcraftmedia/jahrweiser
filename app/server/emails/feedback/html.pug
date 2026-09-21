@@ -1,0 +1,27 @@
+extend ../layout.pug
+
+//- Every member-supplied value is printed with `=` (pug escapes it), never
+//- with `!=`: the message and the context strings arrive from a browser, and
+//- an unescaped `<img onerror=…>` in a report would be rendered by whoever
+//- opens the mail.
+
+block content
+  p!= isBug ? t('emails.feedback.introBug') : t('emails.feedback.introFeedback')
+
+  h3(style="margin-top:1.5em;margin-bottom:0.5em;font-size:1.05em;color:#1e293b")
+    != t('emails.feedback.message')
+  div(style="padding:0.75em 1em;border-left:4px solid #b45309;background:#f8fafc;white-space:pre-wrap;color:#1e293b")
+    = message
+
+  h3(style="margin-top:2em;margin-bottom:0.5em;font-size:1.05em;color:#1e293b")
+    != t('emails.feedback.details')
+  table(style="border-collapse:collapse;font-size:0.9em;color:#334155")
+    each row in [['sender', senderName], ['email', senderEmail], ['role', senderRole], ['uid', senderUid], ['page', page], ['version', appVersion], ['browser', userAgent], ['viewport', viewport], ['colorScheme', colorScheme], ['sentAt', sentAt]]
+      tr
+        td(style="padding:0.2em 1em 0.2em 0;vertical-align:top;color:#64748b;white-space:nowrap")
+          != t('emails.feedback.field.' + row[0])
+        td(style="padding:0.2em 0;vertical-align:top")
+          = row[1]
+
+  p(style="margin-top:2em;font-size:0.85em;color:#64748b")
+    != t('emails.feedback.replyHint')

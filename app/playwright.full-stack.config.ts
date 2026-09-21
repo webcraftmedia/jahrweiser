@@ -33,9 +33,11 @@ export default defineConfig({
     // BLAETTCHEN_*: die Suite bekommt ihr eigenes Ausgaben-Verzeichnis und eine
     // eigene Kontaktadresse, damit sie ein echtes Archiv auf dem Entwickler-
     // rechner weder anfasst noch preisgibt — siehe navigation.spec.ts.
+    // FEEDBACK_*: eigene Zieladresse (landet in maildev) und kein Cooldown,
+    // damit mehrere Tests hintereinander senden können.
     command:
       // eslint-disable-next-line no-template-curly-in-string
-      'cross-env TZ=UTC SYNC_SECRET=${SYNC_SECRET:-dev-sync-secret} LOGIN_RATE_LIMIT_MS=0 BLAETTCHEN_DIR=e2e-full-stack/.blaettchen BLAETTCHEN_CONTACT_EMAIL=redaktion@example.com NODE_ENV=test npm run dev -- --port ' +
+      'cross-env TZ=UTC SYNC_SECRET=${SYNC_SECRET:-dev-sync-secret} LOGIN_RATE_LIMIT_MS=0 BLAETTCHEN_DIR=e2e-full-stack/.blaettchen BLAETTCHEN_CONTACT_EMAIL=redaktion@example.com FEEDBACK_EMAIL=feedback@example.com FEEDBACK_RATE_LIMIT_MS=0 NODE_ENV=test npm run dev -- --port ' +
       PORT,
     url: BASE_URL,
     timeout: 120_000,

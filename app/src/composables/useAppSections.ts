@@ -1,5 +1,6 @@
 import IconBlaettchen from '~/assets/icon-blaettchen.svg'
 import IconCalendar from '~/assets/icon-calendar.svg'
+import IconInfo from '~/assets/icon-info.svg'
 import IconMap from '~/assets/icon-map.svg'
 import IconTelegram from '~/assets/icon-telegram.svg'
 
@@ -100,6 +101,16 @@ export function useAppSections() {
       icon: IconMap,
       isActive: (path: string) => path === '/karte',
       warn: hasPostalCode.value === false,
+    },
+    // Last, and unconditional: what the project is, how to report a bug, and
+    // later how to support it. Nothing to fetch — its sub-pages decide for
+    // themselves what they can offer (see pages/projekt/feedback.vue).
+    {
+      to: '/projekt',
+      label: t('components.AppIconRail.projekt'),
+      accessibleLabel: t('components.AppIconRail.projekt'),
+      icon: IconInfo,
+      isActive: (path: string) => path === '/projekt' || path.startsWith('/projekt/'),
     },
   ])
 

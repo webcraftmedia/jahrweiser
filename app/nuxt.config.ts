@@ -132,6 +132,24 @@ export default defineNuxtConfig({
     // the deployment directory entirely (e.g. /var/lib/jahrweiser/blaettchen)
     // and survive a redeploy — see docu/blaettchen.md.
     BLAETTCHEN_DIR: process.env.BLAETTCHEN_DIR || 'data/blaettchen',
+    // Where member feedback and bug reports go. Private for the same reason as
+    // the Blättchen address below: through `public` it would sit in the client
+    // bundle for anyone to scrape. Empty = the feedback form is not offered.
+    //
+    // Outside production the default points at the maildev inbox of the
+    // docker-compose stack, so `npm run dev` offers the form without a .env —
+    // like every other default here. Production keeps the empty default: a
+    // silent send into a nonexistent mailbox would lose real reports, so the
+    // form stays off until an operator names an address.
+    FEEDBACK_EMAIL:
+      process.env.FEEDBACK_EMAIL ||
+      (process.env.NODE_ENV === 'production' ? '' : 'feedback@example.com'),
+    // Per-user cooldown (ms) between two feedback mails. Stops a double-click
+    // or a frustrated member from filling the inbox; e2e overrides it to 0.
+    FEEDBACK_RATE_LIMIT_MS:
+      process.env.FEEDBACK_RATE_LIMIT_MS !== undefined
+        ? parseInt(process.env.FEEDBACK_RATE_LIMIT_MS)
+        : 60_000,
     // Where contributions for the next issue go. A private address, so it is
     // handed out through the authenticated endpoint and never through
     // `public` — the latter would put it in the client bundle, readable by any

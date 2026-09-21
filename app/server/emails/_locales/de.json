@@ -16,6 +16,27 @@
       "loginLink": "Wenn die E-Mail nicht korrekt angezeigt wird kannst du auch diesem Link folgend:",
       "button": "Kalender besuchen"
     },
+    "feedback": {
+      "subjectFeedback": "Feedback",
+      "subjectBug": "Fehlerbericht",
+      "introFeedback": "aus dem Jahrweiser ist Feedback eingegangen.",
+      "introBug": "aus dem Jahrweiser wurde ein Fehler gemeldet.",
+      "message": "Nachricht",
+      "details": "Angaben zum Absender und zur Umgebung",
+      "replyHint": "Eine Antwort auf diese E-Mail geht direkt an die absendende Person.",
+      "field": {
+        "sender": "Name",
+        "email": "E-Mail",
+        "role": "Rolle",
+        "uid": "Kennung",
+        "page": "Seite",
+        "version": "Version",
+        "browser": "Browser",
+        "viewport": "Fenstergröße",
+        "colorScheme": "Darstellung",
+        "sentAt": "Gesendet"
+      }
+    },
     "weeklyNewsletter": {
       "subject": "Immer wieder Sonntags...",
       "intro": "hier ist deine Übersicht der Termine für die kommende Woche.",

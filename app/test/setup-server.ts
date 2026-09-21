@@ -24,6 +24,9 @@ const runtimeConfig = vi.hoisted(() => ({
   SYNC_SECRET: 'test-sync-secret',
   BLAETTCHEN_DIR: 'data/blaettchen',
   BLAETTCHEN_CONTACT_EMAIL: 'redaktion@example.com',
+  FEEDBACK_EMAIL: 'feedback@example.com',
+  FEEDBACK_RATE_LIMIT_MS: 60000,
+  APP_TIMEZONE: 'Europe/Berlin',
 }))
 
 vi.mock('#app/nuxt', async (importOriginal) => {

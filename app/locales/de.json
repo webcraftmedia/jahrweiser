@@ -6,6 +6,7 @@
       "label": "Hauptnavigation",
       "map": "Karte",
       "map-incomplete": "Karte — deine Postleitzahl fehlt oder ist ungültig",
+      "projekt": "Über das Projekt",
       "telegram": "Telegram-Kanäle"
     },
     "Footer": {
@@ -319,6 +320,81 @@
         "text": "Tippe auf „Jetzt anmelden“, um dich einzuloggen. Erst dieser Klick verbraucht deinen Link.",
         "title": "Noch ein Klick"
       }
+    },
+    "projekt": {
+      "about": {
+        "donate": {
+          "heading": "Spenden",
+          "text": "Server, Domain und Backups kosten Geld. Spendenmöglichkeiten richten wir hier in Kürze ein — bis dahin hilft Mitmachen am meisten."
+        },
+        "help": {
+          "heading": "Mithelfen",
+          "link": "Feedback geben",
+          "text": "Der wertvollste Beitrag ist Rückmeldung: Was fehlt, was ist umständlich, was funktioniert nicht? Jede Meldung landet direkt bei den Leuten, die den Jahrweiser bauen."
+        },
+        "tech": {
+          "heading": "Technik und Rechtliches",
+          "text": "Der Jahrweiser läuft auf einem eigenen Server; Termine und Kontakte liegen in einem selbst betriebenen CalDAV-/CardDAV-Server und nicht bei einem Anbieter. Die Versionshistorie öffnest du jederzeit über die Versionsnummer in der Fußzeile.",
+          "version": "Version"
+        },
+        "what": {
+          "feature": {
+            "blaettchen": "Das Blättchen als PDF, Ausgabe für Ausgabe.",
+            "caldav": "Anbindung an Handy oder Thunderbird über CalDAV.",
+            "calendar": "Alle Termine der Gemeinschaft in einer Übersicht, nach Kalendern filterbar.",
+            "map": "Eine Karte, die zeigt, wo Mitglieder wohnen — auf Postleitzahlen genau.",
+            "telegram": "Die Telegram-Kanäle der Gemeinschaft samt Einladungslinks."
+          },
+          "heading": "Was der Jahrweiser ist",
+          "text": "Der Jahrweiser ist der gemeinsame Kalender der Gemeinschaft an der Bergstraße: ein Ort, an dem alle Termine zusammenlaufen, statt sich auf Zettel, Chatgruppen und Aushänge zu verteilen. Er wird ehrenamtlich entwickelt und wächst mit dem, was gebraucht wird."
+        },
+        "who": {
+          "heading": "Wer dahintersteckt",
+          "text": "Entwicklung und Betrieb liegen bei webcraft media und einigen Freiwilligen aus der Gemeinschaft. Niemand verdient daran — Server, Domain und Zeit werden gestellt. Wer mitmachen möchte, ob mit Code, Texten oder Ideen, ist willkommen."
+        }
+      },
+      "feedback": {
+        "context": {
+          "browser": "Browser",
+          "dark": "dunkel",
+          "email": "E-Mail",
+          "hint": "Mehr wird nicht übertragen. Die Angaben helfen dabei, einen Fehler nachzustellen; deine Adresse steht in der E-Mail als Antwortadresse.",
+          "light": "hell",
+          "name": "Name",
+          "none": "keine Angabe",
+          "page": "Seite",
+          "scheme": "Darstellung",
+          "summary": "Diese Daten werden mitgesendet",
+          "version": "Version",
+          "viewport": "Fenstergröße"
+        },
+        "description": "Schreib auf, was dir aufgefallen ist. Die Nachricht geht als E-Mail an das Team, geantwortet wird an deine Adresse.",
+        "error": "Das hat nicht geklappt. Bitte versuche es später noch einmal.",
+        "error-cooldown": "Kurz durchatmen — eine Nachricht pro Minute reicht.",
+        "error-unavailable": "Der Versand ist gerade nicht eingerichtet. Bitte wende dich direkt an die Gemeinschaft.",
+        "heading": "Feedback und Fehler melden",
+        "kind": {
+          "bug": "Fehler melden",
+          "feedback": "Feedback oder Idee"
+        },
+        "kind-legend": "Worum geht es?",
+        "loading": "Wird geladen...",
+        "message": "Deine Nachricht",
+        "message-placeholder-bug": "Was hast du gemacht, was ist passiert, was hättest du erwartet?",
+        "message-placeholder-feedback": "Was gefällt dir, was fehlt dir, was würdest du anders machen?",
+        "page": "Betroffene Seite",
+        "page-hint": "Vorausgefüllt mit der Seite, von der du hierhergekommen bist. Du kannst sie ändern oder leeren.",
+        "page-placeholder": "/2026/09",
+        "sending": "Wird gesendet…",
+        "sent": "Danke! Deine Nachricht ist unterwegs.",
+        "submit": "Absenden",
+        "unavailable": "Das Feedback-Formular ist derzeit nicht eingerichtet. Bitte wende dich direkt an die Gemeinschaft."
+      },
+      "menu": {
+        "about": "Über das Projekt",
+        "feedback": "Feedback"
+      },
+      "title": "Das Projekt"
     },
     "register": {
       "created": {

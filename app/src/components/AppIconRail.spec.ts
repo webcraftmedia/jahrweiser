@@ -86,6 +86,7 @@ describe('Component: AppIconRail', () => {
       '/blaettchen',
       '/telegram',
       '/karte',
+      '/projekt',
     ])
     // Icon-only navigation is unusable with a screen reader unless every link
     // carries a text alternative.
@@ -225,7 +226,11 @@ describe('Component: AppIconRail', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     serving({ channels: [], failing: ['/api/blaettchen'] })
     const wrapper = await railAt('/')
-    expect(wrapper.findAll('nav a').map((a) => a.attributes('href'))).toStrictEqual(['/', '/karte'])
+    expect(wrapper.findAll('nav a').map((a) => a.attributes('href'))).toStrictEqual([
+      '/',
+      '/karte',
+      '/projekt',
+    ])
     consoleSpy.mockRestore()
   })
 

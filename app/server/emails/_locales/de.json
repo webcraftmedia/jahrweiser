@@ -22,7 +22,8 @@
       "introFeedback": "aus dem Jahrweiser ist Feedback eingegangen.",
       "introBug": "aus dem Jahrweiser wurde ein Fehler gemeldet.",
       "message": "Nachricht",
-      "details": "Angaben zum Absender und zur Umgebung",
+      "detailsFeedback": "Angaben zum Absender",
+      "detailsBug": "Angaben zum Absender und zur Umgebung",
       "replyHint": "Eine Antwort auf diese E-Mail geht direkt an die absendende Person.",
       "field": {
         "sender": "Name",

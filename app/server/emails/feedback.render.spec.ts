@@ -40,7 +40,7 @@ const LOCALS = {
   SUPPORT_EMAIL: '',
   name: '',
   alwaysSalutation: true,
-  isBug: false,
+  isBug: true,
   message: 'Die Karte lädt nicht.',
   senderName: 'Anna Mustermann',
   senderEmail: 'anna@example.com',
@@ -59,23 +59,29 @@ async function render(locals: Record<string, unknown> = {}) {
 }
 
 describe('emails/feedback', () => {
-  it('carries the report and its context', async () => {
+  it('carries a bug report with its context', async () => {
     const { subject, html } = await render()
-    expect(subject).toBe('Jahrweiser: Feedback — Anna Mustermann')
+    expect(subject).toBe('Jahrweiser: Fehlerbericht — Anna Mustermann')
     expect(html).toContain('Die Karte lädt nicht.')
     for (const value of ['Anna Mustermann', 'anna@example.com', 'u1', '/2026/09', '1.14.4']) {
       expect(html).toContain(value)
     }
   })
 
-  it('subjects a bug report as one', async () => {
-    const { subject } = await render({ isBug: true })
-    expect(subject).toBe('Jahrweiser: Fehlerbericht — Anna Mustermann')
+  it('prints no technical lines for plain feedback', async () => {
+    // The endpoint sends no context for it; the template must not leave empty
+    // rows where the browser and the window size used to be.
+    const { subject, html } = await render({ isBug: false })
+    expect(subject).toBe('Jahrweiser: Feedback — Anna Mustermann')
+    expect(html).toContain('Anna Mustermann')
+    for (const label of ['Browser', 'Fenstergröße', 'Darstellung', 'Seite', 'Version']) {
+      expect(html).not.toContain(label)
+    }
   })
 
   it('leaves the dash off when there is no name to put behind it', async () => {
     const { subject } = await render({ senderName: '' })
-    expect(subject).toBe('Jahrweiser: Feedback')
+    expect(subject).toBe('Jahrweiser: Fehlerbericht')
   })
 
   it('escapes what the member wrote instead of rendering it', async () => {

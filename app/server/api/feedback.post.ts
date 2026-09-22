@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { z } from 'zod'
 
-import { FEEDBACK_FIELD_MAX, FEEDBACK_KINDS, FEEDBACK_MESSAGE_MAX } from '../../shared/feedback'
+import { FEEDBACK_FIELD_MAX, FEEDBACK_MESSAGE_MAX } from '../../shared/feedback'
 import { defaultParams, emailRenderer } from '../helpers/email'
 
 const contextSchema = z.object({
@@ -13,11 +13,18 @@ const contextSchema = z.object({
   colorScheme: z.string().max(FEEDBACK_FIELD_MAX),
 })
 
-const bodySchema = z.object({
-  kind: z.enum(FEEDBACK_KINDS),
-  message: z.string().trim().min(1).max(FEEDBACK_MESSAGE_MAX),
-  context: contextSchema,
-})
+const message = z.string().trim().min(1).max(FEEDBACK_MESSAGE_MAX)
+
+/**
+ * A union rather than one shape with an optional context, so the rule is the
+ * schema: a bug report carries the technical context, plain feedback carries
+ * none. zod drops unknown keys, so a context posted with `kind: 'feedback'` is
+ * discarded here and never reaches the mail.
+ */
+const bodySchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('feedback'), message }),
+  z.object({ kind: z.literal('bug'), message, context: contextSchema }),
+])
 
 /**
  * When each member last got a mail out of here. Per-process and unpersisted,
@@ -43,7 +50,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 503, statusMessage: 'Feedback is not configured' })
   }
 
-  const { kind, message, context } = await readValidatedBody(event, bodySchema.parse)
+  const report = await readValidatedBody(event, bodySchema.parse)
 
   const previous = lastSentAt.get(user.uid)
   if (
@@ -73,14 +80,15 @@ export default defineEventHandler(async (event) => {
       name: '',
       alwaysSalutation: true,
       SUPPORT_EMAIL: '',
-      isBug: kind === 'bug',
-      message,
+      isBug: report.kind === 'bug',
+      message: report.message,
       senderName,
       senderEmail: user.email,
       senderUid: user.uid,
       senderRole: user.role ?? '',
       sentAt: new Date().toLocaleString('de-DE', { timeZone: config.APP_TIMEZONE }),
-      ...context,
+      // Present for a bug report only — see the schema above.
+      ...(report.kind === 'bug' ? report.context : {}),
     },
   }
 

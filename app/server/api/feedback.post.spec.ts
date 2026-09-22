@@ -23,9 +23,21 @@ const CONTEXT = {
   colorScheme: 'hell',
 }
 
-/** What the browser posts, with whatever the test wants to change about it. */
+/** What the browser posts for a bug report, with whatever a test changes. */
 function body(overrides: Record<string, unknown> = {}) {
-  return { kind: 'feedback', message: 'Die Karte lädt nicht.', context: CONTEXT, ...overrides }
+  return { kind: 'bug', message: 'Die Karte lädt nicht.', context: CONTEXT, ...overrides }
+}
+
+/** What it posts for plain feedback — no technical context at all. */
+function feedbackBody(overrides: Record<string, unknown> = {}) {
+  return { kind: 'feedback', message: 'Schöne Sache.', ...overrides }
+}
+
+/** Make `readValidatedBody` hand the handler this payload. */
+function posting(payload: unknown) {
+  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+    (v as (d: unknown) => unknown)(payload),
+  )
 }
 
 /**
@@ -49,9 +61,7 @@ describe('feedback.post', () => {
     vi.clearAllMocks()
     mockSend.mockResolvedValue(undefined)
     signedInAs('u-default')
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
-      (v as (d: unknown) => unknown)(body()),
-    )
+    posting(body())
   })
 
   afterEach(() => {
@@ -72,7 +82,7 @@ describe('feedback.post', () => {
     expect(args.template).toMatch(/server\/emails\/feedback$/)
   })
 
-  it('passes the message and every context value into the mail', async () => {
+  it('passes a bug report with every context value into the mail', async () => {
     signedInAs('u-locals')
     await fn({})
     expect(lastLocals()).toMatchObject({
@@ -81,18 +91,31 @@ describe('feedback.post', () => {
       senderEmail: 'anna@example.com',
       senderUid: 'u-locals',
       senderRole: 'user',
-      isBug: false,
+      isBug: true,
       ...CONTEXT,
     })
   })
 
-  it('marks a bug report as one', async () => {
-    signedInAs('u-bug')
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
-      (v as (d: unknown) => unknown)(body({ kind: 'bug' })),
-    )
+  it('sends plain feedback without any technical context', async () => {
+    // The point of the split: an idea is not reproduced, so nothing about the
+    // browser is collected for it.
+    signedInAs('u-plain')
+    posting(feedbackBody())
     await fn({})
-    expect(lastLocals().isBug).toBe(true)
+    const locals = lastLocals()
+    expect(locals).toMatchObject({ message: 'Schöne Sache.', isBug: false })
+    for (const key of ['page', 'appVersion', 'userAgent', 'viewport', 'colorScheme']) {
+      expect(locals).not.toHaveProperty(key)
+    }
+  })
+
+  it('drops a context that was posted with plain feedback anyway', async () => {
+    // zod strips what the union's feedback branch does not declare, so a client
+    // that sends one regardless cannot get it into the mail.
+    signedInAs('u-sneaky')
+    posting(feedbackBody({ context: CONTEXT }))
+    await fn({})
+    expect(lastLocals()).not.toHaveProperty('userAgent')
   })
 
   it('suppresses the support block — the mail goes to the team itself', async () => {
@@ -139,9 +162,7 @@ describe('feedback.post', () => {
 
   describe('validation', () => {
     const validate = async (payload: unknown) => {
-      vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
-        (v as (d: unknown) => unknown)(payload),
-      )
+      posting(payload)
       return fn({})
     }
 
@@ -163,7 +184,7 @@ describe('feedback.post', () => {
       ).rejects.toThrow(ZodError)
     })
 
-    it('rejects a missing context', async () => {
+    it('rejects a bug report without context', async () => {
       await expect(validate(body({ context: undefined }))).rejects.toThrow(ZodError)
     })
   })

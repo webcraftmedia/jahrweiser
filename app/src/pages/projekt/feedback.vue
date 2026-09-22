@@ -21,8 +21,11 @@
   const sending = ref(false)
   const status = ref<{ kind: 'ok' | 'err'; text: string } | null>(null)
 
-  // The technical context. Every value here is also rendered in the form: the
-  // member sees exactly what leaves their browser before they press send.
+  // The technical context of a *bug report*. Every value here is also rendered
+  // in the form: the member sees exactly what leaves their browser before they
+  // press send. Plain feedback sends none of it — nothing about the browser
+  // helps with an idea, so nothing about it is collected.
+  const isBug = computed(() => kind.value === 'bug')
   const page = ref('')
   const userAgent = ref('')
   const viewport = ref('')
@@ -58,7 +61,8 @@
     // The page they came from — that is the one a bug report is about. Read
     // from the history entry vue-router maintains (`{ back, current, … }`),
     // which is also why it can be empty: opened in a fresh tab or from a
-    // bookmark there is no previous page. The field is editable either way.
+    // bookmark there is no previous page. Not a form field: asking somebody to
+    // type a route is asking for a wrong one.
     const back = (window.history.state as { back?: unknown } | null)?.back
     page.value = typeof back === 'string' ? back : ''
     userAgent.value = navigator.userAgent
@@ -78,17 +82,19 @@
     try {
       await api('/api/feedback', {
         method: 'POST',
-        body: {
-          kind: kind.value,
-          message: message.value,
-          context: {
-            page: page.value,
-            appVersion,
-            userAgent: userAgent.value,
-            viewport: viewport.value,
-            colorScheme: colorScheme.value,
-          },
-        },
+        body: isBug.value
+          ? {
+              kind: 'bug',
+              message: message.value,
+              context: {
+                page: page.value,
+                appVersion,
+                userAgent: userAgent.value,
+                viewport: viewport.value,
+                colorScheme: colorScheme.value,
+              },
+            }
+          : { kind: 'feedback', message: message.value },
       })
       status.value = { kind: 'ok', text: t('pages.projekt.feedback.sent') }
       // Cleared so a second thought is a new report, not an accidental resend.
@@ -168,25 +174,11 @@
           />
         </div>
 
-        <div>
-          <label for="feedback-page" class="block text-sm font-medium mb-1">
-            {{ t('pages.projekt.feedback.page') }}
-          </label>
-          <input
-            id="feedback-page"
-            v-model="page"
-            type="text"
-            :placeholder="t('pages.projekt.feedback.page-placeholder')"
-            class="w-full rounded border-2 border-navy/15 dark:border-poster-darkBorder bg-white dark:bg-poster-dark px-3 py-2 text-sm"
-          />
-          <p class="mt-1 text-xs text-navy/60 dark:text-ivory/60">
-            {{ t('pages.projekt.feedback.page-hint') }}
-          </p>
-        </div>
-
         <!-- Open on demand, but complete: the member can read every value that
-             travels with their report before they send it. -->
+             travels with their report before they send it. Shown for a bug
+             report only, because only a bug report carries it. -->
         <details
+          v-if="isBug"
           class="rounded border border-navy/15 dark:border-poster-darkBorder px-3 py-2 text-sm"
         >
           <summary class="cursor-pointer text-navy/80 dark:text-ivory/80">
@@ -236,9 +228,6 @@
               <dd class="break-all">{{ colorScheme }}</dd>
             </div>
           </dl>
-          <p class="mt-3 text-xs text-navy/60 dark:text-ivory/60">
-            {{ t('pages.projekt.feedback.context.hint') }}
-          </p>
         </details>
 
         <div class="flex items-center gap-3">

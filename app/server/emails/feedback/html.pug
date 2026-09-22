@@ -14,9 +14,14 @@ block content
     = message
 
   h3(style="margin-top:2em;margin-bottom:0.5em;font-size:1.05em;color:#1e293b")
-    != t('emails.feedback.details')
+    != isBug ? t('emails.feedback.detailsBug') : t('emails.feedback.detailsFeedback')
+  //- The technical half exists for a bug report only; plain feedback carries
+  //- nothing but who wrote it and when.
+  - var rows = [['sender', senderName], ['email', senderEmail], ['role', senderRole], ['uid', senderUid], ['sentAt', sentAt]]
+  if isBug
+    - rows = rows.concat([['page', page], ['version', appVersion], ['browser', userAgent], ['viewport', viewport], ['colorScheme', colorScheme]])
   table(style="border-collapse:collapse;font-size:0.9em;color:#334155")
-    each row in [['sender', senderName], ['email', senderEmail], ['role', senderRole], ['uid', senderUid], ['page', page], ['version', appVersion], ['browser', userAgent], ['viewport', viewport], ['colorScheme', colorScheme], ['sentAt', sentAt]]
+    each row in rows
       tr
         td(style="padding:0.2em 1em 0.2em 0;vertical-align:top;color:#64748b;white-space:nowrap")
           != t('emails.feedback.field.' + row[0])

@@ -60,6 +60,11 @@ async function mountReady(route = '/projekt/feedback') {
   return wrapper
 }
 
+/** Switch the form over to a bug report. */
+async function chooseBug(wrapper: Awaited<ReturnType<typeof mountReady>>) {
+  await wrapper.find('input[type="radio"][value="bug"]').setValue()
+}
+
 /** Fill in a message and press send, then let the request settle. */
 async function submitReport(
   wrapper: Awaited<ReturnType<typeof mountReady>>,
@@ -129,12 +134,23 @@ describe('Page: Feedback', () => {
     expect(button.attributes('disabled')).toBeUndefined()
   })
 
-  it('sends the report with its context and confirms it', async () => {
+  it('sends plain feedback as message only — no technical context', async () => {
     cameFrom('/2026/09')
     const wrapper = await mountReady()
+    await submitReport(wrapper, 'Gefällt mir gut.')
+    expect(lastPost()).toStrictEqual({ kind: 'feedback', message: 'Gefällt mir gut.' })
+    expect(wrapper.text()).toContain('pages.projekt.feedback.sent')
+    // Emptied, so a second thought is a new report and not a resend.
+    expect((wrapper.find('#feedback-message').element as HTMLTextAreaElement).value).toBe('')
+  })
+
+  it('sends a bug report with the context that makes it reproducible', async () => {
+    cameFrom('/2026/09')
+    const wrapper = await mountReady()
+    await chooseBug(wrapper)
     await submitReport(wrapper, 'Die Karte lädt nicht.')
     expect(lastPost()).toStrictEqual({
-      kind: 'feedback',
+      kind: 'bug',
       message: 'Die Karte lädt nicht.',
       context: {
         page: '/2026/09',
@@ -144,45 +160,31 @@ describe('Page: Feedback', () => {
         colorScheme: 'pages.projekt.feedback.context.light',
       },
     })
-    expect(wrapper.text()).toContain('pages.projekt.feedback.sent')
-    // Emptied, so a second thought is a new report and not a resend.
-    expect((wrapper.find('#feedback-message').element as HTMLTextAreaElement).value).toBe('')
-  })
-
-  it('sends the chosen kind', async () => {
-    const wrapper = await mountReady()
-    await wrapper.find('input[type="radio"][value="bug"]').setValue()
-    await submitReport(wrapper)
-    expect(lastPost().kind).toBe('bug')
   })
 
   it('reports the colour scheme the member is actually using', async () => {
     mockIsDark.value = true
     const wrapper = await mountReady()
+    await chooseBug(wrapper)
     await submitReport(wrapper)
     expect((lastPost().context as { colorScheme: string }).colorScheme).toBe(
       'pages.projekt.feedback.context.dark',
     )
   })
 
-  it('leaves the page field empty when there is no previous page', async () => {
+  it('takes the page from the history rather than asking for it', async () => {
     const wrapper = await mountReady()
-    expect((wrapper.find('#feedback-page').element as HTMLInputElement).value).toBe('')
+    // Nothing for the member to fill in — the previous page is known.
+    expect(wrapper.find('#feedback-page').exists()).toBe(false)
+    await chooseBug(wrapper)
     await submitReport(wrapper)
     expect((lastPost().context as { page: string }).page).toBe('')
   })
 
-  it('takes the page the member corrected it to', async () => {
-    cameFrom('/2026/09')
-    const wrapper = await mountReady()
-    await wrapper.find('#feedback-page').setValue('/karte')
-    await submitReport(wrapper)
-    expect((lastPost().context as { page: string }).page).toBe('/karte')
-  })
-
-  it('shows every value that will be sent along', async () => {
+  it('shows every value a bug report will send along', async () => {
     cameFrom('/karte')
     const wrapper = await mountReady()
+    await chooseBug(wrapper)
     const details = wrapper.find('details').text()
     expect(details).toContain('Anna Mustermann')
     expect(details).toContain('anna@example.com')
@@ -192,8 +194,14 @@ describe('Page: Feedback', () => {
     expect(details).toContain(`${window.innerWidth}×${window.innerHeight}`)
   })
 
-  it('names the empty page field rather than showing a gap', async () => {
+  it('offers no such list for plain feedback, because there is nothing in it', async () => {
     const wrapper = await mountReady()
+    expect(wrapper.find('details').exists()).toBe(false)
+  })
+
+  it('names the unknown page rather than showing a gap', async () => {
+    const wrapper = await mountReady()
+    await chooseBug(wrapper)
     expect(wrapper.find('details').text()).toContain('pages.projekt.feedback.context.none')
   })
 

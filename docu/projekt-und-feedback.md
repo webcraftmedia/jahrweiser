@@ -37,7 +37,9 @@ den Server nie. Das Formular fragt vor dem Anzeigen der Textarea — ohne diese
 Auskunft würde ein Mitglied erst einen Bericht tippen und dann einen 503 sehen.
 
 `POST` validiert den Body mit zod gegen die Grenzen aus
-`app/shared/feedback.ts` (`FEEDBACK_MESSAGE_MAX`, `FEEDBACK_FIELD_MAX`), setzt
+`app/shared/feedback.ts` (`FEEDBACK_MESSAGE_MAX`, `FEEDBACK_FIELD_MAX`) — als
+discriminated union, damit die Regel im Schema steht: ein Fehlerbericht trägt
+den technischen Kontext, reines Feedback trägt keinen. Der Endpoint setzt
 die E-Mail über `emailRenderer` ab (Template `app/server/emails/feedback/`) und
 antwortet:
 
@@ -53,15 +55,22 @@ verletzen und im Spam landen. Antworten geht trotzdem direkt zurück.
 
 ## Welche Daten mitgehen
 
-Aus der Session (nicht aus dem Formular): Anzeigename, E-Mail-Adresse, UID,
-Rolle. Aus dem Browser: aufgerufene Seite, App-Version, User-Agent,
-Fenstergröße, Hell-/Dunkel-Modus.
+**Immer** (aus der Session, nicht aus dem Formular): Anzeigename,
+E-Mail-Adresse, UID, Rolle, Zeitpunkt.
+
+**Nur beim Fehlerbericht** (aus dem Browser): aufgerufene Seite, App-Version,
+User-Agent, Fenstergröße, Hell-/Dunkel-Modus. Eine Idee oder ein Lob wird nicht
+nachgestellt — dafür sind diese Angaben zwecklos, und zwecklose Daten werden
+nicht erhoben. Das Formular blendet den Block deshalb mit der Auswahl ein und
+aus, zod verwirft einen trotzdem mitgeschickten Kontext, und das Mail-Template
+druckt die Zeilen nur beim Fehlerbericht.
 
 Der technische Kontext wird im Formular **angezeigt** (aufklappbarer Block
-„Diese Daten werden mitgesendet“), und die Seite ist editierbar. Deshalb nimmt
-der Server auch die Angaben des Clients entgegen, statt die Request-Header
-auszulesen: gesendet wird genau das, was vorher zu sehen war. Die IP-Adresse
-wird nicht erfasst.
+„Diese Daten werden mitgesendet“). Deshalb nimmt der Server auch die Angaben des
+Clients entgegen, statt die Request-Header auszulesen: gesendet wird genau das,
+was vorher zu sehen war. Die betroffene Seite kommt aus dem History-Eintrag
+(`window.history.state.back`) und ist kein Eingabefeld — wer eine Route
+abtippen soll, tippt die falsche. Die IP-Adresse wird nicht erfasst.
 
 Die Nachricht und alle Kontextwerte werden im Pug-Template mit `=` ausgegeben
 (escaped), nie mit `!=` — sonst würde selbst geschriebener HTML-Code im

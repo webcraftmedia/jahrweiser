@@ -11,7 +11,11 @@ export const FEEDBACK_MESSAGE_MAX = 5000
 export const FEEDBACK_FIELD_MAX = 300
 
 /**
- * The technical context that travels with a report.
+ * The technical context that travels with a *bug report*.
+ *
+ * Only with a bug report: an idea or a compliment is not reproduced, so the
+ * browser, the window size and the page are data with no purpose there — and
+ * data with no purpose is data not collected.
  *
  * Collected in the browser and *shown to the member before they send* — the
  * form lists every one of these values. Nothing here is gathered behind their
@@ -19,7 +23,7 @@ export const FEEDBACK_FIELD_MAX = 300
  * reading the request headers: what is sent is what was displayed.
  */
 export interface FeedbackContext {
-  /** In-app route the report is about, editable in the form. */
+  /** In-app route the member came from — what the report is about. */
   page: string
   /** `runtimeConfig.public.appVersion` of the client that sent it. */
   appVersion: string
@@ -31,8 +35,5 @@ export interface FeedbackContext {
   colorScheme: string
 }
 
-export interface FeedbackRequest {
-  kind: FeedbackKind
-  message: string
-  context: FeedbackContext
-}
+export type FeedbackRequest =
+  { kind: 'feedback'; message: string } | { kind: 'bug'; message: string; context: FeedbackContext }

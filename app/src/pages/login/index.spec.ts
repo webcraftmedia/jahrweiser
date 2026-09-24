@@ -1,4 +1,5 @@
 import { mountSuspended, renderSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
+import { flushPromises } from '@vue/test-utils'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 import { stubApi } from '../../../test/helpers/stub-api'
@@ -44,6 +45,7 @@ describe('Page: Login', () => {
     const input = wrapper.find('input')
     await input.setValue('test@example.com')
     await wrapper.find('form').trigger('submit')
+    await flushPromises()
 
     expect(wrapper.html()).toMatchSnapshot()
   })
@@ -56,6 +58,7 @@ describe('Page: Login', () => {
 
     await wrapper.find('input').setValue('test@example.com')
     await wrapper.find('form').trigger('submit')
+    await flushPromises()
 
     expect(wrapper.text()).toContain('pages.login.cooldown.title')
     expect(wrapper.text()).toContain('pages.login.cooldown.text1')
@@ -71,6 +74,7 @@ describe('Page: Login', () => {
     const input = wrapper.find('input')
     await input.setValue('test@example.com')
     await wrapper.find('form').trigger('submit')
+    await flushPromises()
 
     // Click "back to login" button to return to form
     await wrapper.find('[role="alert"] button').trigger('click')
@@ -83,6 +87,7 @@ describe('Page: Login', () => {
     const input = wrapper.find('input')
     await input.setValue('not-an-email')
     await wrapper.find('form').trigger('submit')
+    await flushPromises()
     // Should still show form (not success message)
     expect(wrapper.find('form').exists()).toBe(true)
     // Error label should be visible
@@ -96,6 +101,7 @@ describe('Page: Login', () => {
     const input = wrapper.find('input')
     await input.setValue('test@example.com')
     await wrapper.find('form').trigger('submit')
+    await flushPromises()
     // Form stays, error hint is shown, success message is NOT shown
     expect(wrapper.find('form').exists()).toBe(true)
     expect(wrapper.text()).toContain('pages.login.form.error')
@@ -109,9 +115,11 @@ describe('Page: Login', () => {
     const input = wrapper.find('input')
     await input.setValue('  test@example.com  ')
     await wrapper.find('form').trigger('submit')
+    await flushPromises()
     expect(globalThis.$fetch).toHaveBeenCalledWith('/api/requestLoginLink', {
       method: 'POST',
       body: { email: 'test@example.com' },
+      signal: expect.any(AbortSignal),
     })
   })
 
@@ -134,9 +142,11 @@ describe('Page: Login', () => {
     const input = wrapper.find('input')
     await input.setValue('test@example.com')
     await wrapper.find('form').trigger('submit')
+    await flushPromises()
     expect(globalThis.$fetch).toHaveBeenCalledWith('/api/requestLoginLink', {
       method: 'POST',
       body: { email: 'test@example.com', redirect: '/2025/03' },
+      signal: expect.any(AbortSignal),
     })
   })
 
@@ -145,9 +155,11 @@ describe('Page: Login', () => {
     const input = wrapper.find('input')
     await input.setValue('test@example.com')
     await wrapper.find('form').trigger('submit')
+    await flushPromises()
     expect(globalThis.$fetch).toHaveBeenCalledWith('/api/requestLoginLink', {
       method: 'POST',
       body: { email: 'test@example.com' },
+      signal: expect.any(AbortSignal),
     })
   })
 

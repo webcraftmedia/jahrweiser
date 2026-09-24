@@ -287,7 +287,10 @@
       "error": {
         "disabled": "Für dieses Konto ist die Anmeldung gesperrt. Sprich bitte mit deinem Obmann.",
         "expired": "Dieser Link ist abgelaufen. Fordere dir auf der Login-Seite einfach einen neuen an.",
+        "nosession": "Die Anmeldung hat geklappt, aber dein Browser hat sie nicht gespeichert. Das passiert, wenn der Link im eingebauten Browser einer App geöffnet wird oder Cookies blockiert sind. Fordere dir bitte einen neuen Link an und öffne ihn in Chrome, Safari oder Firefox.",
+        "retry": "Nochmal versuchen",
         "text": "Dein Code ist nicht mehr gültig.",
+        "timeout": "Der Server hat nicht geantwortet. Meistens liegt das an der Verbindung — versuch es gleich noch einmal oder fordere dir einen neuen Link an.",
         "title": "Ein Fehler...",
         "unknown": "Diesen Link kennen wir nicht. Prüfe, ob die Adresse vollständig übernommen wurde, oder fordere dir einen neuen an.",
         "used": "Dieser Link wurde bereits verwendet. Das kann auch der Virenscanner deines E-Mail-Postfachs gewesen sein, der ihn automatisch geöffnet hat — fordere dir bitte einen neuen an."
@@ -352,6 +355,7 @@
         "expired": "Dieser Registrierungslink ist abgelaufen.",
         "notfound": "Dieser Registrierungslink ist ungültig.",
         "revoked": "Dieser Registrierungslink wurde deaktiviert.",
+        "timeout": "Der Server hat nicht geantwortet. Bitte lade die Seite in einem Moment noch einmal — dein Einladungslink ist davon nicht betroffen.",
         "title": "Link nicht nutzbar"
       },
       "validating": "Link wird geprüft..."

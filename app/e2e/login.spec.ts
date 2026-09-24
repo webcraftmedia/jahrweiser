@@ -163,6 +163,55 @@ test.describe('Login Page', () => {
     await expect(page).toHaveURL(/\/2025\/03$/, { timeout: 15_000 })
   })
 
+  test('a redeemed link without a session says so instead of bouncing', async ({ page }) => {
+    // The reported failure: the POST succeeds and spends the token, but the
+    // browser keeps no cookie — a mail app's built-in browser, blocked cookies,
+    // a device clock far enough off. The page used to navigate on regardless,
+    // the authenticated middleware bounced the member back to the login form,
+    // and nothing said why. Only a real browser can show this: it is the
+    // session round-trip, not the redemption, that fails.
+    await page.route('**/api/_auth/session', async (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) }),
+    )
+    await page.route('**/api/redeemLoginLink', async (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) }),
+    )
+
+    await page.goto('/login/valid-token-123')
+    const confirm = page.getByRole('button', { name: 'Jetzt anmelden' })
+    await expect(confirm).toBeEnabled()
+    await confirm.click()
+
+    await expect(
+      page.getByText('dein Browser hat sie nicht gespeichert', { exact: false }),
+    ).toBeVisible()
+    await expect(page).toHaveURL(/\/login\/valid-token-123$/)
+  })
+
+  test('a server that never answers ends in an error, not endless dots', async ({ page }) => {
+    // 15s deadline plus page load; the default 30s budget is too tight to be
+    // reliable about it.
+    test.setTimeout(60_000)
+
+    // Accepted and never answered — the shape of a stalled connection or a
+    // database whose pool has nothing left to hand out. `fetch` has no timeout
+    // of its own, so before the deadline this state lasted until the tab closed.
+    await page.route('**/api/redeemLoginLink', async () => {
+      // Deliberately never fulfilled.
+    })
+
+    await page.goto('/login/valid-token-123')
+    const confirm = page.getByRole('button', { name: 'Jetzt anmelden' })
+    await expect(confirm).toBeEnabled()
+    await confirm.click()
+
+    await expect(page.getByRole('status')).toBeVisible()
+    await expect(page.getByText('Der Server hat nicht geantwortet', { exact: false })).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(page.getByRole('button', { name: 'Nochmal versuchen' })).toBeVisible()
+  })
+
   test('invalid token shows error message', async ({ page }) => {
     await page.route('**/api/redeemLoginLink', async (route) =>
       route.fulfill({

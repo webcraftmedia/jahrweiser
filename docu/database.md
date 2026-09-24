@@ -22,10 +22,57 @@ the app writes automatically.
 | link redemptions         | MariaDB         | Who joined via which link (+ count)       |
 | telegram channels        | MariaDB         | Admin-edited invite list (see `docu/telegram-channels.md`) |
 | daily metrics            | MariaDB         | One measured snapshot per day for /admin (see `docu/admin-dashboard.md`) |
+| user events              | MariaDB         | Append-only audit trail per member, auto-expiring (see below) |
 
 Self-registration still funnels contact data into DAV: a successful signup
 writes the new VCard to DAV (source of truth) and mirrors it into the sidecar so
 login works before the next sync. See `docu/registration-links.md`.
+
+## The audit trail (`user_events`)
+
+Every step of a member's contact with the system leaves one row: a login link
+asked for, held back by the cooldown, refused, mailed or not mailed; a link
+redeemed or rejected and why; a session invalidated; a newsletter delivered; a
+profile edited; an admin changing somebody's calendars. Written by
+`server/helpers/events.ts`, read by the member view in `/admin`.
+
+It exists because the console could not answer the one question support keeps
+asking — *why* could this person not log in — and because a log that rotates
+cannot be read per member.
+
+Three properties are deliberate:
+
+- **Append-only.** Nothing updates a row except the retention sweep. An audit
+  trail that can be edited answers no question worth asking.
+- **Failing open.** `recordEvent` never lets a write error reach the caller: a
+  busy audit table must not be what stops somebody logging in. It logs the loss
+  to the console instead, so a hole in the trail is visible.
+- **Expiring.** The truncated origin is blanked after **30 days**, the row
+  itself dropped after **180** (`IP_RETENTION_DAYS` / `EVENT_RETENTION_DAYS`).
+  The sweep rides along with the sync cron — see `docu/sync-crontab.md`.
+
+The members' area at `/admin/members` reads it, and writes to it: every admin
+action against a member (block, unblock, end sessions, send a login link,
+resolve or reveal an address, change a role or the newsletter, set calendars)
+is recorded with **both** uids — who it was about, and who did it. The
+chronicle on a member's page therefore answers "who looked at this, and when"
+without anybody having to grep a log.
+
+What an admin can set there is what the sidecar owns: **role**, **newsletter**,
+the **login block**, and the **calendars** (which go to DAV). Name, address and
+postal code are deliberately not editable there — DAV is the source of truth for
+contact data, and a value typed into the admin page would be overwritten by the
+next sync.
+
+Data minimisation, in the two places it matters:
+
+- A login attempt for an address nobody here uses is recorded **without that
+  address** (`user_uid` null). A table of non-members who once typed something
+  into our form is a shadow list we have no business keeping.
+- The origin is stored as a network, never as an address: IPv4 truncated to
+  /24, IPv6 to /48. Behind a reverse proxy it comes from `X-Forwarded-For`,
+  which a client can set — it is a diagnostic hint and must never become the
+  basis for a decision.
 
 ## Local development
 

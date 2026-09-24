@@ -3,9 +3,20 @@ import { eq } from 'drizzle-orm'
 import { useDb } from '../db'
 import { sessions } from '../db/schema'
 import { withDbTimeout } from '../helpers/dbTimeout'
+import { recordEvent } from '../helpers/events'
 import { nextExpiry } from '../helpers/sessionTtl'
 
 const LAST_SEEN_THROTTLE_MS = 60_000
+
+/**
+ * Why a cookie stopped being worth anything. Three different stories for the
+ * member: somebody ended the session, it simply aged out, or the row is gone
+ * entirely — which is what a restored database backup looks like from here.
+ */
+function invalidationReason(row: { revokedAt: Date | null } | undefined): string {
+  if (!row) return 'missing'
+  return row.revokedAt !== null ? 'revoked' : 'expired'
+}
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -28,6 +39,16 @@ export default defineEventHandler(async (event) => {
   const isInvalid = row?.revokedAt !== null || row.expiresAt.getTime() < now
 
   if (isInvalid) {
+    // Recorded before the cookie goes: once it is cleared the browser stops
+    // sending it, so this is the only request that can say why somebody was
+    // suddenly logged out. Which of the two reasons it was matters — revoked
+    // is somebody's decision, expired is just time passing.
+    await recordEvent({
+      type: 'session.invalidated',
+      userUid: (session as { user?: { uid?: string } }).user?.uid,
+      meta: { reason: invalidationReason(row) },
+      event,
+    })
     // Clear the cookie so subsequent requests are clean, AND throw 401 for
     // this request — clearUserSession alone doesn't propagate within the
     // same request to downstream `requireUserSession` calls.

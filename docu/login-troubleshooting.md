@@ -16,41 +16,45 @@ dauerhaft stehen bleiben: nach 15 Sekunden wird daraus „Der Server hat nicht
 geantwortet" samt „Nochmal versuchen". Kommt die Meldung trotzdem noch, ist die
 Seite älter als dieses Release — Cache leeren lassen.
 
-## Schritt 1: ins Log schauen
+## Schritt 1: in die Ereignis-Spur schauen
 
-Jede Einlösung hinterlässt genau eine Zeile (`server/api/redeemLoginLink.post.ts`):
+Jeder Schritt hinterlässt genau eine Zeile in `user_events` — angefordert,
+verschickt, eingelöst oder abgelehnt (siehe `docu/database.md`). Absichtlich
+ohne Token (ein lebendes Credential) und ohne Adresse: die UID genügt zur
+Zuordnung und steht ohnehin in jeder Zeile, die wir zu dem Mitglied speichern.
 
-```
-[auth] redeem ok uid=<dav-uid>
-[auth] redeem used uid=<dav-uid>
-[auth] redeem expired uid=<dav-uid>
-[auth] redeem unknown
-[auth] redeem disabled uid=<dav-uid>
-```
-
-Absichtlich ohne Token (ein lebendes Credential) und ohne Adresse — die UID
-genügt zur Zuordnung und steht ohnehin in jeder Zeile, die wir zu dem Mitglied
-speichern.
-
-```sh
-pm2 logs jahrweiser --lines 2000 --nostream | grep '\[auth\] redeem'
+```sql
+SELECT e.at, e.type, e.meta, e.ip_prefix
+  FROM user_events e JOIN users u ON u.uid = e.user_uid
+ WHERE u.email = '<adresse>' ORDER BY e.at DESC LIMIT 50;
 ```
 
 - **Gar keine Zeile zum fraglichen Zeitpunkt** → die Anfrage kam nie an.
   Verbindung des Mitglieds, oder der Server/die Datenbank hing (siehe
   Schritt 3).
-- **`ok`** → wir haben alles richtig gemacht. Das Problem sitzt im Browser
-  (Schritt 2).
-- **`used` / `expired` / `unknown`** → der Link war tatsächlich nicht mehr
-  gültig; neuen anfordern lassen.
-- **`disabled`** → Konto gesperrt oder gelöscht. Das ist eine bewusste
-  Entscheidung, kein Fehler.
+- **`auth.link_requested` ohne `auth.mail_sent`** → die Mail ging nie raus.
+  `auth.mail_failed` sagt es ausdrücklich; `auth.mail_sent` mit
+  `meta.retried = true` heißt: ging erst im zweiten Anlauf raus — ein
+  SMTP-Problem, das sich bald wiederholt.
+- **`auth.redeem_ok`** → wir haben alles richtig gemacht. Das Problem sitzt im
+  Browser (Schritt 2).
+- **`auth.redeem_used` / `_expired` / `_unknown`** → der Link war tatsächlich
+  nicht mehr gültig; neuen anfordern lassen.
+- **`auth.redeem_disabled`** oder **`auth.link_refused`** → Konto gesperrt oder
+  gelöscht. Das ist eine bewusste Entscheidung, kein Fehler.
+- **`auth.link_cooldown` in Serie** → das Mitglied fordert im Minutentakt neue
+  Links an und klickt dann den ältesten. Genau die Schleife, die
+  `pages.login.cooldown` abfangen soll.
+
+Steht zu einem Zeitpunkt `[events] failed to record …` im pm2-Log, hat die
+Datenbank den Eintrag abgelehnt — die Spur hat dort ein Loch, der Login lief
+trotzdem durch (`recordEvent` scheitert bewusst nach außen folgenlos).
 
 Kein Scanner-Rauschen mehr im Log: `server/middleware/01.probe-filter.ts`
 beantwortet `wp-admin`, `.env` & Co. direkt mit 404, ohne Renderer und ohne
 Datenbank.
 
-## Schritt 2: Wenn das Log `ok` sagt
+## Schritt 2: Wenn die Spur `auth.redeem_ok` sagt
 
 Dann existiert die Sitzung serverseitig, und der Browser hat das Cookie nicht
 behalten. Das Mitglied sieht dafür seit diesem Release eine eigene Meldung
@@ -90,7 +94,7 @@ geklickt hat: der Virenscanner des Postfachs war schneller. Dagegen steht die
 Klick-Bestätigung auf `/login/{token}` — sie zu umgehen wäre der Rückfall in
 genau dieses Problem.
 
-## Schritt 3: Wenn gar nichts im Log steht
+## Schritt 3: Wenn gar keine Spur existiert
 
 Dann hat die Anfrage den Handler nicht erreicht oder die Datenbank hat nicht
 geantwortet. Jede Auth-Query läuft gegen eine Deadline

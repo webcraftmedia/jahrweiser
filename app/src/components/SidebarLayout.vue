@@ -26,11 +26,18 @@
 
 <template>
   <div class="bg-ivory dark:bg-poster-dark w-full flex-1 border-l border-r">
-    <div class="flex overflow-hidden full-height">
+    <!-- One scroll container, not two. This used to be a fixed-height box with
+         its own `overflow-auto` pane inside the layout's scrolling `.content`,
+         which gave every admin page two scrollbars — and, because the inner box
+         was the viewport's height regardless of what was in it, a stretch of
+         empty page below short content. The page now scrolls in `.content`
+         alone; the sidebar stays put by being sticky rather than by sitting in
+         a box of its own. -->
+    <div class="flex min-h-full">
       <!-- Desktop Sidebar - Full Height -->
       <aside class="hidden md:flex md:flex-shrink-0">
         <div
-          class="flex flex-col w-64 bg-ivory dark:bg-poster-darkCard border-r border-navy/10 dark:border-poster-darkBorder h-full"
+          class="flex flex-col w-64 bg-ivory dark:bg-poster-darkCard border-r border-navy/10 dark:border-poster-darkBorder sticky top-0 self-start max-h-screen"
         >
           <div class="flex items-center flex-shrink-0 px-4 pt-5 pb-4">
             <h2 class="text-xl font-semibold text-navy dark:text-ivory">
@@ -129,8 +136,8 @@
       </div>
 
       <!-- Main Content -->
-      <div class="flex-1 overflow-auto w-full">
-        <main class="w-full min-h-full">
+      <div class="flex-1 w-full min-w-0">
+        <main class="w-full">
           <!-- Mobile Menu Button -->
           <div class="md:hidden flex items-center gap-3 px-4 pt-4 pb-3">
             <button
@@ -166,12 +173,6 @@
 </template>
 
 <style scoped>
-  .full-height {
-    height: 100%;
-    height: -moz-available;
-    height: -webkit-fill-available;
-  }
-
   /* Drawer bounce transition */
   .drawer-slide {
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);

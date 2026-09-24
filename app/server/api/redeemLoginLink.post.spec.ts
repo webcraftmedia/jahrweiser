@@ -8,6 +8,11 @@ import handler from './redeemLoginLink.post'
 
 vi.mock('../db', () => ({ useDb: () => mockDb }))
 
+const mockRecordEvent = vi.fn()
+vi.mock('../helpers/events', () => ({
+  recordEvent: (...a: unknown[]) => mockRecordEvent(...a),
+}))
+
 const fn = handler as unknown as (e: unknown) => Promise<unknown>
 
 const future = new Date(Date.now() + 60_000)
@@ -31,6 +36,41 @@ describe('redeemLoginLink.post', () => {
     await expect(fn({})).rejects.toThrow('Bad credentials')
     queueDbResults([])
     await expect(fn({})).rejects.toMatchObject({ data: { reason: 'unknown' } })
+  })
+
+  // The trail is the reason this endpoint can be diagnosed at all: from the
+  // member's side "already used" and "expired" are the same shrug, and the
+  // difference decides whether they need a new link or a word with the Obmann.
+  it.each([
+    ['unknown', 'auth.redeem_unknown', undefined],
+    ['used', 'auth.redeem_used', 'u1'],
+    ['expired', 'auth.redeem_expired', 'u1'],
+  ] as const)('records a refusal for %s', async (reason, type, userUid) => {
+    const rows: Record<string, unknown[]> = {
+      unknown: [],
+      used: [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: new Date() }],
+      expired: [{ token: 'tok', userUid: 'u1', expiresAt: past, consumedAt: null }],
+    }
+    queueDbResults(rows[reason])
+    await expect(fn({ path: '/api/redeemLoginLink' })).rejects.toThrow('Bad credentials')
+    expect(mockRecordEvent).toHaveBeenCalledWith({
+      type,
+      userUid,
+      event: { path: '/api/redeemLoginLink' },
+    })
+  })
+
+  it('records a refusal for a blocked account against that account', async () => {
+    queueDbResults(
+      [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
+      [{ uid: 'u1', deletedAt: null, loginDisabled: true }],
+    )
+    await expect(fn({})).rejects.toThrow('Bad credentials')
+    expect(mockRecordEvent).toHaveBeenCalledWith({
+      type: 'auth.redeem_disabled',
+      userUid: 'u1',
+      event: {},
+    })
   })
 
   it('rejects a token that was already redeemed', async () => {
@@ -106,5 +146,53 @@ describe('redeemLoginLink.post', () => {
     )
     vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
     await expect(fn({})).resolves.toStrictEqual({})
+  })
+
+  it('records the success only once the session row exists', async () => {
+    // Written last on purpose: "ok" in the trail has to mean the session was
+    // really established, so that a failure reported after it points at the
+    // browser rather than at us.
+    queueDbResults(
+      [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
+      [
+        {
+          uid: 'u1',
+          displayName: 'A',
+          email: 'a@x.de',
+          role: 'user',
+          deletedAt: null,
+          loginDisabled: false,
+        },
+      ],
+      {},
+      {},
+    )
+    vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
+    await fn({})
+    expect(mockRecordEvent).toHaveBeenCalledWith({
+      type: 'auth.redeem_ok',
+      userUid: 'u1',
+      event: {},
+    })
+  })
+
+  it('records nothing when the session id could not be established', async () => {
+    queueDbResults(
+      [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
+      [
+        {
+          uid: 'u1',
+          displayName: 'A',
+          email: 'a@x.de',
+          role: 'user',
+          deletedAt: null,
+          loginDisabled: false,
+        },
+      ],
+      {},
+    )
+    vi.mocked(globalThis.getUserSession).mockResolvedValue({})
+    await expect(fn({})).rejects.toThrow('Failed to establish session id')
+    expect(mockRecordEvent).not.toHaveBeenCalled()
   })
 })

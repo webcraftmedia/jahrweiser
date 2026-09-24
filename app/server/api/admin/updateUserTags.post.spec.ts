@@ -3,8 +3,18 @@ import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { createMockVCard } from '../../../test/fixtures/vcard-data'
+import { mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
 
 import handler from './updateUserTags.post'
+
+// The endpoint's only use for the sidecar: resolving the target's uid so the
+// audit trail can name who the calendars were handed to.
+vi.mock('~~/server/db', () => ({ useDb: () => mockDb }))
+
+const mockRecordEvent = vi.fn()
+vi.mock('~~/server/helpers/events', () => ({
+  recordEvent: (...a: unknown[]) => mockRecordEvent(...a),
+}))
 
 const mockFindUserByEmail = vi.fn()
 const mockSaveUser = vi.fn()
@@ -32,11 +42,13 @@ const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>
 describe('updateUserTags.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    resetDb()
+    queueDbResults([{ uid: 'target-uid' }])
   })
 
   function setupAdmin() {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
-      user: { name: 'Admin User', email: 'admin@example.com', role: 'admin' },
+      user: { uid: 'admin-uid', name: 'Admin User', email: 'admin@example.com', role: 'admin' },
     })
     const adminVcard = createMockVCard({ email: 'admin@example.com', adminTags: 'Tag1,Tag2,Tag3' })
     mockFindUserByEmail.mockResolvedValueOnce({
@@ -117,6 +129,58 @@ describe('updateUserTags.post', () => {
     const result = await handlerFn({})
     expect(result).toBe(false)
     expect(mockCreateUser).toHaveBeenCalled()
+  })
+
+  // Both sides of the change end up in the trail: which admin handed out which
+  // calendars, and to whom.
+  it('records who granted what, and to whom', async () => {
+    setupAdmin()
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) =>
+      (validator as (data: unknown) => unknown)({
+        email: 'user@example.com',
+        tags: [{ name: 'Tag1', state: true }],
+        sendMail: false,
+      }),
+    )
+    mockFindUserByEmail.mockResolvedValueOnce({
+      user: { url: '/u' },
+      vcard: createMockVCard({ categories: [] }),
+    })
+    mockSaveUser.mockResolvedValue(undefined)
+
+    await handlerFn({ path: '/api/admin/updateUserTags' })
+
+    expect(mockRecordEvent).toHaveBeenCalledWith({
+      type: 'admin.tags_changed',
+      userUid: 'target-uid',
+      actorUid: 'admin-uid',
+      meta: { granted: ['Tag1'], calendars: ['Tag1'] },
+      event: { path: '/api/admin/updateUserTags' },
+    })
+  })
+
+  it('records a grant to somebody the sidecar has not mirrored yet', async () => {
+    // This endpoint can create a contact in DAV; the sidecar only learns about
+    // it on the next sync. An unattributable grant is recorded as such rather
+    // than dropped — the acting admin is the part that matters here.
+    resetDb()
+    queueDbResults([])
+    setupAdmin()
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) =>
+      (validator as (data: unknown) => unknown)({
+        email: 'brand-new@example.com',
+        tags: [{ name: 'Tag1', state: true }],
+        sendMail: false,
+      }),
+    )
+    mockFindUserByEmail.mockResolvedValueOnce(false)
+    mockCreateUser.mockResolvedValue(undefined)
+
+    await handlerFn({})
+
+    expect(mockRecordEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ userUid: null, actorUid: 'admin-uid' }),
+    )
   })
 
   it('adds categories property when existing user has none, then adds tag', async () => {

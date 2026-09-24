@@ -6,6 +6,7 @@ import { and, eq, isNull } from 'drizzle-orm'
 import { useDb } from '~~/server/db'
 import { users } from '~~/server/db/schema'
 import { defaultParams, emailRenderer } from '~~/server/helpers/email'
+import { recordEvent } from '~~/server/helpers/events'
 import {
   collectEventsForUser,
   formatDayHeadingDE,
@@ -133,6 +134,7 @@ export default defineEventHandler(async (event) => {
         .update(users)
         .set({ newsletterLastSentAt: new Date() })
         .where(eq(users.uid, user.uid))
+      await recordEvent({ type: 'newsletter.sent', userUid: user.uid, meta: { weekLabel } })
       result.sent += 1
       // eslint-disable-next-line no-catch-all/no-catch-all -- pro Empfaenger: Fehler wird geloggt und in result.errors gezaehlt, Versand laeuft weiter
     } catch (err) {

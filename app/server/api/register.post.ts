@@ -12,6 +12,7 @@ import {
   findUserByEmail,
   saveUser,
 } from '../helpers/dav'
+import { recordEvent } from '../helpers/events'
 import { sendLoginLink } from '../helpers/loginLink'
 import { clearEmailNotFound } from '../helpers/negativeCache'
 import {
@@ -115,6 +116,7 @@ export default defineEventHandler(async (event) => {
         .values({ linkToken: token, userUid: uid, grantedCalendars: newlyGranted })
     }
 
+    await recordEvent({ type: 'register.redeemed', userUid: uid, meta: { existing: true }, event })
     await sendLoginLink(config, { uid, email: normalizedEmail, displayName }, undefined)
     return { status: 'created' as const }
   }
@@ -147,6 +149,8 @@ export default defineEventHandler(async (event) => {
   await db
     .insert(registrationLinkRedemptions)
     .values({ linkToken: token, userUid: uid, grantedCalendars: link.calendars })
+
+  await recordEvent({ type: 'register.redeemed', userUid: uid, meta: { existing: false }, event })
 
   // 5. Verify email ownership by sending the magic login link — clicking it
   // both confirms the address and logs the new user in.

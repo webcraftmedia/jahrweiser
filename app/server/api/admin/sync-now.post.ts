@@ -1,3 +1,4 @@
+import { pruneUserEvents } from '~~/server/helpers/events'
 import { recordDailyMetrics } from '~~/server/helpers/metrics'
 import { syncDavToSidecar } from '~~/server/helpers/sync'
 
@@ -42,6 +43,22 @@ export default defineEventHandler(async (event) => {
     // eslint-disable-next-line no-catch-all/no-catch-all -- Kennzahlen sind Beiwerk; ein Fehler hier darf den Sync nicht als gescheitert melden
   } catch (error) {
     console.error('Failed to record daily metrics:', error)
+  }
+
+  // Same arrangement for forgetting: the retention sweep rides along with the
+  // cron the sync already has, and a failed sweep must not make the run look
+  // failed. It is also the one piece here that has to keep running while DAV is
+  // down — a deletion obligation does not pause because a server is offline.
+  try {
+    const pruned = await pruneUserEvents()
+    if (pruned.deleted > 0 || pruned.anonymised > 0) {
+      console.warn(
+        `[events] pruned ${pruned.deleted} event(s), blanked the origin on ${pruned.anonymised}`,
+      )
+    }
+    // eslint-disable-next-line no-catch-all/no-catch-all -- Aufräumen ist Beiwerk; ein Fehler darf den Sync nicht als gescheitert melden
+  } catch (error) {
+    console.error('Failed to prune user events:', error)
   }
 
   // The cron still sees a failed sync as a failed sync. `syncDavToSidecar`

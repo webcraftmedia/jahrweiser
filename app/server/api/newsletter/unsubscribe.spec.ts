@@ -10,6 +10,9 @@ import postHandler from './unsubscribe.post'
 
 vi.mock('../../db', () => ({ useDb: () => mockDb }))
 
+const mockRecordEvent = vi.fn()
+vi.mock('../../helpers/events', () => ({ recordEvent: (...a: unknown[]) => mockRecordEvent(...a) }))
+
 const getFn = getHandler as unknown as (event: unknown) => Promise<string>
 const postFn = postHandler as unknown as (event: unknown) => Promise<unknown>
 
@@ -32,6 +35,24 @@ describe('unsubscribeByToken', () => {
   it('returns false when no user has the token', async () => {
     queueDbResults([])
     await expect(unsubscribeByToken('unknown')).resolves.toBe(false)
+  })
+
+  it('records the unsubscribe as coming from the link, not from the settings', async () => {
+    // Mail clients press this button on the member's behalf; "I never
+    // unsubscribed" is a support call the trail can actually answer.
+    queueDbResults([{ uid: 'u1' }], {})
+    await unsubscribeByToken('tok')
+    expect(mockRecordEvent).toHaveBeenCalledWith({
+      type: 'newsletter.unsubscribed',
+      userUid: 'u1',
+      meta: { via: 'link' },
+    })
+  })
+
+  it('records nothing for a token nobody holds', async () => {
+    queueDbResults([])
+    await unsubscribeByToken('unknown')
+    expect(mockRecordEvent).not.toHaveBeenCalled()
   })
 })
 

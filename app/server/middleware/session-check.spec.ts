@@ -14,6 +14,11 @@ const mockUpdate = vi.fn(() => ({ set: mockSet }))
 
 vi.mock('../db', () => ({ useDb: () => ({ select: mockSelect, update: mockUpdate }) }))
 
+const mockRecordEvent = vi.fn()
+vi.mock('../helpers/events', () => ({
+  recordEvent: (...a: unknown[]) => mockRecordEvent(...a),
+}))
+
 const mockGetUserSession = vi.fn()
 const mockClearUserSession = vi.fn()
 
@@ -96,6 +101,52 @@ describe('session-check middleware', () => {
     await expect(run({ path: '/api/calendars' })).rejects.toMatchObject({ statusCode: 401 })
     expect(mockClearUserSession).toHaveBeenCalledTimes(1)
     expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  // Recorded before the cookie is cleared: afterwards the browser stops sending
+  // it, so this is the only request that can say why somebody was logged out.
+  it.each([
+    ['revoked', { revokedAt: new Date(NOW - 1000), expiresAt: new Date(NOW + IDLE_TTL_MS) }],
+    ['expired', { revokedAt: null, expiresAt: new Date(NOW - 1000) }],
+  ])('records why a session stopped counting: %s', async (reason, row) => {
+    mockGetUserSession.mockResolvedValue({ id: 'sid', user: { uid: 'u1' } })
+    mockLimit.mockResolvedValue([{ ...row, createdAt: new Date(NOW - 1000), lastSeenAt: null }])
+
+    await expect(run({ path: '/api/calendars' })).rejects.toMatchObject({ statusCode: 401 })
+
+    expect(mockRecordEvent).toHaveBeenCalledWith({
+      type: 'session.invalidated',
+      userUid: 'u1',
+      meta: { reason },
+      event: { path: '/api/calendars' },
+    })
+  })
+
+  it('tells a vanished session row apart from an expired one', async () => {
+    // What a restored backup looks like from here — and a member being logged
+    // out for a reason nobody would otherwise be able to name.
+    mockGetUserSession.mockResolvedValue({ id: 'sid', user: { uid: 'u1' } })
+    mockLimit.mockResolvedValue([])
+
+    await expect(run({ path: '/api/calendars' })).rejects.toMatchObject({ statusCode: 401 })
+
+    expect(mockRecordEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ meta: { reason: 'missing' } }),
+    )
+  })
+
+  it('records nothing while a session is simply in use', async () => {
+    mockGetUserSession.mockResolvedValue({ id: 'sid', user: { uid: 'u1' } })
+    mockLimit.mockResolvedValue([
+      {
+        revokedAt: null,
+        expiresAt: new Date(NOW + IDLE_TTL_MS),
+        createdAt: new Date(NOW - 1000),
+        lastSeenAt: new Date(NOW - 1000),
+      },
+    ])
+    await run({ path: '/api/calendars' })
+    expect(mockRecordEvent).not.toHaveBeenCalled()
   })
 
   it('clears a revoked session without throwing on page paths', async () => {

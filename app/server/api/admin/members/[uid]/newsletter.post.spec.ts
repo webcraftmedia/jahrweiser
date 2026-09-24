@@ -85,6 +85,6 @@ describe('admin/members/[uid]/newsletter.post', () => {
     vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
       (v as (d: unknown) => unknown)({}),
     )
-    await expect(fn({})).rejects.toThrow()
+    await expect(fn({})).rejects.toThrow(/invalid|expected|received/i)
   })
 })

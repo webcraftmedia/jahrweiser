@@ -104,6 +104,6 @@ describe('admin/members/[uid]/role.post', () => {
 
   it('refuses a role that does not exist', async () => {
     sending('superadmin')
-    await expect(fn({})).rejects.toThrow()
+    await expect(fn({})).rejects.toThrow(/invalid|expected/i)
   })
 })

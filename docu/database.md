@@ -51,6 +51,19 @@ Three properties are deliberate:
   itself dropped after **180** (`IP_RETENTION_DAYS` / `EVENT_RETENTION_DAYS`).
   The sweep rides along with the sync cron — see `docu/sync-crontab.md`.
 
+The members' area at `/admin/members` reads it, and writes to it: every admin
+action against a member (block, unblock, end sessions, send a login link,
+resolve or reveal an address, change a role or the newsletter, set calendars)
+is recorded with **both** uids — who it was about, and who did it. The
+chronicle on a member's page therefore answers "who looked at this, and when"
+without anybody having to grep a log.
+
+What an admin can set there is what the sidecar owns: **role**, **newsletter**,
+the **login block**, and the **calendars** (which go to DAV). Name, address and
+postal code are deliberately not editable there — DAV is the source of truth for
+contact data, and a value typed into the admin page would be overwritten by the
+next sync.
+
 Data minimisation, in the two places it matters:
 
 - A login attempt for an address nobody here uses is recorded **without that

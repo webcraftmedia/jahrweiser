@@ -116,6 +116,6 @@ describe('admin/members/[uid]/block.post', () => {
 
   it('refuses a body that does not say what to do', async () => {
     sending({} as { blocked: boolean })
-    await expect(fn({})).rejects.toThrow()
+    await expect(fn({})).rejects.toThrow(/invalid|expected|received/i)
   })
 })

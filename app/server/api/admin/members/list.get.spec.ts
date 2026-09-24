@@ -160,7 +160,7 @@ describe('admin/members/list.get', () => {
 
   it('refuses a page number that is not one', async () => {
     vi.mocked(globalThis.getQuery).mockReturnValue({ page: '0' })
-    await expect(fn({})).rejects.toThrow(/greater than or equal to 1|too_small/)
+    await expect(fn({})).rejects.toThrow(/too_small|greater than or equal/i)
   })
 
   it('reports an empty directory as empty, not as broken', async () => {

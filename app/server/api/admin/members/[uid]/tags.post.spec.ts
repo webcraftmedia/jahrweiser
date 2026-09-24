@@ -91,6 +91,6 @@ describe('admin/members/[uid]/tags.post', () => {
     vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
       (v as (d: unknown) => unknown)({ tags: 'all' }),
     )
-    await expect(fn({})).rejects.toThrow()
+    await expect(fn({})).rejects.toThrow(/invalid|expected|received/i)
   })
 })

@@ -110,7 +110,7 @@ describe('admin/members/[uid]/events.get', () => {
 
   it('refuses a group nobody defined', async () => {
     vi.mocked(globalThis.getQuery).mockReturnValue({ group: 'everything' })
-    await expect(fn({})).rejects.toThrow()
+    await expect(fn({})).rejects.toThrow(/invalid|expected|received/i)
   })
 
   it('pages with a fixed size', async () => {

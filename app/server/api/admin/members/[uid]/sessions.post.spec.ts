@@ -22,6 +22,13 @@ vi.mock('~~/server/helpers/events', () => ({
 const fn = handler as unknown as (e: unknown) => Promise<{ revokedSessions: number }>
 
 describe('admin/members/[uid]/sessions.post', () => {
+  /** The body the detail page sends: nothing, or one session id. */
+  function sending(body: { sessionId?: string }) {
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+      (v as (d: unknown) => unknown)(body),
+    )
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
@@ -31,13 +38,6 @@ describe('admin/members/[uid]/sessions.post', () => {
     vi.mocked(globalThis.getRouterParam).mockReturnValue('u1')
     sending({})
   })
-
-  /** The body the detail page sends: nothing, or one session id. */
-  function sending(body: { sessionId?: string }) {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
-      (v as (d: unknown) => unknown)(body),
-    )
-  }
 
   it('refuses anybody who is not an admin', async () => {
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
@@ -104,6 +104,6 @@ describe('admin/members/[uid]/sessions.post', () => {
 
   it('refuses an empty session id rather than treating it as "all"', async () => {
     sending({ sessionId: '' })
-    await expect(fn({})).rejects.toThrow()
+    await expect(fn({})).rejects.toThrow(/too_small|at least/i)
   })
 })

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.15.0...v1.15.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **workflow:** fix env loading using fs ([#430](https://github.com/webcraftmedia/jahrweiser/issues/430)) ([dbf00e0](https://github.com/webcraftmedia/jahrweiser/commit/dbf00e0a8bd78c0d6388516ab61f42991886ee69))
+
 ## [1.15.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.5...v1.15.0) (2026-09-24)
 
 

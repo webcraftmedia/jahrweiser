@@ -2,6 +2,7 @@ import { eq, sql } from 'drizzle-orm'
 
 import { useDb } from '~~/server/db'
 import { registrationLinkRedemptions, registrationLinks, users } from '~~/server/db/schema'
+import { withDbTimeout } from '~~/server/helpers/dbTimeout'
 import { linkStatus } from '~~/server/helpers/registrationLinks'
 
 // Public, unauthenticated: lets the registration page decide whether to render
@@ -17,12 +18,14 @@ export default defineEventHandler(async (event) => {
   const db = useDb()
 
   const row = (
-    await db
-      .select({ link: registrationLinks, invitedBy: users.displayName })
-      .from(registrationLinks)
-      .leftJoin(users, eq(users.uid, registrationLinks.createdByUid))
-      .where(eq(registrationLinks.token, token))
-      .limit(1)
+    await withDbTimeout(
+      db
+        .select({ link: registrationLinks, invitedBy: users.displayName })
+        .from(registrationLinks)
+        .leftJoin(users, eq(users.uid, registrationLinks.createdByUid))
+        .where(eq(registrationLinks.token, token))
+        .limit(1),
+    )
   )[0]
   if (!row) {
     return { status: 'notfound' as const, invitedBy: null }
@@ -30,10 +33,12 @@ export default defineEventHandler(async (event) => {
 
   const useCount = Number(
     (
-      await db
-        .select({ count: sql<string>`count(*)` })
-        .from(registrationLinkRedemptions)
-        .where(eq(registrationLinkRedemptions.linkToken, token))
+      await withDbTimeout(
+        db
+          .select({ count: sql<string>`count(*)` })
+          .from(registrationLinkRedemptions)
+          .where(eq(registrationLinkRedemptions.linkToken, token)),
+      )
     )[0]?.count ?? 0,
   )
 

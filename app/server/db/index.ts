@@ -47,6 +47,18 @@ export function useDb() {
     connectionLimit: 10,
     waitForConnections: true,
     namedPlaceholders: true,
+    // A connection attempt that hangs is worse than one that fails: the caller
+    // has no timeout of its own, so it would wait for the OS to give up.
+    connectTimeout: 5_000,
+    // Detect half-open sockets — a firewall or router that drops an idle NAT
+    // entry leaves connections that look usable and answer nothing. Without
+    // keepalive they stay in the pool until a query picks one and stalls on it.
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10_000,
+    // Retire idle connections rather than hold all ten open forever; a restarted
+    // database then costs one failed query instead of ten stale sockets.
+    maxIdle: 10,
+    idleTimeout: 60_000,
   })
   db = drizzle(pool, { schema, mode: 'default' })
   return db

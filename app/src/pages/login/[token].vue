@@ -51,13 +51,28 @@
         <div class="mb-4 text-base font-body">
           <p class="font-medium">{{ errorText }}</p>
         </div>
-        <button
-          class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
-          type="button"
-          @click="goHome"
-        >
-          {{ $t('pages.login.message.button') }}
-        </button>
+        <div class="flex flex-wrap gap-3">
+          <!-- Only offered after a timeout: there the request may never have
+               reached the server, so the token is likely still unspent. For
+               every other reason a retry can only repeat the same answer. -->
+          <button
+            v-if="reason === 'timeout'"
+            data-action="retry"
+            class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna bg-sienna text-ivory rounded hover:bg-sienna-dark hover:border-sienna-dark transition-colors"
+            type="button"
+            @click="redeem"
+          >
+            {{ $t('pages.login.error.retry') }}
+          </button>
+          <button
+            data-action="back"
+            class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
+            type="button"
+            @click="goLogin"
+          >
+            {{ $t('pages.login.message.button') }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -80,6 +95,8 @@
    * A sandbox renders. It does not click. The extra click is the price of
    * magic links working in company mailboxes at all.
    */
+  import { TimeoutError, withTimeout } from '../../utils/withTimeout'
+
   definePageMeta({ layout: 'login' })
 
   const { t } = useI18n()
@@ -109,8 +126,21 @@
     hydrated.value = true
   })
 
-  /** Why it failed — see RedeemFailure in server/api/redeemLoginLink.post.ts. */
+  /**
+   * Why it failed — `RedeemFailure` from server/api/redeemLoginLink.post.ts,
+   * plus the two the client decides on its own: `timeout` (the server never
+   * answered) and `nosession` (it did, and the browser dropped the cookie).
+   */
   const reason = ref<string | null>(null)
+
+  /**
+   * How long the redemption may take before we call it a failure.
+   *
+   * Generous on purpose: the endpoint does four small queries, so anything past
+   * a second means something is wrong, but a member on a train should not be
+   * told "timeout" while the request is merely slow.
+   */
+  const REDEEM_TIMEOUT_MS = 15_000
 
   // Spelled out rather than built from the reason: the keys stay greppable,
   // and an unknown value from an older or newer server falls through to the
@@ -125,25 +155,52 @@
         return t('pages.login.error.unknown')
       case 'disabled':
         return t('pages.login.error.disabled')
+      case 'timeout':
+        return t('pages.login.error.timeout')
+      case 'nosession':
+        return t('pages.login.error.nosession')
       default:
         return t('pages.login.error.text')
     }
   })
 
-  const goHome = () => navigateTo('/')
+  // `/login` rather than `/`, which only gets there via the authenticated
+  // middleware anyway — and the form there is where a new link is requested,
+  // which is what every one of these messages asks for.
+  const goLogin = () => navigateTo('/login')
 
   async function redeem() {
     state.value = 'pending'
+    reason.value = null
     try {
-      await api('/api/redeemLoginLink', {
-        method: 'POST',
-        body: route.params,
-      })
+      await withTimeout(REDEEM_TIMEOUT_MS, (signal) =>
+        api('/api/redeemLoginLink', {
+          method: 'POST',
+          body: route.params,
+          signal,
+        }),
+      )
       await refreshSession()
+
+      // The POST succeeded, so the token is spent — but that only means the
+      // server issued a cookie, not that this browser kept it. Cookies blocked,
+      // a mail app's built-in browser, a device clock far enough off: the
+      // session is simply not there, and navigating on would hand the member to
+      // the authenticated middleware, which bounces them back to the login form
+      // with no explanation and one link less. Saying so is the whole point.
+      if (!loggedIn.value) {
+        reason.value = 'nosession'
+        state.value = 'error'
+        return
+      }
+
       await navigateTo(redirect || '/')
       // eslint-disable-next-line no-catch-all/no-catch-all -- Token-Einloesung fehlgeschlagen = genau der Zustand state='error'
     } catch (error) {
-      reason.value = (error as { data?: { data?: { reason?: string } } }).data?.data?.reason ?? null
+      reason.value =
+        error instanceof TimeoutError
+          ? 'timeout'
+          : ((error as { data?: { data?: { reason?: string } } }).data?.data?.reason ?? null)
       state.value = 'error'
     }
   }

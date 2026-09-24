@@ -139,7 +139,17 @@
 <script setup lang="ts">
   import { z } from 'zod'
 
+  import { withTimeout } from '../../utils/withTimeout'
+
   definePageMeta({ layout: 'login' })
+
+  /**
+   * Longer than the other pages': this endpoint may fall back to a CardDAV
+   * lookup and then hand the mail to SMTP, both of which legitimately take
+   * seconds. Still finite — "Wird gesendet…" forever is not a state anybody can
+   * do anything with.
+   */
+  const REQUEST_TIMEOUT_MS = 30_000
 
   const { loggedIn } = useUserSession()
   const route = useRoute()
@@ -183,10 +193,13 @@
     sendError.value = false
     loading.value = true
     try {
-      const result = await api<{ cooldown?: boolean }>('/api/requestLoginLink', {
-        method: 'POST',
-        body: { email, ...(redirect ? { redirect } : {}) },
-      })
+      const result = await withTimeout(REQUEST_TIMEOUT_MS, (signal) =>
+        api<{ cooldown?: boolean }>('/api/requestLoginLink', {
+          method: 'POST',
+          body: { email, ...(redirect ? { redirect } : {}) },
+          signal,
+        }),
+      )
       cooldown.value = result.cooldown === true
       requestedLogin.value = true
       // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt und als sendError angezeigt

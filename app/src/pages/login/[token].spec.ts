@@ -1,5 +1,5 @@
 import { mountSuspended, renderSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 
 import { stubApi } from '../../../test/helpers/stub-api'
 
@@ -42,6 +42,11 @@ describe('Page: Login Token', () => {
     vi.clearAllMocks()
     mockLoggedIn.value = false
     mock$fetch.mockResolvedValue({})
+    // What a successful redemption looks like from the client's side: the
+    // cookie was set, so re-reading the session turns `loggedIn` true.
+    mockRefreshSession.mockImplementation(async () => {
+      mockLoggedIn.value = true
+    })
   })
 
   it('renders the confirmation step', async () => {
@@ -86,6 +91,9 @@ describe('Page: Login Token', () => {
       expect(mock$fetch).toHaveBeenCalledWith('/api/redeemLoginLink', {
         method: 'POST',
         body: { token: 'test-token' },
+        // The deadline's cancel handle — without it a stalled request stays on
+        // the wire after the page has given up on it.
+        signal: expect.any(AbortSignal),
       })
     })
     await vi.waitFor(() => {
@@ -142,14 +150,83 @@ describe('Page: Login Token', () => {
     expect(wrapper.text()).toContain('pages.login.error.text')
   })
 
-  it('navigates home on error button click', async () => {
+  it('sends the member to the login form on error button click', async () => {
+    // Every error message here ends in "fordere dir einen neuen an", and the
+    // form that does it is on /login — going to / and relying on the
+    // authenticated middleware to bounce them there is a detour.
     rejectWith()
     const wrapper = await confirm('/login/bad-token')
     await vi.waitFor(() => {
       expect(wrapper.find('[role="alert"]').exists()).toBe(true)
     })
     mockNavigateTo.mockClear()
-    await wrapper.find('[role="alert"] button').trigger('click')
-    expect(mockNavigateTo).toHaveBeenCalledWith('/')
+    await wrapper.find('[data-action="back"]').trigger('click')
+    expect(mockNavigateTo).toHaveBeenCalledWith('/login')
+  })
+
+  describe('when the session does not survive the redemption', () => {
+    // The POST succeeded, so the token is spent — but the browser kept no
+    // cookie (mail-app browser, blocked cookies, a device clock far off). The
+    // old code navigated anyway, the middleware bounced the member back to the
+    // login form, and nothing on screen said why. One link less, every time.
+    beforeEach(() => {
+      mockRefreshSession.mockImplementation(async () => {
+        mockLoggedIn.value = false
+      })
+    })
+
+    it('explains it instead of navigating', async () => {
+      const wrapper = await confirm()
+      await vi.waitFor(() => {
+        expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+      })
+      expect(wrapper.text()).toContain('pages.login.error.nosession')
+      expect(mockNavigateTo).not.toHaveBeenCalled()
+    })
+
+    it('offers no retry — the token is already spent', async () => {
+      const wrapper = await confirm()
+      await vi.waitFor(() => {
+        expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+      })
+      expect(wrapper.find('[data-action="retry"]').exists()).toBe(false)
+    })
+  })
+
+  describe('when the server never answers', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      mock$fetch.mockReturnValue(new Promise(() => {}))
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    /** Click, then let the 15s deadline pass. */
+    async function timeOut() {
+      const wrapper = await mountSuspended(Page, { route: '/login/test-token' })
+      await wrapper.find('button').trigger('click')
+      await vi.advanceTimersByTimeAsync(15_000)
+      return wrapper
+    }
+
+    it('shows an error rather than loading forever', async () => {
+      // The reported symptom: three dots and no way forward, because `fetch`
+      // has no timeout and the pending state had no exit.
+      const wrapper = await timeOut()
+      expect(wrapper.find('[role="status"]').exists()).toBe(false)
+      expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+      expect(wrapper.text()).toContain('pages.login.error.timeout')
+    })
+
+    it('offers a retry, because the token may never have been spent', async () => {
+      const wrapper = await timeOut()
+      mock$fetch.mockResolvedValue({})
+      await wrapper.find('[data-action="retry"]').trigger('click')
+      await vi.advanceTimersByTimeAsync(0)
+      expect(mockRefreshSession).toHaveBeenCalled()
+      expect(mockNavigateTo).toHaveBeenCalledWith('/')
+    })
   })
 })

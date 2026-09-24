@@ -106,6 +106,21 @@ describe('Page: Register Token', () => {
     expect(wrapper.find('#email').exists()).toBe(false)
   })
 
+  it('names the timeout instead of blaming the link when the server stalls', async () => {
+    // "Dieser Link ist ungültig" for a database that was merely busy sends the
+    // invitee to their Obmann for a problem neither of them can fix — and the
+    // link works again five minutes later.
+    vi.useFakeTimers()
+    try {
+      mock$fetch.mockImplementation(() => new Promise(() => {}))
+      const wrapper = await mountSuspended(Page, { route: ROUTE })
+      await vi.advanceTimersByTimeAsync(15_000)
+      expect(wrapper.text()).toContain('pages.register.invalid.timeout')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('treats a failed validation request as not found', async () => {
     mock$fetch.mockImplementation((url: string) => {
       if (url.startsWith('/api/register/')) return Promise.reject(new Error('boom'))

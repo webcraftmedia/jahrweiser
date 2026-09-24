@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 
 import { useDb } from '../db'
 import { sessions } from '../db/schema'
+import { withDbTimeout } from '../helpers/dbTimeout'
 import { nextExpiry } from '../helpers/sessionTtl'
 
 const LAST_SEEN_THROTTLE_MS = 60_000
@@ -16,7 +17,12 @@ export default defineEventHandler(async (event) => {
   if (!sessionId || !(session as { user?: unknown }).user) return
 
   const db = useDb()
-  const row = (await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1))[0]
+  // This runs on every authenticated request, so a query that hangs here hangs
+  // the whole app for everyone logged in — the deadline matters more here than
+  // anywhere else.
+  const row = (
+    await withDbTimeout(db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1))
+  )[0]
 
   const now = Date.now()
   const isInvalid = row?.revokedAt !== null || row.expiresAt.getTime() < now
@@ -37,12 +43,14 @@ export default defineEventHandler(async (event) => {
     // Sliding session: push the idle window forward on activity, capped at the
     // absolute maximum from creation. Throttled to once per minute alongside
     // lastSeenAt, so this stays cheap.
-    await db
-      .update(sessions)
-      .set({
-        lastSeenAt: new Date(now),
-        expiresAt: new Date(nextExpiry(now, row.createdAt.getTime())),
-      })
-      .where(eq(sessions.id, sessionId))
+    await withDbTimeout(
+      db
+        .update(sessions)
+        .set({
+          lastSeenAt: new Date(now),
+          expiresAt: new Date(nextExpiry(now, row.createdAt.getTime())),
+        })
+        .where(eq(sessions.id, sessionId)),
+    )
   }
 })

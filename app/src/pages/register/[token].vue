@@ -141,7 +141,12 @@
 <script setup lang="ts">
   import { z } from 'zod'
 
+  import { TimeoutError, withTimeout } from '../../utils/withTimeout'
+
   definePageMeta({ layout: 'login' })
+
+  /** See the same constant in login/[token].vue — a request may not hang. */
+  const REQUEST_TIMEOUT_MS = 15_000
 
   const { loggedIn } = useUserSession()
   if (loggedIn.value) {
@@ -154,7 +159,9 @@
   const { t } = useI18n()
 
   const validating = ref(true)
-  const linkStatus = ref<'valid' | 'revoked' | 'expired' | 'exhausted' | 'notfound'>('valid')
+  const linkStatus = ref<'valid' | 'revoked' | 'expired' | 'exhausted' | 'notfound' | 'timeout'>(
+    'valid',
+  )
   const invitedBy = ref<string | null>(null)
   const result = ref<'created' | null>(null)
 
@@ -167,6 +174,7 @@
         expired: t('pages.register.invalid.expired'),
         exhausted: t('pages.register.invalid.exhausted'),
         notfound: t('pages.register.invalid.notfound'),
+        timeout: t('pages.register.invalid.timeout'),
       })[linkStatus.value],
   )
 
@@ -192,14 +200,20 @@
 
   onMounted(async () => {
     try {
-      const res = await api<{ status: typeof linkStatus.value; invitedBy: string | null }>(
-        `/api/register/${token}`,
+      const res = await withTimeout(REQUEST_TIMEOUT_MS, (signal) =>
+        api<{ status: typeof linkStatus.value; invitedBy: string | null }>(
+          `/api/register/${token}`,
+          { signal },
+        ),
       )
       linkStatus.value = res.status
       invitedBy.value = res.invitedBy
-      // eslint-disable-next-line no-catch-all/no-catch-all -- Link-Pruefung fehlgeschlagen = Zustand notfound
-    } catch {
-      linkStatus.value = 'notfound'
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Link-Pruefung fehlgeschlagen = Zustand notfound bzw. timeout
+    } catch (error) {
+      // A server that never answered is not the same as a link that does not
+      // exist, and telling somebody their invitation is invalid when the
+      // database was merely busy sends them to the wrong person for help.
+      linkStatus.value = error instanceof TimeoutError ? 'timeout' : 'notfound'
     } finally {
       validating.value = false
     }
@@ -215,15 +229,18 @@
     sendError.value = false
     loading.value = true
     try {
-      const res = await api<{ status: 'created' }>('/api/register', {
-        method: 'POST',
-        body: {
-          token,
-          email: email.value.trim(),
-          firstName: firstName.value.trim(),
-          lastName: lastName.value.trim(),
-        },
-      })
+      const res = await withTimeout(REQUEST_TIMEOUT_MS, (signal) =>
+        api<{ status: 'created' }>('/api/register', {
+          method: 'POST',
+          body: {
+            token,
+            email: email.value.trim(),
+            firstName: firstName.value.trim(),
+            lastName: lastName.value.trim(),
+          },
+          signal,
+        }),
+      )
       result.value = res.status
       // eslint-disable-next-line no-catch-all/no-catch-all -- Registrierung fehlgeschlagen = Zustand sendError
     } catch {

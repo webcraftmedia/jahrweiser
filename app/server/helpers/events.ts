@@ -47,6 +47,18 @@ export const USER_EVENT_TYPES = [
   'profile.updated',
   // An admin changing which calendars a member may see.
   'admin.tags_changed',
+  // An admin resolving a masked row back to a person. `email_lookup` is a
+  // search for an address somebody already knew; `email_revealed` is the
+  // deliberate uncovering of one they did not. Both are recorded against the
+  // member, so the chronicle shows who looked — that is the whole point of
+  // allowing it at all.
+  'admin.email_lookup',
+  'admin.email_revealed',
+  // An admin intervening in an account.
+  'admin.blocked',
+  'admin.unblocked',
+  'admin.sessions_revoked',
+  'admin.login_link_sent',
 ] as const
 
 export type UserEventType = (typeof USER_EVENT_TYPES)[number]

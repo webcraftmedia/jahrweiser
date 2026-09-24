@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.15.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.5...v1.15.0) (2026-09-24)
+
+
+### Features
+
+* **app:** user events & user search ([#429](https://github.com/webcraftmedia/jahrweiser/issues/429)) ([0d79cfd](https://github.com/webcraftmedia/jahrweiser/commit/0d79cfd33c5cdea94cef12dc3528a62739532eac))
+
+
+### Bug Fixes
+
+* **app:** fix timeout, missing logs, do not wait forever ([#427](https://github.com/webcraftmedia/jahrweiser/issues/427)) ([0f5b4fc](https://github.com/webcraftmedia/jahrweiser/commit/0f5b4fcef81aee5f19dda7aad0696d2671f9f948))
+
 ## [1.14.5](https://github.com/webcraftmedia/jahrweiser/compare/v1.14.4...v1.14.5) (2026-09-19)
 
 

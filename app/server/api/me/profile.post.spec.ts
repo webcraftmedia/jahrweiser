@@ -18,6 +18,9 @@ vi.mock('../../helpers/dav', () => ({
 }))
 vi.mock('../../db', () => ({ useDb: () => mockDb }))
 
+const mockRecordEvent = vi.fn()
+vi.mock('../../helpers/events', () => ({ recordEvent: (...a: unknown[]) => mockRecordEvent(...a) }))
+
 const mockLoadPlzAreas = vi.fn()
 vi.mock('../../helpers/memberMap', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
@@ -168,6 +171,29 @@ describe('profile.post', () => {
       sending('646')
       contactExists()
       await expect(fn({})).rejects.toThrow('invalid-postal-code')
+    })
+  })
+
+  describe('the trail it leaves', () => {
+    it('records which fields were touched, never their values', async () => {
+      // An audit trail of where members live is a second address book. The
+      // current values are one row away for anyone entitled to see them.
+      sending('64653')
+      contactExists()
+      await fn({ path: '/api/me/profile' })
+      expect(mockRecordEvent).toHaveBeenCalledWith({
+        type: 'profile.updated',
+        userUid: 'u1',
+        meta: { fields: ['name', 'postalCode'] },
+        event: { path: '/api/me/profile' },
+      })
+    })
+
+    it('records nothing when the save was refused', async () => {
+      sending('646')
+      contactExists()
+      await expect(fn({})).rejects.toThrow('invalid-postal-code')
+      expect(mockRecordEvent).not.toHaveBeenCalled()
     })
   })
 })

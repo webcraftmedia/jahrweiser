@@ -6,6 +6,7 @@ import { useDb } from '../db'
 import { loginTokens } from '../db/schema'
 
 import { defaultParams, emailRenderer } from './email'
+import { recordEvent } from './events'
 
 /**
  * How long a magic link stays redeemable.
@@ -66,8 +67,14 @@ export async function sendLoginLink(
     // and is cheap enough to be worth the latency cost on the first failure.
     try {
       await emailRenderer.send(sendArgs)
+      // The retry is worth recording as such: a member whose links regularly
+      // need a second attempt has an SMTP problem, not a browser problem.
+      await recordEvent({ type: 'auth.mail_sent', userUid: user.uid, meta: { retried: true } })
+      return
     } catch {
+      await recordEvent({ type: 'auth.mail_failed', userUid: user.uid })
       throw createError({ statusCode: 500, statusMessage: 'Failed to send login email' })
     }
   }
+  await recordEvent({ type: 'auth.mail_sent', userUid: user.uid })
 }

@@ -19,6 +19,11 @@ The endpoint:
   **even when the sync itself failed** — it reads the sidecar, which is fine
   while DAV is unreachable — so a broken DAV no longer takes the dashboard
   series down with it.
+- Sweeps the audit trail: blanks the origin on events older than 30 days,
+  deletes events older than 180 (see `docu/database.md`). Runs on the same terms
+  as the metrics — a deletion obligation does not pause because DAV is offline,
+  and a failed sweep is logged rather than reported as a failed sync. Quiet when
+  there was nothing to forget; otherwise one `[events] pruned …` line.
 - Returns JSON:
   `{added, updated, deleted, emailChanges, tagFailures, durationMs, skippedLocked}`.
 

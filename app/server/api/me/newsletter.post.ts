@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 import { useDb } from '../../db'
 import { users } from '../../db/schema'
+import { recordEvent } from '../../helpers/events'
 
 const bodySchema = z.object({
   subscribed: z.boolean(),
@@ -44,6 +45,13 @@ export default defineEventHandler(async (event) => {
       unsubscribeToken: ensuredToken,
     })
     .where(eq(users.uid, uid))
+
+  await recordEvent({
+    type: subscribed ? 'newsletter.subscribed' : 'newsletter.unsubscribed',
+    userUid: uid,
+    meta: { via: 'settings' },
+    event,
+  })
 
   return { subscribed }
 })

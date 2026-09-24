@@ -8,6 +8,11 @@ import handler from './newsletter.post'
 
 vi.mock('../../db', () => ({ useDb: () => mockDb }))
 
+const mockRecordEvent = vi.fn()
+vi.mock('../../helpers/events', () => ({
+  recordEvent: (...a: unknown[]) => mockRecordEvent(...a),
+}))
+
 const fn = handler as unknown as (e: unknown) => Promise<{ subscribed: boolean }>
 
 describe('me/newsletter.post', () => {
@@ -48,5 +53,30 @@ describe('me/newsletter.post', () => {
     )
     queueDbResults([{ unsubscribeToken: 'existing-token' }], {})
     await expect(fn({})).resolves.toStrictEqual({ subscribed: false })
+  })
+
+  // `via` is what tells the two routes apart later: this switch, or the
+  // unsubscribe button in a mail client, which members press without noticing.
+  it.each([
+    [true, 'newsletter.subscribed'],
+    [false, 'newsletter.unsubscribed'],
+  ])('records the decision (subscribed=%s)', async (subscribed, type) => {
+    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+      (v as (d: unknown) => unknown)({ subscribed }),
+    )
+    queueDbResults([{ unsubscribeToken: 'existing-token' }], {})
+    await fn({ path: '/api/me/newsletter' })
+    expect(mockRecordEvent).toHaveBeenCalledWith({
+      type,
+      userUid: 'u1',
+      meta: { via: 'settings' },
+      event: { path: '/api/me/newsletter' },
+    })
+  })
+
+  it('records nothing when there was no user to record it against', async () => {
+    queueDbResults([])
+    await expect(fn({})).rejects.toThrow('User not found')
+    expect(mockRecordEvent).not.toHaveBeenCalled()
   })
 })

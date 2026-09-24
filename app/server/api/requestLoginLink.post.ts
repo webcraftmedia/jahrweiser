@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { useDb } from '../db'
 import { loginTokens, userTags, users } from '../db/schema'
 import { createCardDAVAccount, findUserByEmail } from '../helpers/dav'
+import { recordEvent } from '../helpers/events'
 import { isWithinLoginCooldown, markLoginRequested } from '../helpers/loginCooldown'
 import { sendLoginLink } from '../helpers/loginLink'
 import { isEmailNotFound, markEmailNotFound } from '../helpers/negativeCache'
@@ -13,6 +14,14 @@ const bodySchema = z.object({
   email: z.email(),
   redirect: z.string().startsWith('/').optional(),
 })
+
+/** The sidecar's id for an address, or null — used only to attribute events. */
+async function uidFor(email: string): Promise<string | null> {
+  const row = (
+    await useDb().select({ uid: users.uid }).from(users).where(eq(users.email, email)).limit(1)
+  )[0]
+  return row?.uid ?? null
+}
 
 export default defineEventHandler(async (event) => {
   const { email, redirect } = await readValidatedBody(event, bodySchema.parse)
@@ -31,11 +40,17 @@ export default defineEventHandler(async (event) => {
     config.LOGIN_RATE_LIMIT_MS > 0 &&
     isWithinLoginCooldown(normalizedEmail, config.LOGIN_RATE_LIMIT_MS)
   ) {
+    // Attributed with a plain sidecar lookup — no DAV fallback, which stays
+    // behind the cooldown gate where it belongs. Worth the one indexed query:
+    // "asked five times in a row" is precisely the pattern somebody reports as
+    // "I never get a mail", and it is invisible without this line.
+    await recordEvent({ type: 'auth.link_cooldown', userUid: await uidFor(normalizedEmail), event })
     return { cooldown: true }
   }
   markLoginRequested(normalizedEmail)
 
   if (isEmailNotFound(normalizedEmail)) {
+    await recordEvent({ type: 'auth.link_unknown', event })
     return {}
   }
 
@@ -47,11 +62,16 @@ export default defineEventHandler(async (event) => {
     const davMatch = await findUserByEmail(davAccount, normalizedEmail)
     if (!davMatch) {
       markEmailNotFound(normalizedEmail)
+      // No address on the row, by design: see the comment on `user_uid` in
+      // server/db/schema/user-events.ts. What stays is the bare fact that
+      // somebody tried, and the network they tried from.
+      await recordEvent({ type: 'auth.link_unknown', event })
       return {}
     }
     const snap = extractUserFromVCardData(davMatch.vcard.toString())
     if (snap?.email !== normalizedEmail) {
       markEmailNotFound(normalizedEmail)
+      await recordEvent({ type: 'auth.link_unknown', event })
       return {}
     }
     await db
@@ -80,6 +100,15 @@ export default defineEventHandler(async (event) => {
   }
 
   if (userRow?.deletedAt !== null || userRow.loginDisabled) {
+    // A blocked account asking for a link is worth seeing — from the member's
+    // side it looks exactly like a mail that never arrived, and they will say
+    // so rather than "I am locked out".
+    await recordEvent({
+      type: 'auth.link_refused',
+      userUid: userRow?.uid ?? null,
+      meta: { reason: userRow?.deletedAt != null ? 'deleted' : 'disabled' },
+      event,
+    })
     return {}
   }
 
@@ -101,9 +130,11 @@ export default defineEventHandler(async (event) => {
     recentToken &&
     Date.now() - recentToken.requestedAt.getTime() < config.LOGIN_RATE_LIMIT_MS
   ) {
+    await recordEvent({ type: 'auth.link_cooldown', userUid: userRow.uid, event })
     return { cooldown: true }
   }
 
+  await recordEvent({ type: 'auth.link_requested', userUid: userRow.uid, event })
   await sendLoginLink(config, userRow, redirect)
 
   return {}

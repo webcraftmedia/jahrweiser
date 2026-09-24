@@ -1,8 +1,11 @@
 import path from 'node:path'
 
+import { eq } from 'drizzle-orm'
 import ICAL from 'ical.js'
 import { z } from 'zod'
 
+import { useDb } from '~~/server/db'
+import { users } from '~~/server/db/schema'
 import {
   createCardDAVAccount,
   createUser,
@@ -11,6 +14,7 @@ import {
   saveUser,
 } from '~~/server/helpers/dav'
 import { defaultParams, emailRenderer } from '~~/server/helpers/email'
+import { recordEvent } from '~~/server/helpers/events'
 
 const bodySchema = z.object({
   email: z.email(),
@@ -83,6 +87,23 @@ export default defineEventHandler(async (event) => {
     userVcard.getFirstProperty('categories')?.setValues(userTags)
     await saveUser(cardDavAccount, user, userVcard)
   }
+
+  // Attributed to both sides: which admin handed out which calendars, and to
+  // whom. The target may not be in the sidecar yet — this endpoint can create a
+  // contact that the next sync will mirror — so a missing uid is recorded as
+  // missing rather than as nobody's doing.
+  const targetUid =
+    (await useDb().select({ uid: users.uid }).from(users).where(eq(users.email, email)).limit(1))[0]
+      ?.uid ?? null
+  await recordEvent({
+    type: 'admin.tags_changed',
+    userUid: targetUid,
+    actorUid: session.user.uid,
+    // Calendar keys, not personal data — and exactly what a "why can I not see
+    // the Vorstand calendar?" question needs answered.
+    meta: { granted: newTags, calendars: filteredTags.filter((t) => t.state).map((t) => t.name) },
+    event,
+  })
 
   // sendMail if selected and at least one new tag is set
   if (sendMail && newTags.length > 0) {

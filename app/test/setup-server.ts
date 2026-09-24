@@ -60,5 +60,7 @@ globalThis.clearUserSession = vi.fn()
 globalThis.getQuery = vi.fn()
 globalThis.getRouterParam = vi.fn()
 globalThis.getHeader = vi.fn()
+// The audit trail's only use for the request object (server/helpers/events.ts).
+globalThis.getRequestIP = vi.fn()
 globalThis.setHeader = vi.fn()
 globalThis.setResponseStatus = vi.fn()

@@ -12,6 +12,11 @@ vi.mock('~~/server/helpers/metrics', () => ({
   recordDailyMetrics: (...a: unknown[]) => mockRecord(...a),
 }))
 
+const mockPrune = vi.fn()
+vi.mock('~~/server/helpers/events', () => ({
+  pruneUserEvents: (...a: unknown[]) => mockPrune(...a),
+}))
+
 const fn = handler as unknown as (e: unknown) => Promise<unknown>
 const originalConfig = globalThis.useRuntimeConfig
 
@@ -19,6 +24,7 @@ describe('sync-now.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     globalThis.useRuntimeConfig = originalConfig
+    mockPrune.mockResolvedValue({ deleted: 0, anonymised: 0 })
   })
 
   it('returns 503 when no sync secret is configured', async () => {
@@ -80,5 +86,57 @@ describe('sync-now.post', () => {
     vi.mocked(globalThis.getHeader).mockReturnValue('Bearer wrong')
     await expect(fn({})).rejects.toThrow('Unauthorized')
     expect(mockRecord).not.toHaveBeenCalled()
+    expect(mockPrune).not.toHaveBeenCalled()
+  })
+
+  it('says what the retention sweep forgot, when it forgot something', async () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.mocked(globalThis.getHeader).mockReturnValue('Bearer test-sync-secret')
+    mockSync.mockResolvedValue({ added: 0, updated: 0, deleted: 0 })
+    mockPrune.mockResolvedValue({ deleted: 4, anonymised: 9 })
+
+    await fn({})
+
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('pruned 4 event(s)'))
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('origin on 9'))
+    consoleSpy.mockRestore()
+  })
+
+  it('stays quiet on a sweep with nothing to do', async () => {
+    // It runs every ten minutes; a line each time would drown the log it is
+    // supposed to keep readable.
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.mocked(globalThis.getHeader).mockReturnValue('Bearer test-sync-secret')
+    mockSync.mockResolvedValue({ added: 0, updated: 0, deleted: 0 })
+
+    await fn({})
+
+    expect(consoleSpy).not.toHaveBeenCalled()
+    consoleSpy.mockRestore()
+  })
+
+  it('still reports the sync as successful when the sweep fails', async () => {
+    // A deletion obligation that cannot be met is an operator problem, not a
+    // reason to mark the cron run failed — it retries in ten minutes.
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.mocked(globalThis.getHeader).mockReturnValue('Bearer test-sync-secret')
+    mockSync.mockResolvedValue({ added: 3, updated: 0, deleted: 0 })
+    mockPrune.mockRejectedValue(new Error('table missing'))
+
+    await expect(fn({})).resolves.toStrictEqual({ added: 3, updated: 0, deleted: 0 })
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to prune user events'),
+      expect.anything(),
+    )
+    consoleSpy.mockRestore()
+  })
+
+  it('still forgets while DAV is down', async () => {
+    // The sweep reads and writes the sidecar only. Tying it to a healthy DAV
+    // would pause the deletion obligation for as long as a server is offline.
+    vi.mocked(globalThis.getHeader).mockReturnValue('Bearer test-sync-secret')
+    mockSync.mockRejectedValue(new Error('DAV unreachable'))
+    await expect(fn({})).rejects.toThrow('DAV unreachable')
+    expect(mockPrune).toHaveBeenCalledTimes(1)
   })
 })

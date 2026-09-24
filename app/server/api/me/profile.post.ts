@@ -5,6 +5,7 @@ import { useDb } from '../../db'
 import { users } from '../../db/schema'
 import { setPostalCode, setVCardName } from '../../helpers/contactName'
 import { createCardDAVAccount, findUserByEmail, saveUser } from '../../helpers/dav'
+import { recordEvent } from '../../helpers/events'
 import { loadPlzAreas, lookupPostalCode, normalisePostalCode } from '../../helpers/memberMap'
 import { ABSOLUTE_TTL_SECONDS } from '../../helpers/sessionTtl'
 
@@ -83,6 +84,16 @@ export default defineEventHandler(async (event) => {
   // merges, so uid/email/role are preserved; h3 keeps the session id, leaving
   // the DB-backed session row valid.
   await setUserSession(event, { user: { name: displayName } }, { maxAge: ABSOLUTE_TTL_SECONDS })
+
+  // Which fields, never their values: the trail records that a member edited
+  // their address, not where they live. The current values are one row away in
+  // `users` for anyone entitled to see them.
+  await recordEvent({
+    type: 'profile.updated',
+    userUid: uid,
+    meta: { fields: ['name', 'postalCode'] },
+    event,
+  })
 
   return { firstName, lastName, postalCode, displayName }
 })

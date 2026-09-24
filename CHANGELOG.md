@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.15.1...v1.15.2) (2026-09-24)
+
+
+### Bug Fixes
+
+* **app:** fix more env loading ([#432](https://github.com/webcraftmedia/jahrweiser/issues/432)) ([0f40e49](https://github.com/webcraftmedia/jahrweiser/commit/0f40e49d4b8278ae8656496265ed152d93cefca4))
+
 ## [1.15.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.15.0...v1.15.1) (2026-09-24)
 
 

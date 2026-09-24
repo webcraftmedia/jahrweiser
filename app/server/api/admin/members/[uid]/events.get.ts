@@ -1,9 +1,10 @@
-import { and, desc, eq, like } from 'drizzle-orm'
+import { aliasedTable, and, desc, eq, like } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { useDb } from '~~/server/db'
-import { userEvents } from '~~/server/db/schema'
+import { userEvents, users } from '~~/server/db/schema'
 import { requireAdmin } from '~~/server/helpers/requireAdmin'
+import { abbreviateName } from '~~/shared/mask'
 
 /**
  * A member's chronicle: every line the app wrote about them, newest first.
@@ -40,25 +41,31 @@ export default defineEventHandler(async (event) => {
     ? and(eq(userEvents.userUid, uid), like(userEvents.type, `${group}.%`))
     : eq(userEvents.userUid, uid)
 
+  // Joined rather than resolved in the page: "who did this" is the whole point
+  // of recording an actor, and a uid on screen answers it for nobody.
+  const actor = aliasedTable(users, 'actor')
   const rows = await db
-    .select()
+    .select({ event: userEvents, actorName: actor.displayName })
     .from(userEvents)
+    .leftJoin(actor, eq(actor.uid, userEvents.actorUid))
     .where(where)
     .orderBy(desc(userEvents.at), desc(userEvents.id))
     .limit(PER_PAGE)
     .offset((page - 1) * PER_PAGE)
 
   return {
-    events: rows.map((row) => ({
-      id: row.id,
-      at: row.at.toISOString(),
-      type: row.type,
-      meta: row.meta,
+    events: rows.map(({ event: entry, actorName }) => ({
+      id: entry.id,
+      at: entry.at.toISOString(),
+      type: entry.type,
+      meta: entry.meta,
       // Already a network rather than an address when it was written, and
       // blanked entirely after 30 days.
-      origin: row.ipPrefix,
+      origin: entry.ipPrefix,
       /** Set when an admin caused this, not the member themselves. */
-      actorUid: row.actorUid,
+      actorUid: entry.actorUid,
+      /** That admin, abbreviated like every other name here. */
+      actorName: entry.actorUid ? abbreviateName(actorName) : null,
     })),
     page,
     perPage: PER_PAGE,

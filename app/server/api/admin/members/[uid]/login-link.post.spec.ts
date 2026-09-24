@@ -40,7 +40,9 @@ describe('admin/members/[uid]/login-link.post', () => {
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({ user: { uid: 'u1', role: 'user' } })
+    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+      user: { uid: 'u1', role: 'user' },
+    })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
     expect(mockSendLoginLink).not.toHaveBeenCalled()
   })
@@ -61,14 +63,14 @@ describe('admin/members/[uid]/login-link.post', () => {
     expect(mockSendLoginLink).toHaveBeenCalledWith(expect.anything(), member)
   })
 
-  it.each([
-    [{ loginDisabled: true }],
-    [{ deletedAt: new Date() }],
-  ])('refuses to send a working key to a shut account (%o)', async (over) => {
-    queueDbResults([{ ...member, ...over }])
-    await expect(fn({})).rejects.toMatchObject({ statusCode: 409 })
-    expect(mockSendLoginLink).not.toHaveBeenCalled()
-  })
+  it.each([[{ loginDisabled: true }], [{ deletedAt: new Date() }]])(
+    'refuses to send a working key to a shut account (%o)',
+    async (over) => {
+      queueDbResults([{ ...member, ...over }])
+      await expect(fn({})).rejects.toMatchObject({ statusCode: 409 })
+      expect(mockSendLoginLink).not.toHaveBeenCalled()
+    },
+  )
 
   it('records the admin’s intent before the mail is attempted', async () => {
     // So that a send which throws still leaves the intent in the trail —

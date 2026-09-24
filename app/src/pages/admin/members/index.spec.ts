@@ -91,7 +91,7 @@ describe('Page: Admin Members', () => {
     await wrapper.find('#member-search').setValue('muster')
     await wrapper.find('form').trigger('submit')
     await vi.waitFor(() => {
-      expect(calls.length).toBe(2)
+      expect(calls).toHaveLength(2)
     })
     expect(calls[1]!.query).toMatchObject({ q: 'muster' })
   })
@@ -102,12 +102,12 @@ describe('Page: Admin Members', () => {
     const wrapper = await mountLoaded()
     await wrapper.findAll('button').at(-1)!.trigger('click') // next page
     await vi.waitFor(() => {
-      expect(calls.length).toBe(2)
+      expect(calls).toHaveLength(2)
     })
     await wrapper.find('#member-search').setValue('anna')
     await wrapper.find('form').trigger('submit')
     await vi.waitFor(() => {
-      expect(calls.length).toBe(3)
+      expect(calls).toHaveLength(3)
     })
     expect(calls[2]!.query).toMatchObject({ page: 1 })
   })
@@ -123,7 +123,7 @@ describe('Page: Admin Members', () => {
     const wrapper = await mountLoaded()
     await wrapper.find('#member-status').setValue('blocked')
     await vi.waitFor(() => {
-      expect(calls.length).toBe(2)
+      expect(calls).toHaveLength(2)
     })
     expect(calls[1]!.query).toMatchObject({ status: 'blocked' })
   })
@@ -137,7 +137,7 @@ describe('Page: Admin Members', () => {
     expect(previous().attributes('disabled')).toBeDefined()
     await next().trigger('click')
     await vi.waitFor(() => {
-      expect(calls.length).toBe(2)
+      expect(calls).toHaveLength(2)
     })
     expect(calls[1]!.query).toMatchObject({ page: 2 })
     // 30 members, 25 per page: page 2 is the last one.
@@ -154,11 +154,11 @@ describe('Page: Admin Members', () => {
 
     await next().trigger('click')
     await vi.waitFor(() => {
-      expect(calls.length).toBe(2)
+      expect(calls).toHaveLength(2)
     })
     await previous().trigger('click')
     await vi.waitFor(() => {
-      expect(calls.length).toBe(3)
+      expect(calls).toHaveLength(3)
     })
     expect(calls[2]!.query).toMatchObject({ page: 1 })
   })

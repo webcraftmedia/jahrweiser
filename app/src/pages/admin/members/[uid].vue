@@ -12,7 +12,11 @@
       <span class="sr-only">{{ $t('pages.admin.members.detail.loading') }}</span>
     </div>
 
-    <p v-else-if="loadError" role="alert" class="text-sm font-body text-sienna dark:text-sienna-light">
+    <p
+      v-else-if="loadError"
+      role="alert"
+      class="text-sm font-body text-sienna dark:text-sienna-light"
+    >
       {{ $t('pages.admin.members.detail.error') }}
     </p>
 
@@ -98,7 +102,11 @@
             {{ $t('pages.admin.members.detail.actions') }}
           </h2>
 
-          <p v-if="actionError" role="alert" class="text-sm font-body text-sienna dark:text-sienna-light">
+          <p
+            v-if="actionError"
+            role="alert"
+            class="text-sm font-body text-sienna dark:text-sienna-light"
+          >
             {{ actionError }}
           </p>
           <p
@@ -147,7 +155,7 @@
             type="button"
             :disabled="isActing || activeCount(member) === 0"
             class="w-full px-5 py-2 text-base font-semibold font-body border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory rounded hover:border-sienna transition-colors disabled:opacity-60"
-            @click="revokeSessions"
+            @click="revokeSessions()"
           >
             {{ $t('pages.admin.members.detail.revoke-sessions', { count: activeCount(member) }) }}
           </button>
@@ -161,15 +169,78 @@
             {{ $t('pages.admin.members.detail.send-login-link') }}
           </button>
 
-          <NuxtLink
-            to="/admin/members/add"
-            class="block text-center px-5 py-2 text-base font-semibold font-body border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory rounded hover:border-sienna transition-colors"
-          >
+          <div class="pt-2 border-t border-navy/10 dark:border-poster-darkBorder">
+            <label
+              for="member-role"
+              class="block mb-1 text-sm font-medium font-body text-navy dark:text-ivory"
+            >
+              {{ $t('pages.admin.members.detail.role-change') }}
+            </label>
+            <select
+              id="member-role"
+              :value="member.role"
+              :disabled="isActing || isSelf"
+              class="bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder text-navy dark:text-ivory text-sm rounded font-body focus:border-sienna focus:outline-none block w-full p-2 disabled:opacity-60"
+              @change="setRole(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="user">{{ $t('pages.admin.members.detail.role-user') }}</option>
+              <option value="admin">{{ $t('pages.admin.members.detail.role-admin') }}</option>
+            </select>
+            <p v-if="isSelf" class="mt-1 text-xs font-body text-navy/60 dark:text-poster-darkMuted">
+              {{ $t('pages.admin.members.detail.role-self') }}
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 pt-2">
+            <input
+              id="member-newsletter"
+              type="checkbox"
+              :checked="member.newsletter === 'subscribed'"
+              :disabled="isActing"
+              class="w-4 h-4 accent-sienna"
+              @change="setNewsletter(($event.target as HTMLInputElement).checked)"
+            />
+            <label for="member-newsletter" class="text-sm font-body text-navy dark:text-ivory">
+              {{ $t('pages.admin.members.detail.newsletter-toggle') }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Calendars -->
+        <div
+          class="animate-fade-slide-up bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder space-y-3"
+        >
+          <h2 class="text-lg font-display text-navy dark:text-ivory">
             {{ $t('pages.admin.members.detail.calendars') }}
-          </NuxtLink>
-          <p class="text-xs font-body text-navy/60 dark:text-poster-darkMuted">
-            {{ $t('pages.admin.members.detail.calendars-hint') }}
+          </h2>
+          <p
+            v-if="tags.length === 0"
+            class="text-sm font-body text-navy/60 dark:text-poster-darkMuted"
+          >
+            {{ $t('pages.admin.members.detail.calendars-none') }}
           </p>
+          <template v-else>
+            <div v-for="tag in tags" :key="tag.name" class="flex items-center gap-2">
+              <input
+                :id="`tag-${tag.name}`"
+                v-model="tag.state"
+                type="checkbox"
+                :disabled="isActing"
+                class="w-4 h-4 accent-sienna"
+              />
+              <label :for="`tag-${tag.name}`" class="text-sm font-body text-navy dark:text-ivory">
+                {{ tag.label }}
+              </label>
+            </div>
+            <button
+              type="button"
+              :disabled="isActing"
+              class="w-full px-5 py-2 text-base font-semibold font-body border-2 border-sienna bg-sienna text-ivory rounded hover:bg-sienna-dark hover:border-sienna-dark transition-colors disabled:opacity-60"
+              @click="saveTags"
+            >
+              {{ $t('pages.admin.members.detail.calendars-save') }}
+            </button>
+          </template>
         </div>
       </div>
 
@@ -192,7 +263,10 @@
               <tr class="border-b border-navy/10 dark:border-poster-darkBorder">
                 <th class="py-2 pr-3">{{ $t('pages.admin.members.detail.session-started') }}</th>
                 <th class="py-2 px-3">{{ $t('pages.admin.members.detail.session-last-seen') }}</th>
-                <th class="py-2 pl-3">{{ $t('pages.admin.members.table.status') }}</th>
+                <th class="py-2 px-3">{{ $t('pages.admin.members.table.status') }}</th>
+                <th class="py-2 pl-3 text-right">
+                  {{ $t('pages.admin.members.table.actions') }}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -203,7 +277,7 @@
               >
                 <td class="py-2 pr-3 whitespace-nowrap">{{ formatDate(session.createdAt) }}</td>
                 <td class="py-2 px-3 whitespace-nowrap">{{ formatDate(session.lastSeenAt) }}</td>
-                <td class="py-2 pl-3">
+                <td class="py-2 px-3">
                   <span
                     class="px-2 py-0.5 rounded-full text-xs whitespace-nowrap"
                     :class="
@@ -214,6 +288,17 @@
                   >
                     {{ sessionLabel(session) }}
                   </span>
+                </td>
+                <td class="py-2 pl-3 text-right">
+                  <button
+                    v-if="session.active"
+                    type="button"
+                    :disabled="isActing"
+                    class="text-sienna dark:text-sienna-light hover:underline disabled:opacity-60"
+                    @click="revokeSessions(session.id)"
+                  >
+                    {{ $t('pages.admin.members.detail.session-end') }}
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -256,12 +341,14 @@
               </span>
               <span class="text-navy dark:text-ivory">
                 {{ entry.type }}
-                <span v-if="entry.actorUid" class="text-navy/60 dark:text-poster-darkMuted">
-                  {{ $t('pages.admin.members.detail.by-admin') }}
+                <span v-if="entry.actorName" class="text-navy/60 dark:text-poster-darkMuted">
+                  {{ $t('pages.admin.members.detail.by-admin', { name: entry.actorName }) }}
                 </span>
+                <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
                 <span v-if="entry.origin" class="text-navy/40 dark:text-poster-darkMuted">
                   · {{ entry.origin }}
                 </span>
+                <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
               </span>
             </li>
           </ul>
@@ -315,10 +402,19 @@
     meta: Record<string, unknown> | null
     origin: string | null
     actorUid: string | null
+    /** The admin behind it, abbreviated — null when the member acted. */
+    actorName: string | null
+  }
+
+  interface TagState {
+    name: string
+    label: string
+    state: boolean
   }
 
   const member = ref<MemberDetail | null>(null)
   const events = ref<ChronicleEntry[]>([])
+  const tags = ref<TagState[]>([])
   const group = ref<string>('')
   const isLoading = ref(true)
   const loadError = ref(false)
@@ -329,6 +425,14 @@
   const actionNote = ref<string | null>(null)
   const actionError = ref<string | null>(null)
   const blockReason = ref('')
+
+  const { user: actingUser } = useUserSession()
+
+  /**
+   * An admin may not change their own role — the endpoint refuses it too. Said
+   * here as well so the control is visibly off rather than failing on click.
+   */
+  const isSelf = computed(() => actingUser.value?.uid === uid)
 
   /**
    * Taken from the member rather than kept alongside them: every place that
@@ -358,6 +462,17 @@
       loadError.value = true
     } finally {
       isLoading.value = false
+    }
+  }
+
+  async function loadTags(): Promise<void> {
+    try {
+      const result = await api<{ tags: TagState[] }>(`/api/admin/members/${uid}/tags`)
+      tags.value = result.tags
+      // eslint-disable-next-line no-catch-all/no-catch-all -- die Kalenderliste kommt von DAV; ein Fehler darf die Seite nicht leeren
+    } catch (error) {
+      console.error(error)
+      tags.value = []
     }
   }
 
@@ -415,13 +530,10 @@
 
   async function setBlocked(blocked: boolean): Promise<void> {
     await act(async () => {
-      const result = await api<{ revokedSessions: number }>(
-        `/api/admin/members/${uid}/block`,
-        {
-          method: 'POST',
-          body: { blocked, ...(blockReason.value ? { reason: blockReason.value } : {}) },
-        },
-      )
+      const result = await api<{ revokedSessions: number }>(`/api/admin/members/${uid}/block`, {
+        method: 'POST',
+        body: { blocked, ...(blockReason.value ? { reason: blockReason.value } : {}) },
+      })
       blockReason.value = ''
       return blocked
         ? t('pages.admin.members.detail.blocked-note', { count: result.revokedSessions })
@@ -429,13 +541,46 @@
     })
   }
 
-  async function revokeSessions(): Promise<void> {
+  /** One session by id, or all of them when none is named. */
+  async function revokeSessions(sessionId?: string): Promise<void> {
     await act(async () => {
-      const result = await api<{ revokedSessions: number }>(
-        `/api/admin/members/${uid}/sessions`,
-        { method: 'POST' },
-      )
+      const result = await api<{ revokedSessions: number }>(`/api/admin/members/${uid}/sessions`, {
+        method: 'POST',
+        body: sessionId ? { sessionId } : {},
+      })
       return t('pages.admin.members.detail.revoked-note', { count: result.revokedSessions })
+    })
+  }
+
+  async function setRole(role: string): Promise<void> {
+    await act(async () => {
+      await api(`/api/admin/members/${uid}/role`, { method: 'POST', body: { role } })
+      return role === 'admin'
+        ? t('pages.admin.members.detail.promoted-note')
+        : t('pages.admin.members.detail.demoted-note')
+    })
+  }
+
+  async function setNewsletter(subscribed: boolean): Promise<void> {
+    await act(async () => {
+      await api(`/api/admin/members/${uid}/newsletter`, {
+        method: 'POST',
+        body: { subscribed },
+      })
+      return subscribed
+        ? t('pages.admin.members.detail.newsletter-on-note')
+        : t('pages.admin.members.detail.newsletter-off-note')
+    })
+  }
+
+  async function saveTags(): Promise<void> {
+    await act(async () => {
+      const result = await api<{ granted: string[] }>(`/api/admin/members/${uid}/tags`, {
+        method: 'POST',
+        body: { tags: tags.value.map(({ name, state }) => ({ name, state })) },
+      })
+      await loadTags()
+      return t('pages.admin.members.detail.calendars-note', { count: result.granted.length })
     })
   }
 
@@ -488,6 +633,6 @@
   }
 
   onMounted(async () => {
-    await Promise.all([loadMember(), loadEvents()])
+    await Promise.all([loadMember(), loadEvents(), loadTags()])
   })
 </script>

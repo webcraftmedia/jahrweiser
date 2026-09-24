@@ -35,9 +35,20 @@ export function abbreviateName(displayName: string | null | undefined): string {
   const given = parts.slice(0, -1).join(' ')
   // `[...surname]` rather than `surname[0]`: a name may begin with a character
   // outside the basic plane, and half a code point is not an initial.
+  // eslint-disable-next-line @typescript-eslint/no-misused-spread -- genau deshalb steht hier der Spread
   const initial = [...surname][0] ?? ''
   return initial ? `${given} ${initial}.` : given
 }
+
+/**
+ * The first two characters of a part, or fewer if that is all there is.
+ *
+ * Code points rather than UTF-16 units: cutting `Ö` or an emoji in half would
+ * put a replacement character in an admin's list. Segmenting by grapheme would
+ * be more correct still, but two code points is a mask, not text to read.
+ */
+// eslint-disable-next-line @typescript-eslint/no-misused-spread -- Code Points sind hier genau das Richtige, siehe Kommentar
+const head = (part: string): string => [...part].slice(0, 2).join('')
 
 /**
  * `anna.mustermann@example.de` → `an•••@ex•••.de`
@@ -67,9 +78,4 @@ export function maskEmail(email: string | null | undefined): string {
   const tld = dot > 0 ? domain.slice(dot) : ''
 
   return `${head(local)}${ELLIPSIS}@${head(host)}${ELLIPSIS}${tld}`
-}
-
-/** The first two characters of a part, or fewer if that is all there is. */
-function head(part: string): string {
-  return [...part].slice(0, 2).join('')
 }

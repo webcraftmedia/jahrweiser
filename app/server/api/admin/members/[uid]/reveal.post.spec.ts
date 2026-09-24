@@ -26,7 +26,9 @@ describe('admin/members/[uid]/reveal.post', () => {
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({ user: { uid: 'u1', role: 'user' } })
+    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+      user: { uid: 'u1', role: 'user' },
+    })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
     expect(mockRecordEvent).not.toHaveBeenCalled()
   })

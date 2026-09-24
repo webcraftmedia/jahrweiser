@@ -1,20 +1,13 @@
 import path from 'node:path'
 
 import { eq } from 'drizzle-orm'
-import ICAL from 'ical.js'
 import { z } from 'zod'
 
 import { useDb } from '~~/server/db'
 import { users } from '~~/server/db/schema'
-import {
-  createCardDAVAccount,
-  createUser,
-  findUserByEmail,
-  readAdminTags,
-  saveUser,
-} from '~~/server/helpers/dav'
 import { defaultParams, emailRenderer } from '~~/server/helpers/email'
 import { recordEvent } from '~~/server/helpers/events'
+import { applyTagChanges } from '~~/server/helpers/userTags'
 
 const bodySchema = z.object({
   email: z.email(),
@@ -33,60 +26,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Not Authorized' })
   }
 
-  // Find admin
-  const cardDavAccount = createCardDAVAccount(config)
-  const adminQuery = await findUserByEmail(cardDavAccount, session.user.email)
-
-  if (!adminQuery) {
-    throw createError({ statusCode: 403, statusMessage: 'Admin account not found' })
-  }
-
-  const { vcard: adminVcard } = adminQuery
-  const adminTags = readAdminTags(adminVcard)
-
   const { email, tags, sendMail } = await readValidatedBody(event, bodySchema.parse)
-  const filteredTags = tags.filter((t) => adminTags.includes(t.name))
 
-  const userQuery = await findUserByEmail(cardDavAccount, email)
-
-  let newTags: string[] = []
-  if (!userQuery) {
-    const newUser = new ICAL.Component('vcard')
-    // VERSION is mandatory (RFC 6350 §6.7.9) and must come first. Without it
-    // ical.js falls back to the vCard 3 design when re-reading the card, which
-    // changes how comma-separated properties are parsed.
-    newUser.addPropertyWithValue('version', '4.0')
-    newUser.addPropertyWithValue('email', email)
-    newUser.addPropertyWithValue('categories', '')
-    newUser
-      .getFirstProperty('categories')
-      ?.setValues(filteredTags.filter((t) => t.state).map((t) => t.name))
-
-    await createUser(cardDavAccount, newUser)
-    newTags = filteredTags.filter((t) => t.state).map((t) => t.name)
-  } else {
-    const { user, vcard: userVcard } = userQuery
-    let categoriesProp = userVcard.getFirstProperty('categories')
-    if (!categoriesProp) {
-      userVcard.addPropertyWithValue('categories', '')
-      categoriesProp = userVcard.getFirstProperty('categories')!
-    }
-    // ICAL.Property#getValues() always returns an array — no nullish fallback
-    // needed, and adding one creates an unreachable branch.
-    let userTags = categoriesProp.getValues() as string[]
-    for (const t of filteredTags) {
-      if (t.state) {
-        if (!userTags.includes(t.name)) {
-          userTags.push(t.name)
-          newTags.push(t.name)
-        }
-      } else {
-        userTags = userTags.filter((item) => item !== t.name)
-      }
-    }
-    userVcard.getFirstProperty('categories')?.setValues(userTags)
-    await saveUser(cardDavAccount, user, userVcard)
-  }
+  // The DAV work itself lives in the helper, which the uid-keyed route in the
+  // members' area uses too — one implementation, two ways in.
+  const { newTags, created } = await applyTagChanges(config, session.user.email, email, tags)
 
   // Attributed to both sides: which admin handed out which calendars, and to
   // whom. The target may not be in the sidecar yet — this endpoint can create a
@@ -99,9 +43,7 @@ export default defineEventHandler(async (event) => {
     type: 'admin.tags_changed',
     userUid: targetUid,
     actorUid: session.user.uid,
-    // Calendar keys, not personal data — and exactly what a "why can I not see
-    // the Vorstand calendar?" question needs answered.
-    meta: { granted: newTags, calendars: filteredTags.filter((t) => t.state).map((t) => t.name) },
+    meta: { granted: newTags, calendars: tags.filter((t) => t.state).map((t) => t.name) },
     event,
   })
 
@@ -120,7 +62,7 @@ export default defineEventHandler(async (event) => {
         locals: {
           ...defaultParams,
           locale: 'de',
-          newUser: !userQuery,
+          newUser: created,
           tags: newTags,
           adminName,
         },

@@ -53,7 +53,9 @@ describe('admin/members/list.get', () => {
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({ user: { uid: 'u1', role: 'user' } })
+    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+      user: { uid: 'u1', role: 'user' },
+    })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
   })
 
@@ -158,11 +160,11 @@ describe('admin/members/list.get', () => {
 
   it('refuses a page number that is not one', async () => {
     vi.mocked(globalThis.getQuery).mockReturnValue({ page: '0' })
-    await expect(fn({})).rejects.toThrow()
+    await expect(fn({})).rejects.toThrow(/greater than or equal to 1|too_small/)
   })
 
   it('reports an empty directory as empty, not as broken', async () => {
-    queueDbResults([], [])
+    queueDbResults([{ value: '0' }], [])
     await expect(fn({})).resolves.toMatchObject({ members: [], total: 0 })
   })
 })

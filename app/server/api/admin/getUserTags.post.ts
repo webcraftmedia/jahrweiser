@@ -1,15 +1,6 @@
 import { z } from 'zod'
 
-import {
-  calendarKey,
-  calendarLabel,
-  createCalDAVAccount,
-  createCardDAVAccount,
-  findCalendars,
-  findUserByEmail,
-  readAdminTags,
-  readCategories,
-} from '~~/server/helpers/dav'
+import { tagStateFor } from '~~/server/helpers/userTags'
 
 const bodySchema = z.object({
   email: z.email(),
@@ -26,38 +17,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Not Authorized' })
   }
 
-  // Find admin
-  const cardDavAccount = createCardDAVAccount(config)
-  const adminQuery = await findUserByEmail(cardDavAccount, session.user.email)
-
-  if (!adminQuery) {
-    throw createError({ statusCode: 403, statusMessage: 'Admin account not found' })
-  }
-
-  const { vcard: adminVcard } = adminQuery
-  const adminTags = readAdminTags(adminVcard)
-
-  // Tags are calendar keys; the UI needs the human display name next to them.
-  // A key without a matching calendar falls back to itself, so a dangling grant
-  // stays visible instead of rendering as a blank checkbox.
-  const calendars = await findCalendars(createCalDAVAccount(config))
-  const labels = new Map(calendars.map((cal) => [calendarKey(cal), calendarLabel(cal)]))
-  const labelFor = (key: string) => labels.get(key) || key
-
-  // Find user
   const { email } = await readValidatedBody(event, bodySchema.parse)
-  const userQuery = await findUserByEmail(cardDavAccount, email)
 
-  if (!userQuery) {
-    return adminTags.map((t) => {
-      return { name: t, label: labelFor(t), state: false }
-    })
-  }
-
-  const { vcard: userVcard } = userQuery
-  const userTags = readCategories(userVcard)
-
-  return adminTags.map((t) => {
-    return { name: t, label: labelFor(t), state: userTags.includes(t) }
-  })
+  // The DAV work itself lives in the helper, which the uid-keyed route in the
+  // members' area uses too — one implementation, two ways in.
+  return tagStateFor(config, session.user.email, email)
 })

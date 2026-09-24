@@ -53,7 +53,9 @@ describe('admin/members/[uid].get', () => {
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({ user: { uid: 'u1', role: 'user' } })
+    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+      user: { uid: 'u1', role: 'user' },
+    })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
   })
 
@@ -89,10 +91,13 @@ describe('admin/members/[uid].get', () => {
     expect(result.sessions.map((s) => s.active)).toStrictEqual([true, false, false])
   })
 
-  it('shortens the session id to something that only tells rows apart', async () => {
+  it('names each session, because ending one means naming it', async () => {
+    // Not a credential: the cookie carrying it is sealed with a server secret,
+    // so knowing the id gets nobody in. The page shows only its first
+    // characters.
     queueDbResults([user], [session()])
     const result = await fn({})
-    expect(result.sessions[0]!.id).toBe('abcdef01')
+    expect(result.sessions[0]!.id).toBe('abcdef0123456789')
   })
 
   it.each([

@@ -16,15 +16,18 @@ const fn = handler as unknown as (e: unknown) => Promise<{
 
 const AT = new Date(Date.UTC(2026, 8, 24, 12, 0, 0))
 
-function eventRow(over: Record<string, unknown> = {}) {
+function eventRow(over: Record<string, unknown> = {}, actorName: string | null = null) {
   return {
-    id: 1,
-    at: AT,
-    type: 'auth.redeem_ok',
-    meta: null,
-    ipPrefix: '192.0.2.0',
-    actorUid: null,
-    ...over,
+    event: {
+      id: 1,
+      at: AT,
+      type: 'auth.redeem_ok',
+      meta: null,
+      ipPrefix: '192.0.2.0',
+      actorUid: null,
+      ...over,
+    },
+    actorName,
   }
 }
 
@@ -40,7 +43,9 @@ describe('admin/members/[uid]/events.get', () => {
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({ user: { uid: 'u1', role: 'user' } })
+    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+      user: { uid: 'u1', role: 'user' },
+    })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
   })
 
@@ -59,18 +64,39 @@ describe('admin/members/[uid]/events.get', () => {
       meta: { reason: 'used' },
       origin: '192.0.2.0',
       actorUid: null,
+      actorName: null,
     })
   })
 
   it('shows an origin the retention sweep has already blanked as absent', async () => {
     queueDbResults([eventRow({ ipPrefix: null })])
-    await expect(fn({})).resolves.toMatchObject({ events: [expect.objectContaining({ origin: null })] })
+    await expect(fn({})).resolves.toMatchObject({
+      events: [expect.objectContaining({ origin: null })],
+    })
   })
 
   it('names the admin behind an entry that was not the member’s own doing', async () => {
-    queueDbResults([eventRow({ type: 'admin.blocked', actorUid: 'a1' })])
+    // A uid on screen answers "who did this" for nobody — and that question is
+    // the whole point of recording an actor.
+    queueDbResults([eventRow({ type: 'admin.blocked', actorUid: 'a1' }, 'Admin Example')])
     const result = await fn({})
-    expect(result.events[0]).toMatchObject({ type: 'admin.blocked', actorUid: 'a1' })
+    expect(result.events[0]).toMatchObject({
+      type: 'admin.blocked',
+      actorUid: 'a1',
+      actorName: 'Admin E.',
+    })
+  })
+
+  it('abbreviates that admin like every other name here', async () => {
+    queueDbResults([eventRow({ actorUid: 'a1' }, 'Bernd Konrad Meier')])
+    const result = await fn({})
+    expect(result.events[0]).toMatchObject({ actorName: 'Bernd Konrad M.' })
+  })
+
+  it('leaves the actor empty for an entry the member caused themselves', async () => {
+    queueDbResults([eventRow({}, 'Somebody Else')])
+    const result = await fn({})
+    expect(result.events[0]).toMatchObject({ actorUid: null, actorName: null })
   })
 
   it('filters by group rather than by an exhaustive list of types', async () => {

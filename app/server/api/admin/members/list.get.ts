@@ -42,6 +42,14 @@ export type MemberStatus = 'active' | 'blocked' | 'deleted'
 export type StatusFilter = MemberStatus | 'all'
 
 /**
+ * `LIKE` treats `%` and `_` as wildcards, so a member typing either would
+ * match half the directory — and `%` alone would list all of it.
+ */
+function escapeLike(term: string): string {
+  return term.replace(/[\\%_]/g, (char) => `\\${char}`)
+}
+
+/**
  * What a search box entry means, decided before any SQL is built.
  *
  * Pulled out as a pure function because this is where the privacy rule lives:
@@ -87,14 +95,6 @@ function statusOf(row: { deletedAt: Date | null; loginDisabled: boolean }): Memb
 }
 
 /**
- * `LIKE` treats `%` and `_` as wildcards, so a member typing either would
- * match half the directory — and `%` alone would list all of it.
- */
-function escapeLike(term: string): string {
-  return term.replace(/[\\%_]/g, (char) => `\\${char}`)
-}
-
-/**
  * MySQL hands datetimes back as `Date`; a raw `MAX()` may not be mapped and can
  * arrive as the naive string `2026-09-01 08:00:00`.
  *
@@ -107,7 +107,12 @@ function toIso(value: unknown): string | null {
   if (value instanceof Date) return value.toISOString()
   if (typeof value !== 'string' || value === '') return null
 
-  const naive = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(value)
+  // Two plain tests rather than one pattern with an optional tail: a zoned
+  // value starts exactly like a naive one, so the zone is what tells them apart.
+  const isTimestamp = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}/.test(value)
+  const statesZone = /(?:Z|[+-]\d{2}:?\d{2})$/.test(value)
+  const naive = isTimestamp && !statesZone
+
   return new Date(naive ? `${value.replace(' ', 'T')}Z` : value).toISOString()
 }
 
@@ -127,13 +132,16 @@ export default defineEventHandler(async (event) => {
   }
   if (criteria.status === 'deleted') filters.push(isNotNull(users.deletedAt))
   if (criteria.email !== undefined) filters.push(eq(users.email, criteria.email))
-  if (criteria.namePattern !== undefined) filters.push(like(users.displayName, criteria.namePattern))
+  if (criteria.namePattern !== undefined)
+    filters.push(like(users.displayName, criteria.namePattern))
 
   const where = filters.length > 0 ? and(...filters) : undefined
 
-  const total = Number(
-    (await db.select({ value: sql<string>`count(*)` }).from(users).where(where))[0]?.value ?? 0,
-  )
+  const counted = await db
+    .select({ value: sql<string>`count(*)` })
+    .from(users)
+    .where(where)
+  const total = Number(counted[0].value)
 
   const rows = await db
     .select({
@@ -149,7 +157,11 @@ export default defineEventHandler(async (event) => {
       // Counted in SQL rather than by fetching the sessions: the list only
       // needs the number, and a member with forty old sessions should not cost
       // forty rows on the wire.
-      activeSessions: sql<string>`SUM(CASE WHEN ${sessions.revokedAt} IS NULL AND ${sessions.expiresAt} > NOW() THEN 1 ELSE 0 END)`,
+      // `string | null`, not `string`: with no joined session at all the SUM is
+      // NULL, and typing that away would make the fallback below look pointless.
+      activeSessions: sql<
+        string | null
+      >`SUM(CASE WHEN ${sessions.revokedAt} IS NULL AND ${sessions.expiresAt} > NOW() THEN 1 ELSE 0 END)`,
     })
     .from(users)
     .leftJoin(sessions, eq(sessions.userUid, users.uid))

@@ -59,6 +59,11 @@ export const USER_EVENT_TYPES = [
   'admin.unblocked',
   'admin.sessions_revoked',
   'admin.login_link_sent',
+  // Handing out or taking back the admin role, and switching somebody's
+  // newsletter for them.
+  'admin.promoted',
+  'admin.demoted',
+  'admin.newsletter_changed',
 ] as const
 
 export type UserEventType = (typeof USER_EVENT_TYPES)[number]

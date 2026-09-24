@@ -17,7 +17,11 @@ import { abbreviateName, maskEmail } from '~~/shared/mask'
  */
 
 export interface MemberSession {
-  /** First characters only — enough to tell two rows apart, and no more. */
+  /**
+   * The full id, because ending one session means naming it. It is not a
+   * credential: the cookie that carries it is sealed with a server secret, so
+   * knowing the id gets nobody in. The page shows only the first characters.
+   */
   id: string
   createdAt: string | null
   expiresAt: string | null
@@ -64,15 +68,13 @@ export default defineEventHandler(async (event) => {
     postalCode: user.postalCode,
     createdAt: iso(user.createdAt),
     deletedAt: iso(user.deletedAt),
-    sessions: rows.map(
-      (row): MemberSession => ({
-        id: row.id.slice(0, 8),
-        createdAt: iso(row.createdAt),
-        expiresAt: iso(row.expiresAt),
-        lastSeenAt: iso(row.lastSeenAt),
-        revokedAt: iso(row.revokedAt),
-        active: row.revokedAt === null && row.expiresAt.getTime() > now,
-      }),
-    ),
+    sessions: rows.map((row): MemberSession => ({
+      id: row.id,
+      createdAt: iso(row.createdAt),
+      expiresAt: iso(row.expiresAt),
+      lastSeenAt: iso(row.lastSeenAt),
+      revokedAt: iso(row.revokedAt),
+      active: row.revokedAt === null && row.expiresAt.getTime() > now,
+    })),
   }
 })

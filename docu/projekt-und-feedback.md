@@ -7,8 +7,17 @@ eigenes Untermenü.
 
 | Route | Inhalt |
 |---|---|
+| `/projekt/gemeinschaft` | Über GG&G: wofür die Gemeinschaft steht, als reiner Text |
 | `/projekt` | Über das Projekt: Zweck, Beteiligte, Technik, Version, Impressum/Datenschutz, Spenden-Platzhalter |
 | `/projekt/feedback` | Formular für Feedback und Fehlerberichte |
+
+Die Gemeinschaftsseite steht im Untermenü **vor** der Projektseite: sie
+beschreibt, wofür die Software da ist, nicht umgekehrt. Sie beschreibt die
+Gemeinschaft von ihrer Idee her — „Gemeinsam Gestalten & Genießen", Abschnitt
+für Abschnitt — und benennt bewusst keine Entstehungsgeschichte und keine
+Tagespolitik: beides veraltet, die Idee nicht. Der Text liegt vollständig in
+`pages.projekt.gemeinschaft.*` in `app/locales/de.json`, die Seite selbst hält
+keine Inhalte.
 
 Beide Seiten sind nur eingeloggt erreichbar (`middleware: ['authenticated']`) —
 dadurch stammen die Absenderdaten aus der Session und können nicht gefälscht
@@ -105,3 +114,4 @@ niemanden eine Minute lang aussperrt.
 | `app/server/emails/feedback.render.spec.ts` | echtes Rendern des Templates samt Escaping |
 | `app/src/pages/projekt/feedback.spec.ts` | Formular, Kontextanzeige, Fehlerfälle (429/503/sonstige) |
 | `app/src/pages/projekt/index.spec.ts`, `app/src/pages/projekt.spec.ts` | Inhalte und Untermenü |
+| `app/src/pages/projekt/gemeinschaft.spec.ts` | Vollständigkeit der Abschnitte |

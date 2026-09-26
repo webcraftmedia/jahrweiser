@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.15.2...v1.15.3) (2026-09-26)
+
+
+### Bug Fixes
+
+* **app:** browser polyfills ([#434](https://github.com/webcraftmedia/jahrweiser/issues/434)) ([9794e04](https://github.com/webcraftmedia/jahrweiser/commit/9794e04e8f14922176a3634274ebe920eb1a2b71))
+
 ## [1.15.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.15.1...v1.15.2) (2026-09-24)
 
 

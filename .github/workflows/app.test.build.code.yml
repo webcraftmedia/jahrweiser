@@ -51,3 +51,11 @@ jobs:
       - name: Frontend | Size Check
         run: npm run test:size
         working-directory: ${{env.WORKING_DIRECTORY}}
+
+      # Runs here rather than in its own job because it inspects the built
+      # bundle: a dependency that starts emitting syntax or APIs the browsers
+      # in app/.browserslistrc do not have has to fail the build, not a member's
+      # phone. See docu/browser-support.md.
+      - name: Frontend | Browser Baseline
+        run: npm run test:baseline
+        working-directory: ${{env.WORKING_DIRECTORY}}

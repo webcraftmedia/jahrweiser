@@ -249,6 +249,13 @@ export default withNuxt(
       '@intlify/vue-i18n/no-duplicate-keys-in-locale': 'error',
       '@intlify/vue-i18n/no-dynamic-keys': 'error',
       '@intlify/vue-i18n/no-missing-keys-in-other-locales': 'error', // seems not to work
+      // The rule reads everything inside `<noscript>` as one raw text node —
+      // the nested markup included — and flags the interpolations in it, which
+      // Vue does translate. Configured once here rather than with an inline
+      // disable per occurrence: those comments survive into the rendered
+      // markup in dev and into every snapshot taken of it.
+      // See components/BootFallback.vue.
+      '@intlify/vue-i18n/no-raw-text': ['warn', { ignoreNodes: ['noscript'] }],
       '@intlify/vue-i18n/no-unknown-locale': 'error',
       '@intlify/vue-i18n/no-unused-keys': [
         'error',

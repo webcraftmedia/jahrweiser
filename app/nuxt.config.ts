@@ -2,6 +2,9 @@ import { defineNuxtConfig } from 'nuxt/config'
 
 const isTest = !!process.env.VITEST
 
+/** Shown in the footer, and the cache-buster for the polyfill script. */
+const appVersion = isTest ? '0.0.0-test' : process.env.npm_package_version || 'development'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -12,6 +15,14 @@ export default defineNuxtConfig({
   app: {
     pageTransition: { name: 'page', mode: 'out-in' },
     head: {
+      script: [
+        // Classic and not deferred, so it runs before the (always deferred)
+        // module bundle — see public/polyfills.js for why that ordering is the
+        // whole point. Served from our own origin: a polyfill CDN would put a
+        // third party in front of every page load, and polyfill.io is the
+        // textbook example of how that ends.
+        { src: `/polyfills.js?v=${appVersion}` },
+      ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
@@ -33,6 +44,17 @@ export default defineNuxtConfig({
     },
   },
   vite: {
+    build: {
+      // Keep in step with .browserslistrc — `scripts/browser-baseline.mjs`
+      // fails the build if the emitted syntax drifts above this.
+      //
+      // Vite 8 defaults to `baseline-widely-available` (Safari 16 / Chrome 107).
+      // Two dependencies ship ES2022 class fields, so without this line the
+      // entry chunk is a SyntaxError on anything older — and a SyntaxError
+      // happens before any of our code runs, so nothing can report it. The
+      // member just sees the server-rendered markup sit there forever.
+      target: ['chrome80', 'edge80', 'firefox72', 'safari14'],
+    },
     optimizeDeps: {
       include: [
         '@vue/devtools-core',
@@ -140,7 +162,7 @@ export default defineNuxtConfig({
 
     // Keys within public, will be also exposed to the client-side
     public: {
-      appVersion: isTest ? '0.0.0-test' : process.env.npm_package_version || 'development',
+      appVersion,
     },
   },
   hooks: {

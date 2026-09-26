@@ -8,6 +8,13 @@
       "map-incomplete": "Karte — deine Postleitzahl fehlt oder ist ungültig",
       "telegram": "Telegram-Kanäle"
     },
+    "BootFallback": {
+      "contact": "Hilft das nicht, melde dich bitte bei uns — die Kontaktdaten stehen im Impressum.",
+      "hint": "Bitte öffne den Link in einem aktuellen Chrome, Firefox oder Safari — möglichst nicht im eingebauten Browser deiner Mail-App.",
+      "noscript": "In deinem Browser ist JavaScript ausgeschaltet. Anmeldung und Registrierung brauchen JavaScript.",
+      "text": "Dein Browser konnte den Jahrweiser nicht starten. Das liegt fast immer an einem sehr alten Browser oder daran, dass JavaScript blockiert wird.",
+      "title": "Diese Seite konnte nicht geladen werden"
+    },
     "Footer": {
       "changelog": "Versionshistorie",
       "changelog-intro-after": "GitHub abzurufen",

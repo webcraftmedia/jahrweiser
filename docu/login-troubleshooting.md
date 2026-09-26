@@ -5,16 +5,41 @@ woran man in fünf Minuten erkennt, ob das Problem auf unserer Seite liegt.
 
 ## Die drei Bilder, die gemeldet werden
 
-| Was das Mitglied sieht                           | Was passiert ist                                  |
-| ------------------------------------------------ | ------------------------------------------------- |
-| Drei Punkte, die nicht weggehen                   | Eine Anfrage, die nie beantwortet wurde           |
-| Wieder das Login-Formular, ohne Erklärung         | Anmeldung lief durch, der Browser behielt sie nicht |
-| „Dieser Link wurde bereits verwendet"             | Token verbraucht — oft vom Virenscanner des Postfachs |
+| Was das Mitglied sieht                    | Was passiert ist                                                             |
+| ----------------------------------------- | ---------------------------------------------------------------------------- |
+| Drei Punkte, die nicht weggehen           | Eine Anfrage, die nie beantwortet wurde — **oder** die App ist nie gestartet |
+| „Diese Seite konnte nicht geladen werden" | Die App ist nie gestartet, und sie sagt es jetzt selbst                      |
+| Wieder das Login-Formular, ohne Erklärung | Anmeldung lief durch, der Browser behielt sie nicht                          |
+| „Dieser Link wurde bereits verwendet"     | Token verbraucht — oft vom Virenscanner des Postfachs                        |
 
-Seit den Deadlines in `src/utils/withTimeout.ts` kann das erste Bild nicht mehr
-dauerhaft stehen bleiben: nach 15 Sekunden wird daraus „Der Server hat nicht
-geantwortet" samt „Nochmal versuchen". Kommt die Meldung trotzdem noch, ist die
+Zu den drei Punkten gibt es zwei verschiedene Ursachen, und sie sehen für das
+Mitglied gleich aus:
+
+1. **Die Anfrage kam nicht zurück.** Dagegen stehen die Deadlines in
+   `src/utils/withTimeout.ts`: nach 15 Sekunden wird daraus „Der Server hat
+   nicht geantwortet" samt „Nochmal versuchen".
+2. **Das Client-Bundle lief nie.** Dann hilft die Deadline nicht — sie steckt in
+   demselben Bundle. Das serverseitig gerenderte Wartebild bleibt für immer
+   stehen, der Server hat einen ganz normalen 200 geloggt, und im Monitoring ist
+   nichts zu sehen. Ursachen: Browser älter als `app/.browserslistrc` erlaubt,
+   Content-Blocker, Firmen-Proxy, kaputte Browser-Erweiterung.
+
+Fall 2 meldet sich seit `src/components/BootFallback.vue` selbst („Diese Seite
+konnte nicht geladen werden"). Bleiben trotzdem nur die Punkte stehen, ist die
 Seite älter als dieses Release — Cache leeren lassen.
+
+Zur Einordnung von Fall 2 genügt das Access-Log:
+
+```sh
+grep '<token-anfang>' /var/log/nginx/access.log      # User-Agent des Mitglieds
+grep '<seine-IP>' /var/log/nginx/access.log | grep '_nuxt'
+```
+
+- HTML geholt, **keine** `/_nuxt/*.js` → JavaScript wird blockiert.
+- JS geholt, aber **kein** `/api/register/<token>` danach → das Bundle ließ sich
+  nicht ausführen; der User-Agent sagt, wie alt der Browser ist.
+
+Hintergrund und Grenzwerte: `docu/browser-support.md`.
 
 ## Schritt 1: in die Ereignis-Spur schauen
 

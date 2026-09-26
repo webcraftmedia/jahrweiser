@@ -1,0 +1,33 @@
+# The browsers the client bundle must run in.
+#
+# This file is the single source of truth for three things that have to agree,
+# and used to agree only by accident:
+#
+#   1. `vite.build.target` in nuxt.config.ts — which syntax is emitted,
+#   2. `public/polyfills.js` — which runtime APIs are filled in,
+#   3. `scripts/browser-baseline.mjs` — the CI check that both still hold.
+#
+# Why it is pinned this low: Vite 8 defaults to `baseline-widely-available`
+# (Safari 16 / Chrome 107, i.e. 2022). A member on an older device then gets a
+# module the browser cannot parse, the app never mounts, and the server-rendered
+# markup freezes — on /register that is three loading dots that never go away,
+# with no error anywhere. See docu/browser-support.md.
+#
+# ES2020 is the floor, not a preference: below it a module build can no longer
+# express `import.meta` and dynamic `import()`, and the next step down is a
+# second nomodule bundle. Browsers without ES modules at all (IE 11, Safari 10,
+# Android WebView 60) cannot load this app whatever the target says.
+#
+# Safari 14 rather than 13.1 for one concrete reason: a hashing helper in the
+# dependency tree writes the BigInt literal `32n`. BigInt arrived in Safari 14,
+# and a literal is syntax — no polyfill reaches it, and rolldown says so with
+# `TOLERATED_TRANSFORM: Big integer literals are not available`. That warning
+# is easy to scroll past, so `scripts/browser-baseline.mjs` checks for it.
+chrome >= 80
+edge >= 80
+firefox >= 72
+safari >= 14
+ios_saf >= 14
+and_chr >= 80
+samsung >= 13
+not dead

@@ -4,9 +4,12 @@
 
     <!-- Content -->
     <div
-      class="flex-1 flex items-start justify-center px-4"
+      class="flex-1 flex flex-col items-center justify-start px-4"
       :style="loginZoom !== 1 ? { zoom: loginZoom } : undefined"
     >
+      <!-- Only on this layout: elsewhere a dead app is obvious, here it looks
+           like the page is still working. -->
+      <BootFallback />
       <slot />
     </div>
 

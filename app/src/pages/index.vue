@@ -183,7 +183,7 @@
   import IconGrid from '~/assets/icon-grid.svg'
   import IconList from '~/assets/icon-list.svg'
   import IconPlus from '~/assets/icon-plus.svg'
-  import { designPalette } from '~~/shared/calendar-palette'
+  import { paletteEntryForIndex } from '~~/shared/calendar-palette'
 
   interface RawCalendarEvent {
     calendar: string
@@ -288,13 +288,14 @@
     }
   })
 
-  // designPalette imported from shared/calendar-palette so the weekly
-  // newsletter (server/helpers/newsletter.ts) renders the same color per
-  // calendar as the calendar view here.
+  // The palette comes from shared/calendar-palette so the weekly newsletter
+  // (server/helpers/newsletter.ts) renders the same color per calendar as the
+  // calendar view here — including how it wraps around when there are more
+  // calendars than colors.
 
   const calendarLegend = computed(() =>
     calendars.value.map((cal, i) => {
-      const palette = designPalette[i % designPalette.length]!
+      const palette = paletteEntryForIndex(i)
       const colors = isDark.value ? palette.dark : palette.light
       return { name: cal.name, dotColor: colors.bg }
     }),
@@ -765,7 +766,7 @@
       /* v8 ignore next */
     > = {}
     calendars.value.forEach((cal, i) => {
-      const palette = designPalette[i % designPalette.length]!
+      const palette = paletteEntryForIndex(i)
       config[`cal-${i}`] = {
         colorName: `cal-${i}`,
         lightColors: {

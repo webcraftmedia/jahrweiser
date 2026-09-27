@@ -159,3 +159,9 @@ niemanden eine Minute lang aussperrt.
 | `app/src/pages/projekt/gemeinschaft.spec.ts` | Vollständigkeit der Abschnitte |
 | `app/shared/feedback.spec.ts` | Datum/Zeit-Format, Verschiebung über Tages-, Monats- und DST-Grenzen |
 | `app/src/pages/index.spec.ts` | `+`-Knopf: Ziel-Link, Monatsübernahme, Ausweichen vor der Legende |
+| `app/e2e/suggest-event.spec.ts` | echter Browser: Vorbelegung, gesendeter Payload — und per Bounding-Box, dass Knopf und Legende sich nicht überlappen |
+| `app/e2e-full-stack/feedback.spec.ts` | echte Mail in maildev für alle drei Arten: Betreff, Inhalt, und dass nicht mitgeht, was nicht mitgehen soll |
+
+Die Geometrie ist bewusst im gemockten e2e-Lauf geprüft und nicht im Unit-Test:
+dass die Klasse `cal-add-raised` gesetzt wird, sagt nichts darüber, ob der Knopf
+der Legende tatsächlich ausweicht — das zeigt nur eine gelayoutete Seite.

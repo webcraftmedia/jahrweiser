@@ -84,13 +84,12 @@ export const designPalette: readonly CalendarPaletteEntry[] = [
   }, // brick → bright red
 ]
 
+/**
+ * The entry a calendar at `index` gets, wrapping around once the palette runs
+ * out. The only place that knows about the wrap — both renderings go through it.
+ */
 export function paletteEntryForIndex(index: number): CalendarPaletteEntry {
   return designPalette[index % designPalette.length]!
-}
-
-/** Light-mode border color used by the in-app calendar view. */
-export function paletteBorderForIndex(index: number): string {
-  return paletteEntryForIndex(index).light.border
 }
 
 /** Higher-contrast border color used in the weekly newsletter mail. */

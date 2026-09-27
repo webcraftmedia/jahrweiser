@@ -7,5 +7,7 @@
 export function firstNameOf(displayName: string | null | undefined): string {
   const name = (displayName ?? '').trim()
   if (!name) return ''
-  return name.split(/\s+/)[0] ?? ''
+  // Non-empty and trimmed, so `split` yields at least one non-empty part — the
+  // assertion is for the type checker, not a case that can occur.
+  return name.split(/\s+/)[0]!
 }

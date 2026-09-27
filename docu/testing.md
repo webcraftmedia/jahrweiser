@@ -15,10 +15,17 @@ cd app
 npm run test:unit
 ```
 
-Coverage is enforced at 100%. The DB-integrated auth endpoints
-(`requestLoginLink`, `redeemLoginLink`, `admin/sync-now`) and the DB
-orchestration in `helpers/sync.ts` are excluded from coverage — they are
-validated by the full-stack E2E suite instead. See `vitest.config.ts`.
+Coverage is enforced at 100% over `src/`, `server/api/`, `server/helpers/` and
+`shared/`. The last one is measured because it holds the rules both sides depend
+on (validation limits, the feedback contract, the calendar palette): an untested
+branch there is one neither the client nor the server notices.
+
+Four files are excluded — the bulk newsletter send
+(`admin/send-newsletter.post.ts`), the rate-limited login request
+(`requestLoginLink.post.ts`), the multi-path register flow (`register.post.ts`)
+and the DAV→sidecar diff (`helpers/sync.ts`). They are validated by the
+full-stack E2E suite, and `server/api/_smoke.spec.ts` guards them against
+load-time errors. See `vitest.config.ts` for the list and the reasoning.
 
 ## E2E (mocked)
 
@@ -77,9 +84,12 @@ and extract login tokens. UI for manual inspection at <http://localhost:1080>.
 - Admin can reach `/admin`
 - Login-link rate limit silently blocks repeated requests
 - `/api/admin/sync-now` requires a valid Bearer token
+- Weekly newsletter reaches its subscribers (`newsletter.spec.ts`)
+- Feedback, bug report and event suggestion arrive as mail in the team inbox,
+  with the member's wording and without the data they did not send
+  (`feedback.spec.ts`)
 
 ### What's NOT covered (yet)
 
 - Soft-delete blocking login after DAV-side delete
 - Email change in DAV invalidating active sessions
-- Newsletter flow (future PR)

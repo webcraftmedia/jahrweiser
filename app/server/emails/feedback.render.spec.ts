@@ -58,6 +58,16 @@ async function render(locals: Record<string, unknown> = {}) {
   return renderer.renderAll(TEMPLATE, { ...LOCALS, ...locals })
 }
 
+/** What the endpoint adds for a suggested event, on top of the sender lines. */
+const EVENT_LOCALS = {
+  isBug: false,
+  isEvent: true,
+  eventTitle: 'Chorprobe',
+  eventStart: '05.11.2026, 19:00',
+  eventEnd: '05.11.2026, 21:00',
+  eventLocation: 'Gemeindehaus',
+}
+
 describe('emails/feedback', () => {
   it('carries a bug report with its context', async () => {
     const { subject, html } = await render()
@@ -77,6 +87,38 @@ describe('emails/feedback', () => {
     for (const label of ['Browser', 'Fenstergröße', 'Darstellung', 'Seite', 'Version']) {
       expect(html).not.toContain(label)
     }
+  })
+
+  it('carries a suggested event with its times and place', async () => {
+    const { subject, html } = await render({ ...EVENT_LOCALS, message: 'Bitte Noten mitbringen.' })
+    expect(subject).toBe('Jahrweiser: Terminvorschlag — Anna Mustermann')
+    for (const value of ['Chorprobe', '05.11.2026, 19:00', '05.11.2026, 21:00', 'Gemeindehaus']) {
+      expect(html).toContain(value)
+    }
+    expect(html).toContain('Bitte Noten mitbringen.')
+    // A suggestion is not reproduced, so the technical half stays away.
+    for (const label of ['Browser', 'Fenstergröße', 'Darstellung']) {
+      expect(html).not.toContain(label)
+    }
+  })
+
+  it('leaves out the place and the description a suggestion did not have', async () => {
+    // Both are optional — an empty row would look like a lost value.
+    const { html } = await render({ ...EVENT_LOCALS, eventLocation: '', message: '' })
+    expect(html).toContain('Chorprobe')
+    expect(html).not.toContain('Ort')
+    expect(html).not.toContain('Beschreibung')
+  })
+
+  it('escapes a suggested event as thoroughly as a message', async () => {
+    const { html } = await render({
+      ...EVENT_LOCALS,
+      eventTitle: '<img src=x onerror="alert(1)">',
+      eventLocation: '<b>Halle</b>',
+    })
+    expect(html).not.toContain('<img src=x')
+    expect(html).not.toContain('<b>Halle</b>')
+    expect(html).toContain('&lt;img src=x')
   })
 
   it('leaves the dash off when there is no name to put behind it', async () => {

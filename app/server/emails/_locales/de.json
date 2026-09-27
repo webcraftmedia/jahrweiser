@@ -19,9 +19,13 @@
     "feedback": {
       "subjectFeedback": "Feedback",
       "subjectBug": "Fehlerbericht",
+      "subjectEvent": "Terminvorschlag",
       "introFeedback": "aus dem Jahrweiser ist Feedback eingegangen.",
       "introBug": "aus dem Jahrweiser wurde ein Fehler gemeldet.",
+      "introEvent": "aus dem Jahrweiser wurde ein Termin vorgeschlagen.",
       "message": "Nachricht",
+      "description": "Beschreibung",
+      "eventHeading": "Vorgeschlagener Termin",
       "detailsFeedback": "Angaben zum Absender",
       "detailsBug": "Angaben zum Absender und zur Umgebung",
       "replyHint": "Eine Antwort auf diese E-Mail geht direkt an die absendende Person.",
@@ -35,6 +39,10 @@
         "browser": "Browser",
         "viewport": "Fenstergröße",
         "colorScheme": "Darstellung",
+        "eventTitle": "Titel",
+        "eventStart": "Beginn",
+        "eventEnd": "Ende",
+        "eventLocation": "Ort",
         "sentAt": "Gesendet"
       }
     },

@@ -65,6 +65,16 @@ async function chooseBug(wrapper: Awaited<ReturnType<typeof mountReady>>) {
   await wrapper.find('input[type="radio"][value="bug"]').setValue()
 }
 
+/** Switch the form over to suggesting an event. */
+async function chooseEvent(wrapper: Awaited<ReturnType<typeof mountReady>>) {
+  await wrapper.find('input[type="radio"][value="event"]').setValue()
+}
+
+/** The value a field currently holds. */
+function valueOf(wrapper: Awaited<ReturnType<typeof mountReady>>, selector: string): string {
+  return (wrapper.find(selector).element as HTMLInputElement).value
+}
+
 /** Fill in a message and press send, then let the request settle. */
 async function submitReport(
   wrapper: Awaited<ReturnType<typeof mountReady>>,
@@ -203,6 +213,146 @@ describe('Page: Feedback', () => {
     const wrapper = await mountReady()
     await chooseBug(wrapper)
     expect(wrapper.find('details').text()).toContain('pages.projekt.feedback.context.none')
+  })
+
+  describe('suggesting an event', () => {
+    /** Fill in the minimum a suggestion needs. */
+    async function fillEvent(
+      wrapper: Awaited<ReturnType<typeof mountReady>>,
+      { title = 'Chorprobe', start = '2026-11-05T19:00', end = '2026-11-05T21:00' } = {},
+    ) {
+      await wrapper.find('#feedback-event-title').setValue(title)
+      await wrapper.find('#feedback-event-start').setValue(start)
+      await wrapper.find('#feedback-event-end').setValue(end)
+    }
+
+    it('offers the event fields only for a suggestion', async () => {
+      const wrapper = await mountReady()
+      expect(wrapper.find('#feedback-event-title').exists()).toBe(false)
+      await chooseEvent(wrapper)
+      for (const field of ['title', 'start', 'end', 'location']) {
+        expect(wrapper.find(`#feedback-event-${field}`).exists()).toBe(true)
+      }
+      // A suggestion is not reproduced, so it carries no browser context either.
+      expect(wrapper.find('details').exists()).toBe(false)
+    })
+
+    it('arrives ready to fill in when the calendar sent a date along', async () => {
+      // This is the calendar's "+": kind preselected, the displayed month in,
+      // and an end two hours later so only the title is actually missing.
+      const wrapper = await mountReady('/projekt/feedback?kind=event&date=2026-11-01')
+      expect(wrapper.find('#feedback-event-title').exists()).toBe(true)
+      expect(valueOf(wrapper, '#feedback-event-start')).toBe('2026-11-01T19:00')
+      expect(valueOf(wrapper, '#feedback-event-end')).toBe('2026-11-01T21:00')
+      expect(wrapper.text()).toContain('pages.projekt.feedback.heading-event')
+    })
+
+    it('ignores a date the query made up', async () => {
+      const wrapper = await mountReady('/projekt/feedback?kind=event&date=irgendwann')
+      expect(valueOf(wrapper, '#feedback-event-start')).toBe('')
+      expect(valueOf(wrapper, '#feedback-event-end')).toBe('')
+    })
+
+    it('needs a title and a time, not a description', async () => {
+      const wrapper = await mountReady()
+      await chooseEvent(wrapper)
+      const button = wrapper.find('button[type="submit"]')
+      expect(button.attributes('disabled')).toBeDefined()
+      await wrapper.find('#feedback-event-title').setValue('Chorprobe')
+      // Named, but no time yet.
+      expect(button.attributes('disabled')).toBeDefined()
+      await wrapper.find('#feedback-event-start').setValue('2026-11-05T19:00')
+      // The end came along with the start, so this is complete — without a word
+      // of description.
+      expect(button.attributes('disabled')).toBeUndefined()
+    })
+
+    it('refuses a title of nothing but spaces', async () => {
+      const wrapper = await mountReady()
+      await chooseEvent(wrapper)
+      await fillEvent(wrapper, { title: '   ' })
+      expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
+    })
+
+    it('drags an untouched end along when the start moves', async () => {
+      const wrapper = await mountReady()
+      await chooseEvent(wrapper)
+      await wrapper.find('#feedback-event-start').setValue('2026-11-05T19:00')
+      expect(valueOf(wrapper, '#feedback-event-end')).toBe('2026-11-05T21:00')
+      await wrapper.find('#feedback-event-start').setValue('2026-11-06T23:30')
+      // Rolled into the next day rather than ending before it started.
+      expect(valueOf(wrapper, '#feedback-event-end')).toBe('2026-11-07T01:30')
+    })
+
+    it('leaves an end that was chosen on purpose alone', async () => {
+      const wrapper = await mountReady()
+      await chooseEvent(wrapper)
+      await wrapper.find('#feedback-event-start').setValue('2026-11-05T10:00')
+      await wrapper.find('#feedback-event-end').setValue('2026-11-05T18:00')
+      await wrapper.find('#feedback-event-start').setValue('2026-11-05T11:00')
+      expect(valueOf(wrapper, '#feedback-event-end')).toBe('2026-11-05T18:00')
+    })
+
+    it('says so and refuses to send when the end is before the start', async () => {
+      const wrapper = await mountReady()
+      await chooseEvent(wrapper)
+      await fillEvent(wrapper, { start: '2026-11-05T19:00', end: '2026-11-05T21:00' })
+      await wrapper.find('#feedback-event-end').setValue('2026-11-04T09:00')
+      expect(wrapper.text()).toContain('pages.projekt.feedback.event.end-before-start')
+      expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
+    })
+
+    it('sends the suggestion as structured fields, description and all', async () => {
+      const wrapper = await mountReady()
+      await chooseEvent(wrapper)
+      await fillEvent(wrapper)
+      await wrapper.find('#feedback-event-location').setValue('Gemeindehaus')
+      await submitReport(wrapper, 'Bitte Noten mitbringen.')
+      expect(lastPost()).toStrictEqual({
+        kind: 'event',
+        message: 'Bitte Noten mitbringen.',
+        event: {
+          title: 'Chorprobe',
+          start: '2026-11-05T19:00',
+          end: '2026-11-05T21:00',
+          location: 'Gemeindehaus',
+        },
+      })
+      expect(wrapper.text()).toContain('pages.projekt.feedback.sent-event')
+    })
+
+    it('sends a suggestion without a description or a place', async () => {
+      const wrapper = await mountReady()
+      await chooseEvent(wrapper)
+      await fillEvent(wrapper)
+      await wrapper.find('form').trigger('submit')
+      await vi.waitFor(() => {
+        expect(wrapper.find('[role="status"]').exists()).toBe(true)
+      })
+      expect(lastPost()).toMatchObject({ kind: 'event', message: '' })
+      expect((lastPost().event as { location: string }).location).toBe('')
+    })
+
+    it('empties the fields once it is out', async () => {
+      const wrapper = await mountReady()
+      await chooseEvent(wrapper)
+      await fillEvent(wrapper)
+      await wrapper.find('#feedback-event-location').setValue('Gemeindehaus')
+      await submitReport(wrapper, 'Bitte Noten mitbringen.')
+      for (const field of ['title', 'start', 'end', 'location']) {
+        expect(valueOf(wrapper, `#feedback-event-${field}`)).toBe('')
+      }
+    })
+
+    it('keeps the suggestion when the send fails', async () => {
+      serving({ send: 500 })
+      const wrapper = await mountReady()
+      await chooseEvent(wrapper)
+      await fillEvent(wrapper)
+      await submitReport(wrapper, 'Mühsam getippt.')
+      expect(valueOf(wrapper, '#feedback-event-title')).toBe('Chorprobe')
+      expect(valueOf(wrapper, '#feedback-event-start')).toBe('2026-11-05T19:00')
+    })
   })
 
   describe('when sending fails', () => {

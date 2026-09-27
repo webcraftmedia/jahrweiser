@@ -1,32 +1,51 @@
 extend ../layout.pug
 
 //- Every member-supplied value is printed with `=` (pug escapes it), never
-//- with `!=`: the message and the context strings arrive from a browser, and
-//- an unescaped `<img onerror=…>` in a report would be rendered by whoever
-//- opens the mail.
+//- with `!=`: the message, the context strings and the suggested event arrive
+//- from a browser, and an unescaped `<img onerror=…>` in a report would be
+//- rendered by whoever opens the mail.
 
 block content
-  p!= isBug ? t('emails.feedback.introBug') : t('emails.feedback.introFeedback')
+  //- One mail, three kinds — the intro says which one before anything else does.
+  - var intro = isBug ? t('emails.feedback.introBug') : (isEvent ? t('emails.feedback.introEvent') : t('emails.feedback.introFeedback'))
+  p!= intro
 
-  h3(style="margin-top:1.5em;margin-bottom:0.5em;font-size:1.05em;color:#1e293b")
-    != t('emails.feedback.message')
-  div(style="padding:0.75em 1em;border-left:4px solid #b45309;background:#f8fafc;white-space:pre-wrap;color:#1e293b")
-    = message
+  mixin fields(rows)
+    table(style="border-collapse:collapse;font-size:0.9em;color:#334155")
+      each row in rows
+        tr
+          td(style="padding:0.2em 1em 0.2em 0;vertical-align:top;color:#64748b;white-space:nowrap")
+            != t('emails.feedback.field.' + row[0])
+          td(style="padding:0.2em 0;vertical-align:top")
+            = row[1]
+
+  //- The suggestion itself goes first: it is what the team has to decide on,
+  //- and the description below only explains it.
+  if isEvent
+    h3(style="margin-top:1.5em;margin-bottom:0.5em;font-size:1.05em;color:#1e293b")
+      != t('emails.feedback.eventHeading')
+    - var eventRows = [['eventTitle', eventTitle], ['eventStart', eventStart], ['eventEnd', eventEnd]]
+    //- Omitted rather than shown empty — a suggestion without a place yet is normal.
+    if eventLocation
+      - eventRows = eventRows.concat([['eventLocation', eventLocation]])
+    +fields(eventRows)
+
+  //- Required for feedback and bug reports, optional for a suggestion, so the
+  //- heading is never left standing above nothing.
+  if message
+    h3(style="margin-top:1.5em;margin-bottom:0.5em;font-size:1.05em;color:#1e293b")
+      != isEvent ? t('emails.feedback.description') : t('emails.feedback.message')
+    div(style="padding:0.75em 1em;border-left:4px solid #b45309;background:#f8fafc;white-space:pre-wrap;color:#1e293b")
+      = message
 
   h3(style="margin-top:2em;margin-bottom:0.5em;font-size:1.05em;color:#1e293b")
     != isBug ? t('emails.feedback.detailsBug') : t('emails.feedback.detailsFeedback')
-  //- The technical half exists for a bug report only; plain feedback carries
-  //- nothing but who wrote it and when.
+  //- The technical half exists for a bug report only; feedback and suggestions
+  //- carry nothing but who wrote them and when.
   - var rows = [['sender', senderName], ['email', senderEmail], ['role', senderRole], ['uid', senderUid], ['sentAt', sentAt]]
   if isBug
     - rows = rows.concat([['page', page], ['version', appVersion], ['browser', userAgent], ['viewport', viewport], ['colorScheme', colorScheme]])
-  table(style="border-collapse:collapse;font-size:0.9em;color:#334155")
-    each row in rows
-      tr
-        td(style="padding:0.2em 1em 0.2em 0;vertical-align:top;color:#64748b;white-space:nowrap")
-          != t('emails.feedback.field.' + row[0])
-        td(style="padding:0.2em 0;vertical-align:top")
-          = row[1]
+  +fields(rows)
 
   p(style="margin-top:2em;font-size:0.85em;color:#64748b")
     != t('emails.feedback.replyHint')

@@ -262,6 +262,7 @@
       },
       "listView": "Liste",
       "monthView": "Monat",
+      "suggestEvent": "Termin vorschlagen",
       "today": "Heute"
     },
     "karte": {
@@ -368,21 +369,37 @@
           "viewport": "Fenstergröße"
         },
         "description": "Schreib auf, was dir aufgefallen ist. Die Nachricht geht als E-Mail an das Team, geantwortet wird an deine Adresse.",
+        "description-event": "Trag den Termin so ein, wie er im Kalender stehen soll. Der Vorschlag geht als E-Mail an das Team, das ihn anlegt — Rückfragen gehen an deine Adresse.",
         "error": "Das hat nicht geklappt. Bitte versuche es später noch einmal.",
         "error-cooldown": "Kurz durchatmen — eine Nachricht pro Minute reicht.",
         "error-unavailable": "Der Versand ist gerade nicht eingerichtet. Bitte wende dich direkt an die Gemeinschaft.",
+        "event": {
+          "description": "Beschreibung (optional)",
+          "end": "Ende",
+          "end-before-start": "Das Ende liegt vor dem Beginn.",
+          "legend": "Der Termin",
+          "location": "Ort",
+          "location-placeholder": "Wo findet es statt? (optional)",
+          "start": "Beginn",
+          "title": "Titel",
+          "title-placeholder": "Wie soll der Termin im Kalender heißen?"
+        },
         "heading": "Feedback und Fehler melden",
+        "heading-event": "Termin vorschlagen",
         "kind": {
           "bug": "Fehler melden",
+          "event": "Termin vorschlagen",
           "feedback": "Feedback oder Idee"
         },
         "kind-legend": "Worum geht es?",
         "loading": "Wird geladen...",
         "message": "Deine Nachricht",
         "message-placeholder-bug": "Was hast du gemacht, was ist passiert, was hättest du erwartet?",
+        "message-placeholder-event": "Worum geht es, wer ist eingeladen, was sollte man mitbringen?",
         "message-placeholder-feedback": "Was gefällt dir, was fehlt dir, was würdest du anders machen?",
         "sending": "Wird gesendet…",
         "sent": "Danke! Deine Nachricht ist unterwegs.",
+        "sent-event": "Danke! Dein Terminvorschlag ist unterwegs.",
         "submit": "Absenden",
         "unavailable": "Das Feedback-Formular ist derzeit nicht eingerichtet. Bitte wende dich direkt an die Gemeinschaft."
       },

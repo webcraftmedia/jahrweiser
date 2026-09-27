@@ -33,6 +33,18 @@ function feedbackBody(overrides: Record<string, unknown> = {}) {
   return { kind: 'feedback', message: 'Schöne Sache.', ...overrides }
 }
 
+const EVENT = {
+  title: 'Chorprobe',
+  start: '2026-11-05T19:00',
+  end: '2026-11-05T21:00',
+  location: 'Gemeindehaus',
+}
+
+/** What it posts for a suggested event. */
+function eventBody(overrides: Record<string, unknown> = {}) {
+  return { kind: 'event', message: 'Bitte Noten mitbringen.', event: EVENT, ...overrides }
+}
+
 /** Make `readValidatedBody` hand the handler this payload. */
 function posting(payload: unknown) {
   vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
@@ -118,6 +130,60 @@ describe('feedback.post', () => {
     expect(lastLocals()).not.toHaveProperty('userAgent')
   })
 
+  it('passes a suggested event into the mail with readable times', async () => {
+    signedInAs('u-event')
+    posting(eventBody())
+    await fn({})
+    expect(lastLocals()).toMatchObject({
+      isEvent: true,
+      isBug: false,
+      message: 'Bitte Noten mitbringen.',
+      eventTitle: 'Chorprobe',
+      // Reformatted, never parsed: 19:00 was wall-clock time and stays 19:00.
+      eventStart: '05.11.2026, 19:00',
+      eventEnd: '05.11.2026, 21:00',
+      eventLocation: 'Gemeindehaus',
+    })
+  })
+
+  it('does not move a suggested event across time zones', async () => {
+    // The regression this guards: reading the input value with `new Date()` and
+    // rendering it in APP_TIMEZONE shifts the evening by the UTC offset.
+    globalThis.useRuntimeConfig = () => ({
+      FEEDBACK_EMAIL: 'feedback@example.com',
+      FEEDBACK_RATE_LIMIT_MS: 0,
+      APP_TIMEZONE: 'Pacific/Auckland',
+    })
+    signedInAs('u-event-tz')
+    posting(eventBody())
+    await fn({})
+    expect(lastLocals()).toMatchObject({ eventStart: '05.11.2026, 19:00' })
+  })
+
+  it('takes a suggestion with neither description nor place', async () => {
+    signedInAs('u-event-bare')
+    posting({ kind: 'event', event: { ...EVENT, location: undefined } })
+    await fn({})
+    expect(lastLocals()).toMatchObject({ message: '', eventLocation: '' })
+  })
+
+  it('sends a suggestion without any technical context', async () => {
+    signedInAs('u-event-clean')
+    posting(eventBody({ context: CONTEXT }))
+    await fn({})
+    const locals = lastLocals()
+    for (const key of ['page', 'userAgent', 'viewport', 'colorScheme']) {
+      expect(locals).not.toHaveProperty(key)
+    }
+  })
+
+  it('strips line breaks from the event title and place', async () => {
+    signedInAs('u-event-inject')
+    posting(eventBody({ event: { ...EVENT, title: 'Probe\r\nBcc: someone@evil.example' } }))
+    await fn({})
+    expect(lastLocals().eventTitle).toBe('Probe Bcc: someone@evil.example')
+  })
+
   it('suppresses the support block — the mail goes to the team itself', async () => {
     signedInAs('u-support')
     await fn({})
@@ -186,6 +252,46 @@ describe('feedback.post', () => {
 
     it('rejects a bug report without context', async () => {
       await expect(validate(body({ context: undefined }))).rejects.toThrow(ZodError)
+    })
+
+    it('rejects a suggestion without an event', async () => {
+      await expect(validate(eventBody({ event: undefined }))).rejects.toThrow(ZodError)
+    })
+
+    it('rejects a suggestion without a title', async () => {
+      await expect(validate(eventBody({ event: { ...EVENT, title: '  ' } }))).rejects.toThrow(
+        ZodError,
+      )
+    })
+
+    it.each([
+      ['a date without a time', '2026-11-05'],
+      ['seconds', '2026-11-05T19:00:00'],
+      ['a zone', '2026-11-05T19:00Z'],
+      ['prose', 'nächsten Donnerstag'],
+    ])('rejects a start given as %s', async (_case, start) => {
+      await expect(validate(eventBody({ event: { ...EVENT, start } }))).rejects.toThrow(ZodError)
+    })
+
+    it('rejects an event that ends before it starts', async () => {
+      // The form disables the button for this; the schema makes it unacceptable,
+      // so a hand-rolled request cannot put a backwards range in front of the team.
+      await expect(
+        validate(eventBody({ event: { ...EVENT, end: '2026-11-04T09:00' } })),
+      ).rejects.toThrow(ZodError)
+    })
+
+    it('accepts an event that starts and ends at the same minute', async () => {
+      signedInAs('u-event-instant')
+      await expect(
+        validate(eventBody({ event: { ...EVENT, end: EVENT.start } })),
+      ).resolves.toStrictEqual({ sent: true })
+    })
+
+    it('rejects an over-long event title', async () => {
+      await expect(
+        validate(eventBody({ event: { ...EVENT, title: 'x'.repeat(301) } })),
+      ).rejects.toThrow(ZodError)
     })
   })
 

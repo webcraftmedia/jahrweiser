@@ -9,7 +9,7 @@ eigenes Untermenü.
 |---|---|
 | `/projekt/gemeinschaft` | Über GG&G: wofür die Gemeinschaft steht, als reiner Text |
 | `/projekt` | Über das Projekt: Zweck, Beteiligte, Technik, Version, Impressum/Datenschutz, Spenden-Platzhalter |
-| `/projekt/feedback` | Formular für Feedback und Fehlerberichte |
+| `/projekt/feedback` | Formular für Feedback, Fehlerberichte und Terminvorschläge |
 
 Die Gemeinschaftsseite steht im Untermenü **vor** der Projektseite: sie
 beschreibt, wofür die Software da ist, nicht umgekehrt. Sie beschreibt die
@@ -19,7 +19,7 @@ Tagespolitik: beides veraltet, die Idee nicht. Der Text liegt vollständig in
 `pages.projekt.gemeinschaft.*` in `app/locales/de.json`, die Seite selbst hält
 keine Inhalte.
 
-Beide Seiten sind nur eingeloggt erreichbar (`middleware: ['authenticated']`) —
+Alle Seiten sind nur eingeloggt erreichbar (`middleware: ['authenticated']`) —
 dadurch stammen die Absenderdaten aus der Session und können nicht gefälscht
 werden, und das Formular braucht weder Captcha noch IP-Rate-Limit.
 
@@ -34,6 +34,43 @@ markierter Abschnitt. Sobald es etwas zu verlinken gibt, wird daraus
 `/projekt/spenden` plus ein dritter Eintrag in `menuItems` in
 `app/src/pages/projekt.vue` — die Sektion ist dafür gebaut.
 
+## Termine vorschlagen
+
+Auf der Kalenderseite sitzt unten rechts ein runder `+`-Knopf (`.cal-add` in
+`app/src/pages/index.vue`), der auf
+`/projekt/feedback?kind=event&date=JJJJ-MM-TT` zeigt. Er schreibt **nichts** in
+den Kalender: ein Vorschlag ist eine Mail an das Team, das entscheidet und den
+Termin anlegt. Deshalb gibt es hier auch keine Kalender-Auswahl und keine
+Wiederholungsregel.
+
+Der Knopf gibt den angezeigten Monat mit — den Ersten des Monats, frühestens
+aber heute, weil der Kalender auch den Vormonat zeigt und ein Vorschlag mit
+Datum in der Vergangenheit niemandem hilft. Das Formular liest `kind` und
+`date` aus der Query, wählt die Vorschlags-Variante vor und setzt Beginn auf
+19:00 sowie Ende auf zwei Stunden später; eine unplausible Query wird ignoriert,
+nicht übernommen.
+
+Weil die Legende am unteren Rand über die volle Breite aufklappt, weicht der
+Knopf ihr aus (`.cal-add-raised`, gesteuert vom Computed `legendOpen` — derselbe
+Zustand, der die Legende öffnet).
+
+### Zeiten ohne Zeitzone
+
+Beginn und Ende sind `<input type="datetime-local">`-Werte und damit *Wandzeit
+ohne Zone* (`2026-11-05T19:00`). Sie bleiben das bis in die Mail:
+`LOCAL_DATE_TIME_PATTERN` in `app/shared/feedback.ts` validiert die Form,
+`formatLocalDateTime()` formatiert rein textuell nach `05.11.2026, 19:00`.
+Nirgendwo entsteht daraus ein `Date` — das würde die Zeichenkette als UTC (oder
+als Serverzone) lesen und den Termin um den Offset verschieben, aus einer
+Chorprobe um 19:00 also eine um 21:00 machen.
+
+Die feste Breite hat einen zweiten Nutzen: zwei solche Werte vergleichen sich
+korrekt mit `<`. „Ende vor Beginn" braucht deshalb weder Datumsarithmetik im
+Formular noch im Schema. Das Formular sperrt den Absenden-Knopf und sagt es,
+zod lehnt es zusätzlich ab (`.refine` auf dem Event-Objekt) — ein
+handgeschriebener Request kann dem Team keinen rückwärts laufenden Termin
+vorlegen.
+
 ## Feedback-Versand
 
 ```
@@ -47,8 +84,11 @@ Auskunft würde ein Mitglied erst einen Bericht tippen und dann einen 503 sehen.
 
 `POST` validiert den Body mit zod gegen die Grenzen aus
 `app/shared/feedback.ts` (`FEEDBACK_MESSAGE_MAX`, `FEEDBACK_FIELD_MAX`) — als
-discriminated union, damit die Regel im Schema steht: ein Fehlerbericht trägt
-den technischen Kontext, reines Feedback trägt keinen. Der Endpoint setzt
+discriminated union über drei Arten, damit die Regel im Schema steht: ein
+Fehlerbericht trägt den technischen Kontext, ein Terminvorschlag trägt den
+Termin, reines Feedback trägt keins von beidem. Nur beim Vorschlag darf die
+Nachricht leer sein — Titel und Zeit sind der Vorschlag, die Beschreibung
+erklärt ihn. Der Endpoint setzt
 die E-Mail über `emailRenderer` ab (Template `app/server/emails/feedback/`) und
 antwortet:
 
@@ -66,6 +106,8 @@ verletzen und im Spam landen. Antworten geht trotzdem direkt zurück.
 
 **Immer** (aus der Session, nicht aus dem Formular): Anzeigename,
 E-Mail-Adresse, UID, Rolle, Zeitpunkt.
+
+**Nur beim Terminvorschlag** (aus dem Formular): Titel, Beginn, Ende, Ort.
 
 **Nur beim Fehlerbericht** (aus dem Browser): aufgerufene Seite, App-Version,
 User-Agent, Fenstergröße, Hell-/Dunkel-Modus. Eine Idee oder ein Lob wird nicht
@@ -109,9 +151,11 @@ niemanden eine Minute lang aussperrt.
 
 | Datei | Prüft |
 |---|---|
-| `app/server/api/feedback.post.spec.ts` | Validierung, Cooldown, Reply-To, Header-Injection, Retry |
+| `app/server/api/feedback.post.spec.ts` | Validierung, Cooldown, Reply-To, Header-Injection, Retry, Termin ohne Zeitzonen-Verschiebung |
 | `app/server/api/feedback.get.spec.ts` | Verfügbarkeit, und dass die Adresse nicht herausgegeben wird |
 | `app/server/emails/feedback.render.spec.ts` | echtes Rendern des Templates samt Escaping |
 | `app/src/pages/projekt/feedback.spec.ts` | Formular, Kontextanzeige, Fehlerfälle (429/503/sonstige) |
 | `app/src/pages/projekt/index.spec.ts`, `app/src/pages/projekt.spec.ts` | Inhalte und Untermenü |
 | `app/src/pages/projekt/gemeinschaft.spec.ts` | Vollständigkeit der Abschnitte |
+| `app/shared/feedback.spec.ts` | Datum/Zeit-Format, Verschiebung über Tages-, Monats- und DST-Grenzen |
+| `app/src/pages/index.spec.ts` | `+`-Knopf: Ziel-Link, Monatsübernahme, Ausweichen vor der Legende |

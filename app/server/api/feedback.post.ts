@@ -2,7 +2,12 @@ import path from 'node:path'
 
 import { z } from 'zod'
 
-import { FEEDBACK_FIELD_MAX, FEEDBACK_MESSAGE_MAX } from '../../shared/feedback'
+import {
+  FEEDBACK_FIELD_MAX,
+  FEEDBACK_MESSAGE_MAX,
+  LOCAL_DATE_TIME_PATTERN,
+  formatLocalDateTime,
+} from '../../shared/feedback'
 import { defaultParams, emailRenderer } from '../helpers/email'
 
 const contextSchema = z.object({
@@ -13,17 +18,47 @@ const contextSchema = z.object({
   colorScheme: z.string().max(FEEDBACK_FIELD_MAX),
 })
 
+const localDateTime = z.string().regex(LOCAL_DATE_TIME_PATTERN)
+
+/**
+ * A suggested event. The order of the two times is part of the schema rather
+ * than a check in the form: the form can only make it hard to send a backwards
+ * range, the schema makes it impossible to accept one.
+ */
+const eventSchema = z
+  .object({
+    title: z.string().trim().min(1).max(FEEDBACK_FIELD_MAX),
+    start: localDateTime,
+    end: localDateTime,
+    // No place yet is a normal state for a suggestion; a missing field means
+    // the same thing as an empty one.
+    location: z.string().trim().max(FEEDBACK_FIELD_MAX).default(''),
+  })
+  // Fixed-width wall-clock strings, so `<=` is the whole comparison — see
+  // LOCAL_DATE_TIME_PATTERN.
+  .refine((event) => event.start <= event.end, {
+    path: ['end'],
+    message: 'End must not be before start',
+  })
+
 const message = z.string().trim().min(1).max(FEEDBACK_MESSAGE_MAX)
 
 /**
- * A union rather than one shape with an optional context, so the rule is the
- * schema: a bug report carries the technical context, plain feedback carries
- * none. zod drops unknown keys, so a context posted with `kind: 'feedback'` is
- * discarded here and never reaches the mail.
+ * A union rather than one shape with optional parts, so the rule is the schema:
+ * a bug report carries the technical context, a suggestion carries the event,
+ * plain feedback carries neither. zod drops unknown keys, so a context posted
+ * with `kind: 'feedback'` is discarded here and never reaches the mail.
  */
 const bodySchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('feedback'), message }),
   z.object({ kind: z.literal('bug'), message, context: contextSchema }),
+  z.object({
+    kind: z.literal('event'),
+    // The only kind where the message may be empty: title and time are the
+    // suggestion, the description explains it and is welcome to be missing.
+    message: z.string().trim().max(FEEDBACK_MESSAGE_MAX).default(''),
+    event: eventSchema,
+  }),
 ])
 
 /**
@@ -81,6 +116,7 @@ export default defineEventHandler(async (event) => {
       alwaysSalutation: true,
       SUPPORT_EMAIL: '',
       isBug: report.kind === 'bug',
+      isEvent: report.kind === 'event',
       message: report.message,
       senderName,
       senderEmail: user.email,
@@ -89,6 +125,17 @@ export default defineEventHandler(async (event) => {
       sentAt: new Date().toLocaleString('de-DE', { timeZone: config.APP_TIMEZONE }),
       // Present for a bug report only — see the schema above.
       ...(report.kind === 'bug' ? report.context : {}),
+      // Likewise for the suggestion. The times are reformatted, never parsed:
+      // they are wall-clock strings and stay wall-clock all the way into the
+      // mail. `singleLine` because a title is one line by definition.
+      ...(report.kind === 'event'
+        ? {
+            eventTitle: singleLine(report.event.title),
+            eventStart: formatLocalDateTime(report.event.start),
+            eventEnd: formatLocalDateTime(report.event.end),
+            eventLocation: singleLine(report.event.location),
+          }
+        : {}),
     },
   }
 

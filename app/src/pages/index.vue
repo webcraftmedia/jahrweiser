@@ -48,13 +48,21 @@
               <LoadingDots />
             </div>
           </div>
-          <!-- Calendar legend / filter -->
-          <div
-            class="cal-legend"
-            :class="{
-              'cal-legend-open': legendHover || (hiddenCalendars.size > 0 && !legendDismissed),
-            }"
+          <!-- Suggest an event. Writes nothing to the calendar — it hands the
+               member the feedback form with the displayed month prefilled, and
+               the team enters what they decide to keep. Rises out of the way
+               when the legend below unfolds. -->
+          <NuxtLink
+            :to="suggestEventPath"
+            class="cal-add"
+            :class="{ 'cal-add-raised': legendOpen }"
+            :aria-label="$t('pages.index.suggestEvent')"
+            :title="$t('pages.index.suggestEvent')"
           >
+            <IconPlus class="cal-add-icon" />
+          </NuxtLink>
+          <!-- Calendar legend / filter -->
+          <div class="cal-legend" :class="{ 'cal-legend-open': legendOpen }">
             <div class="cal-legend-inner">
               <button
                 v-for="cal in calendarLegend"
@@ -174,6 +182,7 @@
 
   import IconGrid from '~/assets/icon-grid.svg'
   import IconList from '~/assets/icon-list.svg'
+  import IconPlus from '~/assets/icon-plus.svg'
   import { designPalette } from '~~/shared/calendar-palette'
 
   interface RawCalendarEvent {
@@ -455,6 +464,19 @@
 
   const isPastLimit = computed(() => isBeforePastLimit(currentDate.value.subtract({ months: 1 })))
 
+  /**
+   * Where the "+" leads: the feedback form, set to a suggestion and carrying the
+   * month on screen. Somebody browsing November and pressing it means November,
+   * not today — but the calendar also shows last month, and a suggestion dated
+   * into the past is noise, so the date never falls before today.
+   */
+  const suggestEventPath = computed(() => {
+    const now = Temporal.PlainDate.from(localDateStr())
+    const firstOfShownMonth = currentDate.value.toPlainYearMonth().toPlainDate({ day: 1 })
+    const date = Temporal.PlainDate.compare(firstOfShownMonth, now) < 0 ? now : firstOfShownMonth
+    return `/projekt/feedback?kind=event&date=${date.toString()}`
+  })
+
   function applyFutureClassRepeatedly() {
     setTimeout(applyFutureClass, 100)
     setTimeout(applyFutureClass, 350)
@@ -585,6 +607,16 @@
     legendHover.value = false
     legendDismissed.value = true
   }
+
+  /**
+   * Whether the legend strip is unfolded — either because the cursor is down
+   * there, or because a filter is active and the member has not waved it away.
+   * One computed rather than the same expression twice, because the suggest
+   * button has to dodge exactly when the legend appears.
+   */
+  const legendOpen = computed(
+    () => legendHover.value || (hiddenCalendars.value.size > 0 && !legendDismissed.value),
+  )
 
   let mouseMoveFrame: number | undefined
   function onMouseMove(e: MouseEvent) {
@@ -1740,6 +1772,49 @@
       grid-template-rows: 1fr;
       opacity: 1;
     }
+  }
+
+  /* ===== Suggest-event button (floating, bottom right) ===== */
+
+  .cal-add {
+    position: absolute;
+    right: 0.6em;
+    bottom: 0.6em;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4em;
+    height: 2.4em;
+    border-radius: 50%;
+    background-color: #c2410c;
+    color: #faf5eb;
+    box-shadow: 0 2px 8px rgba(30, 41, 59, 0.35);
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      filter 0.2s;
+  }
+
+  .cal-add:hover {
+    filter: brightness(1.12);
+  }
+
+  .cal-add-icon {
+    width: 1.1em;
+    height: 1.1em;
+  }
+
+  /* The legend unfolds along the whole bottom edge, so the button steps aside
+     for it — same duration and easing, so the two move as one. Desktop only:
+     below 768px the legend is not rendered at all. */
+  @media (min-width: 768px) {
+    .cal-add-raised {
+      transform: translateY(-3.1em);
+    }
+  }
+
+  .dark .cal-add {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   }
 
   /* ===== Calendar legend (desktop overlay) ===== */

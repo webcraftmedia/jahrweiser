@@ -1768,6 +1768,54 @@ describe('Page: Index', () => {
     })
     consoleSpy.mockRestore()
   })
+
+  describe('suggest an event', () => {
+    /** The "+" in the calendar, and the date it hands to the form. */
+    function suggestLink(wrapper: Awaited<ReturnType<typeof mount>>) {
+      const href = wrapper.find('a.cal-add').attributes('href')
+      expect(href).toBeDefined()
+      const match = /^\/projekt\/feedback\?kind=event&date=(\d{4}-\d{2}-\d{2})$/.exec(href!)
+      expect(match, `unexpected href: ${href}`).not.toBeNull()
+      return match![1]!
+    }
+
+    it('links to the feedback form with the suggestion preselected', async () => {
+      const wrapper = await mount()
+      const link = wrapper.find('a.cal-add')
+      expect(link.exists()).toBe(true)
+      expect(link.attributes('aria-label')).toBe('pages.index.suggestEvent')
+      // System time is 2025-01-15 and January is on screen: the first of the
+      // month has passed, so the suggestion starts today instead of in the past.
+      expect(suggestLink(wrapper)).toBe('2025-01-15')
+    })
+
+    it('carries the month the member navigated to', async () => {
+      const wrapper = await mount()
+      const navButtons = wrapper.findAll('.cv-header-nav button')
+      await navButtons[3]!.trigger('click') // view-toggle, ‹, today, ›
+      expect(suggestLink(wrapper)).toBe('2025-02-01')
+    })
+
+    it('never offers a date that has already passed', async () => {
+      // The calendar can show last month; a suggestion dated into it would be
+      // noise, so the link clamps to today.
+      const wrapper = await mount()
+      const navButtons = wrapper.findAll('.cv-header-nav button')
+      await navButtons[1]!.trigger('click') // previous month — December 2024
+      expect(suggestLink(wrapper)).toBe('2025-01-15')
+    })
+
+    it('steps aside when the legend unfolds over the same corner', async () => {
+      const wrapper = await mount()
+      await nextTick()
+      expect(wrapper.find('a.cal-add').classes()).not.toContain('cal-add-raised')
+      // Hiding a calendar keeps the legend open — and the button has to move.
+      await wrapper.find('.cal-legend-item').trigger('click')
+      await nextTick()
+      expect(wrapper.find('a.cal-add').classes()).toContain('cal-add-raised')
+      expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+    })
+  })
 })
 
 describe('month-pad middleware', () => {

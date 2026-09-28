@@ -14,6 +14,11 @@ export default defineConfig({
   testDir: './e2e-full-stack',
   fullyParallel: false, // tests share the seeded stack
   workers: 1,
+  // Above Playwright's 30s default, and deliberately more than the cold-start
+  // budget a single login may use (`COLD_START_MS` in helpers/session.ts):
+  // a test whose per-test budget is the same as the budget of one step inside
+  // it cannot fail with a useful message — it only ever times out.
+  timeout: 60_000,
   retries: process.env.CI ? 2 : 1,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {

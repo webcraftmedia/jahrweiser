@@ -1,15 +1,8 @@
 import { expect, test } from '@playwright/test'
 
-import {
-  deleteAllMail,
-  extractLoginTokenFromMail,
-  preparePage,
-  waitForMailFor,
-  openLoginLink,
-} from './helpers/maildev'
+import { deleteAllMail, preparePage } from './helpers/maildev'
+import { loginViaMagicLink } from './helpers/session'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
-
-import type { Page } from '@playwright/test'
 
 // A seeded user we edit. The beforeAll reset restores the demo name, so the
 // edits below don't leak between runs.
@@ -31,18 +24,6 @@ test.beforeAll(() => {
 test.beforeEach(async () => {
   await deleteAllMail()
 })
-
-async function loginViaMagicLink(page: Page, email: string): Promise<void> {
-  await page.goto('/login')
-  await preparePage(page)
-  await page.locator('#email-address-icon').fill(email)
-  await page.getByRole('button', { name: 'Einloggen' }).click()
-  await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-  const mail = await waitForMailFor(email)
-  const token = extractLoginTokenFromMail(mail)
-  await openLoginLink(page, token)
-  await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
-}
 
 test.describe('full-stack profile', () => {
   test('a user can edit their name in settings and it persists', async ({ page }) => {

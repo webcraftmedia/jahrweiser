@@ -50,9 +50,19 @@ Datum in der Vergangenheit niemandem hilft. Das Formular liest `kind` und
 19:00 sowie Ende auf zwei Stunden später; eine unplausible Query wird ignoriert,
 nicht übernommen.
 
+Er hängt in einem nulltiefen, klebrigen Streifen (`.cal-add-dock`,
+`position: sticky`) und damit am unteren Rand des **Scrollbereichs**, nicht am
+unteren Rand des Kalenders. Der Unterschied ist auf dem Handy der zwischen
+sichtbar und unsichtbar: dort ist die Listenansicht mehrere Bildschirme hoch,
+und ein Knopf, zu dem niemand scrollt, ist ein Knopf, den niemand hat. Sticky
+statt `fixed`, weil er so im gezoomten Inhaltsbereich bleibt (siehe `useZoom`)
+und Fußzeile wie Handy-Icon-Leiste nicht verdeckt — die sind Chrome und stehen
+unterhalb des Scrollbereichs.
+
 Weil die Legende am unteren Rand über die volle Breite aufklappt, weicht der
 Knopf ihr aus (`.cal-add-raised`, gesteuert vom Computed `legendOpen` — derselbe
-Zustand, der die Legende öffnet).
+Zustand, der die Legende öffnet). Geprüft wird das nicht über die Klasse,
+sondern über die Bounding-Boxen im gemockten e2e-Lauf.
 
 ### Zeiten ohne Zeitzone
 

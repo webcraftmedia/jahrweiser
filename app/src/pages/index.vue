@@ -51,16 +51,26 @@
           <!-- Suggest an event. Writes nothing to the calendar — it hands the
                member the feedback form with the displayed month prefilled, and
                the team enters what they decide to keep. Rises out of the way
-               when the legend below unfolds. -->
-          <NuxtLink
-            :to="suggestEventPath"
-            class="cal-add"
-            :class="{ 'cal-add-raised': legendOpen }"
-            :aria-label="$t('pages.index.suggestEvent')"
-            :title="$t('pages.index.suggestEvent')"
-          >
-            <IconPlus class="cal-add-icon" />
-          </NuxtLink>
+               when the legend below unfolds.
+
+               The dock around it is a zero-height sticky strip, so the button
+               rides along the bottom edge of the *scrollport* instead of the
+               bottom of the calendar: in the list view on a phone that edge is
+               several screens down, and a button nobody scrolls to is a button
+               nobody has. Sticky rather than fixed because it stays inside the
+               zoomed content box (see useZoom) and above the footer and the
+               mobile icon bar, which are chrome and must not be covered. -->
+          <div class="cal-add-dock">
+            <NuxtLink
+              :to="suggestEventPath"
+              class="cal-add"
+              :class="{ 'cal-add-raised': legendOpen }"
+              :aria-label="$t('pages.index.suggestEvent')"
+              :title="$t('pages.index.suggestEvent')"
+            >
+              <IconPlus class="cal-add-icon" />
+            </NuxtLink>
+          </div>
           <!-- Calendar legend / filter -->
           <div class="cal-legend" :class="{ 'cal-legend-open': legendOpen }">
             <div class="cal-legend-inner">
@@ -1777,11 +1787,24 @@
 
   /* ===== Suggest-event button (floating, bottom right) ===== */
 
-  .cal-add {
-    position: absolute;
-    right: 0.6em;
-    bottom: 0.6em;
+  /* Zero height and no pointer target of its own: the strip must neither take
+     space in the column nor swallow clicks meant for the day underneath it. */
+  .cal-add-dock {
+    position: sticky;
+    bottom: 0;
     z-index: 5;
+    display: flex;
+    justify-content: flex-end;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .cal-add {
+    pointer-events: auto;
+    margin-right: 0.6em;
+    /* Lifts the button off the bottom edge it is docked to — `bottom` on the
+       dock is what makes it stick, so the offset has to happen here. */
+    transform: translateY(-3em);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1806,11 +1829,13 @@
   }
 
   /* The legend unfolds along the whole bottom edge, so the button steps aside
-     for it — same duration and easing, so the two move as one. Desktop only:
-     below 768px the legend is not rendered at all. */
+     for it — same duration and easing, so the two move as one. The extra lift
+     clears one or two rows of calendar chips, which is what the list wraps to
+     in practice; it is capped at `max-height: 6em` below. Desktop only: under
+     768px the legend is not rendered at all. */
   @media (min-width: 768px) {
     .cal-add-raised {
-      transform: translateY(-3.1em);
+      transform: translateY(-5.6em);
     }
   }
 

@@ -1,15 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-import {
-  deleteAllMail,
-  extractLoginTokenFromMail,
-  openLoginLink,
-  preparePage,
-  waitForMailFor,
-} from './helpers/maildev'
+import { deleteAllMail, preparePage, waitForMailFor } from './helpers/maildev'
+import { COLD_START_MS, fillAndSubmit, loginViaMagicLink } from './helpers/session'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
-import type { Locator, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 /**
  * The feedback strecke against the real stack: the form in a real browser, the
@@ -40,48 +35,6 @@ test.beforeAll(() => {
 test.beforeEach(async () => {
   await deleteAllMail()
 })
-
-/**
- * How long the *first* interaction of a run may take.
- *
- * The suite talks to a dev server, and the first hit on a route compiles it,
- * opens the DAV connection and warms the pool. Configurable rather than a
- * literal, so a slow machine raises the number instead of adding a retry that
- * hides what is actually a cold start.
- */
-const COLD_START_MS = Number(process.env.E2E_COLD_START_MS ?? 30_000)
-
-/**
- * Type a value and make sure it stuck.
- *
- * A dev server that is still re-optimizing dependencies reloads the page
- * moments after it was typed into, and the fingerprint of that race is a login
- * form submitted with an empty field — the request never happens and the test
- * fails on a message it was right to expect. Retyping is the fix; retrying the
- * whole test only hides the cause.
- */
-async function fillStable(input: Locator, value: string): Promise<void> {
-  await expect
-    .poll(
-      async () => {
-        await input.fill(value)
-        return input.inputValue()
-      },
-      { timeout: COLD_START_MS, intervals: [250, 500, 1_000] },
-    )
-    .toBe(value)
-}
-
-async function loginViaMagicLink(page: Page, email: string): Promise<void> {
-  await page.goto('/login')
-  await preparePage(page)
-  await fillStable(page.locator('#email-address-icon'), email)
-  await page.getByRole('button', { name: 'Einloggen' }).click()
-  await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: COLD_START_MS })
-  const mail = await waitForMailFor(email, COLD_START_MS)
-  await openLoginLink(page, extractLoginTokenFromMail(mail))
-  await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: COLD_START_MS })
-}
 
 /** Open the feedback form the way a member does: through the side menu. */
 async function openFeedbackForm(page: Page): Promise<void> {
@@ -118,10 +71,15 @@ test.describe('feedback', () => {
     expect(start).toMatch(/^\d{4}-\d{2}-\d{2}T19:00$/)
     expect(end).toMatch(/^\d{4}-\d{2}-\d{2}T21:00$/)
 
-    await fillStable(page.locator('#feedback-event-title'), 'Chorprobe')
-    await fillStable(page.locator('#feedback-event-location'), 'Gemeindehaus')
-    await fillStable(page.locator('#feedback-message'), 'Bitte Noten mitbringen.')
-    await page.getByRole('button', { name: 'Absenden' }).click()
+    await fillAndSubmit(page, {
+      fields: [
+        [page.locator('#feedback-event-title'), 'Chorprobe'],
+        [page.locator('#feedback-event-location'), 'Gemeindehaus'],
+        [page.locator('#feedback-message'), 'Bitte Noten mitbringen.'],
+      ],
+      button: 'Absenden',
+      api: '/api/feedback',
+    })
 
     await expect(page.getByText('Dein Terminvorschlag ist unterwegs')).toBeVisible({
       timeout: COLD_START_MS,
@@ -147,8 +105,11 @@ test.describe('feedback', () => {
     await loginViaMagicLink(page, BOB)
     await openFeedbackForm(page)
 
-    await fillStable(page.locator('#feedback-message'), 'Der Kalender ist eine große Hilfe.')
-    await page.getByRole('button', { name: 'Absenden' }).click()
+    await fillAndSubmit(page, {
+      fields: [[page.locator('#feedback-message'), 'Der Kalender ist eine große Hilfe.']],
+      button: 'Absenden',
+      api: '/api/feedback',
+    })
     await expect(page.getByText('Deine Nachricht ist unterwegs')).toBeVisible({
       timeout: COLD_START_MS,
     })
@@ -182,8 +143,11 @@ test.describe('feedback', () => {
     await shown.click()
     await expect(shown).toContainText('Carol Example')
 
-    await fillStable(page.locator('#feedback-message'), 'Die Karte lädt nicht.')
-    await page.getByRole('button', { name: 'Absenden' }).click()
+    await fillAndSubmit(page, {
+      fields: [[page.locator('#feedback-message'), 'Die Karte lädt nicht.']],
+      button: 'Absenden',
+      api: '/api/feedback',
+    })
     await expect(page.getByText('Deine Nachricht ist unterwegs')).toBeVisible({
       timeout: COLD_START_MS,
     })

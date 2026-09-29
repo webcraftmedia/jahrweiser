@@ -76,7 +76,7 @@
     "@testing-library/vue": "^8.1.0",
     "@types/email-templates": "^10.0.4",
     "@types/node": "^26.6.2",
-    "@types/nodemailer": "^8.0.1",
+    "@types/nodemailer": "^8.0.2",
     "@vitest/coverage-v8": "^5.0.1",
     "acorn": "^8.18.0",
     "browserslist": "^4.29.1",

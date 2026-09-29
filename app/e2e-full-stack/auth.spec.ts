@@ -4,10 +4,10 @@ import {
   deleteAllMail,
   extractLoginTokenFromMail,
   getMailFor,
-  preparePage,
   waitForMailFor,
   openLoginLink,
 } from './helpers/maildev'
+import { COLD_START_MS, loginViaMagicLink, requestLoginLink } from './helpers/session'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
 // Each test uses a different seeded user so the in-process rate limit on
@@ -27,50 +27,33 @@ test.beforeEach(async () => {
   await deleteAllMail()
 })
 
-async function loginViaMagicLink(page: import('@playwright/test').Page, email: string) {
-  await page.goto('/login')
-  await preparePage(page)
-  await page.locator('#email-address-icon').fill(email)
-  await page.getByRole('button', { name: 'Einloggen' }).click()
-  await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-
-  const mail = await waitForMailFor(email)
-  const token = extractLoginTokenFromMail(mail)
-  await openLoginLink(page, token)
-  await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
-}
-
 test.describe('full-stack auth', () => {
   test('seeded user can log in via email magic link', async ({ page }) => {
     await loginViaMagicLink(page, ALICE)
   })
 
   test('login request for unknown email does not error and sends no mail', async ({ page }) => {
-    await page.goto('/login')
-    await preparePage(page)
-    await page.locator('#email-address-icon').fill(UNKNOWN)
-    await page.getByRole('button', { name: 'Einloggen' }).click()
-    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
+    // Same answer as for a known address — the page must not reveal which one
+    // exists. Only the empty inbox tells the two apart.
+    await requestLoginLink(page, UNKNOWN)
 
     await page.waitForTimeout(1500)
     expect(await getMailFor(UNKNOWN)).toHaveLength(0)
   })
 
   test('reusing a consumed token fails with 401', async ({ page }) => {
-    await page.goto('/login')
-    await preparePage(page)
-    await page.locator('#email-address-icon').fill(BOB)
-    await page.getByRole('button', { name: 'Einloggen' }).click()
-    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-    const mail = await waitForMailFor(BOB)
+    // Spelled out rather than via loginViaMagicLink: this test needs the token
+    // itself, to spend it a second time below.
+    await requestLoginLink(page, BOB)
+    const mail = await waitForMailFor(BOB, COLD_START_MS)
     const token = extractLoginTokenFromMail(mail)
 
     await openLoginLink(page, token)
-    await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
+    await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: COLD_START_MS })
 
     await page.context().clearCookies()
     await openLoginLink(page, token)
-    await expect(page.getByText('Ein Fehler...')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Ein Fehler…')).toBeVisible({ timeout: COLD_START_MS })
   })
 
   test('admin user reaches /admin page after login', async ({ page }) => {

@@ -166,9 +166,9 @@ describe('Header', () => {
       const wrapper = await mountSuspended(Component)
       await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
       const links = wrapper.findAll('#navbar-mobile nav a').map((a) => a.attributes('href'))
-      // Nothing was loaded in this mount, so only the two unconditional
+      // Nothing was loaded in this mount, so only the three unconditional
       // sections are there — Blättchen and Telegram appear once their lists do.
-      expect(links).toStrictEqual(['/', '/karte', '/admin', '/settings'])
+      expect(links).toStrictEqual(['/', '/karte', '/projekt', '/admin', '/settings'])
     })
 
     it('names every section, rather than leaving the icon to say it', async () => {
@@ -225,7 +225,7 @@ describe('Header', () => {
     // and the sections above it are unaffected by the role.
     expect(wrapper.find('#navbar-mobile a[href="/admin"]').exists()).toBe(false)
     const mobileLinks = wrapper.findAll('#navbar-mobile nav a').map((a) => a.attributes('href'))
-    expect(mobileLinks).toStrictEqual(['/', '/karte', '/settings'])
+    expect(mobileLinks).toStrictEqual(['/', '/karte', '/projekt', '/settings'])
     // Logout button should still be present
     expect(wrapper.find('#navbar-mobile nav button').exists()).toBe(true)
   })

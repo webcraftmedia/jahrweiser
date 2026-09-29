@@ -14,7 +14,22 @@ exports[`Page: Index > renders 1`] = `
         <div class="sx-vue-calendar-wrapper"></div><!-- Loading overlay -->
         <div class="cal-loading-overlay" style="display: none;">
           <div class="flex items-center gap-2"><span class="loading-dot"></span><span class="loading-dot" style="animation-delay: 0.15s;"></span><span class="loading-dot" style="animation-delay: 0.3s;"></span></div>
-        </div><!-- Calendar legend / filter -->
+        </div>
+        <!-- Suggest an event. Writes nothing to the calendar — it hands the
+               member the feedback form with the displayed month prefilled, and
+               the team enters what they decide to keep. Rises out of the way
+               when the legend below unfolds.
+
+               The dock around it is a zero-height sticky strip, so the button
+               rides along the bottom edge of the *scrollport* instead of the
+               bottom of the calendar: in the list view on a phone that edge is
+               several screens down, and a button nobody scrolls to is a button
+               nobody has. Sticky rather than fixed because it stays inside the
+               zoomed content box (see useZoom) and above the footer and the
+               mobile icon bar, which are chrome and must not be covered. -->
+        <div class="cal-add-dock"><a href="/projekt/feedback?kind=event&amp;date=2025-01-15" class="cal-add" aria-label="pages.index.suggestEvent" title="pages.index.suggestEvent"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 16 16" class="nuxt-icon nuxt-icon--fill cal-add-icon">
+              <path d="M8 3.25v9.5M3.25 8h9.5"></path>
+            </svg></a></div><!-- Calendar legend / filter -->
         <div class="cal-legend">
           <div class="cal-legend-inner"><button class="cal-legend-item"><span class="cal-legend-dot" style="background-color: #dfc8b4;"></span><span class="cal-legend-name">Work</span></button></div>
         </div>

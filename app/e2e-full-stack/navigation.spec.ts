@@ -4,17 +4,11 @@ import path from 'node:path'
 import { expect, test } from '@playwright/test'
 
 import { restoreTelegramChannels, setTelegramChannels, stashTelegramChannels } from './helpers/db'
-import {
-  extractLoginTokenFromMail,
-  preparePage,
-  waitForMailFor,
-  deleteAllMail,
-  openLoginLink,
-} from './helpers/maildev'
+import { preparePage, deleteAllMail } from './helpers/maildev'
+import { loginViaMagicLink } from './helpers/session'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
 import type { TelegramChannelRow } from './helpers/db'
-import type { Page } from '@playwright/test'
 
 // One seeded user per test: /api/requestLoginLink is rate-limited per user
 // (60s), so three logins as the same account in one file would be flaky.
@@ -78,17 +72,6 @@ test.afterAll(async () => {
 test.beforeEach(async () => {
   await deleteAllMail()
 })
-
-async function loginViaMagicLink(page: Page, email: string): Promise<void> {
-  await page.goto('/login')
-  await preparePage(page)
-  await page.locator('#email-address-icon').fill(email)
-  await page.getByRole('button', { name: 'Einloggen' }).click()
-  await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-  const mail = await waitForMailFor(email)
-  await openLoginLink(page, extractLoginTokenFromMail(mail))
-  await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
-}
 
 test.describe('icon rail', () => {
   test('hides the telegram entry when no channel is configured', async ({ page }) => {

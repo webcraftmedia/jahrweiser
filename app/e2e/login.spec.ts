@@ -226,6 +226,6 @@ test.describe('Login Page', () => {
     await expect(confirm).toBeEnabled()
     await confirm.click()
 
-    await expect(page.getByText('Ein Fehler...')).toBeVisible()
+    await expect(page.getByText('Ein Fehler…')).toBeVisible()
   })
 })

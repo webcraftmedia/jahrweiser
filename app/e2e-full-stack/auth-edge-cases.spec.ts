@@ -12,10 +12,9 @@ import {
   deleteAllMail,
   extractLoginTokenFromMail,
   getMailFor,
-  preparePage,
   waitForMailFor,
-  openLoginLink,
 } from './helpers/maildev'
+import { loginViaMagicLink } from './helpers/session'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
 // Each test creates its own user (with a deterministic UID) so the seeded
@@ -70,15 +69,7 @@ test.describe('email change in DAV', () => {
     await createDavUser({ uid, email: oldEmail, displayName: 'Rename Me' })
     await triggerSync()
 
-    await page.goto('/login')
-    await preparePage(page)
-    await page.locator('#email-address-icon').fill(oldEmail)
-    await page.getByRole('button', { name: 'Einloggen' }).click()
-    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-    const mail = await waitForMailFor(oldEmail)
-    const token = extractLoginTokenFromMail(mail)
-    await openLoginLink(page, token)
-    await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
+    await loginViaMagicLink(page, oldEmail)
 
     // Confirm session works
     let resp = await context.request.get('/api/calendars')
@@ -126,15 +117,7 @@ test.describe('sliding session', () => {
   ): Promise<void> {
     await createDavUser({ uid, email, displayName: 'Sliding User' })
     await triggerSync()
-    await page.goto('/login')
-    await preparePage(page)
-    await page.locator('#email-address-icon').fill(email)
-    await page.getByRole('button', { name: 'Einloggen' }).click()
-    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-    const mail = await waitForMailFor(email)
-    const token = extractLoginTokenFromMail(mail)
-    await openLoginLink(page, token)
-    await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
+    await loginViaMagicLink(page, email)
   }
 
   const remainingSeconds = (uid: string): number =>
@@ -244,15 +227,7 @@ test.describe('admin tag management', () => {
     const targetEmail = 'alice@example.com'
 
     // Login as admin
-    await page.goto('/login')
-    await preparePage(page)
-    await page.locator('#email-address-icon').fill(adminEmail)
-    await page.getByRole('button', { name: 'Einloggen' }).click()
-    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-    const mail = await waitForMailFor(adminEmail)
-    const token = extractLoginTokenFromMail(mail)
-    await openLoginLink(page, token)
-    await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
+    await loginViaMagicLink(page, adminEmail)
 
     // Grant alice the 'sportgruppe' calendar via the admin API. Tags are
     // calendar keys and are filtered against the admin's own X-ADMIN-TAGS, so

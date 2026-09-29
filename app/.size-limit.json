@@ -1,7 +1,7 @@
 [
   {
     "path": ".output/public/_nuxt/*.js",
-    "limit": "240 kB",
+    "limit": "250 kB",
     "name": "JS bundles"
   },
   {

@@ -269,6 +269,41 @@ export async function mockProfileEndpoints(
   })
 }
 
+/** What the feedback form posts, as the mocked endpoint received it. */
+export interface CapturedFeedback {
+  kind: string
+  message: string
+  event?: { title: string; start: string; end: string; location: string }
+  context?: Record<string, string>
+}
+
+/**
+ * The feedback endpoint, mocked to accept anything and remember it.
+ *
+ * Returns the list the test asserts on: sending is a POST the real stack turns
+ * into a mail, which the full-stack suite covers — here the question is only
+ * what the form put on the wire.
+ */
+export async function mockFeedbackEndpoints(page: Page, { enabled = true } = {}) {
+  const sent: CapturedFeedback[] = []
+  await page.route('**/api/feedback', async (route) => {
+    if (route.request().method() === 'POST') {
+      sent.push(route.request().postDataJSON() as CapturedFeedback)
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ sent: true }),
+      })
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ enabled }),
+    })
+  })
+  return sent
+}
+
 export async function loginAs(page: Page, user: typeof DEFAULT_USER) {
   // Mock session endpoint — returns authenticated user
   await page.route('**/api/_auth/session', async (route) =>

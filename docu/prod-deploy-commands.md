@@ -78,6 +78,32 @@ Dann muss der DB-User aber `@'%'` oder `@'127.0.0.1'` sein, nicht `@'localhost'`
 Die bestehenden Werte (`NUXT_SESSION_PASSWORD`, `DAV_URL`, `DAV_USERNAME`,
 `DAV_PASSWORD`, `CLIENT_URI`, `SMTP_*`) UNVERÄNDERT lassen.
 
+### Adressen, ohne die eine Funktion still ausbleibt
+
+Zwei Adressen haben in Produktion **keinen** Default. Ohne sie fehlt still ein
+Stück Oberfläche — ohne Fehler und ohne Logzeile. Das ist Absicht (eine Mail in
+ein nicht existierendes Postfach wäre schlimmer als eine abwesende Schaltfläche),
+kostet aber beim Deploy genau dann eine Runde, wenn niemand daran denkt:
+
+```
+FEEDBACK_EMAIL=ERSETZE_MICH_MIT_DER_TEAM_ADRESSE
+BLAETTCHEN_CONTACT_EMAIL=ERSETZE_MICH_MIT_DER_REDAKTIONS_ADRESSE
+```
+
+Ohne `FEEDBACK_EMAIL` antwortet `/api/feedback` mit `enabled: false`, und
+`/projekt/feedback` zeigt statt des Formulars „Der Versand ist gerade nicht
+eingerichtet" — die Seite ist erreichbar, nur nutzlos, und der `+`-Knopf im
+Kalender führt genau dorthin. Ohne `BLAETTCHEN_CONTACT_EMAIL` bleibt das Archiv
+sichtbar, nur der Aufruf zum Mitschreiben fehlt. Siehe
+`docu/projekt-und-feedback.md` und `docu/blaettchen.md`.
+
+Beide Adressen sind privat und gehören nur in die git-ignorierte `.env`, nicht
+nach `nuxt.config.ts` und erst recht nicht unter `runtimeConfig.public` — dort
+lägen sie im Client-Bundle.
+
+`FEEDBACK_RATE_LIMIT_MS` ist **nicht** zu setzen: der Default (60 s Cooldown je
+Mitglied) ist der Produktionswert, und `0` schaltet die Bremse ab.
+
 
 ## 5) Deploy triggern
 

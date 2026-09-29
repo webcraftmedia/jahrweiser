@@ -87,6 +87,13 @@ exports[`Header > renders 1`] = `
               <!-- Same marker as on the rail, and as there it is never the only
                    thing saying it — the link's accessible name does too. -->
               <!--v-if-->
+            </a><a data-v-c970699f="" href="/projekt" aria-label="components.AppIconRail.projekt" class="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150 text-navy dark:text-ivory"><svg data-v-c970699f="" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 16 16" class="nuxt-icon nuxt-icon--fill menu-icon shrink-0" aria-hidden="true">
+                <circle cx="8" cy="8" r="6.25"></circle>
+                <path d="M8 7.25V11M8 4.9h.01"></path>
+              </svg> components.AppIconRail.projekt
+              <!-- Same marker as on the rail, and as there it is never the only
+                   thing saying it — the link's accessible name does too. -->
+              <!--v-if-->
             </a>
             <div data-v-c970699f="" class="my-2 border-t border-navy/10 dark:border-poster-darkBorder"></div><a data-v-c970699f="" href="/admin" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.admin</a><a data-v-c970699f="" href="/settings" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.settings</a><button data-v-c970699f="" class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.logout-label</button>
           </nav><!-- Calendar Filter (mobile) -->

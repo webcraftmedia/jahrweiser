@@ -13,9 +13,13 @@ export default defineVitestConfig({
     coverage: {
       reporter: ['text', 'json', 'html'],
       all: true,
-      include: ['src/**/*.{ts,vue}', 'server/helpers/*.ts', 'server/api/**/*.ts'],
+      // `shared/` is measured too: it holds the rules both sides depend on
+      // (validation limits, the feedback contract, the calendar palette), so an
+      // untested branch there is one neither the client nor the server notices.
+      include: ['src/**/*.{ts,vue}', 'server/helpers/*.ts', 'server/api/**/*.ts', 'shared/**/*.ts'],
       exclude: [
         'src/**/*.spec.ts',
+        'shared/**/*.spec.ts',
         'server/emails/**',
         // These four carry branchy / defensive DB-and-DAV orchestration (bulk
         // newsletter send, the full DAV→sidecar diff, the rate-limited login

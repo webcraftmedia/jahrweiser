@@ -6,6 +6,7 @@
       "label": "Hauptnavigation",
       "map": "Karte",
       "map-incomplete": "Karte — deine Postleitzahl fehlt oder ist ungültig",
+      "projekt": "Über das Projekt",
       "telegram": "Telegram-Kanäle"
     },
     "BootFallback": {
@@ -360,6 +361,7 @@
       },
       "listView": "Liste",
       "monthView": "Monat",
+      "suggestEvent": "Termin vorschlagen",
       "today": "Heute"
     },
     "karte": {
@@ -421,6 +423,120 @@
         "text": "Tippe auf „Jetzt anmelden“, um dich einzuloggen. Erst dieser Klick verbraucht deinen Link.",
         "title": "Noch ein Klick"
       }
+    },
+    "projekt": {
+      "about": {
+        "donate": {
+          "heading": "Spenden",
+          "text": "Server, Domain und Backups kosten Geld. Spendenmöglichkeiten richten wir hier in Kürze ein — bis dahin hilft Mitmachen am meisten."
+        },
+        "help": {
+          "heading": "Mithelfen",
+          "link": "Feedback geben",
+          "text": "Der wertvollste Beitrag ist Rückmeldung: Was fehlt, was ist umständlich, was funktioniert nicht? Jede Meldung landet direkt bei den Leuten, die den Jahrweiser bauen."
+        },
+        "tech": {
+          "heading": "Technik und Rechtliches",
+          "text": "Der Jahrweiser läuft auf einem eigenen Server; Termine und Kontakte liegen in einem selbst betriebenen CalDAV-/CardDAV-Server und nicht bei einem Anbieter. Die Versionshistorie öffnest du jederzeit über die Versionsnummer in der Fußzeile.",
+          "version": "Version"
+        },
+        "what": {
+          "feature": {
+            "blaettchen": "Das Blättchen als PDF, Ausgabe für Ausgabe.",
+            "caldav": "Anbindung an Handy oder Thunderbird über CalDAV.",
+            "calendar": "Alle Termine der Gemeinschaft in einer Übersicht, nach Kalendern filterbar.",
+            "map": "Eine Karte, die zeigt, wo Mitglieder wohnen — auf Postleitzahlen genau.",
+            "telegram": "Die Telegram-Kanäle der Gemeinschaft samt Einladungslinks."
+          },
+          "heading": "Was der Jahrweiser ist",
+          "text": "Der Jahrweiser ist der gemeinsame Kalender der Gemeinschaft an der Bergstraße: ein Ort, an dem alle Termine zusammenlaufen, statt sich auf Zettel, Chatgruppen und Aushänge zu verteilen. Er wird ehrenamtlich entwickelt und wächst mit dem, was gebraucht wird."
+        },
+        "who": {
+          "heading": "Wer dahintersteckt",
+          "text": "Entwicklung und Betrieb liegen bei webcraft media und einigen Freiwilligen aus der Gemeinschaft. Niemand verdient daran — Server, Domain und Zeit werden gestellt. Wer mitmachen möchte, ob mit Code, Texten oder Ideen, ist willkommen."
+        }
+      },
+      "feedback": {
+        "context": {
+          "browser": "Browser",
+          "dark": "dunkel",
+          "email": "E-Mail",
+          "light": "hell",
+          "name": "Name",
+          "none": "keine Angabe",
+          "page": "Seite",
+          "scheme": "Darstellung",
+          "summary": "Diese Daten werden mitgesendet",
+          "version": "Version",
+          "viewport": "Fenstergröße"
+        },
+        "description": "Schreib auf, was dir aufgefallen ist. Die Nachricht geht als E-Mail an das Team, geantwortet wird an deine Adresse.",
+        "description-event": "Trag den Termin so ein, wie er im Kalender stehen soll. Der Vorschlag geht als E-Mail an das Team, das ihn anlegt — Rückfragen gehen an deine Adresse.",
+        "error": "Das hat nicht geklappt. Bitte versuche es später noch einmal.",
+        "error-cooldown": "Kurz durchatmen — eine Nachricht pro Minute reicht.",
+        "error-unavailable": "Der Versand ist gerade nicht eingerichtet. Bitte wende dich direkt an die Gemeinschaft.",
+        "event": {
+          "description": "Beschreibung (optional)",
+          "end": "Ende",
+          "end-before-start": "Das Ende liegt vor dem Beginn.",
+          "legend": "Der Termin",
+          "location": "Ort",
+          "location-placeholder": "Wo findet es statt? (optional)",
+          "start": "Beginn",
+          "title": "Titel",
+          "title-placeholder": "Wie soll der Termin im Kalender heißen?"
+        },
+        "heading": "Feedback und Fehler melden",
+        "heading-event": "Termin vorschlagen",
+        "kind": {
+          "bug": "Fehler melden",
+          "event": "Termin vorschlagen",
+          "feedback": "Feedback oder Idee"
+        },
+        "kind-legend": "Worum geht es?",
+        "loading": "Wird geladen...",
+        "message": "Deine Nachricht",
+        "message-placeholder-bug": "Was hast du gemacht, was ist passiert, was hättest du erwartet?",
+        "message-placeholder-event": "Worum geht es, wer ist eingeladen, was sollte man mitbringen?",
+        "message-placeholder-feedback": "Was gefällt dir, was fehlt dir, was würdest du anders machen?",
+        "sending": "Wird gesendet…",
+        "sent": "Danke! Deine Nachricht ist unterwegs.",
+        "sent-event": "Danke! Dein Terminvorschlag ist unterwegs.",
+        "submit": "Absenden",
+        "unavailable": "Das Feedback-Formular ist derzeit nicht eingerichtet. Bitte wende dich direkt an die Gemeinschaft."
+      },
+      "gemeinschaft": {
+        "gemeinsam": {
+          "heading": "Gemeinsam",
+          "text": "Am Anfang steht die Begegnung — nicht das Programm, nicht die Satzung, nicht das Ziel. Wir kennen einander mit Namen, mit Geschichte, mit Ecken und Kanten. Aus dieser Vertrautheit wächst alles Weitere: Hilfe, die man nicht erst beantragen muss, Kinder, die mehrere Erwachsene haben, an die sie sich wenden können, und Gespräche, die auch dann weitergehen, wenn man verschiedener Meinung ist."
+        },
+        "geniessen": {
+          "heading": "Genießen",
+          "text": "Auffällig viele von uns machen Musik, schreiben, malen, bauen, backen. Deshalb steht das Genießen nicht am Ende der Liste, sondern gleichberechtigt daneben. Ein Abend mit Gitarre, selbst gebackenem Brot und vorgelesenen Texten ist kein Rahmenprogramm — er ist der Punkt. Freude ist keine Belohnung für getane Arbeit, sie ist der Grund, warum man sie gemeinsam tut."
+        },
+        "gestalten": {
+          "heading": "Gestalten",
+          "text": "Gestalten heißt: selbst anfangen. Wer etwas kann, gibt es weiter — Kräuterwissen, Gesang, Handwerk, Sprachen, Gartenbau, das Kochen für viele. Aus einer Idee wird ein Termin, aus einem Termin eine Gewohnheit, aus Gewohnheiten ein Netz, das trägt. Niemand wartet hier darauf, dass eine Institution etwas anbietet; es reicht, dass zwei Leute es ernst meinen."
+        },
+        "lead": {
+          "heading": "GG&G — Gemeinsam Gestalten & Genießen",
+          "text": "Der Name ist kein Slogan, sondern eine Reihenfolge. Wir sind Menschen aus der Region an der Bergstraße, die sich entschieden haben, ihr Leben nicht nur nebeneinander, sondern miteinander zu führen: mit offenen Türen, geteilten Fähigkeiten und dem Vertrauen, dass das, was wir selbst in die Hand nehmen, meistens tragfähiger wird als das, was man uns abnimmt."
+        },
+        "offen": {
+          "heading": "Offen",
+          "text": "Wer neugierig ist, kommt vorbei. Es gibt keine Aufnahmeprüfung, nur die Bereitschaft, etwas beizutragen — und sei es die eigene Anwesenheit. Der Jahrweiser, in dem du gerade liest, ist selbst ein Stück dieser Arbeit: von Leuten aus der Gemeinschaft gebaut, damit man findet, was ohnehin schon da ist."
+        },
+        "verbindet": {
+          "heading": "Was uns verbindet",
+          "text": "Uns eint ein Blick auf den Menschen, der ihn als Ganzes nimmt: Leib, Seele und Geist, eingebettet in Rhythmen, die älter sind als jeder Terminkalender. Viele schöpfen aus anthroposophischem Denken, aus Naturheilkunde, aus alten Handwerks- und Heiltraditionen. Gesundheit verstehen wir als etwas, das gepflegt wird, nicht als etwas, das verwaltet wird — und dem eigenen Urteil trauen wir mehr zu als dem lautesten Konsens. Ein Dogma ist daraus nie geworden: Fragen sind hier willkommener als fertige Antworten."
+        }
+      },
+      "menu": {
+        "about": "Über das Projekt",
+        "community": "Die Gemeinschaft",
+        "feedback": "Feedback"
+      },
+      "title": "Das Projekt"
     },
     "register": {
       "created": {

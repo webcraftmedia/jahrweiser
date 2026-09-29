@@ -1,17 +1,11 @@
 import { expect, test } from '@playwright/test'
 
 import { closeDb, setLoginDisabled, softDeleteUser, subscribeUserDirectly } from './helpers/db'
-import {
-  deleteAllMail,
-  extractLoginTokenFromMail,
-  getLatestMailFor,
-  preparePage,
-  waitForMailFor,
-  openLoginLink,
-} from './helpers/maildev'
+import { deleteAllMail, getLatestMailFor, waitForMailFor } from './helpers/maildev'
+import { loginViaMagicLink } from './helpers/session'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
-import type { APIRequestContext, Page } from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
 
 // Dedicated seed user so the in-process rate limit on requestLoginLink
 // (60s/user) does not collide with other full-stack suites.
@@ -34,18 +28,6 @@ test.afterAll(async () => {
 test.beforeEach(async () => {
   await deleteAllMail()
 })
-
-async function loginViaMagicLink(page: Page, email: string): Promise<void> {
-  await page.goto('/login')
-  await preparePage(page)
-  await page.locator('#email-address-icon').fill(email)
-  await page.getByRole('button', { name: 'Einloggen' }).click()
-  await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-  const mail = await waitForMailFor(email)
-  const token = extractLoginTokenFromMail(mail)
-  await openLoginLink(page, token)
-  await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
-}
 
 async function triggerSendNewsletter(request: APIRequestContext): Promise<{
   sent: number

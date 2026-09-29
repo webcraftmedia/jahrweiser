@@ -7,6 +7,7 @@ import {
   waitForMailFor,
   openLoginLink,
 } from './helpers/maildev'
+import { COLD_START_MS, fillAndSubmit, loginViaMagicLink } from './helpers/session'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
 const ADMIN = 'admin@example.com'
@@ -35,19 +36,6 @@ test.beforeAll(() => {
 test.beforeEach(async () => {
   await deleteAllMail()
 })
-
-async function loginViaMagicLink(page: import('@playwright/test').Page, email: string) {
-  await page.goto('/login')
-  await preparePage(page)
-  await page.locator('#email-address-icon').fill(email)
-  await page.getByRole('button', { name: 'Einloggen' }).click()
-  await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-
-  const mail = await waitForMailFor(email)
-  const token = extractLoginTokenFromMail(mail)
-  await openLoginLink(page, token)
-  await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
-}
 
 async function createLink(
   page: import('@playwright/test').Page,
@@ -117,11 +105,16 @@ async function registerVia(
   const guest = await guestContext.newPage()
   await guest.goto(`/register/${token}`)
   await preparePage(guest)
-  await guest.locator('#firstName').fill(who.firstName)
-  await guest.locator('#lastName').fill(who.lastName)
-  await guest.locator('#email').fill(who.email)
-  await guest.getByRole('button', { name: 'Konto anlegen' }).click()
-  await expect(guest.getByText('Fast geschafft!')).toBeVisible({ timeout: 10_000 })
+  await fillAndSubmit(guest, {
+    fields: [
+      [guest.locator('#firstName'), who.firstName],
+      [guest.locator('#lastName'), who.lastName],
+      [guest.locator('#email'), who.email],
+    ],
+    button: 'Konto anlegen',
+    api: '/api/register',
+  })
+  await expect(guest.getByText('Fast geschafft!')).toBeVisible({ timeout: COLD_START_MS })
   await guestContext.close()
 }
 

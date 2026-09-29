@@ -6,17 +6,11 @@ import {
   setTelegramChannels,
   stashTelegramChannels,
 } from './helpers/db'
-import {
-  deleteAllMail,
-  extractLoginTokenFromMail,
-  preparePage,
-  waitForMailFor,
-  openLoginLink,
-} from './helpers/maildev'
+import { deleteAllMail, preparePage } from './helpers/maildev'
+import { loginViaMagicLink } from './helpers/session'
 import { runSeedDemo, runSeedReset } from './helpers/stack'
 
 import type { TelegramChannelRow } from './helpers/db'
-import type { Page } from '@playwright/test'
 
 const ADMIN = 'admin@example.com'
 const ALICE = 'alice@example.com'
@@ -45,17 +39,6 @@ test.beforeEach(async () => {
   await deleteAllMail()
   await setTelegramChannels(SEEDED)
 })
-
-async function loginViaMagicLink(page: Page, email: string): Promise<void> {
-  await page.goto('/login')
-  await preparePage(page)
-  await page.locator('#email-address-icon').fill(email)
-  await page.getByRole('button', { name: 'Einloggen' }).click()
-  await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
-  const mail = await waitForMailFor(email)
-  await openLoginLink(page, extractLoginTokenFromMail(mail))
-  await expect(page).toHaveURL(/\/\d{4}\/\d{2}$/, { timeout: 15_000 })
-}
 
 test.describe('admin: editing the Telegram channels', () => {
   // One login for the whole flow — each step builds on the previous one's

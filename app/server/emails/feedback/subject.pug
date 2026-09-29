@@ -1,0 +1,2 @@
+- var label = isBug ? t('emails.feedback.subjectBug') : (isEvent ? t('emails.feedback.subjectEvent') : t('emails.feedback.subjectFeedback'))
+!= `${APPLICATION_NAME}: ${label}${senderName ? ' — ' + senderName : ''}`

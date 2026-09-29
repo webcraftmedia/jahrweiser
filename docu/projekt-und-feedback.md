@@ -8,7 +8,7 @@ eigenes Untermenü.
 | Route | Inhalt |
 |---|---|
 | `/projekt/gemeinschaft` | Über GG&G: wofür die Gemeinschaft steht, als reiner Text |
-| `/projekt` | Über das Projekt: Zweck, Beteiligte, Technik, Version, Impressum/Datenschutz, Spenden-Platzhalter |
+| `/projekt` | Über das Projekt: Zweck, Beteiligte, Mithelfen, Technik, Version, Impressum/Datenschutz |
 | `/projekt/feedback` | Formular für Feedback, Fehlerberichte und Terminvorschläge |
 
 Die Gemeinschaftsseite steht im Untermenü **vor** der Projektseite: sie
@@ -18,6 +18,18 @@ für Abschnitt — und benennt bewusst keine Entstehungsgeschichte und keine
 Tagespolitik: beides veraltet, die Idee nicht. Der Text liegt vollständig in
 `pages.projekt.gemeinschaft.*` in `app/locales/de.json`, die Seite selbst hält
 keine Inhalte.
+
+Den Namen führt `/projekt` einmal ein („der Gemeinschaft GG&G an der
+Bergstraße") und die Gemeinschaftsseite entfaltet ihn. Damit stolpert niemand,
+egal in welcher Reihenfolge die beiden gelesen werden: auf der Projektseite
+steht, *wo* die Gemeinschaft ist, auf der Gemeinschaftsseite, *was* der Name
+bedeutet.
+
+Alle drei Seiten benutzen dieselbe Kartenüberschrift (`text-lg font-semibold`)
+und blenden ihre `h1` unter `md` aus — dort trägt die Kopfzeile des
+`SidebarLayout` den Titel, und zwei Überschriften übereinander wären eine zu
+viel. Drei Seiten, die im Untermenü nebeneinanderstehen, sollen auch wie drei
+Seiten derselben Sektion aussehen.
 
 Alle Seiten sind nur eingeloggt erreichbar (`middleware: ['authenticated']`) —
 dadurch stammen die Absenderdaten aus der Session und können nicht gefälscht
@@ -29,10 +41,16 @@ Telegram ist er an keine Bedingung geknüpft.
 
 ## Spenden
 
-Noch nicht umgesetzt. Auf `/projekt` steht dafür ein bewusst als Platzhalter
-markierter Abschnitt. Sobald es etwas zu verlinken gibt, wird daraus
-`/projekt/spenden` plus ein dritter Eintrag in `menuItems` in
-`app/src/pages/projekt.vue` — die Sektion ist dafür gebaut.
+Noch nicht umgesetzt — und deshalb steht davon auch nichts auf `/projekt`. Ein
+Abschnitt, der Spenden „in Kürze" ankündigt, ist ein Versprechen mit
+Verfallsdatum: er wird alt, ohne dass jemand ihn anfasst, und der Beitrag, der
+heute wirklich hilft, steht ohnehin eine Karte darüber („Mithelfen").
+`app/src/pages/projekt/index.spec.ts` prüft die Abwesenheit, damit die Karte
+nicht unbemerkt zurückkehrt.
+
+Sobald es etwas zu verlinken gibt, wird daraus `/projekt/spenden` plus ein
+vierter Eintrag in `menuItems` in `app/src/pages/projekt.vue` — die Sektion ist
+dafür gebaut.
 
 ## Termine vorschlagen
 

@@ -18,11 +18,12 @@ describe('Page: Über das Projekt', () => {
     expect(wrapper.findAll('a').map((a) => a.attributes('href'))).toContain('/projekt/feedback')
   })
 
-  it('says that donations are still being set up', async () => {
-    // Deliberately a placeholder rather than a missing section: the members ask
-    // for it, and "in Kürze" is an answer where silence is not.
+  it('promises nothing about donations while there is nothing to point at', async () => {
+    // The placeholder is gone on purpose — it comes back with `/projekt/spenden`.
+    // Asserted, not just deleted: a card that quietly reappears would ship a
+    // dated promise to every member.
     const wrapper = await mountSuspended(Page, { route: '/projekt' })
-    expect(wrapper.text()).toContain('pages.projekt.about.donate.text')
+    expect(wrapper.text()).not.toContain('pages.projekt.about.donate')
   })
 
   it('shows the running version and the legal links', async () => {

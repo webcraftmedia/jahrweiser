@@ -78,6 +78,16 @@ describe('emails/feedback', () => {
     }
   })
 
+  it('says so rather than trailing off when a context value is empty', async () => {
+    // `page` stays empty whenever the form was opened directly instead of from
+    // inside the app — a bookmark, a link in a chat. The form shows "keine
+    // Angabe" there, and a label with nothing behind it in the mail reads like
+    // a rendering fault rather than like the real state it is.
+    const { html } = await render({ page: '' })
+    expect(html).toContain('Seite')
+    expect(html).toContain('keine Angabe')
+  })
+
   it('prints no technical lines for plain feedback', async () => {
     // The endpoint sends no context for it; the template must not leave empty
     // rows where the browser and the window size used to be.

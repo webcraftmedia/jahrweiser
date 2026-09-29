@@ -53,7 +53,7 @@ test.describe('full-stack auth', () => {
 
     await page.context().clearCookies()
     await openLoginLink(page, token)
-    await expect(page.getByText('Ein Fehler...')).toBeVisible({ timeout: COLD_START_MS })
+    await expect(page.getByText('Ein Fehler…')).toBeVisible({ timeout: COLD_START_MS })
   })
 
   test('admin user reaches /admin page after login', async ({ page }) => {

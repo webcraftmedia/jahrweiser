@@ -43,10 +43,10 @@
     <section
       class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
-      <h2 class="text-xl font-display text-navy dark:text-ivory">
+      <h2 class="text-lg font-semibold mb-2">
         {{ t('pages.projekt.gemeinschaft.lead.heading') }}
       </h2>
-      <p class="mt-3 text-sm text-navy/80 dark:text-ivory/80">
+      <p class="text-sm text-navy/80 dark:text-ivory/80">
         {{ t('pages.projekt.gemeinschaft.lead.text') }}
       </p>
     </section>

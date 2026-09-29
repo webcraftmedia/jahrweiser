@@ -64,18 +64,10 @@
       </NuxtLink>
     </section>
 
-    <!-- Placeholder on purpose: the ways to donate are not decided yet, and an
-         empty promise is worse than a dated one. Becomes its own page (and a
-         third sidebar entry) as soon as there is something to point at. -->
-    <section
-      class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-dashed border-navy/20 dark:border-poster-darkBorder"
-    >
-      <h2 class="text-lg font-semibold mb-2">{{ t('pages.projekt.about.donate.heading') }}</h2>
-      <p class="text-sm text-navy/80 dark:text-ivory/80">
-        {{ t('pages.projekt.about.donate.text') }}
-      </p>
-    </section>
-
+    <!-- No donation section until there is something to point at: "in Kürze"
+         is a promise with an expiry date, and the card above already names the
+         contribution that helps today. It returns as `/projekt/spenden` plus a
+         fourth entry in `menuItems` — the section is built for it. -->
     <section
       class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >

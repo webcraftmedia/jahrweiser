@@ -34,10 +34,13 @@ export function abbreviateName(displayName: string | null | undefined): string {
   const surname = parts[parts.length - 1]!
   const given = parts.slice(0, -1).join(' ')
   // `[...surname]` rather than `surname[0]`: a name may begin with a character
-  // outside the basic plane, and half a code point is not an initial.
+  // outside the basic plane, and half a code point is not an initial. The `!`
+  // holds by construction: the whitespace above is collapsed and trimmed, so no
+  // part of the split is empty — an `?? ''` fallback here would be a branch no
+  // input can reach.
   // eslint-disable-next-line @typescript-eslint/no-misused-spread -- genau deshalb steht hier der Spread
-  const initial = [...surname][0] ?? ''
-  return initial ? `${given} ${initial}.` : given
+  const initial = [...surname][0]!
+  return `${given} ${initial}.`
 }
 
 /**

@@ -89,7 +89,7 @@
           "target": "Wird gespeichert als:",
           "target-incomplete": "Nummer und Datum fehlen noch.",
           "title": "Neue Ausgabe hochladen",
-          "uploading": "Wird hochgeladen..."
+          "uploading": "Wird hochgeladen…"
         }
       },
       "dashboard": {
@@ -117,7 +117,7 @@
           "button": "Link erzeugen",
           "calendars": "Kalender-Bindung",
           "calendars-hint": "Wer sich über diesen Link registriert, erhält Zugriff auf die privaten Termine der ausgewählten Kalender. Ohne Auswahl vergibt der Link keinen Kalenderzugriff.",
-          "creating": "Wird erzeugt...",
+          "creating": "Wird erzeugt…",
           "duration": "Gültigkeit",
           "error": "Link konnte nicht erstellt werden.",
           "label": "Bezeichnung",
@@ -195,7 +195,7 @@
           },
           "step3": {
             "button-submit": "Mitglied hinzufügen",
-            "processing": "Wird verarbeitet...",
+            "processing": "Wird verarbeitet…",
             "send-welcome-email": "Begrüßungsmail versenden",
             "title": "Schritt 3: Abschluss"
           },
@@ -305,7 +305,7 @@
       "telegram": {
         "create": {
           "button": "Kanal hinzufügen",
-          "creating": "Wird gespeichert...",
+          "creating": "Wird gespeichert…",
           "error": "Der Kanal konnte nicht gespeichert werden.",
           "hint": "Der Einladungslink ist die Berechtigung: wer ihn hat, kann beitreten. Trage hier nur Links ein, die alle Mitglieder bekommen dürfen.",
           "title": "Neuen Kanal hinzufügen"
@@ -392,7 +392,7 @@
         "retry": "Nochmal versuchen",
         "text": "Dein Code ist nicht mehr gültig.",
         "timeout": "Der Server hat nicht geantwortet. Meistens liegt das an der Verbindung — versuch es gleich noch einmal oder fordere dir einen neuen Link an.",
-        "title": "Ein Fehler...",
+        "title": "Ein Fehler…",
         "unknown": "Diesen Link kennen wir nicht. Prüfe, ob die Adresse vollständig übernommen wurde, oder fordere dir einen neuen an.",
         "used": "Dieser Link wurde bereits verwendet. Das kann auch der Virenscanner deines E-Mail-Postfachs gewesen sein, der ihn automatisch geöffnet hat — fordere dir bitte einen neuen an."
       },
@@ -419,17 +419,13 @@
       },
       "token": {
         "button": "Jetzt anmelden",
-        "loading": "Laden...",
+        "loading": "Laden…",
         "text": "Tippe auf „Jetzt anmelden“, um dich einzuloggen. Erst dieser Klick verbraucht deinen Link.",
         "title": "Noch ein Klick"
       }
     },
     "projekt": {
       "about": {
-        "donate": {
-          "heading": "Spenden",
-          "text": "Server, Domain und Backups kosten Geld. Spendenmöglichkeiten richten wir hier in Kürze ein — bis dahin hilft Mitmachen am meisten."
-        },
         "help": {
           "heading": "Mithelfen",
           "link": "Feedback geben",
@@ -449,7 +445,7 @@
             "telegram": "Die Telegram-Kanäle der Gemeinschaft samt Einladungslinks."
           },
           "heading": "Was der Jahrweiser ist",
-          "text": "Der Jahrweiser ist der gemeinsame Kalender der Gemeinschaft an der Bergstraße: ein Ort, an dem alle Termine zusammenlaufen, statt sich auf Zettel, Chatgruppen und Aushänge zu verteilen. Er wird ehrenamtlich entwickelt und wächst mit dem, was gebraucht wird."
+          "text": "Der Jahrweiser ist der gemeinsame Kalender der Gemeinschaft GG&G an der Bergstraße: ein Ort, an dem alle Termine zusammenlaufen, statt sich auf Zettel, Chatgruppen und Aushänge zu verteilen. Er wird ehrenamtlich entwickelt und wächst mit dem, was gebraucht wird."
         },
         "who": {
           "heading": "Wer dahintersteckt",
@@ -494,7 +490,7 @@
           "feedback": "Feedback oder Idee"
         },
         "kind-legend": "Worum geht es?",
-        "loading": "Wird geladen...",
+        "loading": "Wird geladen…",
         "message": "Deine Nachricht",
         "message-placeholder-bug": "Was hast du gemacht, was ist passiert, was hättest du erwartet?",
         "message-placeholder-event": "Worum geht es, wer ist eingeladen, was sollte man mitbringen?",
@@ -573,10 +569,10 @@
         "timeout": "Der Server hat nicht geantwortet. Bitte lade die Seite in einem Moment noch einmal — dein Einladungslink ist davon nicht betroffen.",
         "title": "Link nicht nutzbar"
       },
-      "validating": "Link wird geprüft..."
+      "validating": "Link wird geprüft…"
     },
     "settings": {
-      "loading": "Wird geladen...",
+      "loading": "Wird geladen…",
       "menu": {
         "newsletter": "Newsletter",
         "profile": "Meine Daten"
@@ -588,7 +584,7 @@
         "error": "Konnte nicht speichern. Bitte später erneut versuchen.",
         "heading": "Wöchentlicher Newsletter",
         "saved": "Gespeichert.",
-        "saving": "Wird gespeichert...",
+        "saving": "Wird gespeichert…",
         "toggleOff": "Newsletter abbestellen",
         "toggleOn": "Newsletter aktivieren"
       },
@@ -599,7 +595,7 @@
         "intro": "Verwalte hier deine persönlichen Angaben.",
         "lastName": "Nachname",
         "postalCode": "Postleitzahl",
-        "postalCode-checking": "Wird geprüft …",
+        "postalCode-checking": "Wird geprüft…",
         "postalCode-format": "Eine deutsche Postleitzahl besteht aus fünf Ziffern.",
         "postalCode-hint": "Deine Postleitzahl erscheint anonym und zusammengefasst — also ohne Namen — auf der Karte, die zeigt, woher unsere Gemeinschaft kommt. Die Karte ist ausschließlich für die Community sichtbar und nicht öffentlich; angezeigt wird sie dir, sobald du selbst eine Postleitzahl hinterlegt hast.",
         "postalCode-known": "{plz} — {ort}",
@@ -608,7 +604,7 @@
         "postalCode-unknown": "Diese Postleitzahl kennt die Karte nicht. Bitte prüfe deine Eingabe.",
         "save": "Speichern",
         "saved": "Gespeichert.",
-        "saving": "Wird gespeichert..."
+        "saving": "Wird gespeichert…"
       },
       "title": "Einstellungen"
     },

@@ -17,7 +17,12 @@ block content
           td(style="padding:0.2em 1em 0.2em 0;vertical-align:top;color:#64748b;white-space:nowrap")
             != t('emails.feedback.field.' + row[0])
           td(style="padding:0.2em 0;vertical-align:top")
-            = row[1]
+            //- A label with nothing behind it reads like a rendering fault. An
+            //- empty value is a real state here — `page` stays empty when the
+            //- form was opened directly rather than from inside the app, and
+            //- the form itself says "keine Angabe" for exactly that. The mail
+            //- says the same thing instead of trailing off.
+            = row[1] ? row[1] : t('emails.feedback.none')
 
   //- The suggestion itself goes first: it is what the team has to decide on,
   //- and the description below only explains it.

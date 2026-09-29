@@ -30,6 +30,16 @@ ein Release riskant macht, nicht nach Fachbereichen:
 | `release` | release-please |
 | `other` | der ehrliche Rest |
 
+### Nutzersichtbare Texte
+
+Sie liegen vollständig in `app/locales/de.json` und `app/server/emails/_locales/de.json`,
+nie im Template — nur so findet sie der Locale-Linter (`npm run test:lint:locales`).
+
+Auslassungspunkte sind **ein** Zeichen: `…`, nicht drei Punkte. Zwei
+Ladezustände nebeneinander, von denen einer `Wird geladen...` und der andere
+`Wird gesendet…` sagt, sehen aus wie zwei verschiedene Anwendungen; welche der
+beiden Schreibweisen es wird, ist beliebig, dass es eine ist, nicht.
+
 ## Ziele
 - Kalenderübesicht zu anstehenden Terminen
 - Nutzerverwaltung

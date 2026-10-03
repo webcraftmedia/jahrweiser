@@ -51,7 +51,7 @@
     "@schedule-x/theme-default": "4.8.0",
     "@schedule-x/vue": "4.1.0",
     "cross-env": "^10.1.0",
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "^0.45.3",
     "email-templates": "^13.0.1",
     "ical.js": "^2.2.1",
     "mysql2": "^3.24.4",

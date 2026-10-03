@@ -33,6 +33,24 @@ test.describe('Calendar', () => {
     await expect(modal).not.toBeVisible()
   })
 
+  test('event under the pointer does not paint over the open modal', async ({ page }) => {
+    // The click leaves the pointer on the event, so it stays :hover — and the
+    // hover style raises its z-index. Whether the raised event then covers the
+    // close button depends on where today falls in the month grid, which made
+    // 'modal can be closed' fail on some dates only. Hit-testing the event's own
+    // spot checks the stacking independently of the date.
+    const event = page.locator('.sx__month-grid-event').first()
+    await event.click()
+    await expect(page.locator('#default-modal')).toBeVisible()
+
+    const box = (await event.boundingBox())!
+    const topmostIsEvent = await page.evaluate(
+      ({ x, y }) => !!document.elementFromPoint(x, y)?.closest('.sx__month-grid-event'),
+      { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+    )
+    expect(topmostIsEvent).toBe(false)
+  })
+
   test('header shows welcome message and logout', async ({ page }) => {
     const navbar = page.locator('#navbar-desktop')
     await expect(navbar.getByText('Willkommen')).toBeVisible()

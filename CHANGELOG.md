@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.15.3...v1.16.0) (2026-10-03)
+
+
+### Features
+
+* **app:** projekt section with feedback, bug reports and event suggestions ([#444](https://github.com/webcraftmedia/jahrweiser/issues/444)) ([02c60c8](https://github.com/webcraftmedia/jahrweiser/commit/02c60c898cd8a10fdecd3fffbafd7ebf1a278ab6))
+
+
+### Bug Fixes
+
+* **app:** drop the "Der Name ist kein Slogan" sentence from the community lead ([#452](https://github.com/webcraftmedia/jahrweiser/issues/452)) ([0cb1350](https://github.com/webcraftmedia/jahrweiser/commit/0cb1350e5b3c8db4ea941b44a8fd733626ff2566))
+* **app:** keep hovered calendar events below the modal ([#451](https://github.com/webcraftmedia/jahrweiser/issues/451)) ([7ee6069](https://github.com/webcraftmedia/jahrweiser/commit/7ee606911fbeda639ba0a5ff4678a76ea5e6abb0))
+
 ## [1.15.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.15.2...v1.15.3) (2026-09-26)
 
 

@@ -1124,8 +1124,12 @@
     flex: 1 1 auto;
   }
 
+  /* `isolation` keeps the calendar's z-indices local: a hovered event is raised
+     to 100 to spill over its neighbours, and without a stacking context of its
+     own it would also rise above the teleported modal (60) and the header (50). */
   .cal-wrapper {
     position: relative;
+    isolation: isolate;
     display: flex;
     flex-flow: column;
     flex: 1 1 auto;

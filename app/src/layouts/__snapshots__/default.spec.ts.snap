@@ -133,6 +133,11 @@ exports[`Layout: Default > renders with default zoom (no inline style) 1`] = `
         <div data-v-19b56bd5="" class="max-w-screen-2xl flex flex-wrap justify-between mx-auto w-full min-h-0 flex-1"></div>
       </div>
     </div>
+    <!-- Above the bottom bar, where a thumb already is, and in normal flow
+         like it: it takes its line instead of covering content. Lazy: only a
+         phone or tablet browser ever loads it (src/plugins/pwa.client.ts),
+         and it renders nothing once dismissed. -->
+    <!--v-if-->
     <!-- In normal flow rather than fixed: no overlay means no content hidden
          behind it and no bottom-padding hack on every page. -->
     <!--v-if-->

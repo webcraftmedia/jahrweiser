@@ -26,6 +26,11 @@
         </div>
       </div>
     </div>
+    <!-- Above the bottom bar, where a thumb already is, and in normal flow
+         like it: it takes its line instead of covering content. Lazy: only a
+         phone or tablet browser ever loads it (src/plugins/pwa.client.ts),
+         and it renders nothing once dismissed. -->
+    <LazyInstallHint v-if="loggedIn && installHintEligible" />
     <!-- In normal flow rather than fixed: no overlay means no content hidden
          behind it and no bottom-padding hack on every page. -->
     <AppIconRail v-if="loggedIn" orientation="horizontal" class="md:hidden" />
@@ -34,6 +39,8 @@
 </template>
 
 <script setup lang="ts">
+  import { installHintEligible } from '~/utils/installPrompt'
+
   const { zoomLevel } = useZoom()
   // `v-if`, not `v-show`: the rail fetches the channel list on mount, and
   // src/plugins/auth-redirect.ts turns any 401 into a forced logout. Mounting

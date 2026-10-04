@@ -49,6 +49,15 @@
       "settings": "Einstellungen",
       "welcome": "Willkommen"
     },
+    "InstallHint": {
+      "dismiss": "Hinweis ausblenden",
+      "install": "Installieren",
+      "label": "Jahrweiser als App",
+      "menu": "Als App installieren: im Browser-Menü „Zum Startbildschirm hinzufügen“ wählen.",
+      "prompt": "Hol dir den Jahrweiser als App auf den Startbildschirm.",
+      "safari": "Als App installieren: Öffne diese Seite in Safari, dann „Teilen“ → „Zum Home-Bildschirm“.",
+      "share": "Als App installieren: Tippe auf „Teilen“ und dann auf „Zum Home-Bildschirm“."
+    },
     "LoginCodeForm": {
       "button": "Anmelden",
       "error": {

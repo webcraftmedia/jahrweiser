@@ -1,0 +1,14 @@
+{
+  "icon-192": {
+    "src": "/pwa/icon-192.0aa33a67.png",
+    "size": 192
+  },
+  "icon-512": {
+    "src": "/pwa/icon-512.73e3e68f.png",
+    "size": 512
+  },
+  "apple-touch-icon": {
+    "src": "/pwa/apple-touch-icon.73284ec5.png",
+    "size": 180
+  }
+}

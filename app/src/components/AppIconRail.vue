@@ -81,7 +81,7 @@
     background: #d97706;
     box-shadow: 0 0 0 2px #faf5eb;
   }
-  :global(.dark) .rail-warn {
+  .dark .rail-warn {
     background: #f59e0b;
     box-shadow: 0 0 0 2px #2a2520;
   }

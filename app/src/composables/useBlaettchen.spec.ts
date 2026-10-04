@@ -124,4 +124,68 @@ describe('useBlaettchen', () => {
       urlFor({ number: 4, date: '2023-12-23', title: 'Ä B', file: '04_2023-12-23_Ä B.pdf' }),
     ).toBe('/api/blaettchen/04_2023-12-23_%C3%84%20B.pdf')
   })
+
+  describe('refresh on resume', () => {
+    const LATER = {
+      issues: [{ number: 13, date: '2026-06-01', file: '13_2026-06-01.pdf' }, ...LISTING.issues],
+      contact: 'blaettchen@example.com',
+    }
+
+    it('asks again without passing through the loading state', async () => {
+      mock$fetch.mockResolvedValue(LISTING)
+      const { issues, contact, isLoading, load, refresh } = useBlaettchen()
+      await load()
+      mock$fetch.mockResolvedValue(LATER)
+
+      const refreshing = refresh()
+      expect(isLoading.value).toBe(false)
+      await refreshing
+
+      expect(issues.value).toStrictEqual(LATER.issues)
+      expect(contact.value).toBe(LATER.contact)
+    })
+
+    it('clears an error message once the archive is readable again', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mock$fetch.mockRejectedValueOnce(new Error('500'))
+      const { issues, loadError, load, refresh } = useBlaettchen()
+      await load()
+      expect(loadError.value).toBe(true)
+
+      mock$fetch.mockResolvedValue(LISTING)
+      await refresh()
+      expect(loadError.value).toBe(false)
+      expect(issues.value).toStrictEqual(LISTING.issues)
+      consoleSpy.mockRestore()
+    })
+
+    it('keeps the list on screen when the network is not back yet', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mock$fetch.mockResolvedValueOnce(LISTING)
+      const { issues, contact, loadError, load, refresh } = useBlaettchen()
+      await load()
+
+      mock$fetch.mockRejectedValueOnce(new Error('offline'))
+      await refresh()
+      expect(issues.value).toStrictEqual(LISTING.issues)
+      expect(contact.value).toBe(LISTING.contact)
+      expect(loadError.value).toBe(false)
+      expect(consoleSpy).toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    it('joins a request that is already on its way', async () => {
+      mock$fetch.mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => {
+              resolve(LISTING)
+            }, 10),
+          ),
+      )
+      const { refresh } = useBlaettchen()
+      await Promise.all([refresh(), refresh()])
+      expect(mock$fetch).toHaveBeenCalledTimes(1)
+    })
+  })
 })

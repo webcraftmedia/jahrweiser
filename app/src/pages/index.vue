@@ -832,10 +832,23 @@
       }))
   }
 
+  /** The range Schedule-X last asked for — what a refresh on resume asks again. */
+  let shownRange: { start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime } | undefined
+
+  /**
+   * Load the events for a range. `refresh` is the variant for a member coming
+   * back to a calendar that has been on screen all along (see
+   * refreshShownRange): it asks for the calendar list again too, and leaves the
+   * view where the member left it instead of scrolling to today and replaying
+   * the pop-in.
+   */
   async function fetchDataForRange(
     start: Temporal.ZonedDateTime,
     end: Temporal.ZonedDateTime,
+    { refresh = false }: { refresh?: boolean } = {},
   ): Promise<void> {
+    const range = { start, end }
+    shownRange = range
     calLoading.value = true
     try {
       // Update currentDate from range midpoint for header labels
@@ -844,8 +857,9 @@
       const mid = new Date((startDate.getTime() + endDate.getTime()) / 2)
       currentDate.value = Temporal.PlainDate.from(mid.toISOString().slice(0, 10))
 
-      // Fetch all calendars if not already loaded
-      if (calendars.value.length === 0) {
+      // Fetch all calendars if not already loaded — or again on a refresh: a
+      // calendar may have been shared with the member in the meantime.
+      if (calendars.value.length === 0 || refresh) {
         calendars.value = await api('/api/calendars')
         buildScheduleXCalendars()
       }
@@ -867,7 +881,14 @@
         ),
       )
 
+      // The member moved on to another month while this was in flight; that
+      // month's own fetch decides what is shown.
+      if (shownRange !== range) return
       rawEvents.value = results.flat()
+      if (refresh) {
+        eventsService.set(mapToScheduleXEvents())
+        return
+      }
       scheduleStagger()
       scrollToDay()
       // eslint-disable-next-line no-catch-all/no-catch-all -- Kalender-Abruf: Fehler wird geloggt, die Ansicht bleibt leer statt zu brechen
@@ -877,6 +898,19 @@
       calLoading.value = false
     }
   }
+
+  /**
+   * Refetch the shown month for a member returning after the app sat in the
+   * background — a phone tab or the installed PWA left open for days would
+   * otherwise keep showing the calendar as it was then. Skipped while a fetch is
+   * already running: that one is fresh anyway.
+   */
+  async function refreshShownRange(): Promise<void> {
+    if (!shownRange || calLoading.value) return
+    await fetchDataForRange(shownRange.start, shownRange.end, { refresh: true })
+  }
+
+  useRefreshOnResume(refreshShownRange)
 
   /* ── Mark future days ── */
 

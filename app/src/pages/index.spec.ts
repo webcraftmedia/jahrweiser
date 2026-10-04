@@ -98,7 +98,16 @@ interface RangeArg {
 const mockCallbacks = vi.hoisted(() => ({
   fetchEvents: null as ((range: RangeArg) => Promise<unknown[]>) | null,
   onEventClick: null as ((event: unknown) => void) | null,
+  /** Leave out the first fetch Schedule-X makes on render, for the one test that needs no range yet. */
+  skipInitialFetch: false,
 }))
+
+// The resume hook is driven by hand here; when it fires is useRefreshOnResume's
+// own spec's business.
+const resume = vi.hoisted(() => ({ refresh: null as (() => Promise<void>) | null }))
+mockNuxtImport('useRefreshOnResume', () => (refresh: () => Promise<void>) => {
+  resume.refresh = refresh
+})
 
 vi.mock('@schedule-x/vue', () => ({
   ScheduleXCalendar: {
@@ -124,6 +133,8 @@ vi.mock('@schedule-x/calendar', () => ({
     // Capture the callbacks for test invocation
     if (config.callbacks?.fetchEvents) {
       mockCallbacks.fetchEvents = config.callbacks.fetchEvents
+    }
+    if (config.callbacks?.fetchEvents && !mockCallbacks.skipInitialFetch) {
       // Simulate Schedule-X initial render: call fetchEvents and set returned events
       const start = new Date('2025-01-01T00:00:00Z')
       const end = new Date('2025-01-31T23:59:59Z')
@@ -225,6 +236,8 @@ describe('Page: Index', () => {
     mockCalendarFilter.hiddenCalendars.value = new Set()
     mockCallbacks.fetchEvents = null
     mockCallbacks.onEventClick = null
+    mockCallbacks.skipInitialFetch = false
+    resume.refresh = null
     // Clean up stale modal elements from previous tests to prevent DOM pollution
     document.querySelectorAll('#default-modal').forEach((el) => {
       el.remove()
@@ -1767,6 +1780,143 @@ describe('Page: Index', () => {
       expect(replaceStateSpy).toHaveBeenCalledWith(expect.any(Object), '', '/2025/01')
     })
     consoleSpy.mockRestore()
+  })
+
+  describe('refresh on resume', () => {
+    const LATER_EVENT = {
+      id: 'event-2',
+      title: 'Added while away',
+      color: '#00ff00',
+      calendar: 'Family',
+      startDate: '2025-01-20',
+      endDate: '2025-01-20',
+    }
+
+    /** What the server answers once the member is back: a calendar and an event more. */
+    function serveLater(): void {
+      mock$fetch.mockImplementation((url: string, options?: { body?: { calendar: string } }) => {
+        if (url === '/api/calendars') {
+          return Promise.resolve([
+            { name: 'Work', color: '#ff0000' },
+            { name: 'Family', color: '#00ff00' },
+          ])
+        }
+        if (url === '/api/calendar') {
+          return Promise.resolve(options?.body?.calendar === 'Family' ? [LATER_EVENT] : [])
+        }
+        return Promise.resolve({})
+      })
+    }
+
+    it('refetches the shown month, calendar list included, and swaps the events in', async () => {
+      await mount()
+      mock$fetch.mockClear()
+      mockEventsServiceSet.mockClear()
+      serveLater()
+
+      await resume.refresh!()
+
+      expect(mock$fetch).toHaveBeenCalledWith('/api/calendars')
+      expect(mock$fetch).toHaveBeenCalledWith(
+        '/api/calendar',
+        expect.objectContaining({
+          body: expect.objectContaining({
+            calendar: 'Family',
+            startDate: new Date('2025-01-01T00:00:00Z'),
+            endDate: new Date('2025-01-31T23:59:59Z'),
+          }),
+        }),
+      )
+      expect(mockCalendarControlsSetCalendars).toHaveBeenLastCalledWith(
+        expect.objectContaining({ 'cal-1': expect.anything() }),
+      )
+      expect(mockEventsServiceSet).toHaveBeenCalledTimes(1)
+      const shown = mockEventsServiceSet.mock.calls[0]![0] as { id: string; calendarId: string }[]
+      expect(shown.map((e) => [e.id, e.calendarId])).toStrictEqual([['event-2', 'cal-1']])
+    })
+
+    it('leaves the view where the member left it', async () => {
+      // A today cell to scroll to, the way a fresh fetch would — see the
+      // scrollToDay tests above.
+      const content = document.createElement('div')
+      content.classList.add('content')
+      const scrollSpy = vi.spyOn(content, 'scrollTo').mockImplementation(() => {})
+      const todayEl = document.createElement('div')
+      todayEl.classList.add('sx__month-grid-day')
+      todayEl.setAttribute('data-date', '2025-01-15')
+      const innerEl = document.createElement('div')
+      innerEl.classList.add('sx__is-today')
+      todayEl.appendChild(innerEl)
+      content.appendChild(todayEl)
+      document.body.appendChild(content)
+      const wrapper = await mount()
+      vi.advanceTimersByTime(400)
+      scrollSpy.mockClear()
+      serveLater()
+
+      await resume.refresh!()
+      expect(wrapper.find('.cal-wrapper').classes()).not.toContain('stagger-pending')
+      vi.advanceTimersByTime(400)
+      expect(scrollSpy).not.toHaveBeenCalled()
+      content.remove()
+    })
+
+    it('does not pile onto a fetch that is still running', async () => {
+      await mount()
+      let finish!: (value: unknown) => void
+      mock$fetch.mockImplementation((url: string) =>
+        url === '/api/calendar'
+          ? new Promise((resolve) => {
+              finish = resolve
+            })
+          : Promise.resolve([]),
+      )
+      const navigation = triggerFetchEvents('2025-02-01', '2025-02-28')
+      await vi.waitFor(() => {
+        expect(finish).toBeDefined()
+      })
+      mock$fetch.mockClear()
+
+      await resume.refresh!()
+      expect(mock$fetch).not.toHaveBeenCalled()
+
+      finish([])
+      await navigation
+    })
+
+    it('has nothing to refresh before the calendar asked for a month', async () => {
+      mockCallbacks.skipInitialFetch = true
+      await mount({ awaitFetch: false })
+      mock$fetch.mockClear()
+
+      await resume.refresh!()
+      expect(mock$fetch).not.toHaveBeenCalled()
+    })
+
+    it('drops its answer when the member moved to another month meanwhile', async () => {
+      await mount()
+      let finishRefresh!: (value: unknown) => void
+      mock$fetch.mockImplementation((url: string) => {
+        if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+        return new Promise((resolve) => {
+          finishRefresh = resolve
+        })
+      })
+      const refreshing = resume.refresh!()
+      await vi.waitFor(() => {
+        expect(finishRefresh).toBeDefined()
+      })
+      const stale = finishRefresh
+
+      // The member pages on before the refresh answered; February is answered first.
+      mock$fetch.mockResolvedValue([])
+      await triggerFetchEvents('2025-02-01', '2025-02-28')
+      mockEventsServiceSet.mockClear()
+
+      stale([LATER_EVENT])
+      await refreshing
+      expect(mockEventsServiceSet).not.toHaveBeenCalled()
+    })
   })
 
   describe('suggest an event', () => {

@@ -5,6 +5,7 @@ import { useDb } from '../db'
 import { loginTokens, userTags, users } from '../db/schema'
 import { createCardDAVAccount, findUserByEmail } from '../helpers/dav'
 import { recordEvent } from '../helpers/events'
+import { bindLoginCode } from '../helpers/loginCode'
 import { isWithinLoginCooldown, markLoginRequested } from '../helpers/loginCooldown'
 import { sendLoginLink } from '../helpers/loginLink'
 import { isEmailNotFound, markEmailNotFound } from '../helpers/negativeCache'
@@ -48,6 +49,10 @@ export default defineEventHandler(async (event) => {
     return { cooldown: true }
   }
   markLoginRequested(normalizedEmail)
+  // Past the cooldown and before anything that depends on the address
+  // existing, so every answer carries the same cookie. On a cooldown the
+  // previous binding stays, and with it the code in the mail already sent.
+  const codeNonce = bindLoginCode(event, config)
 
   if (isEmailNotFound(normalizedEmail)) {
     await recordEvent({ type: 'auth.link_unknown', event })
@@ -135,7 +140,7 @@ export default defineEventHandler(async (event) => {
   }
 
   await recordEvent({ type: 'auth.link_requested', userUid: userRow.uid, event })
-  await sendLoginLink(config, userRow, redirect)
+  await sendLoginLink(config, userRow, redirect, codeNonce)
 
   return {}
 })

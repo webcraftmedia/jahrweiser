@@ -48,6 +48,20 @@
       "settings": "Einstellungen",
       "welcome": "Willkommen"
     },
+    "LoginCodeForm": {
+      "button": "Anmelden",
+      "error": {
+        "elsewhere": "Dieser Code gilt nur dort, wo du die E-Mail angefordert hast. Gib ihn dort ein oder fordere hier eine neue E-Mail an.",
+        "expired": "Dieser Code ist abgelaufen. Fordere dir bitte eine neue E-Mail an.",
+        "locked": "Zu viele falsche Versuche. Nimm bitte den Link aus der E-Mail oder versuch es später noch einmal.",
+        "nosession": "Die Anmeldung hat geklappt, aber dein Browser hat sie nicht gespeichert. Prüfe bitte, ob Cookies erlaubt sind.",
+        "used": "Mit dieser E-Mail wurde schon angemeldet. Fordere dir bitte eine neue an.",
+        "wrong": "Der Code stimmt nicht. Noch kein Versuch übrig. | Der Code stimmt nicht. Noch ein Versuch. | Der Code stimmt nicht. Noch {n} Versuche."
+      },
+      "label": "Oder gib den Code aus der E-Mail ein:",
+      "loading": "Prüfe…",
+      "placeholder": "123 456"
+    },
     "MemberMap": {
       "legend": "Mitglieder je Postleitzahl:",
       "table": {

@@ -109,6 +109,17 @@ describe('redeemLoginLink.post', () => {
     await expect(fn({})).rejects.toMatchObject({ data: { reason: 'disabled' } })
   })
 
+  it('refuses as used when the code from the same mail won the race', async () => {
+    // Both read the row as unspent; only the conditional UPDATE decides.
+    queueDbResults(
+      [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
+      [{ uid: 'u1', deletedAt: null, loginDisabled: false }],
+      [{ affectedRows: 0 }],
+    )
+    await expect(fn({})).rejects.toMatchObject({ data: { reason: 'used' } })
+    expect(globalThis.setUserSession).not.toHaveBeenCalled()
+  })
+
   it('throws 500 when no session id is established', async () => {
     queueDbResults(
       [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
@@ -122,7 +133,7 @@ describe('redeemLoginLink.post', () => {
           loginDisabled: false,
         },
       ],
-      {}, // consume update
+      [{ affectedRows: 1 }], // consume update
     )
     vi.mocked(globalThis.getUserSession).mockResolvedValue({})
     await expect(fn({})).rejects.toThrow('Failed to establish session id')
@@ -141,7 +152,7 @@ describe('redeemLoginLink.post', () => {
           loginDisabled: false,
         },
       ],
-      {}, // consume update
+      [{ affectedRows: 1 }], // consume update
       {}, // session insert
     )
     vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
@@ -164,7 +175,7 @@ describe('redeemLoginLink.post', () => {
           loginDisabled: false,
         },
       ],
-      {},
+      [{ affectedRows: 1 }],
       {},
     )
     vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
@@ -189,7 +200,7 @@ describe('redeemLoginLink.post', () => {
           loginDisabled: false,
         },
       ],
-      {},
+      [{ affectedRows: 1 }],
     )
     vi.mocked(globalThis.getUserSession).mockResolvedValue({})
     await expect(fn({})).rejects.toThrow('Failed to establish session id')

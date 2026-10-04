@@ -5,7 +5,8 @@
       "authenticate": "Tippe auf „Anmelden“, um dich einzuloggen. Dieser Link ist aus Sicherheitsgründen nur kurze Zeit und nur einmal gültig.",
       "authenticateLink": "Wenn die E-Mail nicht korrekt angezeigt wird kannst du auch diesem Link folgend:",
       "button": "Anmelden",
-      "hints": "Funktioniert der Knopf nicht mehr, ist der Link abgelaufen — fordere dann auf der Login-Seite einfach einen neuen an. Solange du den Kalender nutzt, bleibst du auf diesem Gerät angemeldet — erst nach längerer Pause (ca. {loginDays} Tage) ist ein neuer Login nötig."
+      "hints": "Funktioniert der Knopf nicht mehr, ist der Link abgelaufen — fordere dann auf der Login-Seite einfach einen neuen an. Solange du den Kalender nutzt, bleibst du auf diesem Gerät angemeldet — erst nach längerer Pause (ca. {loginDays} Tage) ist ein neuer Login nötig.",
+      "code": "Statt auf den Knopf zu tippen, kannst du auch diesen Code dort eingeben, wo du die E-Mail angefordert hast – praktisch, wenn du den Jahrweiser als App auf dem Startbildschirm nutzt. Er gilt {minutes} Minuten und nur dort:"
     },
     "welcome": {
       "subject": "hat dir Kalender-Zugang gewährt",

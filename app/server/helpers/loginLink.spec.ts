@@ -2,8 +2,9 @@
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
+import { firstDbCall, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
 
+import { codeHashOf, codeKeyOf } from './loginCode'
 import { sendLoginLink } from './loginLink'
 
 const mockSend = vi.fn()
@@ -33,6 +34,30 @@ describe('sendLoginLink', () => {
     const authURL = mockSend.mock.calls[0]![0].locals.authURL as URL
     expect(authURL.pathname).toMatch(/^\/login\//)
     expect(authURL.searchParams.has('redirect')).toBe(false)
+  })
+
+  it('adds no code without a binding, as for registration', async () => {
+    queueDbResults({})
+    mockSend.mockResolvedValue(undefined)
+    await sendLoginLink(config, user)
+    expect(mockSend.mock.calls[0]![0].locals.code).toBeUndefined()
+    expect(firstDbCall('values')![0]).not.toHaveProperty('codeHash')
+  })
+
+  it('adds a code bound to the nonce and stores only its hashes', async () => {
+    queueDbResults({})
+    mockSend.mockResolvedValue(undefined)
+    await sendLoginLink(config, user, undefined, 'nonce')
+
+    const locals = mockSend.mock.calls[0]![0].locals
+    expect(locals.code).toMatch(/^\d{3} \d{3}$/)
+    expect(locals.codeMinutes).toBe(15)
+    const code = (locals.code as string).replace(' ', '')
+    expect(firstDbCall('values')![0]).toMatchObject({
+      codeKey: codeKeyOf('nonce'),
+      codeHash: codeHashOf('nonce', code),
+    })
+    expect(JSON.stringify(firstDbCall('values'))).not.toContain(code)
   })
 
   it('appends the redirect when given', async () => {

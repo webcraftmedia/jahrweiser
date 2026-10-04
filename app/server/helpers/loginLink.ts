@@ -7,6 +7,7 @@ import { loginTokens } from '../db/schema'
 
 import { defaultParams, emailRenderer } from './email'
 import { recordEvent } from './events'
+import { LOGIN_CODE_TTL_MS, codeHashOf, codeKeyOf, generateLoginCode } from './loginCode'
 
 /**
  * How long a magic link stays redeemable.
@@ -33,15 +34,28 @@ interface LoginLinkUser {
 // by the user-initiated login flow (requestLoginLink) and self-registration,
 // which logs the new user in via the same email-verified link. The caller owns
 // any rate-limiting and user-existence checks.
+//
+// `codeNonce` adds a login code to the mail, bound to the browser that holds
+// the nonce — see server/helpers/loginCode.ts. Only the login form passes one;
+// registration has no form to type a code into.
 export async function sendLoginLink(
   config: { CLIENT_URI: string },
   user: LoginLinkUser,
   redirect?: string,
+  codeNonce?: string,
 ): Promise<void> {
   const db = useDb()
   const token = randomBytes(32).toString('hex')
   const expiresAt = new Date(Date.now() + LOGIN_TOKEN_TTL_MS)
-  await db.insert(loginTokens).values({ token, userUid: user.uid, expiresAt })
+  const code = codeNonce ? generateLoginCode() : undefined
+  await db.insert(loginTokens).values({
+    token,
+    userUid: user.uid,
+    expiresAt,
+    ...(codeNonce && code
+      ? { codeKey: codeKeyOf(codeNonce), codeHash: codeHashOf(codeNonce, code) }
+      : {}),
+  })
 
   const to = { address: user.email, name: user.displayName ?? '' }
   const sendArgs = {
@@ -52,6 +66,9 @@ export async function sendLoginLink(
       locale: 'de',
       // Greet by first name in the salutation; the "To" header keeps the full name.
       name: firstNameOf(user.displayName),
+      // Grouped 3+3 for reading it off one screen and typing it into another.
+      code: code && `${code.slice(0, 3)} ${code.slice(3)}`,
+      codeMinutes: LOGIN_CODE_TTL_MS / 60_000,
       authURL: (() => {
         const url = new URL(`/login/${token}`, config.CLIENT_URI)
         if (redirect) url.searchParams.set('redirect', redirect)

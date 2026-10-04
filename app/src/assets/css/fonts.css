@@ -1,0 +1,112 @@
+/*
+ * Web fonts, served from our own origin.
+ *
+ * The files come from the Fontsource npm packages (pinned in package-lock,
+ * updated by Dependabot) and are bundled by Vite into `_nuxt/` with a content
+ * hash. Loading them from Google Fonts instead would hand every visitor's IP
+ * address to Google on every page view — which needs consent under the GDPR
+ * (LG München I, 20.01.2022, 3 O 17493/20).
+ *
+ * The faces are declared here rather than by importing the packages' CSS:
+ * - Only the latin and latin-ext subsets — the content is German, so the
+ *   cyrillic, greek and vietnamese faces would be dead weight in the CSS
+ *   bundle. The `unicode-range` makes the browser fetch latin-ext only when a
+ *   page actually contains such a character.
+ * - The family names stay the ones Google served ('Source Sans 3', not
+ *   Fontsource's 'Source Sans 3 Variable'), so tailwind.config.ts and every
+ *   `font-family` in the components keep working unchanged.
+ * - Source Sans 3 is the variable font (one file per style instead of five),
+ *   but its `font-weight` range is clamped to what we used to load from Google
+ *   (normal 300–700, italic 400–500), so e.g. `font-weight: 800` still renders
+ *   like 700 did before.
+ */
+
+/* Abril Fatface — font-display (headlines, branding) */
+@font-face {
+  font-family: 'Abril Fatface';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('@fontsource/abril-fatface/files/abril-fatface-latin-ext-400-normal.woff2')
+    format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Abril Fatface';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('@fontsource/abril-fatface/files/abril-fatface-latin-400-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Permanent Marker — font-hand (labels, annotations). Google ships no latin-ext
+   subset for it either; those characters fall back to the next font in the stack. */
+@font-face {
+  font-family: 'Permanent Marker';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('@fontsource/permanent-marker/files/permanent-marker-latin-400-normal.woff2')
+    format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Source Sans 3 — font-body (body text, UI) */
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url('@fontsource-variable/source-sans-3/files/source-sans-3-latin-ext-wght-normal.woff2')
+    format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url('@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2')
+    format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400 500;
+  src: url('@fontsource-variable/source-sans-3/files/source-sans-3-latin-ext-wght-italic.woff2')
+    format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400 500;
+  src: url('@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-italic.woff2')
+    format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}

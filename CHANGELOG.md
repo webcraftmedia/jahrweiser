@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.17.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.16.0...v1.17.0) (2026-10-04)
+
+
+### Features
+
+* **db:** record active members per day in metrics_daily ([#454](https://github.com/webcraftmedia/jahrweiser/issues/454)) ([d3ae396](https://github.com/webcraftmedia/jahrweiser/commit/d3ae396368a6e001659cbc9f620fb17a0952b30a))
+
+
+### Bug Fixes
+
+* **app:** keep dark-mode chart styles scoped instead of styling &lt;html&gt; ([#453](https://github.com/webcraftmedia/jahrweiser/issues/453)) ([0106c2e](https://github.com/webcraftmedia/jahrweiser/commit/0106c2eeee7fe887c8421f4635529bb66d3b5def))
+
 ## [1.16.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.15.3...v1.16.0) (2026-10-03)
 
 

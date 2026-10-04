@@ -7,6 +7,7 @@ import { dbCalls, firstDbCall, mockDb, queueDbResults, resetDb } from '../../tes
 import { resetPlzAreaCache } from './memberMap'
 import {
   buildMonthlySeries,
+  collectActivity,
   collectCurrentMetrics,
   countBlaettchenIssues,
   countLocatable,
@@ -328,6 +329,12 @@ describe('recordDailyMetrics', () => {
       [{ members: '4', subscribed: '3', unsubscribed: '1' }],
       [{ value: 0 }],
       [{ postalCode: '64673', count: 2 }],
+      [
+        { lastSeenAt: new Date('2026-09-09T07:00:00Z') },
+        { lastSeenAt: new Date('2026-09-05T07:00:00Z') },
+        { lastSeenAt: new Date('2026-08-20T07:00:00Z') },
+        { lastSeenAt: null },
+      ],
     )
     await recordDailyMetrics(CONFIG, new Date('2026-09-09T08:00:00Z'))
     expect(firstDbCall('values')?.[0]).toStrictEqual({
@@ -338,6 +345,9 @@ describe('recordDailyMetrics', () => {
       telegramChannels: 0,
       blaettchenIssues: 0,
       withPostalCode: 2,
+      active1d: 1,
+      active7d: 2,
+      active30d: 3,
     })
     expect(dbCalls().some((call) => call.method === 'onDuplicateKeyUpdate')).toBe(true)
   })
@@ -347,6 +357,46 @@ describe('recordDailyMetrics', () => {
     await recordDailyMetrics(CONFIG, new Date('2026-09-09T08:00:00Z'))
     const upsert = dbCalls().find((call) => call.method === 'onDuplicateKeyUpdate')
     expect((upsert?.args[0] as { set: Record<string, unknown> }).set).not.toHaveProperty('day')
+  })
+
+  it('overwrites the activity counts too — the day’s last run has the full day', async () => {
+    queueDbResults([{ members: '1', subscribed: '1', unsubscribed: '0' }], [{ value: 0 }], [], [])
+    await recordDailyMetrics(CONFIG, new Date('2026-09-09T08:00:00Z'))
+    const upsert = dbCalls().find((call) => call.method === 'onDuplicateKeyUpdate')
+    expect((upsert?.args[0] as { set: Record<string, unknown> }).set).toMatchObject({
+      active1d: 0,
+      active7d: 0,
+      active30d: 0,
+    })
+  })
+})
+
+describe('collectActivity', () => {
+  const NOW = new Date('2026-10-04T12:00:00Z')
+
+  beforeEach(() => {
+    resetDb()
+  })
+
+  it('sorts the members into spans by their newest session', async () => {
+    queueDbResults([
+      { lastSeenAt: new Date('2026-10-04T09:00:00Z') },
+      { lastSeenAt: new Date('2026-06-01T09:00:00Z') },
+      { lastSeenAt: null },
+    ])
+    await expect(collectActivity(NOW)).resolves.toStrictEqual({
+      day: 1,
+      week: 0,
+      month: 0,
+      quarter: 0,
+      older: 1,
+      never: 1,
+    })
+  })
+
+  it('counts one row per member, not per session', async () => {
+    await collectActivity(NOW)
+    expect(dbCalls().some((call) => call.method === 'groupBy')).toBe(true)
   })
 })
 
@@ -479,6 +529,49 @@ describe('buildMonthlySeries', () => {
     )
     const series = await buildMonthlySeries(NOW, 7)
     expect(series[11]).toMatchObject({ members: 12, withPostalCode: 7 })
+  })
+
+  it('leaves the activity figure empty for months nothing was measured in', async () => {
+    // `last_seen_at` is overwritten on every request — there is no past to
+    // reconstruct it from.
+    queueDbResults([user('2025-09-01')], [])
+    const series = await buildMonthlySeries(NOW)
+    expect(series.every((month) => month.active30d === null)).toBe(true)
+  })
+
+  it('takes the running month’s activity from the live count, and only that month', async () => {
+    queueDbResults(
+      [],
+      [
+        {
+          day: '2026-08-31',
+          members: 12,
+          newsletterSubscribed: 10,
+          newsletterUnsubscribed: 2,
+          telegramChannels: 0,
+          blaettchenIssues: 0,
+          withPostalCode: 5,
+          active1d: 1,
+          active7d: 3,
+          active30d: 6,
+        },
+        {
+          day: '2026-09-08',
+          members: 12,
+          newsletterSubscribed: 10,
+          newsletterUnsubscribed: 2,
+          telegramChannels: 0,
+          blaettchenIssues: 0,
+          withPostalCode: 5,
+          active1d: 2,
+          active7d: 4,
+          active30d: 7,
+        },
+      ],
+    )
+    const series = await buildMonthlySeries(NOW, null, 9)
+    expect(series[10]).toMatchObject({ month: '2026-08', active30d: 6 })
+    expect(series[11]).toMatchObject({ month: '2026-09', active30d: 9 })
   })
 
   it('keeps it empty for a snapshot taken before the metric existed', async () => {

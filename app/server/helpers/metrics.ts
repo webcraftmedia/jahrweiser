@@ -1,13 +1,15 @@
 import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 
-import { and, asc, count as countRows, gte, isNull, ne, sql } from 'drizzle-orm'
+import { and, asc, count as countRows, eq, gte, isNull, ne, sql } from 'drizzle-orm'
 
 import type { LoadedAreas, PostalCodeCount } from '~~/server/helpers/memberMap'
+import type { ActivityCounts } from '~~/shared/activity'
 
 import { useDb } from '~~/server/db'
-import { metricsDaily, telegramChannels, users } from '~~/server/db/schema'
+import { metricsDaily, sessions, telegramChannels, users } from '~~/server/db/schema'
 import { loadPlzAreas, lookupPostalCode, normalisePostalCode } from '~~/server/helpers/memberMap'
+import { activeCounts, countActivity } from '~~/shared/activity'
 import { parseBlaettchenFile } from '~~/shared/blaettchen'
 
 /** The six numbers as they are right now. */
@@ -46,6 +48,12 @@ export interface MetricsMonth {
    * simply starts where the measurements do.
    */
   withPostalCode: number | null
+  /**
+   * Members active within the 30 days before the month's last snapshot.
+   * Measured only, like `withPostalCode`: `sessions.last_seen_at` keeps just
+   * the latest moment, so past activity cannot be reconstructed.
+   */
+  active30d: number | null
 }
 
 /** The window shown on the dashboard. */
@@ -203,6 +211,31 @@ export async function countMembersWithPostalCode(): Promise<number> {
   return countLocatable(rows, await loadPlzAreas())
 }
 
+/**
+ * How long ago each current member was last active, coarsened to spans.
+ *
+ * One row per member with their newest `last_seen_at` across all sessions —
+ * the same aggregate the member list draws from. Members without any session
+ * come back as null, which is the "never logged in" span, not a gap. Only the
+ * counts leave this function; the timestamps never reach the response.
+ */
+export async function collectActivity(now = new Date()): Promise<ActivityCounts> {
+  const rows = await useDb()
+    .select({
+      // mapWith: a raw MAX() would come back as the driver's naive string;
+      // the column's own mapping reads it as the UTC moment it is.
+      lastSeenAt: sql<Date | null>`MAX(${sessions.lastSeenAt})`.mapWith(sessions.lastSeenAt),
+    })
+    .from(users)
+    .leftJoin(sessions, eq(sessions.userUid, users.uid))
+    .where(isNull(users.deletedAt))
+    .groupBy(users.uid)
+  return countActivity(
+    rows.map((row) => row.lastSeenAt),
+    now,
+  )
+}
+
 interface MetricsConfig {
   BLAETTCHEN_DIR: string
 }
@@ -241,8 +274,9 @@ export async function collectCurrentMetrics(config: MetricsConfig): Promise<Curr
  */
 export async function recordDailyMetrics(config: MetricsConfig, now = new Date()): Promise<void> {
   const current = await collectCurrentMetrics(config)
-  const row = { day: today(now), ...current }
-  await useDb().insert(metricsDaily).values(row).onDuplicateKeyUpdate({ set: current })
+  const measured = { ...current, ...activeCounts(await collectActivity(now)) }
+  const row = { day: today(now), ...measured }
+  await useDb().insert(metricsDaily).values(row).onDuplicateKeyUpdate({ set: measured })
 }
 
 /**
@@ -260,10 +294,12 @@ export async function recordDailyMetrics(config: MetricsConfig, now = new Date()
  * at all, so without this the newest point would stay empty until the next
  * sync writes a snapshot, and on an installation whose cron never fires it
  * would stay empty for good while the tile above it shows the number.
+ * `liveActive30d` is the same for the activity count, for the same reason.
  */
 export async function buildMonthlySeries(
   now = new Date(),
   liveWithPostalCode: number | null = null,
+  liveActive30d: number | null = null,
 ): Promise<MetricsMonth[]> {
   const db = useDb()
   const months = monthKeys(METRICS_MONTHS, now)
@@ -296,7 +332,9 @@ export async function buildMonthlySeries(
   return months.map((month, index) => {
     const snapshot = measured.get(month)
     // The running month, counted now rather than whenever the last sync was.
-    const live = index === months.length - 1 ? liveWithPostalCode : null
+    const isRunning = index === months.length - 1
+    const live = isRunning ? liveWithPostalCode : null
+    const liveActive = isRunning ? liveActive30d : null
     return {
       month,
       // The derivations are built from the same month list, so index-for-index.
@@ -314,6 +352,8 @@ export async function buildMonthlySeries(
       // snapshot, and a snapshot without the figure — end up as the same
       // "not measured" the chart draws as a gap.
       withPostalCode: live ?? snapshot?.withPostalCode ?? null,
+      // Same rules: measured or nothing, live for the running month.
+      active30d: liveActive ?? snapshot?.active30d ?? null,
     }
   })
 }

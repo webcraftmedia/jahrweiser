@@ -1,10 +1,13 @@
 import { and, asc, eq, isNotNull, isNull, like, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
+import type { ActivityBucket } from '~~/shared/activity'
+
 import { useDb } from '~~/server/db'
 import { sessions, users } from '~~/server/db/schema'
 import { recordEvent } from '~~/server/helpers/events'
 import { requireAdmin } from '~~/server/helpers/requireAdmin'
+import { activityBucket } from '~~/shared/activity'
 import { abbreviateName, maskEmail } from '~~/shared/mask'
 
 /**
@@ -82,8 +85,14 @@ export interface MemberRow {
   status: MemberStatus
   newsletter: string
   createdAt: string | null
-  /** When any of their sessions was last used. */
-  lastSeenAt: string | null
+  /**
+   * How long ago any of their sessions was last used — as a span, not a
+   * moment. The list shows every member at once, and a column of exact
+   * timestamps is everybody's daily rhythm in one table; "active this week"
+   * answers what the list is for. The exact moment stays on the detail page,
+   * where an admin looks at one person on purpose.
+   */
+  lastSeen: ActivityBucket
   /** Sessions that would still let them in right now. */
   activeSessions: number
 }
@@ -114,6 +123,12 @@ function toIso(value: unknown): string | null {
   const naive = isTimestamp && !statesZone
 
   return new Date(naive ? `${value.replace(' ', 'T')}Z` : value).toISOString()
+}
+
+/** The moment behind a `MAX(last_seen_at)`, read the same zone-safe way. */
+function lastSeenOf(value: unknown): Date | null {
+  const iso = toIso(value)
+  return iso === null ? null : new Date(iso)
 }
 
 export default defineEventHandler(async (event) => {
@@ -171,6 +186,7 @@ export default defineEventHandler(async (event) => {
     .limit(PER_PAGE)
     .offset((page - 1) * PER_PAGE)
 
+  const now = new Date()
   const members: MemberRow[] = rows.map((row) => ({
     uid: row.uid,
     name: abbreviateName(row.displayName),
@@ -179,7 +195,7 @@ export default defineEventHandler(async (event) => {
     status: statusOf(row),
     newsletter: row.newsletter,
     createdAt: toIso(row.createdAt),
-    lastSeenAt: toIso(row.lastSeenAt),
+    lastSeen: activityBucket(lastSeenOf(row.lastSeenAt), now),
     activeSessions: Number(row.activeSessions ?? 0),
   }))
 

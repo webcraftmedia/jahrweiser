@@ -1,6 +1,6 @@
 // @vitest-environment node
 import '../../../../test/setup-server'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { dbCalls, mockDb, queueDbResults, resetDb } from '../../../../test/helpers/mock-db'
 
@@ -50,6 +50,12 @@ describe('admin/members/list.get', () => {
       user: { uid: 'a1', email: 'admin@example.de', name: 'Admin', role: 'admin' },
     })
     vi.mocked(globalThis.getQuery).mockReturnValue({})
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-09-03T08:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('refuses anybody who is not an admin', async () => {
@@ -81,7 +87,7 @@ describe('admin/members/list.get', () => {
     queue([row({ activeSessions: null, lastSeenAt: null })])
     const result = await fn({})
     expect(result.members[0]!.activeSessions).toBe(0)
-    expect(result.members[0]).toMatchObject({ lastSeenAt: null })
+    expect(result.members[0]).toMatchObject({ lastSeen: 'never' })
   })
 
   it.each([
@@ -108,23 +114,39 @@ describe('admin/members/list.get', () => {
     expect(mockRecordEvent).not.toHaveBeenCalled()
   })
 
+  it('sends how long ago somebody was here as a span, never the moment', async () => {
+    // The list shows everybody at once — exact timestamps there would be the
+    // whole membership's daily rhythm in one response.
+    queue([row({ lastSeenAt: new Date('2026-08-31T08:00:00.000Z') })])
+    const result = await fn({})
+    expect(result.members[0]).toMatchObject({ lastSeen: 'week' })
+    expect(result.members[0]).not.toHaveProperty('lastSeenAt')
+    expect(JSON.stringify(result)).not.toContain('2026-08-31')
+  })
+
   it('reads a naive timestamp from the driver as UTC, not as local time', async () => {
     // `MAX(last_seen_at)` is a raw expression and is not always mapped to a
     // Date. The bare string carries no zone — read as local time it would shift
-    // every timestamp by the server's offset, which is a silent hour or two of
-    // wrong in a column people use to judge "when was this member last here".
-    queue([row({ lastSeenAt: '2026-09-01 08:00:00', createdAt: '2026-01-02 10:00:00' })])
+    // the moment by the server's offset, and with it the span near a boundary.
+    // 24 hours to the minute before "now": UTC says still "day".
+    queue([row({ lastSeenAt: '2026-09-02 08:00:00', createdAt: '2026-01-02 10:00:00' })])
     const result = await fn({})
     expect(result.members[0]).toMatchObject({
-      lastSeenAt: '2026-09-01T08:00:00.000Z',
+      lastSeen: 'day',
       createdAt: '2026-01-02T10:00:00.000Z',
     })
   })
 
   it('leaves a timestamp that does state its zone alone', async () => {
-    queue([row({ lastSeenAt: '2026-09-01T08:00:00+02:00' })])
+    // 10:00+02:00 is 08:00Z — exactly on the 24-hour bound.
+    queue([
+      row({ lastSeenAt: '2026-09-02T10:00:00+02:00', createdAt: '2026-01-02T12:00:00+02:00' }),
+    ])
     const result = await fn({})
-    expect(result.members[0]).toMatchObject({ lastSeenAt: '2026-09-01T06:00:00.000Z' })
+    expect(result.members[0]).toMatchObject({
+      lastSeen: 'day',
+      createdAt: '2026-01-02T10:00:00.000Z',
+    })
   })
 
   it('passes a name search on as a pattern and an address search as a value', async () => {

@@ -18,7 +18,7 @@ function member(over: Record<string, unknown> = {}) {
     status: 'active',
     newsletter: 'subscribed',
     createdAt: '2026-01-02T10:00:00.000Z',
-    lastSeenAt: '2026-09-01T08:00:00.000Z',
+    lastSeen: 'week',
     activeSessions: 2,
     ...over,
   }
@@ -180,10 +180,15 @@ describe('Page: Admin Members', () => {
   })
 
   it('names a member who never logged in rather than showing an empty cell', async () => {
-    serving({ members: [member({ lastSeenAt: null, name: '' })] })
+    serving({ members: [member({ lastSeen: 'never', name: '' })] })
     const wrapper = await mountLoaded()
     expect(wrapper.text()).toContain('pages.admin.members.table.unnamed')
-    expect(wrapper.text()).toContain('pages.admin.members.table.never')
+    expect(wrapper.text()).toContain('pages.admin.activity.never')
+  })
+
+  it('shows when somebody was last here as a span, not a date', async () => {
+    const wrapper = await mountLoaded()
+    expect(wrapper.text()).toContain('pages.admin.activity.week')
   })
 
   it('links each row to its detail page', async () => {

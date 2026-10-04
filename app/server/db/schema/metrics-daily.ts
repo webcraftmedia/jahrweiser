@@ -28,6 +28,16 @@ export const metricsDaily = mysqlTable('metrics_daily', {
   // keep it, and the chart starts the line where the measurements start
   // instead of drawing a zero nobody counted.
   withPostalCode: int('with_postal_code'),
+  // Members active within the last 1, 7 and 30 days, by their sessions'
+  // `last_seen_at`. Nullable for the same reason as `with_postal_code`: that
+  // column is overwritten on every request, so it only ever knows the latest
+  // moment — yesterday's count cannot be recovered today, and the rows from
+  // before this metric honestly say "not measured". The last write of a day
+  // runs shortly before midnight, which is what makes `active_1d` a daily
+  // count rather than a 24-hour window ending at some random sync.
+  active1d: int('active_1d'),
+  active7d: int('active_7d'),
+  active30d: int('active_30d'),
 })
 
 export type MetricsDay = typeof metricsDaily.$inferSelect

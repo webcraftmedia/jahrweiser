@@ -12,7 +12,7 @@
    * surfaces (teal/orange, worst-case ΔE 13.7; green/orange collapses to 1.7
    * under deuteranopia and was rejected for that reason).
    */
-  export type SeriesTone = 'members' | 'subscribed' | 'unsubscribed' | 'postal'
+  export type SeriesTone = 'members' | 'subscribed' | 'unsubscribed' | 'postal' | 'active'
 
   export interface ChartSeries {
     tone: SeriesTone
@@ -326,7 +326,12 @@
 <style scoped>
   /* Validated against both surfaces with the dataviz palette checker: worst
      adjacent CVD ΔE 13.7 (light) / 13.8 (dark), normal-vision ΔE 27+. The dark
-     steps are chosen, not derived — teal holds, only the orange lightens. */
+     steps are chosen, not derived — teal holds, only the orange lightens.
+
+     Dark rules are plain descendant selectors (`.dark .x`), never
+     `:global(.dark) .x`: Vue compiles the latter to a bare `.dark { … }`,
+     dropping everything after the `:global()` — the strokes and fills then
+     land on <html> and every SVG on the page inherits them. */
   .tone-members {
     --series: #c2410c;
   }
@@ -337,12 +342,13 @@
     --series: #c2410c;
   }
   /* Same teal as `subscribed`: it is drawn against the same orange, and that
-     pair is the one that survived the CVD check. */
-  .tone-postal {
+     pair is the one that survived the CVD check. `active` likewise. */
+  .tone-postal,
+  .tone-active {
     --series: #0d9488;
   }
-  :global(.dark) .tone-members,
-  :global(.dark) .tone-unsubscribed {
+  .dark .tone-members,
+  .dark .tone-unsubscribed {
     --series: #ea580c;
   }
 
@@ -365,7 +371,7 @@
     stroke-width: 2;
     vector-effect: non-scaling-stroke;
   }
-  :global(.dark) .marker {
+  .dark .marker {
     stroke: #2a2520;
   }
 
@@ -382,7 +388,7 @@
     stroke-width: 1;
     vector-effect: non-scaling-stroke;
   }
-  :global(.dark) .grid line {
+  .dark .grid line {
     stroke: rgb(250 245 235 / 0.14);
   }
   .crosshair {
@@ -391,7 +397,7 @@
     stroke-dasharray: 2 2;
     vector-effect: non-scaling-stroke;
   }
-  :global(.dark) .crosshair {
+  .dark .crosshair {
     stroke: rgb(250 245 235 / 0.3);
   }
 
@@ -399,7 +405,7 @@
     font-size: 7px;
     fill: rgb(30 41 59 / 0.6);
   }
-  :global(.dark) .axis-text text {
+  .dark .axis-text text {
     fill: rgb(250 245 235 / 0.6);
   }
 
@@ -408,7 +414,7 @@
     font-weight: 600;
     fill: rgb(30 41 59 / 0.85);
   }
-  :global(.dark) .endpoints text {
+  .dark .endpoints text {
     fill: rgb(250 245 235 / 0.85);
   }
 </style>

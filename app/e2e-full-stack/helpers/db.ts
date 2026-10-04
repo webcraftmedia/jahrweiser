@@ -123,3 +123,49 @@ export async function readTelegramChannelOrder(): Promise<string[]> {
   const [rows] = await getPool().query('SELECT name FROM telegram_channels ORDER BY sort_order, id')
   return (rows as { name: string }[]).map((row) => row.name)
 }
+
+/**
+ * Gives a member one session last used at `lastSeen`, replacing any they had.
+ * Written as a naive UTC datetime — the way the app itself stores it (the
+ * process runs with TZ=UTC) — so the read path is exercised exactly as in
+ * production, `MAX()` and all.
+ */
+export async function setLastSeen(email: string, lastSeen: Date): Promise<void> {
+  const [rows] = await getPool().query('SELECT uid FROM users WHERE email = ?', [email])
+  const uid = (rows as { uid: string }[])[0]?.uid
+  if (!uid) throw new Error(`setLastSeen: no user ${email}`)
+  const naive = (date: Date) => date.toISOString().slice(0, 19).replace('T', ' ')
+  await getPool().query('DELETE FROM sessions WHERE user_uid = ?', [uid])
+  await getPool().query(
+    `INSERT INTO sessions (id, user_uid, created_at, expires_at, last_seen_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [
+      `e2e-${randomBytes(16).toString('hex')}`,
+      uid,
+      naive(new Date(lastSeen.getTime() - 60_000)),
+      naive(new Date(lastSeen.getTime() + 30 * 24 * 60 * 60 * 1000)),
+      naive(lastSeen),
+    ],
+  )
+}
+
+/** One `metrics_daily` row as the table stores it. */
+export type MetricsDayRow = Record<string, unknown> & { day: string }
+
+/**
+ * Today's snapshot, if any — taken before a test makes the sync write one, so
+ * a developer's own measurement for the day is put back afterwards.
+ */
+export async function readMetricsDay(day: string): Promise<MetricsDayRow | null> {
+  const [rows] = await getPool().query(
+    "SELECT *, DATE_FORMAT(day, '%Y-%m-%d') AS day FROM metrics_daily WHERE day = ?",
+    [day],
+  )
+  return (rows as MetricsDayRow[])[0] ?? null
+}
+
+/** Puts a stashed snapshot back, or removes the day's row if there was none. */
+export async function restoreMetricsDay(day: string, row: MetricsDayRow | null): Promise<void> {
+  await getPool().query('DELETE FROM metrics_daily WHERE day = ?', [day])
+  if (row) await getPool().query('INSERT INTO metrics_daily SET ?', [row])
+}

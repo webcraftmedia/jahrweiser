@@ -6,9 +6,11 @@ import handler from './metrics.get'
 
 const mockCurrent = vi.fn()
 const mockSeries = vi.fn()
+const mockActivity = vi.fn()
 vi.mock('~~/server/helpers/metrics', () => ({
   collectCurrentMetrics: (...args: unknown[]) => mockCurrent(...args),
   buildMonthlySeries: (...args: unknown[]) => mockSeries(...args),
+  collectActivity: (...args: unknown[]) => mockActivity(...args),
 }))
 
 const fn = handler as unknown as (event: unknown) => Promise<unknown>
@@ -29,14 +31,17 @@ const MONTHS = [
     newsletterSubscribed: 37,
     newsletterUnsubscribed: 5,
     withPostalCode: 29,
+    active30d: 18,
   },
 ]
+const ACTIVITY = { day: 3, week: 5, month: 10, quarter: 6, older: 8, never: 10 }
 
 describe('admin/metrics.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockCurrent.mockResolvedValue(CURRENT)
     mockSeries.mockResolvedValue(MONTHS)
+    mockActivity.mockResolvedValue(ACTIVITY)
     vi.mocked(globalThis.requireUserSession).mockResolvedValue({
       user: { uid: 'admin-1', name: 'Admin', email: 'admin@example.com', role: 'admin' },
     })
@@ -56,7 +61,11 @@ describe('admin/metrics.get', () => {
   })
 
   it('answers with the current numbers and the monthly series', async () => {
-    await expect(fn({})).resolves.toStrictEqual({ current: CURRENT, months: MONTHS })
+    await expect(fn({})).resolves.toStrictEqual({
+      current: CURRENT,
+      months: MONTHS,
+      activity: ACTIVITY,
+    })
   })
 
   it('passes the configured paths on, so the tiles count the right directory', async () => {
@@ -70,6 +79,16 @@ describe('admin/metrics.get', () => {
     // The running month has no other source for it: no snapshot yet after a
     // fresh deploy, and no derivation ever.
     await fn({})
-    expect(mockSeries).toHaveBeenCalledWith(expect.any(Date), 29)
+    expect(mockSeries).toHaveBeenCalledWith(expect.any(Date), 29, expect.any(Number))
+  })
+
+  it('hands the live 30-day activity to the series — day, week and month together', async () => {
+    await fn({})
+    expect(mockSeries).toHaveBeenCalledWith(expect.any(Date), 29, 18)
+  })
+
+  it('counts activity against the same moment the series is built for', async () => {
+    await fn({})
+    expect(mockActivity.mock.calls[0]![0]).toBe(mockSeries.mock.calls[0]![0])
   })
 })

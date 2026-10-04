@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import type { ActivityCounts } from '~~/shared/activity'
   import type { ChartSeries } from '~~/src/components/AdminTrendChart.vue'
 
   definePageMeta({
@@ -15,6 +16,8 @@
     newsletterUnsubscribed: number
     /** null = not measured that month; see the server-side type. */
     withPostalCode: number | null
+    /** null = not measured that month; there is no reconstruction. */
+    active30d: number | null
   }
 
   interface MetricsResponse {
@@ -27,6 +30,7 @@
       withPostalCode: number
     }
     months: MetricsMonth[]
+    activity: ActivityCounts
   }
 
   const { t, locale } = useI18n()
@@ -43,6 +47,7 @@
       withPostalCode: 0,
     },
     months: [],
+    activity: { day: 0, week: 0, month: 0, quarter: 0, older: 0, never: 0 },
   }
 
   const metrics = ref<MetricsResponse>(EMPTY)
@@ -109,6 +114,24 @@
   ])
 
   /**
+   * Members and, against them, how many were active in the 30 days before
+   * each month ended. Same unit, a subset, one axis — the gap is the part of
+   * the membership that was quiet that month.
+   */
+  const activitySeries = computed<ChartSeries[]>(() => [
+    {
+      tone: 'members',
+      label: t('pages.admin.dashboard.tile.members'),
+      values: metrics.value.months.map((m) => m.members),
+    },
+    {
+      tone: 'active',
+      label: t('pages.admin.dashboard.activity.active30d'),
+      values: metrics.value.months.map((m) => m.active30d),
+    },
+  ])
+
+  /**
    * How many leading months are inferred rather than measured. They are the
    * leading ones by construction: measuring started on some day and never
    * stopped.
@@ -127,6 +150,12 @@
   const postalStartsLate = computed(() => {
     const months = metrics.value.months
     return months.length > 0 && months[0]!.withPostalCode === null
+  })
+
+  /** Same as `postalStartsLate`, for the activity line. */
+  const activityStartsLate = computed(() => {
+    const months = metrics.value.months
+    return months.length > 0 && months[0]!.active30d === null
   })
 
   const tiles = computed(() => [
@@ -203,6 +232,35 @@
           class="mt-2 text-xs font-body text-navy/60 dark:text-poster-darkMuted"
         >
           {{ $t('pages.admin.dashboard.chart.plz-note') }}
+        </p>
+      </div>
+
+      <div :class="cardClass">
+        <h2 class="text-lg font-display text-navy dark:text-ivory mb-4">
+          {{ $t('pages.admin.dashboard.activity.title') }}
+        </h2>
+        <AdminActivityBars
+          :counts="metrics.activity"
+          :title="$t('pages.admin.dashboard.activity.title')"
+        />
+        <p class="mt-3 text-xs font-body text-navy/60 dark:text-poster-darkMuted">
+          {{ $t('pages.admin.dashboard.activity.note') }}
+        </p>
+
+        <h3 class="text-base font-display text-navy dark:text-ivory mt-6 mb-4">
+          {{ $t('pages.admin.dashboard.activity.trend') }}
+        </h3>
+        <AdminTrendChart
+          :labels="labels"
+          :series="activitySeries"
+          :derived-count="derivedCount"
+          :title="$t('pages.admin.dashboard.activity.trend')"
+        />
+        <p
+          v-if="activityStartsLate"
+          class="mt-3 text-xs font-body text-navy/60 dark:text-poster-darkMuted"
+        >
+          {{ $t('pages.admin.dashboard.activity.trend-note') }}
         </p>
       </div>
 

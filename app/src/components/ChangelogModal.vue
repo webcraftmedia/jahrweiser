@@ -7,7 +7,7 @@
       <p class="font-semibold text-navy/70 dark:text-ivory/70 mb-4">
         {{ $t('components.Footer.changelog-intro-before') }}
         <a
-          href="https://github.com/webcraftmedia/jahrweiser"
+          :href="REPO_URL"
           target="_blank"
           rel="noopener noreferrer"
           class="inline text-sienna dark:text-sienna-light hover:underline transition-colors"
@@ -29,55 +29,124 @@
         <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </p>
 
-      <div ref="sectionsContainer" class="space-y-3">
+      <p v-if="loaded && releases.length === 0" class="text-sm text-navy/60 dark:text-ivory/60">
+        {{ $t('components.ChangelogModal.empty') }}
+      </p>
+
+      <div class="space-y-3">
         <details
-          v-for="section in sections"
-          :key="section.version"
-          class="group border border-navy/15 dark:border-poster-darkBorder rounded"
+          v-for="(release, index) in releases"
+          :key="release.version"
+          :open="index === 0"
+          class="changelog-release group border border-navy/15 dark:border-poster-darkBorder rounded"
         >
           <summary
-            class="flex items-center justify-between cursor-pointer px-4 py-2.5 bg-navy/5 dark:bg-poster-dark hover:bg-navy/10 dark:hover:bg-poster-darkCard transition-colors select-none list-none [&::-webkit-details-marker]:hidden"
+            class="flex items-center justify-between gap-3 cursor-pointer px-4 py-2.5 bg-navy/5 dark:bg-poster-dark hover:bg-navy/10 dark:hover:bg-poster-darkCard transition-colors select-none list-none [&::-webkit-details-marker]:hidden"
             @click.stop
           >
-            <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -->
             <span class="font-semibold text-navy dark:text-ivory font-display">
-              v{{ section.version }}
+              {{ $t('components.ChangelogModal.version', { version: release.version }) }}
             </span>
             <span class="text-sm text-navy/50 dark:text-ivory/50">
-              {{ section.date }}
+              {{ formatDates(release) }}
             </span>
           </summary>
-          <!-- eslint-disable vue/no-v-html -->
+
           <div
-            class="changelog-content px-4 py-3 text-sm text-navy/80 dark:text-ivory/80"
+            class="changelog-content px-4 py-3 text-sm text-navy/80 dark:text-ivory/80 space-y-3"
             @click.stop
-            v-html="section.html"
-          />
+          >
+            <section v-if="release.features.length > 0" class="changelog-features">
+              <h4 class="font-semibold mb-1">{{ $t('components.ChangelogModal.features') }}</h4>
+              <ul class="list-disc pl-5 space-y-0.5">
+                <ChangelogModalEntry
+                  v-for="entry in release.features"
+                  :key="entry.text"
+                  :entry="entry"
+                />
+              </ul>
+            </section>
+
+            <details v-if="release.fixes.length > 0" class="changelog-fixes">
+              <summary
+                class="cursor-pointer text-navy/60 dark:text-ivory/60 hover:text-sienna dark:hover:text-sienna-light transition-colors"
+              >
+                {{ $t('components.ChangelogModal.fixes', release.fixes.length) }}
+              </summary>
+              <ul class="list-disc pl-5 mt-1 space-y-0.5">
+                <ChangelogModalEntry
+                  v-for="entry in release.fixes"
+                  :key="entry.text"
+                  :entry="entry"
+                />
+              </ul>
+            </details>
+
+            <p
+              v-if="release.features.length === 0 && release.fixes.length === 0"
+              class="text-navy/60 dark:text-ivory/60"
+            >
+              {{ $t('components.ChangelogModal.internal-only') }}
+            </p>
+
+            <p class="changelog-versions text-xs text-navy/50 dark:text-ivory/50">
+              {{
+                $t('components.ChangelogModal.contains', { versions: release.versions.join(' · ') })
+              }}
+            </p>
+          </div>
         </details>
       </div>
+
+      <p v-if="older > 0" class="mt-4 text-sm">
+        <a
+          :href="`${REPO_URL}/blob/master/CHANGELOG.md`"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="changelog-older text-sienna dark:text-sienna-light hover:underline"
+          @click.stop
+        >
+          {{ $t('components.ChangelogModal.older', older) }}
+        </a>
+      </p>
     </template>
   </Modal>
 </template>
 
 <script setup lang="ts">
+  import type { Changelog, ChangelogRelease } from '~~/shared/changelog'
+
+  const REPO_URL = 'https://github.com/webcraftmedia/jahrweiser'
+
   // The client with the 401 handling — see useApi().
   const api = useApi()
+  const { locale } = useI18n()
   const modal = ref<InstanceType<typeof Modal>>()
-  const sectionsContainer = ref<HTMLElement>()
-  const sections = ref<ReturnType<typeof parseChangelog>>([])
+  const loaded = ref(false)
+  const releases = ref<ChangelogRelease[]>([])
+  const older = ref(0)
+
+  function parseDate(iso: string): Date | null {
+    const date = new Date(`${iso}T00:00:00Z`)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  function formatDates({ dateFrom, dateTo }: ChangelogRelease): string {
+    const from = parseDate(dateFrom)
+    const to = parseDate(dateTo)
+    if (!from || !to) return dateTo || dateFrom
+    const format = new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeZone: 'UTC' })
+    return format.formatRange(from, to)
+  }
 
   async function open() {
-    if (sections.value.length === 0) {
-      const raw = await api<string>('/api/changelog')
-      sections.value = parseChangelog(raw)
+    if (!loaded.value) {
+      const changelog = await api<Changelog>('/api/changelog')
+      releases.value = changelog.releases
+      older.value = changelog.older
+      loaded.value = true
     }
     modal.value?.open()
-    /* v8 ignore start -- nextTick callback: sections are always loaded before this runs */
-    void nextTick(() => {
-      const first = sectionsContainer.value?.querySelector<HTMLDetailsElement>('details')
-      if (first) first.open = true
-    })
-    /* v8 ignore stop */
   }
 
   defineExpose({ open })

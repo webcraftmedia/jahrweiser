@@ -167,7 +167,9 @@ exports[`App > renders default page 1`] = `
                     </svg><!-- eslint-disable @intlify/vue-i18n/no-raw-text --> components.Footer.changelog-intro-after</a>.
                   <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
                 </p>
+                <!--v-if-->
                 <div class="space-y-3"></div>
+                <!--v-if-->
               </div>
             </div>
           </div>

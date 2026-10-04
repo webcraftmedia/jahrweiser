@@ -16,6 +16,15 @@
       "text": "Dein Browser konnte den Jahrweiser nicht starten. Das liegt fast immer an einem sehr alten Browser oder daran, dass JavaScript blockiert wird.",
       "title": "Diese Seite konnte nicht geladen werden"
     },
+    "ChangelogModal": {
+      "contains": "Enthält {versions}",
+      "empty": "Keine Versionshistorie verfügbar.",
+      "features": "Neu",
+      "fixes": "Eine Fehlerbehebung | {n} Fehlerbehebungen",
+      "internal-only": "Nur Änderungen hinter den Kulissen.",
+      "older": "Eine ältere Version auf GitHub ansehen | {n} ältere Versionen auf GitHub ansehen",
+      "version": "Version {version}"
+    },
     "Footer": {
       "changelog": "Versionshistorie",
       "changelog-intro-after": "GitHub abzurufen",

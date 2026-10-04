@@ -31,7 +31,19 @@ vi.mock('../composables/useZoom', () => ({
   }),
 }))
 
-const MOCK_CHANGELOG = '## 1.0.0 (2026-01-01)\n\n### Features\n\n* **scope:** feature one\n'
+const MOCK_CHANGELOG = {
+  releases: [
+    {
+      version: '1.0',
+      versions: ['1.0.0'],
+      dateFrom: '2026-01-01',
+      dateTo: '2026-01-01',
+      features: [{ text: 'Feature one' }],
+      fixes: [],
+    },
+  ],
+  older: 0,
+}
 
 stubApi(vi.fn().mockResolvedValue(MOCK_CHANGELOG))
 

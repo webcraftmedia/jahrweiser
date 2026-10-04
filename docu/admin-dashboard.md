@@ -2,7 +2,8 @@
 
 Six current numbers as tiles — members, members the map can place, newsletter
 subscribers, people who opted out, Telegram channels, Blättchen issues — plus a
-twelve-month curve for the two that move: membership and the newsletter.
+twelve-month curve for the things that move: membership, activity and the
+newsletter.
 
 ## What is measured, and what is reconstructed
 
@@ -65,11 +66,42 @@ that the geometry actually knows. A code the map cannot place puts nobody on it,
 drift apart. Without the geometry artefact the count falls back to the format
 check, the same fallback the status endpoint makes.
 
+**Activity has no reconstruction either.** `sessions.last_seen_at` is
+overwritten on every request (throttled to once a minute), so it only ever
+knows a member's *latest* moment — how many were active last March cannot be
+recovered today. `metrics_daily.active_1d`, `active_7d` and `active_30d` count
+the current members whose newest session was used within that window; they are
+nullable for the same reason as `with_postal_code`, and the running month is
+counted live for the same reason too. The sync's last write of a day runs
+shortly before midnight, which is what makes `active_1d` a count of that day.
+The chart shows `active_30d` at each month's end against the member count.
+
+Only signed-in use counts. Somebody who reads the public calendar or only the
+newsletter never touches a session, so the activity figures are a floor, not
+the reach — the card says so. Reach belongs to the analytics plan
+(`docu/analytics-umami.md`), not to this table.
+
+### Last active, in spans
+
+Next to the curve, a bar per span — last 24 hours, 2–7 days, 8–30 days,
+31–90 days, longer, never signed in — counts the current members by their
+newest `last_seen_at`. Unlike the curve it needs no history, so it is complete
+from the first day. Rolling windows rather than calendar days, so the first
+three spans add up to the 1/7/30-day counts the snapshot records
+(`shared/activity.ts`).
+
+The members' list (`/admin/members`) shows the same span instead of a date.
+That is deliberate data minimisation: the list shows everybody at once, and a
+column of exact timestamps is every member's daily rhythm in one table. The
+server bucketises before serialising, so the moment never reaches the
+response. The exact time stays on the detail page, where an admin looks at one
+person on purpose.
+
 ## Where the numbers come from
 
 `metrics_daily` holds one row per day: members, members with a usable postal
 code, newsletter subscribed and unsubscribed, Telegram channels, Blättchen
-issues.
+issues, and members active within 1, 7 and 30 days.
 
 It is written at the end of every **sync run** — the cron already hits
 `POST /api/admin/sync-now` every ten minutes, and the row is keyed by the day
@@ -102,7 +134,7 @@ surfaces (worst adjacent colour-vision ΔE 13.7 light / 13.8 dark):
 | Series | Light | Dark |
 | --- | --- | --- |
 | Members / opted out | `sienna #c2410c` | `sienna-light #ea580c` |
-| Subscribers / with postal code | `craft #0d9488` | `craft #0d9488` |
+| Subscribers / with postal code / active | `craft #0d9488` | `craft #0d9488` |
 
 Green against orange was the obvious first choice and was rejected: under
 deuteranopia the pair collapses to ΔE 1.7 — indistinguishable.

@@ -116,7 +116,10 @@ export const MOCK_METRICS = {
     newsletterUnsubscribed: index,
     // Never derived — measured months only, the rest is a gap in the line.
     withPostalCode: index < 10 ? null : 20 + index,
+    // Measured only, like the postal code.
+    active30d: index < 10 ? null : 15 + index,
   })),
+  activity: { day: 4, week: 6, month: 10, quarter: 7, older: 5, never: 10 },
 }
 
 export const MOCK_TAGS = [

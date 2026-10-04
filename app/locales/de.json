@@ -56,6 +56,14 @@
   },
   "pages": {
     "admin": {
+      "activity": {
+        "day": "Letzte 24 Stunden",
+        "month": "8 bis 30 Tage",
+        "never": "Nie angemeldet",
+        "older": "Länger als 90 Tage",
+        "quarter": "31 bis 90 Tage",
+        "week": "2 bis 7 Tage"
+      },
       "blaettchen": {
         "list": {
           "cancel": "Abbrechen",
@@ -93,6 +101,14 @@
         }
       },
       "dashboard": {
+        "activity": {
+          "active30d": "Aktiv (30 Tage)",
+          "note": "Gezählt wird, wann ein Mitglied zuletzt angemeldet die Seite genutzt hat. Wer den Kalender ohne Anmeldung ansieht oder nur den Newsletter liest, taucht hier nicht auf.",
+          "span": "Zuletzt aktiv",
+          "title": "Zuletzt aktiv",
+          "trend": "Aktive Mitglieder",
+          "trend-note": "Die Linie der Aktiven beginnt dort, wo die Messung begonnen hat: Der Zeitpunkt der letzten Nutzung wird bei jedem Besuch überschrieben, frühere Monate lassen sich daher nicht nachträglich ermitteln."
+        },
         "chart": {
           "derived-note": "Gestrichelt: aus Beitritts- und Austrittsdaten abgeleitet, nicht gemessen. Alle Mitglieder, die beim Umzug in die neue Nutzerverwaltung schon dabei waren, tragen dasselbe Datum — der Sprung dort ist kein Zuwachs.",
           "members": "Mitglieder-Entwicklung",

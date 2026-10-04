@@ -17,6 +17,8 @@ const CURRENT = {
   withPostalCode: 29,
 }
 
+const ACTIVITY = { day: 3, week: 5, month: 10, quarter: 6, older: 8, never: 10 }
+
 /** Twelve months, the last two measured, everything before it derived. */
 function months() {
   return Array.from({ length: 12 }, (_, index) => {
@@ -29,6 +31,8 @@ function months() {
       newsletterUnsubscribed: index,
       // Never derived: the postal-code figure exists only where it was measured.
       withPostalCode: measured ? 20 + index : null,
+      // Measured only, like the postal code.
+      active30d: measured ? 10 + index : null,
     }
   })
 }
@@ -50,7 +54,7 @@ async function mountLoaded() {
 describe('Page: Admin Übersicht', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    serving({ current: CURRENT, months: months() })
+    serving({ current: CURRENT, months: months(), activity: ACTIVITY })
   })
 
   it('shows the six current numbers', async () => {
@@ -64,7 +68,40 @@ describe('Page: Admin Übersicht', () => {
   it('draws a chart for the developments and none for the small counts', async () => {
     // A line through four Telegram channels would be decoration, not information.
     const wrapper = await mountLoaded()
-    expect(wrapper.findAll('svg')).toHaveLength(2)
+    expect(wrapper.findAll('svg')).toHaveLength(3)
+  })
+
+  it('shows the members by how long ago they were last active', async () => {
+    const wrapper = await mountLoaded()
+    expect(wrapper.findAll('.bar')).toHaveLength(6)
+    expect(wrapper.text()).toContain('pages.admin.activity.never')
+    // Says what the count cannot see, every time — it is not a gap that closes.
+    expect(wrapper.text()).toContain('pages.admin.dashboard.activity.note')
+  })
+
+  it('draws the 30-day activity against the member count', async () => {
+    const wrapper = await mountLoaded()
+    const chart = wrapper
+      .findAll('figure')
+      .find((figure) => figure.find('path.tone-active').exists())!
+    expect(chart.find('path.tone-members').exists()).toBe(true)
+    // Two measured months, one segment: the unmeasured ones add no point.
+    const d = chart.find('path.tone-active:not(.series-derived)').attributes('d')!
+    expect(d.match(/L/g)).toHaveLength(1)
+    expect(chart.find('figcaption').text()).toContain('pages.admin.dashboard.activity.active30d')
+  })
+
+  it('explains why the activity line starts late, until it no longer does', async () => {
+    let wrapper = await mountLoaded()
+    expect(wrapper.text()).toContain('pages.admin.dashboard.activity.trend-note')
+
+    serving({
+      current: CURRENT,
+      activity: ACTIVITY,
+      months: months().map((month, index) => ({ ...month, active30d: index })),
+    })
+    wrapper = await mountLoaded()
+    expect(wrapper.text()).not.toContain('pages.admin.dashboard.activity.trend-note')
   })
 
   it('marks the inferred part of the member curve and says why', async () => {
@@ -77,6 +114,7 @@ describe('Page: Admin Übersicht', () => {
     // The state on the day this ships: every month is an inference.
     serving({
       current: CURRENT,
+      activity: ACTIVITY,
       months: months().map((month) => ({
         ...month,
         derived: true,
@@ -92,6 +130,7 @@ describe('Page: Admin Übersicht', () => {
   it('drops the note once every month has been measured', async () => {
     serving({
       current: CURRENT,
+      activity: ACTIVITY,
       months: months().map((month) => ({ ...month, derived: false })),
     })
     const wrapper = await mountLoaded()
@@ -125,6 +164,7 @@ describe('Page: Admin Übersicht', () => {
   it('drops that note once the whole window has been measured', async () => {
     serving({
       current: CURRENT,
+      activity: ACTIVITY,
       months: months().map((month, index) => ({
         ...month,
         derived: false,

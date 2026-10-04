@@ -1,11 +1,19 @@
 import type { CurrentMetrics, MetricsMonth } from '~~/server/helpers/metrics'
+import type { ActivityCounts } from '~~/shared/activity'
 
-import { buildMonthlySeries, collectCurrentMetrics } from '~~/server/helpers/metrics'
+import {
+  buildMonthlySeries,
+  collectActivity,
+  collectCurrentMetrics,
+} from '~~/server/helpers/metrics'
+import { activeCounts } from '~~/shared/activity'
 
 export interface MetricsResponse {
   current: CurrentMetrics
   /** Oldest month first, twelve of them, the current one last. */
   months: MetricsMonth[]
+  /** Current members by how long ago they were last active — counts only. */
+  activity: ActivityCounts
 }
 
 /**
@@ -19,11 +27,14 @@ export default defineEventHandler(async (event): Promise<MetricsResponse> => {
   }
 
   const config = useRuntimeConfig()
+  const now = new Date()
   const current = await collectCurrentMetrics(config)
+  const activity = await collectActivity(now)
   return {
     current,
-    // The postal-code count is already in hand, and the running month has no
-    // other source for it — see `buildMonthlySeries`.
-    months: await buildMonthlySeries(new Date(), current.withPostalCode),
+    // The postal-code and activity counts are already in hand, and the running
+    // month has no other source for them — see `buildMonthlySeries`.
+    months: await buildMonthlySeries(now, current.withPostalCode, activeCounts(activity).active30d),
+    activity,
   }
 })

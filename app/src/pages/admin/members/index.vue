@@ -114,7 +114,9 @@
                 </span>
               </td>
               <td class="py-2 px-3">{{ member.activeSessions }}</td>
-              <td class="py-2 px-3 whitespace-nowrap">{{ formatDate(member.lastSeenAt) }}</td>
+              <td class="py-2 px-3 whitespace-nowrap">
+                {{ activityLabel(member.lastSeen) }}
+              </td>
               <td class="py-2 pl-3 text-right">
                 <NuxtLink
                   :to="`/admin/members/${member.uid}`"
@@ -156,13 +158,16 @@
 </template>
 
 <script setup lang="ts">
+  import type { ActivityBucket } from '~~/shared/activity'
+
   definePageMeta({
     middleware: ['authenticated', 'admin'],
   })
 
   // The client with the 401 handling — see useApi().
   const api = useApi()
-  const { t, locale } = useI18n()
+  const { t } = useI18n()
+  const activityLabel = useActivityLabel()
 
   type MemberStatus = 'active' | 'blocked' | 'deleted'
   type StatusFilter = MemberStatus | 'all'
@@ -177,7 +182,8 @@
     status: MemberStatus
     newsletter: string
     createdAt: string | null
-    lastSeenAt: string | null
+    /** A span, not a moment — see `MemberRow` on the server. */
+    lastSeen: ActivityBucket
     activeSessions: number
   }
 
@@ -248,15 +254,6 @@
       blocked: t('pages.admin.members.status.blocked'),
       deleted: t('pages.admin.members.status.deleted'),
     }[value]
-  }
-
-  function formatDate(value: string | null): string {
-    if (!value) return t('pages.admin.members.table.never')
-    return new Date(value).toLocaleDateString(locale.value, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
   }
 
   onMounted(load)

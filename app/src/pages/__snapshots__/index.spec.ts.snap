@@ -14,6 +14,9 @@ exports[`Page: Index > renders 1`] = `
               </svg><span class="view-toggle-label">pages.index.listView</span></button><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button aria-label="December"><span class="nav-arrow">‹</span><span class="nav-label">December</span></button><!-- eslint-enable @intlify/vue-i18n/no-raw-text --><button disabled="">pages.index.today</button><!-- eslint-disable @intlify/vue-i18n/no-raw-text --><button aria-label="February"><span class="nav-label">February</span><span class="nav-arrow">›</span></button><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
           </div>
         </div>
+        <!-- Only in the installed app, with the network gone: what is shown
+               is the copy kept on the device, and this says from when. -->
+        <!--v-if-->
         <div class="sx-vue-calendar-wrapper"></div><!-- Loading overlay -->
         <div class="cal-loading-overlay" style="display: none;">
           <div class="flex items-center gap-2"><span class="loading-dot"></span><span class="loading-dot" style="animation-delay: 0.15s;"></span><span class="loading-dot" style="animation-delay: 0.3s;"></span></div>

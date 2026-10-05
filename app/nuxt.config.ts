@@ -170,6 +170,46 @@ export default defineNuxtConfig({
       navigationPreload: true,
       runtimeCaching: [
         {
+          // Calendar pages, for the installed app's offline calendar
+          // (docu/pwa.md): from the network whenever it answers, from this
+          // cache when it does not. The page carries the member's name in its
+          // session payload, so the app deletes this cache on logout, on a
+          // 401, on another member signing in and when the session ran out
+          // (src/utils/offlineSession.ts). Only real 200 pages — a redirect
+          // to the login must not be stored under a calendar address.
+          // Self-contained: workbox-build copies the function's source into
+          // sw.js, so it cannot call anything defined in this file.
+          urlPattern: ({ request, url }) => {
+            if (request.mode !== 'navigate') return false
+            // `/`, `/2026`, `/2026/10`, `/2026/10/event/<id>[/<occurrence>]`
+            const [year, month, event, id, occurrence, ...rest] = url.pathname
+              .split('/')
+              .filter(Boolean)
+            return (
+              rest.length === 0 &&
+              (year === undefined || /^\d{4}$/.test(year)) &&
+              (month === undefined || /^\d{1,2}$/.test(month)) &&
+              (event === undefined || (event === 'event' && id !== undefined)) &&
+              (occurrence === undefined || /^\d+$/.test(occurrence))
+            )
+          },
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'jahrweiser-pages',
+            networkTimeoutSeconds: 5,
+            expiration: { maxEntries: 12 },
+            precacheFallback: { fallbackURL: '/offline.html' },
+            plugins: [
+              {
+                cacheWillUpdate: async ({ response }) =>
+                  Promise.resolve(
+                    response.status === 200 && !response.redirected ? response : null,
+                  ),
+              },
+            ],
+          },
+        },
+        {
           // Page loads always go to the network; only when that fails is the
           // precached offline page shown. /api (e.g. a Blättchen PDF opened
           // directly) and the address book under /admin/cal/ — another app

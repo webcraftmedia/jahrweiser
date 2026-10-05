@@ -1,3 +1,9 @@
+import { purgeOfflineData, recordSessionExpiry } from '../utils/offlineSession'
+
+import type { Ref } from 'vue'
+
+import { SESSION_EXPIRES_HEADER } from '~~/shared/session'
+
 /**
  * Provides the app's HTTP client and turns a 401 into a clean logout.
  *
@@ -32,6 +38,8 @@ export function createUnauthorizedHandler(clear: () => Promise<void>) {
           ? request.pathname
           : request.url
     if (response.status === 401 && !url.includes('/api/redeemLoginLink')) {
+      // The installed app's offline copy belongs to a session that is over.
+      await purgeOfflineData()
       await clear()
       const currentPath =
         import.meta.client &&
@@ -47,8 +55,27 @@ export function createUnauthorizedHandler(clear: () => Promise<void>) {
   }
 }
 
-export default defineNuxtPlugin(() => {
-  const { clear } = useUserSession()
+/**
+ * Builds the handler that keeps the installed app's offline deadline current
+ * from the header every authenticated response carries (shared/session.ts).
+ * The session's `user` is passed in for the same reason `clear` is above.
+ */
+export function createSessionExpiryHandler(user: Ref<unknown>) {
+  return async ({ response }: { response: { headers: Headers } }) => {
+    const uid = (user.value as { uid?: string } | null)?.uid
+    await recordSessionExpiry(uid, response.headers.get(SESSION_EXPIRES_HEADER))
+  }
+}
 
-  return { provide: { api: $fetch.create({ onResponseError: createUnauthorizedHandler(clear) }) } }
+export default defineNuxtPlugin(() => {
+  const { clear, user } = useUserSession()
+
+  return {
+    provide: {
+      api: $fetch.create({
+        onResponse: createSessionExpiryHandler(user),
+        onResponseError: createUnauthorizedHandler(clear),
+      }),
+    },
+  }
 })

@@ -5,6 +5,9 @@ import { installHintEligible, installRequested } from '../utils/installPrompt'
 
 import Component from './Header.vue'
 
+const mockPurge = vi.hoisted(() => vi.fn())
+vi.mock('../utils/offlineSession', () => ({ purgeOfflineData: mockPurge }))
+
 const mockZoomState = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ref, computed } = require('vue')
@@ -124,6 +127,11 @@ describe('Header', () => {
     const logoutButton = wrapper.find('#navbar-desktop button')
     await logoutButton.trigger('click')
 
+    // The offline copy goes first, while the session it belongs to still exists.
+    expect(mockPurge).toHaveBeenCalledTimes(1)
+    expect(mockPurge.mock.invocationCallOrder[0]).toBeLessThan(
+      mockClear.mock.invocationCallOrder[0]!,
+    )
     expect(mockClear).toHaveBeenCalled()
     expect(mockNavigateTo).toHaveBeenCalledWith('/login')
   })

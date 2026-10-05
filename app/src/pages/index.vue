@@ -69,6 +69,11 @@
               <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
             </div>
           </div>
+          <!-- Only in the installed app, with the network gone: what is shown
+               is the copy kept on the device, and this says from when. -->
+          <p v-if="offlineStand !== null" role="status" class="offline-stand">
+            {{ $t('pages.index.offlineStand', { stand: formatStand(offlineStand) }) }}
+          </p>
           <ScheduleXCalendar :calendar-app="calendarApp!" :style="calendarBodyZoomStyle" />
           <!-- Loading overlay -->
           <div v-show="calLoading" class="cal-loading-overlay">
@@ -215,6 +220,14 @@
   import { useCalendarFilter } from '../composables/useCalendarFilter'
   import { useColorMode } from '../composables/useColorMode'
   import { useZoom } from '../composables/useZoom'
+  import {
+    nextMonthRange,
+    readCalendarEvents,
+    readCalendars,
+    readEvent,
+    useOfflineStand,
+  } from '../utils/offlineCalendar'
+  import { offlineSessionEnabled } from '../utils/offlineSession'
 
   import type { CalendarEventExternal } from '@schedule-x/calendar'
 
@@ -222,6 +235,7 @@
   import IconList from '~/assets/icon-list.svg'
   import IconPlus from '~/assets/icon-plus.svg'
   import { paletteEntryForIndex } from '~~/shared/calendar-palette'
+  import { earliestVisibleMonth } from '~~/shared/calendarWindow'
 
   interface RawCalendarEvent {
     calendar: string
@@ -241,6 +255,17 @@
   }
 
   const { locale, localeProperties } = useI18n()
+  const { user } = useUserSession()
+  /** Whose copy the installed app keeps and shows offline (utils/offlineCalendar.ts). */
+  const uid = computed(() => (user.value as { uid?: string } | null)?.uid)
+  const offlineStand = useOfflineStand()
+
+  function formatStand(savedAt: number) {
+    return new Date(savedAt).toLocaleString(locale.value, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    })
+  }
 
   /* v8 ignore start -- definePageMeta is a compile-time macro extracted by Nuxt */
   definePageMeta({
@@ -497,7 +522,7 @@
 
   /** Check if a given month is before the earliest allowed month (previous month from today) */
   function isBeforePastLimit(date: Temporal.PlainDate) {
-    const earliest = Temporal.PlainDate.from(localDateStr()).subtract({ months: 1 })
+    const earliest = earliestVisibleMonth(new Date())
     return date.year < earliest.year || (date.year === earliest.year && date.month < earliest.month)
   }
 
@@ -862,6 +887,34 @@
       }))
   }
 
+  function fetchCalendarEvents(calendar: string, startDate: Date, endDate: Date) {
+    return readCalendarEvents(uid.value, calendar, startDate, endDate, () =>
+      api<RawCalendarEvent[]>('/api/calendar', {
+        method: 'POST',
+        body: { calendar, startDate, endDate },
+      }),
+    )
+  }
+
+  /**
+   * The installed app also stores the month after the one shown, so it is
+   * there offline without having been looked at. Only while online, and in the
+   * background: nothing here may slow the calendar down or show an error.
+   */
+  const prefetched = new Set<string>()
+  function prefetchNextMonth({ again = false }: { again?: boolean } = {}) {
+    if (!offlineSessionEnabled() || offlineStand.value !== null) return
+    const { start, end } = nextMonthRange(currentDate.value.year, currentDate.value.month)
+    // Once per month and page load: paging back and forth must not refetch it.
+    // A refresh asks again on purpose.
+    const month = start.toISOString()
+    if (prefetched.has(month) && !again) return
+    prefetched.add(month)
+    for (const cal of calendars.value) {
+      fetchCalendarEvents(cal.name, start, end).catch(() => {})
+    }
+  }
+
   /** The range Schedule-X last asked for — what a refresh on resume asks again. */
   let shownRange: { start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime } | undefined
 
@@ -890,7 +943,7 @@
       // Fetch all calendars if not already loaded — or again on a refresh: a
       // calendar may have been shared with the member in the meantime.
       if (calendars.value.length === 0 || refresh) {
-        calendars.value = await api('/api/calendars')
+        calendars.value = await readCalendars(uid.value, () => api('/api/calendars'))
         buildScheduleXCalendars()
       }
 
@@ -898,14 +951,7 @@
       const failed: string[] = []
       const results = await Promise.all(
         calendars.value.map((cal) =>
-          api('/api/calendar', {
-            method: 'POST',
-            body: {
-              calendar: cal.name,
-              startDate,
-              endDate,
-            },
-          }).catch((err: unknown) => {
+          fetchCalendarEvents(cal.name, startDate, endDate).catch((err: unknown) => {
             console.warn(`Failed to fetch calendar "${cal.name}":`, err)
             failed.push(cal.name)
             return []
@@ -923,10 +969,13 @@
       rawEvents.value = results.flat()
       if (refresh) {
         eventsService.set(mapToScheduleXEvents())
+        // The copy of the month ahead is as old as the page; a refresh renews it.
+        prefetchNextMonth({ again: true })
         return
       }
       scheduleStagger()
       scrollToDay()
+      prefetchNextMonth()
       // eslint-disable-next-line no-catch-all/no-catch-all -- Kalender-Abruf: Fehler wird geloggt, die Ansicht bleibt leer statt zu brechen
     } catch (error) {
       console.error(error)
@@ -1160,14 +1209,16 @@
       if (window.location.pathname !== url) {
         rewriteUrl(url)
       }
-      const eventData = await api('/api/event', {
-        method: 'POST',
-        body: {
-          calendar,
-          id,
-          occurrence,
-        },
-      })
+      const eventData = await readEvent(uid.value, calendar, id, occurrence, () =>
+        api<EventDetail>('/api/event', {
+          method: 'POST',
+          body: {
+            calendar,
+            id,
+            occurrence,
+          },
+        }),
+      )
       selectedEvent.value = eventData
       // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, Modal schliesst und die URL wird zurueckgesetzt
     } catch (error) {
@@ -1863,6 +1914,16 @@
 
   .dark .cal-loading-overlay {
     background: rgba(26, 23, 20, 0.6);
+  }
+
+  /* Offline: the copy kept on the device is shown */
+  .offline-stand {
+    margin: 0 0 0.5rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.875rem;
+    border: 2px solid rgba(217, 119, 6, 0.5);
+    border-radius: 0.25rem;
+    background: rgba(217, 119, 6, 0.1);
   }
 
   /* ===== Modal content reveal ===== */

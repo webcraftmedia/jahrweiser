@@ -24,6 +24,36 @@ export const appInstalled = ref(false)
  */
 export const installHintEligible = ref(false)
 
+/**
+ * The member asked to install — from the menu or the project page. Shows the
+ * hint whatever became of it before: dismissing it stops the app from
+ * *offering*, not the member from *asking*.
+ */
+export const installRequested = ref(false)
+
+/**
+ * Open Chromium's install dialog, if it offered one. The event can be used
+ * only once, and only from a click — which is where both callers come from.
+ * Returns whether there was a dialog to open.
+ */
+export async function openInstallPrompt(): Promise<boolean> {
+  const prompt = installPrompt.value
+  if (!prompt) return false
+  installPrompt.value = null
+  await prompt.prompt()
+  const { outcome } = await prompt.userChoice
+  if (outcome === 'accepted') appInstalled.value = true
+  return true
+}
+
+/**
+ * "Als App installieren" from the menu or the project page: Chromium's dialog
+ * right away, everywhere else the hint with the steps for this browser.
+ */
+export async function requestInstall(): Promise<void> {
+  if (!(await openInstallPrompt())) installRequested.value = true
+}
+
 export function listenForInstallPrompt(target: Window = window): void {
   target.addEventListener('beforeinstallprompt', (event) => {
     // Stops Chromium's own install banner; the hint offers the same prompt

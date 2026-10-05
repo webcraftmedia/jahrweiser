@@ -1,5 +1,7 @@
 import { renderSuspended, mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest'
+
+import { installHintEligible, installRequested } from '../utils/installPrompt'
 
 import Component from './Header.vue'
 
@@ -290,6 +292,35 @@ describe('Header', () => {
     expect(wrapper.find('nav').exists()).toBe(false)
     // Should render hero logo link
     expect(wrapper.find('.logo-hero').exists()).toBe(true)
+  })
+
+  describe('install entry in the menu', () => {
+    afterEach(() => {
+      installHintEligible.value = false
+      installRequested.value = false
+    })
+
+    it('is there in a phone or tablet browser only', async () => {
+      const desktop = await mountSuspended(Component)
+      expect(desktop.find('#navbar-mobile [data-action="install"]').exists()).toBe(false)
+
+      installHintEligible.value = true
+      const phone = await mountSuspended(Component)
+      expect(phone.find('#navbar-mobile [data-action="install"]').text()).toBe(
+        'components.Header.install-app',
+      )
+    })
+
+    it('closes the menu and asks for the installation', async () => {
+      installHintEligible.value = true
+      const wrapper = await mountSuspended(Component)
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      await wrapper.find('#navbar-mobile [data-action="install"]').trigger('click')
+      expect(wrapper.find('#navbar-mobile').classes()).not.toContain('menu-open')
+      await vi.waitFor(() => {
+        expect(installRequested.value).toBe(true)
+      })
+    })
   })
 
   describe('refresh button', () => {

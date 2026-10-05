@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { appInstalled, installPrompt, listenForInstallPrompt } from './installPrompt'
+import {
+  appInstalled,
+  installPrompt,
+  installRequested,
+  listenForInstallPrompt,
+  requestInstall,
+} from './installPrompt'
 
 describe('listenForInstallPrompt', () => {
   let target: EventTarget
@@ -34,5 +40,42 @@ describe('listenForInstallPrompt', () => {
       'appinstalled',
     ])
     add.mockRestore()
+  })
+})
+
+describe('requestInstall', () => {
+  beforeEach(() => {
+    installPrompt.value = null
+    appInstalled.value = false
+    installRequested.value = false
+  })
+
+  function promptEvent(outcome: 'accepted' | 'dismissed') {
+    const prompt = vi.fn(async () => {})
+    installPrompt.value = Object.assign(new Event('beforeinstallprompt'), {
+      prompt,
+      userChoice: Promise.resolve({ outcome }),
+    })
+    return prompt
+  }
+
+  it("opens Chromium's dialog right away when it offered one", async () => {
+    const prompt = promptEvent('accepted')
+    await requestInstall()
+    expect(prompt).toHaveBeenCalledTimes(1)
+    expect(appInstalled.value).toBe(true)
+    expect(installRequested.value).toBe(false)
+    expect(installPrompt.value).toBeNull()
+  })
+
+  it('leaves the app uninstalled when the dialog is declined', async () => {
+    promptEvent('dismissed')
+    await requestInstall()
+    expect(appInstalled.value).toBe(false)
+  })
+
+  it('shows the hint with the steps everywhere else', async () => {
+    await requestInstall()
+    expect(installRequested.value).toBe(true)
   })
 })

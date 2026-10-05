@@ -85,9 +85,19 @@ test.describe('PWA: install hint on an iPhone', () => {
     await loginAs(page, DEFAULT_USER)
     await expect(page.getByRole('navigation', { name: 'Hauptnavigation' }).first()).toBeVisible()
     await expect(hint).toHaveCount(0)
-    expect(
-      await page.evaluate(() => localStorage.getItem('jahrweiser-install-hint-dismissed')),
-    ).toBe('1')
+    // Dismissed once of three times; back after the pause (useInstallHint).
+    const stored = await page.evaluate(() =>
+      localStorage.getItem('jahrweiser-install-hint-dismissed'),
+    )
+    expect(JSON.parse(stored!)).toMatchObject({ count: 1 })
+
+    // The way back: "Als App installieren" in the menu shows the steps again.
+    await page.locator('[aria-controls="navbar-mobile"]').click()
+    await page
+      .locator('#navbar-mobile')
+      .getByRole('button', { name: 'Als App installieren' })
+      .click()
+    await expect(hint).toContainText('„Zum Home-Bildschirm“')
   })
 })
 

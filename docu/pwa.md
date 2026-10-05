@@ -13,11 +13,11 @@ Grundlage ist `@vite-pwa/nuxt` (Workbox, Strategie `generateSW`). Konfiguration:
 Wer was bekommt, entscheidet `src/plugins/pwa.client.ts` mit Hilfe von
 `src/utils/device.ts` (`pwaMode()`), gleich beim Start im Browser:
 
-|                                    | Manifest-Link | Installations-Hinweis | Service Worker |
-| ---------------------------------- | :-----------: | :-------------------: | :------------: |
-| **Desktop-Browser**                | –             | –                     | –              |
-| **Handy-/Tablet-Browser**          | ✓             | ✓ (lazy geladen)      | –              |
-| **Installierte App** (Startbildschirm) | ✓         | –                     | ✓ (lazy geladen) |
+|                                        | Manifest-Link | Installations-Hinweis |  Service Worker  |
+| -------------------------------------- | :-----------: | :-------------------: | :--------------: |
+| **Desktop-Browser**                    |       –       |           –           |        –         |
+| **Handy-/Tablet-Browser**              |       ✓       |   ✓ (lazy geladen)    |        –         |
+| **Installierte App** (Startbildschirm) |       ✓       |           –           | ✓ (lazy geladen) |
 
 - **Desktop:** bekommt nichts. Ohne `<link rel="manifest">` zeigen Chrome und
   Edge keinen Installieren-Knopf in der Adressleiste — die App ist für den
@@ -61,17 +61,17 @@ erscheint eins zu viel, kaputt geht nichts:
 
 Nur in der installierten App, durch den Service Worker:
 
-| Inhalt | Wie | Warum |
-| ------ | --- | ----- |
-| `/_nuxt/*.js`, `/_nuxt/*.css` | Precache | gehasht, also unveränderlich — sicher zu cachen |
-| `*.woff2` (Schriften) | Precache | sobald sie selbst gehostet werden; bis dahin meldet der Build „pattern doesn't match" |
-| `/pwa/*.png` (Symbole) | Precache | für die Offline-Seite und das Manifest |
-| `/offline.html` | Precache | die Offline-Seite selbst |
-| `/manifest.webmanifest` | Precache | von vite-plugin-pwa immer mitgenommen |
-| **HTML-Seiten** | **nie** — NetworkOnly, bei Netzfehler `/offline.html` | serverseitig gerendertes HTML enthält personenbezogene Daten (Name, Termine, Mitgliederdaten) |
-| **`/api/*`** | **nie** — nicht einmal angefasst | dito; ein zwischengespeicherter API-Response läge unverschlüsselt im Browser-Cache, auch nach dem Abmelden |
-| `/_nuxt/builds/*` | nie | Nuxts Build-Manifest wird mit Cache-Buster-Query geholt, der Precache träfe es ohnehin nicht |
-| `/admin/cal/*` | nie | CalDavZAP, eine eigene Anwendung auf demselben Origin (siehe unten) |
+| Inhalt                        | Wie                                                   | Warum                                                                                                      |
+| ----------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `/_nuxt/*.js`, `/_nuxt/*.css` | Precache                                              | gehasht, also unveränderlich — sicher zu cachen                                                            |
+| `*.woff2` (Schriften)         | Precache                                              | sobald sie selbst gehostet werden; bis dahin meldet der Build „pattern doesn't match"                      |
+| `/pwa/*.png` (Symbole)        | Precache                                              | für die Offline-Seite und das Manifest                                                                     |
+| `/offline.html`               | Precache                                              | die Offline-Seite selbst                                                                                   |
+| `/manifest.webmanifest`       | Precache                                              | von vite-plugin-pwa immer mitgenommen                                                                      |
+| **HTML-Seiten**               | **nie** — NetworkOnly, bei Netzfehler `/offline.html` | serverseitig gerendertes HTML enthält personenbezogene Daten (Name, Termine, Mitgliederdaten)              |
+| **`/api/*`**                  | **nie** — nicht einmal angefasst                      | dito; ein zwischengespeicherter API-Response läge unverschlüsselt im Browser-Cache, auch nach dem Abmelden |
+| `/_nuxt/builds/*`             | nie                                                   | Nuxts Build-Manifest wird mit Cache-Buster-Query geholt, der Precache träfe es ohnehin nicht               |
+| `/admin/cal/*`                | nie                                                   | CalDavZAP, eine eigene Anwendung auf demselben Origin (siehe unten)                                        |
 
 Precache heute: **74 Einträge, ~985 KiB roh, ~357 KiB gzip** (Stand
 Einführung). Darin sind alle Routen-Chunks, auch die des Admin-Bereichs — sie
@@ -174,21 +174,37 @@ unteren Leiste (`<LazyInstallHint>` — ein eigener Chunk, nur im Handy-Browser
 geladen) und nur für angemeldete Mitglieder. Je nach Browser
 (`src/composables/useInstallHint.ts`):
 
-| Browser | Hinweis |
-| ------- | ------- |
-| Android Chrome, Edge, Samsung Internet | Knopf „Installieren", öffnet den Installationsdialog (`beforeinstallprompt`). Erscheint erst, wenn der Browser das Ereignis schickt — bei schon installierter App also nie. |
-| Android Firefox u. a. ohne Ereignis | „im Browser-Menü ‚Zum Startbildschirm hinzufügen'" |
-| iOS Safari, andere iOS-Browser ab 16.4 | „Tippe auf ‚Teilen' und dann auf ‚Zum Home-Bildschirm'" |
-| iOS-Browser vor 16.4, In-App-Browser (Instagram, Facebook, Google-App …) | „Öffne diese Seite in Safari …" |
+| Browser                                                                  | Hinweis                                                                                                                                                                     |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Android Chrome, Edge, Samsung Internet                                   | Knopf „Installieren", öffnet den Installationsdialog (`beforeinstallprompt`). Erscheint erst, wenn der Browser das Ereignis schickt — bei schon installierter App also nie. |
+| Android Firefox u. a. ohne Ereignis                                      | „im Browser-Menü ‚Zum Startbildschirm hinzufügen'"                                                                                                                          |
+| iOS Safari, andere iOS-Browser ab 16.4                                   | „Tippe auf ‚Teilen' und dann auf ‚Zum Home-Bildschirm'"                                                                                                                     |
+| iOS-Browser vor 16.4, In-App-Browser (Instagram, Facebook, Google-App …) | „Öffne diese Seite in Safari …"                                                                                                                                             |
 
 Das `beforeinstallprompt`-Ereignis kommt einmal kurz nach dem Laden. Es wird
 deshalb schon im Plugin abgefangen (`src/utils/installPrompt.ts`), nicht erst
 im Hinweis, der oft später lädt.
 
-Das ✕ blendet den Hinweis auf diesem Gerät dauerhaft aus
-(`localStorage: jahrweiser-install-hint-dismissed`). Ist der Speicher gesperrt,
-erscheint er beim nächsten Besuch wieder. Installieren geht danach weiterhin
-über das Browser-Menü bzw. das Teilen-Menü.
+**Wie oft er kommt:** Das ✕ lässt den Hinweis 30 Tage ruhen; danach bietet
+sich die App erneut an — **höchstens dreimal**, nach dem dritten ✕ nie wieder
+(`localStorage: jahrweiser-install-hint-dismissed`, `{ count, until }`; Werte in
+`useInstallHint.ts`). Ist der Speicher gesperrt, erscheint er beim nächsten
+Besuch wieder.
+
+**Der Weg zurück**, unabhängig davon, wie oft weggeklickt wurde — nur im
+Handy-/Tablet-Browser:
+
+- **Menü → „Als App installieren"** (Kopfleiste),
+- **Projekt-Seite, Abschnitt „Den Jahrweiser als App"** — dort steht in der
+  installierten App, dass sie schon installiert ist, und am Desktop, dass es
+  auf dem Handy geht.
+
+Beide öffnen auf Android den Installationsdialog direkt (das Ereignis wird ja
+schon beim Laden gemerkt) und zeigen sonst den Hinweis mit den Schritten für
+diesen Browser. Ihn dann zu schließen zählt nicht als Wegklicken — es war die
+Frage des Mitglieds, kein Angebot der App.
+
+Daneben geht es immer über das Browser-Menü bzw. „Teilen → Zum Home-Bildschirm".
 
 ## Symbole
 

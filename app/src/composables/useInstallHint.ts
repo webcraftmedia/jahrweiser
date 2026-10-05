@@ -1,7 +1,12 @@
 import type { DeviceEnv } from '~/utils/device'
 
 import { deviceEnv, isDesktopClassIPad } from '~/utils/device'
-import { appInstalled, installPrompt } from '~/utils/installPrompt'
+import {
+  appInstalled,
+  installPrompt,
+  installRequested,
+  openInstallPrompt,
+} from '~/utils/installPrompt'
 
 /**
  * The install hint's logic. Only the lazily loaded InstallHint component uses
@@ -14,6 +19,20 @@ export type InstallMethod = 'prompt' | 'share' | 'safari' | 'menu'
 
 /** Per device, not per member: it is the device that does or does not have the app. */
 export const INSTALL_HINT_DISMISSED_KEY = 'jahrweiser-install-hint-dismissed'
+
+/**
+ * How often the app offers itself: dismissed, the hint comes back after
+ * `INSTALL_HINT_PAUSE_MS`, and after the third time not at all. Asking for it
+ * (menu, project page) is always possible — see `installRequested`.
+ */
+export const INSTALL_HINT_MAX_OFFERS = 3
+export const INSTALL_HINT_PAUSE_MS = 30 * 24 * 60 * 60 * 1000
+
+/** How often the hint was dismissed on this device, and until when it rests. */
+export interface HintDismissal {
+  count: number
+  until: number
+}
 
 export function isIOS(env: DeviceEnv): boolean {
   return /iPhone|iPad|iPod/.test(env.userAgent) || isDesktopClassIPad(env)
@@ -61,33 +80,57 @@ export function manualInstallMethod(
   return hasInstallPrompt ? null : 'menu'
 }
 
-function readDismissed(): boolean {
+const NEVER_DISMISSED: HintDismissal = { count: 0, until: 0 }
+
+export function readDismissal(): HintDismissal {
   try {
-    return localStorage.getItem(INSTALL_HINT_DISMISSED_KEY) === '1'
-    // eslint-disable-next-line no-catch-all/no-catch-all -- storage blocked (privacy settings): the hint is simply shown
+    const raw = JSON.parse(localStorage.getItem(INSTALL_HINT_DISMISSED_KEY) ?? 'null') as unknown
+    const { count, until } = (raw ?? {}) as Partial<HintDismissal>
+    return typeof count === 'number' && typeof until === 'number'
+      ? { count, until }
+      : NEVER_DISMISSED
+    // eslint-disable-next-line no-catch-all/no-catch-all -- storage blocked or unreadable: the hint is simply shown
   } catch {
-    return false
+    return NEVER_DISMISSED
   }
 }
 
+/** Whether the app may offer itself now, after `dismissal`. */
+export function mayOffer(dismissal: HintDismissal, now: number): boolean {
+  return dismissal.count < INSTALL_HINT_MAX_OFFERS && now >= dismissal.until
+}
+
 /**
- * Whether and how to suggest installing the app; null hides the hint. Never
- * again once dismissed on this device, and not after an install.
+ * Whether and how to suggest installing the app; null hides the hint. Not
+ * after an install, and only as often as `mayOffer` allows — unless the member
+ * asked for it.
  */
 export function useInstallHint() {
   const env = deviceEnv()
-  const dismissed = ref(readDismissed())
+  const offered = ref(mayOffer(readDismissal(), Date.now()))
 
   const method = computed<InstallMethod | null>(() => {
-    if (dismissed.value || appInstalled.value) return null
+    if (appInstalled.value || !(offered.value || installRequested.value)) return null
     if (installPrompt.value) return 'prompt'
     return manualInstallMethod(env, 'onbeforeinstallprompt' in window)
   })
 
+  /**
+   * Closing a hint the member asked for counts for nothing: it was their
+   * question, not the app's offer.
+   */
   function dismiss() {
-    dismissed.value = true
+    if (installRequested.value) {
+      installRequested.value = false
+      if (!offered.value) return
+    }
+    offered.value = false
+    const count = readDismissal().count + 1
     try {
-      localStorage.setItem(INSTALL_HINT_DISMISSED_KEY, '1')
+      localStorage.setItem(
+        INSTALL_HINT_DISMISSED_KEY,
+        JSON.stringify({ count, until: Date.now() + INSTALL_HINT_PAUSE_MS }),
+      )
       // eslint-disable-next-line no-catch-all/no-catch-all -- storage blocked: hidden for this visit, back on the next
     } catch {
       // Nothing to do.
@@ -96,12 +139,7 @@ export function useInstallHint() {
 
   /** Opens the browser's install dialog. The event can be used only once. */
   async function install() {
-    const prompt = installPrompt.value
-    if (!prompt) return
-    installPrompt.value = null
-    await prompt.prompt()
-    const { outcome } = await prompt.userChoice
-    if (outcome === 'accepted') appInstalled.value = true
+    await openInstallPrompt()
   }
 
   return { method, install, dismiss }

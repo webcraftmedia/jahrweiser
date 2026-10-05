@@ -42,6 +42,7 @@
     "Header": {
       "admin": "Admin",
       "calendars": "Kalender",
+      "install-app": "Als App installieren",
       "logout": "↪ Ausloggen",
       "logout-label": "Ausloggen",
       "open-menu": "Menü öffnen",
@@ -475,6 +476,13 @@
     },
     "projekt": {
       "about": {
+        "app": {
+          "button": "Als App installieren",
+          "desktop": "Auf dem Handy oder Tablet kannst du den Jahrweiser als App auf den Startbildschirm legen. Öffne ihn dazu dort im Browser und wähle hier „Als App installieren“.",
+          "heading": "Den Jahrweiser als App",
+          "installed": "Du nutzt den Jahrweiser schon als App. Aktualisieren kannst du oben über ⟳ oder indem du den Kalender nach unten ziehst.",
+          "text": "Leg dir den Jahrweiser auf den Startbildschirm: Er startet dann wie eine App, ohne Adresszeile, mit einem Fingertipp."
+        },
         "help": {
           "heading": "Mithelfen",
           "link": "Feedback geben",

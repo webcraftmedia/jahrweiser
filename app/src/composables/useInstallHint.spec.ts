@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { env, UA } from '../../test/helpers/device-env'
-import { appInstalled, installPrompt } from '../utils/installPrompt'
+import { appInstalled, installPrompt, installRequested } from '../utils/installPrompt'
 
 import {
   INSTALL_HINT_DISMISSED_KEY,
+  INSTALL_HINT_MAX_OFFERS,
+  INSTALL_HINT_PAUSE_MS,
+  mayOffer,
+  readDismissal,
   iosVersion,
   isIOS,
   manualInstallMethod,
@@ -102,6 +106,7 @@ describe('useInstallHint', () => {
     localStorage.clear()
     installPrompt.value = null
     appInstalled.value = false
+    installRequested.value = false
     current.env = env({ userAgent: UA.iPhoneSafari })
   })
 
@@ -157,12 +162,72 @@ describe('useInstallHint', () => {
     expect(appInstalled.value).toBe(false)
   })
 
-  it('remembers a dismissal on this device', () => {
+  it('rests after a dismissal, and offers itself again after the pause', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(1_000)
     const first = useInstallHint()
     first.dismiss()
     expect(first.method.value).toBeNull()
-    expect(localStorage.getItem(INSTALL_HINT_DISMISSED_KEY)).toBe('1')
+    expect(readDismissal()).toStrictEqual({ count: 1, until: 1_000 + INSTALL_HINT_PAUSE_MS })
     expect(useInstallHint().method.value).toBeNull()
+
+    vi.setSystemTime(1_000 + INSTALL_HINT_PAUSE_MS)
+    expect(useInstallHint().method.value).toBe('share')
+    vi.useRealTimers()
+  })
+
+  it('stops offering itself after the third dismissal', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    for (let offer = 1; offer <= INSTALL_HINT_MAX_OFFERS; offer++) {
+      vi.setSystemTime(offer * 2 * INSTALL_HINT_PAUSE_MS)
+      const hint = useInstallHint()
+      expect(hint.method.value).toBe('share')
+      hint.dismiss()
+    }
+    vi.setSystemTime(100 * INSTALL_HINT_PAUSE_MS)
+    expect(useInstallHint().method.value).toBeNull()
+    vi.useRealTimers()
+  })
+
+  it('tells when it may offer itself', () => {
+    expect(mayOffer({ count: 0, until: 0 }, 0)).toBe(true)
+    expect(mayOffer({ count: 1, until: 10 }, 9)).toBe(false)
+    expect(mayOffer({ count: 2, until: 10 }, 10)).toBe(true)
+    expect(mayOffer({ count: INSTALL_HINT_MAX_OFFERS, until: 0 }, 99)).toBe(false)
+  })
+
+  it.each([
+    ['nothing stored', null],
+    ['an old flag', '1'],
+    ['garbage', '{'],
+    ['the wrong shape', JSON.stringify({ count: '2' })],
+  ])('reads %s as never dismissed', (_label, raw) => {
+    if (raw !== null) localStorage.setItem(INSTALL_HINT_DISMISSED_KEY, raw)
+    expect(readDismissal()).toStrictEqual({ count: 0, until: 0 })
+  })
+
+  it('shows when asked for, however often it was dismissed', () => {
+    localStorage.setItem(
+      INSTALL_HINT_DISMISSED_KEY,
+      JSON.stringify({ count: INSTALL_HINT_MAX_OFFERS, until: 0 }),
+    )
+    const { method, dismiss } = useInstallHint()
+    expect(method.value).toBeNull()
+    installRequested.value = true
+    expect(method.value).toBe('share')
+
+    // Closing what was asked for is no dismissal of an offer.
+    dismiss()
+    expect(method.value).toBeNull()
+    expect(readDismissal().count).toBe(INSTALL_HINT_MAX_OFFERS)
+  })
+
+  it('counts closing an offer that was also asked for once', () => {
+    const { dismiss } = useInstallHint()
+    installRequested.value = true
+    dismiss()
+    expect(installRequested.value).toBe(false)
+    expect(readDismissal().count).toBe(1)
   })
 
   it('shows the hint when storage cannot be read', () => {

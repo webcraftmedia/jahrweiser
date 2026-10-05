@@ -8,6 +8,13 @@ import AppIconRail from './AppIconRail.vue'
 const mock$fetch = vi.fn()
 stubApi(mock$fetch)
 
+// Every mounted rail registers here; fired by hand — when a return counts is
+// useRefreshable's own spec's business.
+const resume = vi.hoisted(() => ({ refreshes: [] as (() => Promise<void>)[] }))
+mockNuxtImport('useRefreshable', () => (refresh: () => Promise<void>) => {
+  resume.refreshes.push(refresh)
+})
+
 const CHANNELS = [{ id: 1, name: 'Info', url: 'https://t.me/info', public: true }]
 const BLAETTCHEN = {
   issues: [{ number: 12, date: '2026-05-01', file: '12_2026-05-01.pdf' }],
@@ -129,6 +136,50 @@ describe('Component: AppIconRail', () => {
       ).toBeUndefined()
     },
   )
+
+  describe('when the member comes back to the app', () => {
+    beforeEach(() => {
+      resume.refreshes.length = 0
+    })
+
+    it('asks again what exists and follows the answer', async () => {
+      const wrapper = await railAt('/')
+      expect(wrapper.find('nav a[href="/telegram"]').exists()).toBe(true)
+      serving({ channels: [], hasPostalCode: false })
+
+      await resume.refreshes[0]!()
+      await nextTick()
+
+      expect(wrapper.find('nav a[href="/telegram"]').exists()).toBe(false)
+      expect(wrapper.find('nav a[href="/karte"] .rail-warn').exists()).toBe(true)
+    })
+
+    it('sends one request per list for both rails together', async () => {
+      // Desktop and mobile rail are mounted side by side and come back together.
+      await railAt('/', 'vertical')
+      await railAt('/', 'horizontal')
+      mock$fetch.mockClear()
+
+      await Promise.all(resume.refreshes.map((refresh) => refresh()))
+
+      expect(
+        mock$fetch.mock.calls.map(([url]) => String(url)).sort((a, b) => a.localeCompare(b)),
+      ).toStrictEqual(['/api/blaettchen', '/api/map/status', '/api/telegram-channels'])
+    })
+
+    it('keeps its entries when the network is not back yet', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const wrapper = await railAt('/')
+      serving({ failing: ['/api/telegram-channels', '/api/blaettchen', '/api/map/status'] })
+
+      await resume.refreshes[0]!()
+      await nextTick()
+
+      expect(wrapper.find('nav a[href="/telegram"]').exists()).toBe(true)
+      expect(wrapper.find('nav a[href="/blaettchen"]').exists()).toBe(true)
+      consoleSpy.mockRestore()
+    })
+  })
 
   describe('telegram entry visibility', () => {
     it('is absent while no channels are configured (empty list or missing file)', async () => {

@@ -10,12 +10,15 @@
   const props = defineProps<{ orientation: 'vertical' | 'horizontal' }>()
 
   const route = useRoute()
-  const { sections: items, load } = useAppSections()
+  const { sections: items, load, refresh } = useAppSections()
 
   // The rail owns the loading: it is mounted for signed-in members only and on
   // every page, so the lists are there before anyone clicks. The header renders
   // on the login page too and must not fetch — see useAppSections().
   onMounted(load)
+  // For the same reason it owns refreshing them when the member comes back to
+  // an app that sat in the background.
+  useRefreshable(refresh)
 
   const isVertical = computed(() => props.orientation === 'vertical')
 </script>

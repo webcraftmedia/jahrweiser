@@ -46,16 +46,51 @@ export function useBlaettchen() {
     }
   }
 
-  async function load(force = false): Promise<void> {
-    if (loaded.value && !force) return
-    if (inFlight.value && !force) return inFlight.value
-    const run = fetchIssues()
+  /**
+   * The quiet variant for `refresh()`: no loading state, and a failure keeps
+   * the list that is on screen. That is the one difference to the rule above,
+   * and a deliberate one — a phone that has just woken up often has no network
+   * for its first second, and a rail entry vanishing over that would be wrong
+   * far more often than an archive that is really unreadable. The next visit to
+   * the page loads properly and clears it then.
+   */
+  async function fetchIssuesQuietly(): Promise<void> {
+    try {
+      const listing = await api<BlaettchenListing>('/api/blaettchen')
+      issues.value = listing.issues
+      contact.value = listing.contact
+      loadError.value = false
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: geloggt, die Liste bleibt beim letzten Stand
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function share(fetch: () => Promise<void>): Promise<void> {
+    const run = fetch()
     inFlight.value = run
     try {
       await run
     } finally {
       inFlight.value = null
     }
+  }
+
+  async function load(force = false): Promise<void> {
+    if (loaded.value && !force) return
+    if (inFlight.value && !force) return inFlight.value
+    return share(fetchIssues)
+  }
+
+  /**
+   * Ask again for a member coming back to the app after a while (see
+   * useRefreshable), without passing through the loading state. Joins a
+   * request that is already on its way, which is also what keeps the two rail
+   * instances down to one request between them.
+   */
+  async function refresh(): Promise<void> {
+    if (inFlight.value) return inFlight.value
+    return share(fetchIssuesQuietly)
   }
 
   const hasIssues = computed(() => issues.value.length > 0)
@@ -110,6 +145,7 @@ export function useBlaettchen() {
     isLoading,
     loadError,
     load,
+    refresh,
     urlFor,
     formatDate,
     formatDateShort,

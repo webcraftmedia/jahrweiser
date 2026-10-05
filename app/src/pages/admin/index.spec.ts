@@ -1,4 +1,4 @@
-import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { stubApi } from '../../../test/helpers/stub-api'
@@ -7,6 +7,12 @@ import Page from './index.vue'
 
 const mock$fetch = vi.fn()
 stubApi(mock$fetch)
+
+// Fired by hand — when a return counts is useRefreshable's own spec's business.
+const resume = vi.hoisted(() => ({ refresh: null as (() => Promise<void>) | null }))
+mockNuxtImport('useRefreshable', () => (refresh: () => Promise<void>) => {
+  resume.refresh = refresh
+})
 
 const CURRENT = {
   members: 42,
@@ -209,5 +215,59 @@ describe('Page: Admin Übersicht', () => {
     })
     expect(wrapper.find('svg').exists()).toBe(false)
     consoleSpy.mockRestore()
+  })
+
+  describe('when the admin comes back to it', () => {
+    it('shows the new numbers without passing through the loading state', async () => {
+      const wrapper = await mountLoaded()
+      let answer!: (value: unknown) => void
+      mock$fetch.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            answer = resolve
+          }),
+      )
+      const refreshing = resume.refresh!()
+      await nextTick()
+      expect(wrapper.findAll('svg')).toHaveLength(3)
+
+      answer({ current: { ...CURRENT, members: 43 }, months: months(), activity: ACTIVITY })
+      await refreshing
+      await nextTick()
+      expect(wrapper.text()).toContain('43')
+    })
+
+    it('keeps the numbers it has when the network is not back yet', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const wrapper = await mountLoaded()
+      mock$fetch.mockRejectedValue(new Error('offline'))
+      await resume.refresh!()
+      await nextTick()
+      expect(wrapper.text()).toContain('42')
+      expect(wrapper.text()).not.toContain('dashboard.error')
+      expect(consoleSpy).toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    it('loads properly when the last attempt ended in the error message', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mock$fetch.mockRejectedValue(new Error('500'))
+      const wrapper = await mountLoaded()
+      expect(wrapper.text()).toContain('dashboard.error')
+      serving({ current: CURRENT, months: months(), activity: ACTIVITY })
+      await resume.refresh!()
+      await nextTick()
+      expect(wrapper.text()).not.toContain('dashboard.error')
+      expect(wrapper.findAll('svg')).toHaveLength(3)
+      consoleSpy.mockRestore()
+    })
+
+    it('leaves a load that is still on its way alone', async () => {
+      mock$fetch.mockImplementation(() => new Promise(() => {}))
+      await mountSuspended(Page, { route: '/admin' })
+      mock$fetch.mockClear()
+      await resume.refresh!()
+      expect(mock$fetch).not.toHaveBeenCalled()
+    })
   })
 })

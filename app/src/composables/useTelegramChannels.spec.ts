@@ -90,4 +90,62 @@ describe('useTelegramChannels', () => {
     expect(isLoading.value).toBe(false)
     consoleSpy.mockRestore()
   })
+
+  describe('refresh on resume', () => {
+    it('asks again without passing through the loading state', async () => {
+      mock$fetch.mockResolvedValue(CHANNELS)
+      const { channels, isLoading, load, refresh } = useTelegramChannels()
+      await load()
+      mock$fetch.mockResolvedValue([])
+
+      const refreshing = refresh()
+      expect(isLoading.value).toBe(false)
+      await refreshing
+
+      expect(channels.value).toStrictEqual([])
+      expect(mock$fetch).toHaveBeenCalledTimes(2)
+    })
+
+    it('clears an error message once the list is readable again', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mock$fetch.mockRejectedValueOnce(new Error('500'))
+      const { channels, loadError, load, refresh } = useTelegramChannels()
+      await load()
+      expect(loadError.value).toBe(true)
+
+      mock$fetch.mockResolvedValue(CHANNELS)
+      await refresh()
+      expect(loadError.value).toBe(false)
+      expect(channels.value).toStrictEqual(CHANNELS)
+      consoleSpy.mockRestore()
+    })
+
+    it('keeps the list on screen when the network is not back yet', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mock$fetch.mockResolvedValueOnce(CHANNELS)
+      const { channels, loadError, load, refresh } = useTelegramChannels()
+      await load()
+
+      mock$fetch.mockRejectedValueOnce(new Error('offline'))
+      await refresh()
+      expect(channels.value).toStrictEqual(CHANNELS)
+      expect(loadError.value).toBe(false)
+      expect(consoleSpy).toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    it('joins a request that is already on its way', async () => {
+      mock$fetch.mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => {
+              resolve(CHANNELS)
+            }, 10),
+          ),
+      )
+      const { refresh } = useTelegramChannels()
+      await Promise.all([refresh(), refresh()])
+      expect(mock$fetch).toHaveBeenCalledTimes(1)
+    })
+  })
 })

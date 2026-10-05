@@ -49,9 +49,9 @@ function isCalendarPath(path: string): boolean {
  */
 export function useAppSections() {
   const { t } = useI18n()
-  const { hasChannels, load: loadChannels } = useTelegramChannels()
-  const { hasIssues, load: loadIssues } = useBlaettchen()
-  const { hasPostalCode, loadStatus } = useMemberMap()
+  const { hasChannels, load: loadChannels, refresh: refreshChannels } = useTelegramChannels()
+  const { hasIssues, load: loadIssues, refresh: refreshIssues } = useBlaettchen()
+  const { hasPostalCode, loadStatus, refreshStatus } = useMemberMap()
 
   const sections = computed<AppSection[]>(() => [
     {
@@ -125,5 +125,16 @@ export function useAppSections() {
     void loadStatus()
   }
 
-  return { sections, load }
+  /**
+   * Ask all three again, for a member coming back to the app after a while
+   * (see useRefreshable). The lists are the same state /telegram,
+   * /blaettchen and their admin pages render, so this refreshes those pages
+   * too — none of them needs a hook of its own. Quiet: nothing on screen
+   * passes through a loading state, and a failure keeps what is shown.
+   */
+  async function refresh(): Promise<void> {
+    await Promise.all([refreshChannels(), refreshIssues(), refreshStatus()])
+  }
+
+  return { sections, load, refresh }
 }

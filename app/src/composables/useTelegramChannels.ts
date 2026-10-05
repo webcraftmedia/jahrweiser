@@ -42,10 +42,26 @@ export function useTelegramChannels() {
     }
   }
 
-  async function load(force = false): Promise<void> {
-    if (loaded.value && !force) return
-    if (inFlight.value && !force) return inFlight.value
-    const run = fetchChannels()
+  /**
+   * The quiet variant for `refresh()`: no loading state, and a failure keeps
+   * the list that is on screen. That is the one difference to the rule above,
+   * and a deliberate one — a phone that has just woken up often has no network
+   * for its first second, and a rail entry vanishing over that would be wrong
+   * far more often than a list that is really broken. The next visit to the
+   * page loads properly and clears it then.
+   */
+  async function fetchChannelsQuietly(): Promise<void> {
+    try {
+      channels.value = await api<TelegramChannel[]>('/api/telegram-channels')
+      loadError.value = false
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: geloggt, die Liste bleibt beim letzten Stand
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function share(fetch: () => Promise<void>): Promise<void> {
+    const run = fetch()
     inFlight.value = run
     try {
       await run
@@ -54,7 +70,24 @@ export function useTelegramChannels() {
     }
   }
 
+  async function load(force = false): Promise<void> {
+    if (loaded.value && !force) return
+    if (inFlight.value && !force) return inFlight.value
+    return share(fetchChannels)
+  }
+
+  /**
+   * Ask again for a member coming back to the app after a while (see
+   * useRefreshable), without passing through the loading state. Joins a
+   * request that is already on its way, which is also what keeps the two rail
+   * instances down to one request between them.
+   */
+  async function refresh(): Promise<void> {
+    if (inFlight.value) return inFlight.value
+    return share(fetchChannelsQuietly)
+  }
+
   const hasChannels = computed(() => channels.value.length > 0)
 
-  return { channels, hasChannels, isLoading, loadError, load }
+  return { channels, hasChannels, isLoading, loadError, load, refresh }
 }

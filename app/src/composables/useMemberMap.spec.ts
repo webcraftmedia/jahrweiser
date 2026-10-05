@@ -110,6 +110,42 @@ describe('useMemberMap', () => {
       expect(hasPostalCode.value).toBeNull()
       consoleSpy.mockRestore()
     })
+
+    describe('refresh on resume', () => {
+      it('picks up a postal code filled in elsewhere meanwhile', async () => {
+        serving({ status: { hasPostalCode: false } })
+        const { hasPostalCode, loadStatus, refreshStatus } = useMemberMap()
+        await loadStatus()
+        serving({ status: { hasPostalCode: true } })
+        await refreshStatus()
+        expect(hasPostalCode.value).toBe(true)
+      })
+
+      it('keeps the answer it has when the network is not back yet', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        serving({ status: { hasPostalCode: false } })
+        const { hasPostalCode, loadStatus, refreshStatus } = useMemberMap()
+        await loadStatus()
+        mock$fetch.mockRejectedValue(new Error('offline'))
+        await refreshStatus()
+        expect(hasPostalCode.value).toBe(false)
+        consoleSpy.mockRestore()
+      })
+
+      it('joins a request that is already on its way', async () => {
+        mock$fetch.mockImplementation(
+          () =>
+            new Promise((resolve) => {
+              setTimeout(() => {
+                resolve({ hasPostalCode: true })
+              }, 10)
+            }),
+        )
+        const { refreshStatus } = useMemberMap()
+        await Promise.all([refreshStatus(), refreshStatus()])
+        expect(mock$fetch).toHaveBeenCalledTimes(1)
+      })
+    })
   })
 
   describe('place names', () => {
@@ -369,6 +405,88 @@ describe('useMemberMap', () => {
       expect(data.value).toBeNull()
       expect(isLoading.value).toBe(false)
       consoleSpy.mockRestore()
+    })
+
+    describe('refresh on resume', () => {
+      it('waits for the first load — there is nothing on screen to refresh yet', async () => {
+        const { refresh } = useMemberMap()
+        await refresh()
+        expect(mock$fetch).not.toHaveBeenCalled()
+      })
+
+      it('leaves a load that is already on its way alone', async () => {
+        const { isLoading, loaded, refresh } = useMemberMap()
+        loaded.value = true
+        isLoading.value = true
+        await refresh()
+        isLoading.value = false
+        expect(mock$fetch).not.toHaveBeenCalled()
+      })
+
+      it('asks for the aggregate again without passing through the loading state', async () => {
+        const { data, isLoading, load, refresh } = useMemberMap()
+        await load()
+        mock$fetch.mockClear()
+        const changed = { ...PAYLOAD, total: 6 }
+        serving({ map: changed })
+
+        const refreshing = refresh()
+        expect(isLoading.value).toBe(false)
+        await refreshing
+
+        expect(data.value).toStrictEqual(changed)
+        // The silhouette is the same for everyone and is kept.
+        expect(mock$fetch.mock.calls.map(([url]) => url)).toStrictEqual(['/api/map/members'])
+      })
+
+      it('keeps the map it has when nothing changed, so the reader keeps their zoom', async () => {
+        const { data, load, refresh } = useMemberMap()
+        await load()
+        const shown = data.value
+        await refresh()
+        expect(data.value).toBe(shown)
+      })
+
+      it('locks the map when the postal code went away meanwhile, and unlocks it again', async () => {
+        const { data, isLocked, hasPostalCode, load, refresh } = useMemberMap()
+        await load()
+        serving({ map: forbidden() })
+        await refresh()
+        expect(isLocked.value).toBe(true)
+        expect(hasPostalCode.value).toBe(false)
+        expect(data.value).toBeNull()
+
+        serving()
+        await refresh()
+        expect(isLocked.value).toBe(false)
+        expect(hasPostalCode.value).toBe(true)
+        expect(data.value).toStrictEqual(PAYLOAD)
+      })
+
+      it('keeps showing the last map when the refresh fails', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        const { data, loadError, load, refresh } = useMemberMap()
+        await load()
+        serving({ map: Object.assign(new Error('Server error'), { statusCode: 500 }) })
+        await refresh()
+        expect(data.value).toStrictEqual(PAYLOAD)
+        expect(loadError.value).toBe(false)
+        expect(consoleSpy).toHaveBeenCalled()
+        consoleSpy.mockRestore()
+      })
+
+      it('loads properly when the last attempt ended in the error message', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        serving({ map: new Error('500') })
+        const { data, loadError, load, refresh } = useMemberMap()
+        await load()
+        expect(loadError.value).toBe(true)
+        serving()
+        await refresh()
+        expect(loadError.value).toBe(false)
+        expect(data.value).toStrictEqual(PAYLOAD)
+        consoleSpy.mockRestore()
+      })
     })
 
     it('clears the locked state before trying again', async () => {

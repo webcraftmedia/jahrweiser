@@ -6,8 +6,36 @@
           ref="calWrapper"
           class="cal-wrapper"
           @touchstart.passive="onTouchStart"
+          @touchmove.passive="pullToRefresh.onTouchMove"
           @touchend.passive="onTouchEnd"
         >
+          <!-- Pull-to-refresh, installed app only (usePullToRefresh). Follows
+               the finger, then spins while the refresh runs. -->
+          <div
+            v-if="pullToRefresh.pull.value > 0 || (standalone && refreshing)"
+            class="pull-indicator"
+            :class="{ 'pull-indicator--armed': pullToRefresh.armed.value }"
+            :style="{ height: `${refreshing ? PULL_BUSY_HEIGHT_PX : pullToRefresh.pull.value}px` }"
+            aria-hidden="true"
+          >
+            <svg
+              class="w-5 h-5"
+              :class="{ 'animate-spin': refreshing }"
+              :style="
+                refreshing ? undefined : { transform: `rotate(${pullToRefresh.pull.value * 4}deg)` }
+              "
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+              <path d="M21 3v6h-6" />
+            </svg>
+          </div>
           <div class="cv-header" :style="headerZoomStyle">
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
@@ -586,9 +614,11 @@
   function onTouchStart(e: TouchEvent) {
     touchStartX = e.changedTouches[0]!.clientX
     touchStartY = e.changedTouches[0]!.clientY
+    pullToRefresh.onTouchStart(e)
   }
 
   function onTouchEnd(e: TouchEvent) {
+    pullToRefresh.onTouchEnd()
     const dx = e.changedTouches[0]!.clientX - touchStartX
     const dy = e.changedTouches[0]!.clientY - touchStartY
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return
@@ -832,10 +862,23 @@
       }))
   }
 
+  /** The range Schedule-X last asked for — what a refresh on resume asks again. */
+  let shownRange: { start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime } | undefined
+
+  /**
+   * Load the events for a range. `refresh` is the variant for a member coming
+   * back to a calendar that has been on screen all along (see
+   * refreshShownRange): it asks for the calendar list again too, and leaves the
+   * view where the member left it instead of scrolling to today and replaying
+   * the pop-in.
+   */
   async function fetchDataForRange(
     start: Temporal.ZonedDateTime,
     end: Temporal.ZonedDateTime,
+    { refresh = false }: { refresh?: boolean } = {},
   ): Promise<void> {
+    const range = { start, end }
+    shownRange = range
     calLoading.value = true
     try {
       // Update currentDate from range midpoint for header labels
@@ -844,13 +887,15 @@
       const mid = new Date((startDate.getTime() + endDate.getTime()) / 2)
       currentDate.value = Temporal.PlainDate.from(mid.toISOString().slice(0, 10))
 
-      // Fetch all calendars if not already loaded
-      if (calendars.value.length === 0) {
+      // Fetch all calendars if not already loaded — or again on a refresh: a
+      // calendar may have been shared with the member in the meantime.
+      if (calendars.value.length === 0 || refresh) {
         calendars.value = await api('/api/calendars')
         buildScheduleXCalendars()
       }
 
       // Fetch events from all calendars in parallel
+      const failed: string[] = []
       const results = await Promise.all(
         calendars.value.map((cal) =>
           api('/api/calendar', {
@@ -862,12 +907,24 @@
             },
           }).catch((err: unknown) => {
             console.warn(`Failed to fetch calendar "${cal.name}":`, err)
+            failed.push(cal.name)
             return []
           }),
         ),
       )
 
+      // The member moved on to another month while this was in flight; that
+      // month's own fetch decides what is shown.
+      if (shownRange !== range) return
+      // A refresh keeps what is shown unless it got everything: a phone that
+      // just woke up may lose the network halfway, and a calendar missing its
+      // events over that is worse than one an hour old.
+      if (refresh && failed.length > 0) return
       rawEvents.value = results.flat()
+      if (refresh) {
+        eventsService.set(mapToScheduleXEvents())
+        return
+      }
       scheduleStagger()
       scrollToDay()
       // eslint-disable-next-line no-catch-all/no-catch-all -- Kalender-Abruf: Fehler wird geloggt, die Ansicht bleibt leer statt zu brechen
@@ -877,6 +934,25 @@
       calLoading.value = false
     }
   }
+
+  /**
+   * Refetch the shown month for a member returning after the app sat in the
+   * background — a phone tab or the installed PWA left open for days would
+   * otherwise keep showing the calendar as it was then. Skipped while a fetch is
+   * already running: that one is fresh anyway.
+   */
+  async function refreshShownRange(): Promise<void> {
+    if (!shownRange || calLoading.value) return
+    await fetchDataForRange(shownRange.start, shownRange.end, { refresh: true })
+  }
+
+  useRefreshable(refreshShownRange)
+
+  const standalone = useStandalone()
+  const refreshing = useRefreshing()
+  const pullToRefresh = usePullToRefresh(standalone)
+  /** The indicator's height while the refresh runs — half the pull it took. */
+  const PULL_BUSY_HEIGHT_PX = PULL_THRESHOLD_PX / 2
 
   /* ── Mark future days ── */
 
@@ -1749,6 +1825,29 @@
     --sx-color-outline-variant: #3d3630;
     --sx-color-primary: #ea580c;
     --sx-color-on-primary: #faf5eb;
+  }
+
+  /* Pull-to-refresh indicator (installed app only) */
+  .pull-indicator {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0.25rem;
+    overflow: hidden;
+    color: rgba(30, 41, 59, 0.5);
+    transition: color 0.15s ease;
+  }
+
+  .pull-indicator--armed {
+    color: #c2410c;
+  }
+
+  .dark .pull-indicator {
+    color: rgba(250, 245, 235, 0.5);
+  }
+
+  .dark .pull-indicator--armed {
+    color: #ea580c;
   }
 
   /* Loading overlay */

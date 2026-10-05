@@ -240,26 +240,25 @@ export function useMemberMap() {
     }
   }
 
-  async function fetchStatus(): Promise<void> {
+  async function fetchStatus(quiet: boolean): Promise<void> {
     try {
       const status = await api<{ hasPostalCode: boolean }>('/api/map/status')
       hasPostalCode.value = status.hasPostalCode
       // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: bei Fehler bleibt der Status unbekannt
     } catch (error) {
       // Unknown stays unknown: claiming "no postal code" on a failed request
-      // would put a warning marker on the rail that nothing can clear.
+      // would put a warning marker on the rail that nothing can clear. A
+      // refresh keeps the answer it already has instead — a failure there says
+      // nothing new about the member, only about the network.
       console.error(error)
-      hasPostalCode.value = null
+      if (!quiet) hasPostalCode.value = null
     } finally {
       statusLoaded.value = true
     }
   }
 
-  /** Whether the member has a postal code on file. Cheap; called by the rail. */
-  async function loadStatus(force = false): Promise<void> {
-    if (statusLoaded.value && !force) return
-    if (statusInFlight.value && !force) return statusInFlight.value
-    const run = fetchStatus()
+  async function shareStatus(quiet: boolean): Promise<void> {
+    const run = fetchStatus(quiet)
     statusInFlight.value = run
     try {
       await run
@@ -268,11 +267,47 @@ export function useMemberMap() {
     }
   }
 
+  /** Whether the member has a postal code on file. Cheap; called by the rail. */
+  async function loadStatus(force = false): Promise<void> {
+    if (statusLoaded.value && !force) return
+    if (statusInFlight.value && !force) return statusInFlight.value
+    return shareStatus(false)
+  }
+
   /**
-   * The aggregate plus the country silhouette. A 403 is not an error — it is
-   * the documented answer for "you have not given your own postal code yet",
-   * and the page shows its locked preview for it.
+   * Ask again for a member coming back to the app after a while (see
+   * useRefreshable) — the postal code may have been filled in on another
+   * device meanwhile. Joins a request already on its way, which keeps the two
+   * rail instances down to one between them.
    */
+  async function refreshStatus(): Promise<void> {
+    if (statusInFlight.value) return statusInFlight.value
+    return shareStatus(true)
+  }
+
+  /**
+   * The aggregate, or null for the 403 — which is not an error but the
+   * documented answer for "you have not given your own postal code yet", and
+   * the page shows its locked preview for it.
+   */
+  async function fetchMembers(): Promise<MapPayload | null> {
+    try {
+      return await api<MapPayload>('/api/map/members')
+    } catch (error) {
+      const status = error as { statusCode?: number; response?: { status?: number } }
+      if ((status.statusCode ?? status.response?.status) === 403) return null
+      throw error
+    }
+  }
+
+  /** Take an answer from fetchMembers() as what the map now shows. */
+  function apply(payload: MapPayload | null): void {
+    data.value = payload
+    isLocked.value = payload === null
+    hasPostalCode.value = payload !== null
+  }
+
+  /** The aggregate plus the country silhouette. */
   async function load(): Promise<void> {
     isLoading.value = true
     loadError.value = false
@@ -282,19 +317,11 @@ export function useMemberMap() {
       // everyone and the locked preview needs it too, so it must not sit
       // behind the postal-code gate. Both are needed to draw anything.
       const [payload, shape] = await Promise.all([
-        api<MapPayload>('/api/map/members').catch((error: unknown) => {
-          const status = error as { statusCode?: number; response?: { status?: number } }
-          if ((status.statusCode ?? status.response?.status) === 403) {
-            isLocked.value = true
-            return null
-          }
-          throw error
-        }),
+        fetchMembers(),
         outline.value ? Promise.resolve(outline.value) : api<MapOutline>('/api/map/outline'),
       ])
-      data.value = payload
+      apply(payload)
       outline.value = shape
-      hasPostalCode.value = !isLocked.value
       // eslint-disable-next-line no-catch-all/no-catch-all -- geloggt; die Seite zeigt ihren Fehlerzustand
     } catch (error) {
       console.error(error)
@@ -303,6 +330,30 @@ export function useMemberMap() {
     } finally {
       isLoading.value = false
       loaded.value = true
+    }
+  }
+
+  /**
+   * `load()` for a member returning to a map that has been on screen all along
+   * (see useRefreshable). Keeps the map drawn while it asks — `load()` would
+   * swap it for the loading state — and keeps it when the answer does not come:
+   * a map from an hour ago is more use than an error message over it.
+   *
+   * An unchanged answer is not applied at all. The map starts from the extent
+   * of a new set of areas (see MemberMap), so handing it an equal copy would
+   * throw away where the reader had zoomed to for nothing.
+   */
+  async function refresh(): Promise<void> {
+    // Nothing shown yet, or a load already on its way: that one is fresh.
+    if (!loaded.value || isLoading.value) return
+    // An error on screen has nothing worth keeping; try properly again.
+    if (loadError.value) return load()
+    try {
+      const payload = await fetchMembers()
+      if (JSON.stringify(payload) !== JSON.stringify(data.value)) apply(payload)
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: geloggt, die Karte zeigt weiter den letzten Stand
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -321,5 +372,7 @@ export function useMemberMap() {
     load,
     loadPlaces,
     loadStatus,
+    refresh,
+    refreshStatus,
   }
 }

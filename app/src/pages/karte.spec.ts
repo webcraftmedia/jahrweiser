@@ -1,4 +1,4 @@
-import { mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport, mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { stubApi } from '../../test/helpers/stub-api'
@@ -7,6 +7,12 @@ import Page from './karte.vue'
 
 const mock$fetch = vi.fn()
 stubApi(mock$fetch)
+
+// Fired by hand — when a return counts is useRefreshable's own spec's business.
+const resume = vi.hoisted(() => ({ refresh: null as (() => Promise<void>) | null }))
+mockNuxtImport('useRefreshable', () => (refresh: () => Promise<void>) => {
+  resume.refresh = refresh
+})
 
 const OUTLINE = { viewBox: '0 0 4000 5000', d: 'M0 0l4000 0 0 5000-4000 0z' }
 const PAYLOAD = {
@@ -127,6 +133,26 @@ describe('Page: Karte', () => {
     expect(wrapper.find('[role="alert"]').text()).toContain('pages.karte.error')
     expect(wrapper.find('svg').exists()).toBe(false)
     consoleSpy.mockRestore()
+  })
+
+  it('picks up a changed map when the member comes back, without blanking it meanwhile', async () => {
+    const wrapper = await mountLoaded()
+    let answer!: (value: unknown) => void
+    mock$fetch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          answer = resolve
+        }),
+    )
+    const refreshing = resume.refresh!()
+    await nextTick()
+    expect(wrapper.html()).not.toContain('loading-dot')
+    expect(wrapper.findAll('.areas path')).toHaveLength(2)
+
+    answer({ ...PAYLOAD, areas: PAYLOAD.areas.slice(0, 1) })
+    await refreshing
+    await nextTick()
+    expect(wrapper.findAll('.areas path')).toHaveLength(1)
   })
 
   it('fetches the names and the borders for whatever the map has brought on screen', async () => {

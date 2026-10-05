@@ -70,6 +70,26 @@
 
   onMounted(load)
 
+  /**
+   * `load()` for an admin coming back to a dashboard left open in the
+   * background (see useRefreshable). Keeps the tiles and charts on screen
+   * while it asks — `load()` would swap them for the loading state and drop
+   * the scroll position with them — and keeps them when the answer does not
+   * come; an error message replaces nothing that is still worth reading.
+   */
+  async function refresh(): Promise<void> {
+    if (isLoading.value) return
+    if (loadError.value) return load()
+    try {
+      metrics.value = await api<MetricsResponse>('/api/admin/metrics')
+      // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: geloggt, das Dashboard zeigt weiter den letzten Stand
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  useRefreshable(refresh)
+
   /** `2026-09` → `Sep 26`, short enough for an axis label. */
   function monthLabel(month: string): string {
     const [year, index] = month.split('-').map(Number) as [number, number]

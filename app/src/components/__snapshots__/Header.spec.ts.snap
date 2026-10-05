@@ -54,6 +54,10 @@ exports[`Header > renders 1`] = `
         <div data-v-c970699f=""><span data-v-c970699f="" class="font-display text-navy dark:text-ivory text-2xl tracking-wide">Jahrweiser</span><span data-v-c970699f="" class="hidden md:inline font-hand text-mustard text-sm tracking-widest ml-1">Bergstraße</span></div><!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </a>
       <div data-v-c970699f="" class="contents">
+        <!-- Refresh: the installed app has no reload button and no
+             pull-to-refresh of its own (see useRefreshable). \`ml-auto\` keeps
+             it next to the menu instead of in the middle of the bar. -->
+        <!--v-if-->
         <!-- Burger menu button (mobile only) --><button data-v-c970699f="" type="button" class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20" aria-controls="navbar-mobile" aria-expanded="false"><span data-v-c970699f="" class="sr-only">components.Header.open-menu</span><svg data-v-c970699f="" class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
             <path data-v-c970699f="" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"></path>
           </svg>

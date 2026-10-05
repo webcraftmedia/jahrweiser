@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { useDb } from '../db'
@@ -125,7 +125,8 @@ export default defineEventHandler(async (event) => {
     await db
       .select({ requestedAt: loginTokens.requestedAt })
       .from(loginTokens)
-      .where(eq(loginTokens.userUid, userRow.uid))
+      // Only unspent tokens hold the cooldown — see startUserSession().
+      .where(and(eq(loginTokens.userUid, userRow.uid), isNull(loginTokens.consumedAt)))
       .orderBy(desc(loginTokens.requestedAt))
       .limit(1)
   )[0]

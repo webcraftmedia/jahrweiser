@@ -2,6 +2,7 @@ import { useDb } from '../db'
 import { sessions } from '../db/schema'
 
 import { withDbTimeout } from './dbTimeout'
+import { releaseLoginCooldown } from './loginCooldown'
 import { ABSOLUTE_TTL_SECONDS, IDLE_TTL_MS } from './sessionTtl'
 
 import type { User } from '../db/schema/users'
@@ -50,4 +51,10 @@ export async function startUserSession(
       .insert(sessions)
       .values({ id: sess.id, userUid: user.uid, expiresAt, lastSeenAt: new Date() }),
   )
+
+  // The cooldown keeps an unused link from being buried under new mails. Once
+  // one was redeemed there is nothing left to wait for: somebody who logs out
+  // and asks again a minute later would otherwise be sent back to a link that
+  // is spent. No leak either — redeeming proved access to the mailbox.
+  releaseLoginCooldown(user.email.toLowerCase())
 }

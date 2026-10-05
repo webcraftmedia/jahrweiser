@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 
+import { SESSION_EXPIRES_HEADER } from '../../shared/session'
 import { useDb } from '../db'
 import { sessions } from '../db/schema'
 import { withDbTimeout } from '../helpers/dbTimeout'
@@ -59,19 +60,25 @@ export default defineEventHandler(async (event) => {
     return
   }
 
+  let expiresAt = row.expiresAt.getTime()
   const lastSeen = row.lastSeenAt?.getTime() ?? 0
   if (now - lastSeen > LAST_SEEN_THROTTLE_MS) {
     // Sliding session: push the idle window forward on activity, capped at the
     // absolute maximum from creation. Throttled to once per minute alongside
     // lastSeenAt, so this stays cheap.
+    expiresAt = nextExpiry(now, row.createdAt.getTime())
     await withDbTimeout(
       db
         .update(sessions)
-        .set({
-          lastSeenAt: new Date(now),
-          expiresAt: new Date(nextExpiry(now, row.createdAt.getTime())),
-        })
+        .set({ lastSeenAt: new Date(now), expiresAt: new Date(expiresAt) })
         .where(eq(sessions.id, sessionId)),
     )
   }
+
+  // How long this session still holds, for the installed app: offline it
+  // shows the calendar it keeps on the device only as long as the server
+  // would still let it in (docu/pwa.md). The cookie cannot tell — it is
+  // httpOnly, sealed, and lives for the absolute cap regardless. A duration
+  // rather than a date, so a phone whose clock is off still counts right.
+  setHeader(event, SESSION_EXPIRES_HEADER, String(Math.floor((expiresAt - now) / 1000)))
 })

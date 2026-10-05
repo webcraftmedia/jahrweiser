@@ -2,10 +2,41 @@ import { mockNuxtImport, mountSuspended, renderSuspended } from '@nuxt/test-util
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { stubApi } from '../../test/helpers/stub-api'
+import { useOfflineStand } from '../utils/offlineCalendar'
 
 import Page from './index.vue'
 
 const mock$fetch = vi.hoisted(() => vi.fn())
+
+/* ── The installed app's offline copy (utils/offlineCalendar.ts) ── */
+
+const mockOffline = vi.hoisted(() => ({
+  enabled: false,
+  saveEntry: vi.fn(),
+  loadEntry: vi.fn(),
+  loadOverlapping: vi.fn(),
+}))
+vi.mock('../utils/offlineSession', () => ({
+  offlineSessionEnabled: () => mockOffline.enabled,
+  offlineSessionValid: () => true,
+}))
+vi.mock('../utils/offlineData', () => ({
+  saveEntry: mockOffline.saveEntry,
+  loadEntry: mockOffline.loadEntry,
+  loadOverlapping: mockOffline.loadOverlapping,
+}))
+
+const mockUser = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref } = require('vue')
+  return ref(null) as { value: { uid?: string } | null }
+})
+mockNuxtImport('useUserSession', () => () => ({
+  user: mockUser,
+  loggedIn: { value: true },
+  fetch: vi.fn(),
+  clear: vi.fn(),
+}))
 
 let pushStateSpy: ReturnType<typeof vi.spyOn>
 let replaceStateSpy: ReturnType<typeof vi.spyOn>
@@ -2030,6 +2061,122 @@ describe('Page: Index', () => {
       await nextTick()
       expect(wrapper.find('a.cal-add').classes()).toContain('cal-add-raised')
       expect(wrapper.find('.cal-legend').classes()).toContain('cal-legend-open')
+    })
+  })
+
+  describe('in the installed app', () => {
+    /** What ofetch throws when the request never reached the server. */
+    const offlineError = () =>
+      Object.assign(new Error('fetch failed'), { name: 'FetchError', response: undefined })
+
+    beforeEach(() => {
+      mockOffline.enabled = true
+      mockUser.value = { uid: 'u1' }
+      mockOffline.saveEntry.mockResolvedValue(undefined)
+    })
+
+    afterEach(() => {
+      mockOffline.enabled = false
+      mockUser.value = null
+      useOfflineStand().value = null
+    })
+
+    it('keeps what it shows and fetches the next month ahead, once', async () => {
+      await mount()
+      await vi.waitFor(() => {
+        expect(mockOffline.saveEntry).toHaveBeenCalledWith(
+          expect.objectContaining({ key: 'calendars', uid: 'u1' }),
+        )
+      })
+      const ahead = (call: unknown[]) =>
+        call[0] === '/api/calendar' &&
+        (call[1] as { body: { startDate: Date } }).body.startDate.getTime() ===
+          new Date(2025, 1, 1).getTime()
+      await vi.waitFor(() => {
+        expect(mock$fetch.mock.calls.filter(ahead)).toHaveLength(1)
+      })
+      // Paging within the same month must not fetch it again.
+      await triggerFetchEvents()
+      expect(mock$fetch.mock.calls.filter(ahead)).toHaveLength(1)
+      expect(wrappers[0].find('.offline-stand').exists()).toBe(false)
+    })
+
+    it('shows the kept copy offline and says from when', async () => {
+      const savedAt = new Date('2025-01-14T09:30:00Z').getTime()
+      mockOffline.loadEntry.mockResolvedValue({
+        savedAt,
+        data: [{ name: 'Work', color: '#ff0000' }],
+      })
+      mockOffline.loadOverlapping.mockResolvedValue([
+        {
+          savedAt,
+          data: [
+            {
+              id: 'kept',
+              title: 'Kept',
+              calendar: 'Work',
+              color: '#ff0000',
+              startDate: '2025-01-10T10:00:00Z',
+              endDate: '2025-01-10T11:00:00Z',
+            },
+          ],
+        },
+      ])
+      mock$fetch.mockRejectedValue(offlineError())
+      const wrapper = await mount()
+      await vi.waitFor(() => {
+        expect(wrapper.find('.offline-stand').exists()).toBe(true)
+      })
+      expect(wrapper.find('.offline-stand').text()).toContain('pages.index.offlineStand')
+      await vi.waitFor(() => {
+        expect(
+          mockEventsServiceSet.mock.calls.some((call: unknown[][]) =>
+            call[0]?.some((event) => (event as { _originalId?: string })._originalId === 'kept'),
+          ),
+        ).toBe(true)
+      })
+      // Offline: nothing to fetch ahead.
+      expect(
+        mock$fetch.mock.calls.filter(
+          (call: unknown[]) =>
+            call[0] === '/api/calendar' &&
+            (call[1] as { body: { startDate: Date } }).body.startDate.getTime() ===
+              new Date(2025, 1, 1).getTime(),
+        ),
+      ).toHaveLength(0)
+    })
+
+    it('fetches ahead quietly even when that fails', async () => {
+      mock$fetch.mockImplementation((url: string, options?: { body?: { startDate?: Date } }) => {
+        if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+        if (options?.body?.startDate?.getTime() === new Date(2025, 1, 1).getTime()) {
+          return Promise.reject(new Error('next month failed'))
+        }
+        return Promise.resolve([])
+      })
+      const wrapper = await mount()
+      await vi.waitFor(() => {
+        expect(mockOffline.saveEntry).toHaveBeenCalled()
+      })
+      expect(wrapper.find('.offline-stand').exists()).toBe(false)
+    })
+
+    it('opens a kept event offline', async () => {
+      await mount()
+      mockOffline.loadEntry.mockResolvedValue({
+        savedAt: 1,
+        data: { summary: 'Kept event', uid: 'e' },
+      })
+      mock$fetch.mockRejectedValue(offlineError())
+      mockCallbacks.onEventClick?.({
+        _calendar: 'Work',
+        _originalId: 'event-1',
+        _occurrence: 1,
+        title: 'Test',
+      })
+      await vi.waitFor(() => {
+        expect(mockOffline.loadEntry).toHaveBeenCalledWith('event:Work:event-1:1', 'u1')
+      })
     })
   })
 })

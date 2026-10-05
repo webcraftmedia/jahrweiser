@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { env, UA } from '../../test/helpers/device-env'
 import { installHintEligible } from '../utils/installPrompt'
 
-import plugin, { MANIFEST_URL } from './pwa.client'
+import plugin, { MANIFEST_URL, expireOfflineCopy } from './pwa.client'
 
 import type { DeviceEnv } from '../utils/device'
 
@@ -28,6 +28,26 @@ vi.mock('~/utils/installPrompt', async (importOriginal) => ({
 }))
 
 vi.mock('~/utils/serviceWorker', () => ({ registerServiceWorker: mocks.register }))
+
+const offline = vi.hoisted(() => ({
+  enabled: false,
+  session: null as { uid: string; deadline: number } | null,
+  purge: vi.fn(),
+}))
+vi.mock('~/utils/offlineSession', () => ({
+  enableOfflineSession: () => {
+    offline.enabled = true
+  },
+  offlineSessionEnabled: () => offline.enabled,
+  readOfflineSession: () => offline.session,
+  offlineSessionValid: (uid: string, now: number) =>
+    offline.session?.uid === uid && offline.session.deadline > now,
+  purgeOfflineData: offline.purge,
+}))
+
+function offlineSessionEnabled() {
+  return offline.enabled
+}
 
 /** Runs the plugin with a Nuxt app that records its hooks. */
 async function run(device: DeviceEnv) {
@@ -78,7 +98,11 @@ describe('pwa plugin', () => {
     // Enabled everywhere but in development, where no worker is built.
     expect(mocks.register).toHaveBeenCalledWith(!import.meta.dev)
     expect(mocks.listen).not.toHaveBeenCalled()
-    expect(hooks).toStrictEqual({})
+    // Its one hook checks the offline copy; the install hint stays off.
+    expect(Object.keys(hooks)).toStrictEqual(['app:mounted'])
+    expect(offlineSessionEnabled()).toBe(true)
+    hooks['app:mounted']!()
+    expect(installHintEligible.value).toBe(false)
   })
 
   it('registers no worker while the kill switch is on', async () => {
@@ -94,5 +118,54 @@ describe('pwa plugin', () => {
     })
     await expect(run(env({ media: ['(display-mode: standalone)'] }))).resolves.toBeDefined()
     expect(mocks.register).toHaveBeenCalledTimes(1)
+  })
+
+  describe('the offline copy at start-up', () => {
+    const replace = vi.fn()
+
+    beforeEach(() => {
+      offline.session = { uid: 'u1', deadline: 1000 }
+      Object.defineProperty(window, 'location', { value: { replace }, writable: true })
+    })
+
+    function online(value: boolean) {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(value)
+    }
+
+    it('is cleared and the login shown when offline past the deadline', async () => {
+      online(false)
+      await expireOfflineCopy(1000)
+      expect(offline.purge).toHaveBeenCalledTimes(1)
+      expect(replace).toHaveBeenCalledWith('/login')
+    })
+
+    it('still leaves for the login when clearing fails', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      offline.purge.mockRejectedValueOnce(new Error('blocked'))
+      online(false)
+      await expireOfflineCopy(1000)
+      expect(replace).toHaveBeenCalledWith('/login')
+      expect(warn).toHaveBeenCalled()
+      warn.mockRestore()
+    })
+
+    it('stays while the deadline lies ahead', async () => {
+      online(false)
+      await expireOfflineCopy(999)
+      expect(offline.purge).not.toHaveBeenCalled()
+    })
+
+    it('is left to the server while online', async () => {
+      online(true)
+      await expireOfflineCopy(5000)
+      expect(offline.purge).not.toHaveBeenCalled()
+    })
+
+    it('needs nothing when there is no copy', async () => {
+      offline.session = null
+      online(false)
+      await expireOfflineCopy(5000)
+      expect(offline.purge).not.toHaveBeenCalled()
+    })
   })
 })

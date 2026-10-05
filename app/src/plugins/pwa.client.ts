@@ -1,8 +1,31 @@
 import { deviceEnv, pwaMode } from '~/utils/device'
 import { installHintEligible, listenForInstallPrompt } from '~/utils/installPrompt'
+import {
+  enableOfflineSession,
+  offlineSessionValid,
+  purgeOfflineData,
+  readOfflineSession,
+} from '~/utils/offlineSession'
 
 /** Served by @vite-pwa/nuxt; content in nuxt.config.ts (`pwa.manifest`). */
 export const MANIFEST_URL = '/manifest.webmanifest'
+
+/**
+ * Started offline with a session that has run out since: the copy on the
+ * device is no longer the member's to see. Clear it and go to the login, which
+ * offline is the worker's offline page.
+ */
+export async function expireOfflineCopy(now = Date.now()) {
+  const session = readOfflineSession()
+  if (!session || navigator.onLine || offlineSessionValid(session.uid, now)) return
+  try {
+    await purgeOfflineData()
+    // eslint-disable-next-line no-catch-all/no-catch-all -- Loeschen gescheitert: trotzdem weg von den Daten, zum Login
+  } catch (error) {
+    console.warn('Could not clear the offline copy:', error)
+  }
+  window.location.replace('/login')
+}
 
 /** Loads the registration code only for the installed app. */
 async function startServiceWorker(enabled: boolean) {
@@ -30,6 +53,11 @@ export default defineNuxtPlugin((nuxtApp) => {
   useHead({ link: [{ rel: 'manifest', href: MANIFEST_URL }] })
 
   if (mode === 'installed') {
+    // The calendar kept on the device for offline use (docu/pwa.md).
+    enableOfflineSession()
+    nuxtApp.hook('app:mounted', () => {
+      void expireOfflineCopy()
+    })
     // Not awaited: the app must not wait for the worker. No worker exists in
     // development, and none is registered while the kill switch is on — the
     // self-destroying one would otherwise be re-registered after every

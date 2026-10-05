@@ -411,6 +411,7 @@
       },
       "listView": "Liste",
       "monthView": "Monat",
+      "offlineStand": "Offline – du siehst den Stand vom {stand}.",
       "suggestEvent": "Termin vorschlagen",
       "today": "Heute"
     },

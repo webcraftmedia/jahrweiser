@@ -279,6 +279,8 @@
 </template>
 
 <script setup lang="ts">
+  import { purgeOfflineData } from '../utils/offlineSession'
+
   import LogoSmall from '~/../assets/logo-small.svg'
   import { installHintEligible, requestInstall } from '~/utils/installPrompt'
   import { firstNameOf } from '~~/shared/userName'
@@ -320,6 +322,9 @@
 
   async function logout() {
     mobileMenuOpen.value = false
+    // Before the session goes: what the installed app kept offline is the
+    // member's, and the device may be shared.
+    await purgeOfflineData()
     await clearSession()
     await navigateTo('/login')
   }

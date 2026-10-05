@@ -1,6 +1,13 @@
 import { devices, expect, test } from '@playwright/test'
 
-import { DEFAULT_USER, loginAs, waitForHydration } from './helpers/api-mocks'
+import {
+  DEFAULT_USER,
+  MOCK_CALENDARS,
+  MOCK_EVENT_DETAIL,
+  MOCK_EVENTS,
+  loginAs,
+  waitForHydration,
+} from './helpers/api-mocks'
 
 import type { Page } from '@playwright/test'
 
@@ -140,6 +147,10 @@ test.describe('PWA: installed app', () => {
     expect(cached.filter((url) => url.startsWith('/api/'))).toStrictEqual([])
 
     await context.setOffline(true)
+    // The mocks would still answer: route handlers run before the network.
+    for (const path of ['**/api/calendars', '**/api/calendar', '**/api/event']) {
+      await page.route(path, async (route) => route.abort('internetdisconnected'))
+    }
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'Du bist offline' })).toBeVisible()
     // The address stays the member's, so "Erneut versuchen" reloads that page.
@@ -147,5 +158,114 @@ test.describe('PWA: installed app', () => {
 
     // /api is never answered by the worker, not even with the notice.
     await expect(page.goto('/api/blaettchen')).rejects.toThrow(/ERR_INTERNET_DISCONNECTED/)
+  })
+})
+
+test.describe('PWA: installed app, calendar offline', () => {
+  test.use(phone(devices['Pixel 7']))
+
+  /** A member as the server knows them — the offline copy is kept per uid. */
+  const MEMBER = { ...DEFAULT_USER, uid: 'u-offline' }
+  /** What the server sends with every authenticated answer (shared/session.ts). */
+  const SESSION_HEADER = { 'X-Session-Expires-In': '3600' }
+
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true })
+    })
+  })
+
+  async function storedKeys(page: Page) {
+    return page.evaluate(
+      async () =>
+        new Promise<string[]>((resolve) => {
+          const open = indexedDB.open('jahrweiser-offline')
+          open.addEventListener('success', () => {
+            const db = open.result
+            if (!db.objectStoreNames.contains('entries')) {
+              db.close()
+              resolve([])
+              return
+            }
+            const req = db.transaction('entries').objectStore('entries').getAllKeys()
+            req.addEventListener('success', () => {
+              db.close()
+              resolve(req.result.map(String))
+            })
+          })
+        }),
+    )
+  }
+
+  test('shows the kept calendar offline and forgets it on logout', async ({ page, context }) => {
+    await loginAs(page, MEMBER)
+    // Registered last, so they answer before the mocks from loginAs().
+    await page.route('**/api/_auth/session', async (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ user: MEMBER, loggedInAt: new Date().toISOString() }),
+      }),
+    )
+    await page.route('**/api/calendars', async (route) =>
+      route.fulfill({ status: 200, headers: SESSION_HEADER, json: MOCK_CALENDARS }),
+    )
+    await page.route('**/api/calendar', async (route) =>
+      route.fulfill({ status: 200, headers: SESSION_HEADER, json: MOCK_EVENTS }),
+    )
+
+    // A month ahead and back, now with the header the real server sends: the
+    // deadline exists from here on. (No reload — the mocked session lives in
+    // the client only.)
+    const today = page.locator('.cv-header-nav button').nth(2)
+    const next = page.locator('.cv-header-nav button').last()
+    await expect(page.getByText('Jahresversammlung').first()).toBeVisible()
+    await next.click()
+    await today.click()
+    await expect.poll(() => storedKeys(page)).toContain('calendars')
+    // The month after the shown one is fetched ahead.
+    await expect
+      .poll(async () => (await storedKeys(page)).filter((key) => key.startsWith('events:')).length)
+      .toBeGreaterThanOrEqual(2 * MOCK_CALENDARS.length)
+    expect(await page.evaluate(() => localStorage.getItem('jahrweiser-offline-session'))).toContain(
+      'u-offline',
+    )
+
+    // An event opened online is kept with its details.
+    const modal = page.locator('#default-modal')
+    const firstEvent = page.locator('.sx__month-grid-event, .sx__list-event').first()
+    await firstEvent.click()
+    await expect(modal.getByText(MOCK_EVENT_DETAIL.location)).toBeVisible()
+    await expect
+      .poll(async () => (await storedKeys(page)).some((key) => key.startsWith('event:')))
+      .toBe(true)
+    await page.keyboard.press('Escape')
+    await expect(modal).toBeHidden()
+
+    // Network gone (the mocks would still answer — route handlers run before
+    // the network, so they are cut off as well). Opening the event again can
+    // only be answered from the device, and the calendar says so.
+    await context.setOffline(true)
+    for (const path of ['**/api/calendars', '**/api/calendar', '**/api/event']) {
+      await page.route(path, async (route) => route.abort('internetdisconnected'))
+    }
+    await firstEvent.click()
+    await expect(modal.getByText(MOCK_EVENT_DETAIL.location)).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('status').filter({ hasText: 'Offline' })).toContainText(
+      'du siehst den Stand vom',
+    )
+
+    // Back online, logging out leaves nothing of the member on the device.
+    await context.setOffline(false)
+    await page.route('**/api/_auth/session', async (route) =>
+      route.fulfill({ status: 200, json: {} }),
+    )
+    await page.locator('[aria-controls="navbar-mobile"]').click()
+    await page.locator('#navbar-mobile').getByRole('button', { name: 'Ausloggen' }).click()
+    await page.waitForURL('**/login')
+    await expect.poll(() => storedKeys(page)).toStrictEqual([])
+    expect(await page.evaluate(() => localStorage.getItem('jahrweiser-offline-session'))).toBeNull()
+    expect(await page.evaluate(async () => caches.has('jahrweiser-pages'))).toBe(false)
   })
 })

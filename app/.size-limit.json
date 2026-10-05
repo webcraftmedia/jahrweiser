@@ -16,7 +16,7 @@
   },
   {
     "path": ".output/public/sw.js",
-    "limit": "7 kB",
+    "limit": "9 kB",
     "name": "Service worker (installed app only, incl. precache list)"
   }
 ]

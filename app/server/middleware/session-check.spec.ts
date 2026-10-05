@@ -88,6 +88,45 @@ describe('session-check middleware', () => {
     expect(payload.lastSeenAt.getTime()).toBe(NOW)
   })
 
+  // The installed app shows its offline copy exactly as long as this says
+  // (src/utils/offlineSession.ts) — a duration, so a wrong device clock
+  // cannot stretch it.
+  it('tells the client how long the session still holds', async () => {
+    mockGetUserSession.mockResolvedValue({ id: 'sid', user: { uid: 'u1' } })
+    mockLimit.mockResolvedValue([
+      {
+        revokedAt: null,
+        expiresAt: new Date(NOW + 3_600_500),
+        createdAt: new Date(NOW - 1000),
+        lastSeenAt: new Date(NOW - 1000),
+      },
+    ])
+    await run({ path: '/api/calendars' })
+    expect(globalThis.setHeader).toHaveBeenCalledWith(
+      { path: '/api/calendars' },
+      'X-Session-Expires-In',
+      '3600',
+    )
+  })
+
+  it('reports the slid expiry, not the stored one, after sliding', async () => {
+    mockGetUserSession.mockResolvedValue({ id: 'sid', user: { uid: 'u1' } })
+    mockLimit.mockResolvedValue([
+      {
+        revokedAt: null,
+        expiresAt: new Date(NOW + 1000),
+        createdAt: new Date(NOW - 1000),
+        lastSeenAt: new Date(NOW - 5 * 60_000),
+      },
+    ])
+    await run({ path: '/' })
+    expect(globalThis.setHeader).toHaveBeenCalledWith(
+      { path: '/' },
+      'X-Session-Expires-In',
+      String(IDLE_TTL_MS / 1000),
+    )
+  })
+
   it('rejects an expired session with 401 on API paths', async () => {
     mockGetUserSession.mockResolvedValue({ id: 'sid', user: { uid: 'u1' } })
     mockLimit.mockResolvedValue([
@@ -101,6 +140,7 @@ describe('session-check middleware', () => {
     await expect(run({ path: '/api/calendars' })).rejects.toMatchObject({ statusCode: 401 })
     expect(mockClearUserSession).toHaveBeenCalledTimes(1)
     expect(mockUpdate).not.toHaveBeenCalled()
+    expect(globalThis.setHeader).not.toHaveBeenCalled()
   })
 
   // Recorded before the cookie is cleared: afterwards the browser stops sending

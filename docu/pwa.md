@@ -61,17 +61,18 @@ erscheint eins zu viel, kaputt geht nichts:
 
 Nur in der installierten App, durch den Service Worker:
 
-| Inhalt                        | Wie                                                   | Warum                                                                                                      |
-| ----------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `/_nuxt/*.js`, `/_nuxt/*.css` | Precache                                              | gehasht, also unveränderlich — sicher zu cachen                                                            |
-| `*.woff2` (Schriften)         | Precache                                              | sobald sie selbst gehostet werden; bis dahin meldet der Build „pattern doesn't match"                      |
-| `/pwa/*.png` (Symbole)        | Precache                                              | für die Offline-Seite und das Manifest                                                                     |
-| `/offline.html`               | Precache                                              | die Offline-Seite selbst                                                                                   |
-| `/manifest.webmanifest`       | Precache                                              | von vite-plugin-pwa immer mitgenommen                                                                      |
-| **HTML-Seiten**               | **nie** — NetworkOnly, bei Netzfehler `/offline.html` | serverseitig gerendertes HTML enthält personenbezogene Daten (Name, Termine, Mitgliederdaten)              |
-| **`/api/*`**                  | **nie** — nicht einmal angefasst                      | dito; ein zwischengespeicherter API-Response läge unverschlüsselt im Browser-Cache, auch nach dem Abmelden |
-| `/_nuxt/builds/*`             | nie                                                   | Nuxts Build-Manifest wird mit Cache-Buster-Query geholt, der Precache träfe es ohnehin nicht               |
-| `/admin/cal/*`                | nie                                                   | CalDavZAP, eine eigene Anwendung auf demselben Origin (siehe unten)                                        |
+| Inhalt                                                    | Wie                                                                                             | Warum                                                                                                                                                                                                 |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/_nuxt/*.js`, `/_nuxt/*.css`                             | Precache                                                                                        | gehasht, also unveränderlich — sicher zu cachen                                                                                                                                                       |
+| `*.woff2` (Schriften)                                     | Precache                                                                                        | selbst gehostet (Fontsource), nur Latin und Latin-ext                                                                                                                                                 |
+| `/pwa/*.png` (Symbole)                                    | Precache                                                                                        | für die Offline-Seite und das Manifest                                                                                                                                                                |
+| `/offline.html`                                           | Precache                                                                                        | die Offline-Seite selbst                                                                                                                                                                              |
+| `/manifest.webmanifest`                                   | Precache                                                                                        | von vite-plugin-pwa immer mitgenommen                                                                                                                                                                 |
+| **Kalender-Seiten** (`/`, `/2026/10`, `/2026/10/event/…`) | NetworkFirst (5 s), Cache `jahrweiser-pages`, höchstens 12 Seiten; ohne Treffer `/offline.html` | für den Offline-Kalender (unten). Enthält den Namen des Mitglieds — die App löscht den Cache bei Logout, 401, Mitgliederwechsel und Ablauf                                                            |
+| **übrige HTML-Seiten**                                    | **nie** — NetworkOnly, bei Netzfehler `/offline.html`                                           | serverseitig gerendertes HTML enthält personenbezogene Daten (Name, Termine, Mitgliederdaten)                                                                                                         |
+| **`/api/*`**                                              | **nie** vom Service Worker — nicht einmal angefasst                                             | ein zwischengespeicherter API-Response läge im Browser-Cache, ohne dass die App ihn einem Mitglied zuordnen oder gezielt löschen könnte. Die Kalenderdaten für offline legt die App selbst ab (unten) |
+| `/_nuxt/builds/*`                                         | nie                                                                                             | Nuxts Build-Manifest wird mit Cache-Buster-Query geholt, der Precache träfe es ohnehin nicht                                                                                                          |
+| `/admin/cal/*`                                            | nie                                                                                             | CalDavZAP, eine eigene Anwendung auf demselben Origin (siehe unten)                                                                                                                                   |
 
 Precache heute: **74 Einträge, ~985 KiB roh, ~357 KiB gzip** (Stand
 Einführung). Darin sind alle Routen-Chunks, auch die des Admin-Bereichs — sie
@@ -79,9 +80,11 @@ herauszurechnen wäre Handarbeit an gehashten Dateinamen, und knapp 360 KB einma
 pro Deploy sind für eine installierte App vertretbar. Wirklich große, selten
 gebrauchte Daten gibt es im Client-Bundle nicht: die Kartengeometrie kommt über
 `/api` und wird damit nie gecacht. `sw.js` selbst: ~5,6 kB brotli
-(`app/.size-limit.json`, Grenze 7 kB).
+(`app/.size-limit.json`, Grenze 9 kB; seit dem Offline-Kalender ~8 kB, weil
+Workbox' Ablauf-Plugin für den Seiten-Cache eine eigene IndexedDB-Schicht
+mitbringt).
 
-Seitenaufrufe (Navigationen) gehen also immer ans Netz. Nur wenn das scheitert,
+Seitenaufrufe (Navigationen) gehen also immer zuerst ans Netz. Nur wenn das scheitert,
 antwortet der Service Worker mit der vorab gespeicherten Offline-Seite — die
 Adresse bleibt dabei die aufgerufene, „Erneut versuchen" lädt also genau die
 Seite, die das Mitglied wollte; wird das Gerät wieder online, lädt die Seite
@@ -91,14 +94,75 @@ Worker keinen zusätzlichen Roundtrip kostet.
 Ausgenommen von jeder Behandlung sind Navigationen nach `/api/` (etwa ein
 direkt geöffnetes Blättchen-PDF) und nach `/admin/cal/`.
 
-Ein Offline-Kalender kommt in einem eigenen PR; der setzt auf diesem Precache auf.
+## Kalender offline
+
+Die installierte App zeigt den Kalender auch ohne Netz — **so lange, wie der
+Server das Mitglied noch hereinließe**, und nur dem Mitglied, dem die Daten
+gehören. Nur in der installierten App; Desktop und Handy-Browser speichern
+nichts und laden den Code dafür nicht.
+
+**Was auf dem Gerät liegt** (IndexedDB `jahrweiser-offline`, je Eintrag mit der
+UID des Mitglieds):
+
+- die Kalenderliste,
+- die Termine jedes angesehenen Monats **und des Monats danach** (vorab geladen,
+  einmal pro Monat und Seitenaufruf),
+- die Details jedes geöffneten Termins,
+- dazu die Kalender-Seiten selbst im Cache `jahrweiser-pages` (siehe Tabelle).
+
+**Warum IndexedDB und nicht der Service Worker:** Der Kalender wird per POST
+gelesen, mit Kalender, Termin-ID und Datum im Body. Als GET stünden sie in der
+URL und damit samt IP im nginx-Access-Log — wer wann welchen Termin geöffnet
+hat. Die Cache-API speichert aber nur GET. Also legt die App die Antworten
+selbst ab (`app/src/utils/offlineData.ts`), getrennt nach Mitglied.
+
+**Wie lange:** Das Login-Cookie hilft hier nicht — es ist `httpOnly`, versiegelt
+und lebt 90 Tage, egal wie lange die Sitzung wirklich gilt. Der Server schickt
+deshalb mit jeder angemeldeten Antwort die **Restlaufzeit in Sekunden** mit
+(`X-Session-Expires-In`, `app/server/middleware/session-check.ts`). Die App
+rechnet daraus mit der eigenen Uhr einen Ablaufzeitpunkt und merkt ihn sich
+mit der UID (`localStorage`, `jahrweiser-offline-session`). Online rutscht er
+mit jeder Anfrage mit — wie die Sitzung selbst: 7 Tage nach der letzten
+Aktivität, höchstens 90 Tage nach dem Login. Eine Dauer statt eines Datums,
+damit eine falsch gehende Geräte-Uhr die Frist nicht verschiebt.
+
+**Offline** liefert der Kalender, was gespeichert ist, und sagt es: „Offline –
+du siehst den Stand vom …". Eine Ablehnung des Servers (401, 403, 404) wird nie
+durch Gespeichertes überdeckt — eine 401 führt wie bisher zum Logout.
+
+**Gelöscht wird alles** (Daten, Seiten-Cache, Ablaufzeitpunkt):
+
+| Wann                                  | Wo                                                                     |
+| ------------------------------------- | ---------------------------------------------------------------------- |
+| Logout                                | `Header.vue` — vor dem Beenden der Sitzung                             |
+| jede 401                              | `plugins/auth-redirect.ts`                                             |
+| ein anderes Mitglied meldet sich an   | `utils/offlineSession.ts` (UID-Wechsel beim Header)                    |
+| Start ohne Netz nach Ablauf der Frist | `plugins/pwa.client.ts` — danach Login, offline also die Offline-Seite |
+
+Das Löschen läuft in jedem Modus, nicht nur in der App: Auf Android teilen sich
+App und Chrome Speicher und Service Worker, ein Logout im Chrome-Tab muss also
+auch die Daten der App entfernen.
+
+**Grenzen:**
+
+- Beendet ein Admin die Sitzung, während das Gerät offline ist, bleibt der
+  Kalender bis zur Frist oder bis zum nächsten Kontakt mit dem Server lesbar —
+  dann kommt die 401 und alles wird gelöscht.
+- Nicht geöffnete Termine haben offline keine Details; ihr Titel steht im
+  Kalender, das Detailfenster schließt sich wieder.
+- Monate, die weder angesehen noch vorab geladen wurden, bleiben offline leer.
+- Ohne Netz meldet Nuxt beim Start einen Fehler `NUXT_E5002` in der Konsole
+  (das Build-Manifest unter `/_nuxt/builds/` ist nicht gecacht, siehe Tabelle).
+  Folgenlos für die Anzeige.
 
 ### Hinweis zu Android
 
 Auf Android teilen sich die installierte App und Chrome denselben Speicher.
 Hat die App einmal ihren Service Worker registriert, kontrolliert er auch
-Chrome-Tabs auf gg-g.info: dort gibt es dann ebenfalls die Offline-Seite und
-den Precache. Das ist gewollt harmlos — es wird ja nichts Persönliches gecacht.
+Chrome-Tabs auf gg-g.info: dort gibt es dann ebenfalls die Offline-Seite, den
+Precache und den Seiten-Cache der Kalender-Seiten. Deshalb löscht ein Logout
+auch im Chrome-Tab, was die App für offline abgelegt hat (siehe „Kalender
+offline").
 Auf iOS haben Startbildschirm-Apps einen eigenen, getrennten Speicher.
 
 ### CalDavZAP (`/admin/cal/`)

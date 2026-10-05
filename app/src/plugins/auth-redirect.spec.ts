@@ -1,10 +1,16 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-import { createUnauthorizedHandler } from './auth-redirect'
+import { createSessionExpiryHandler, createUnauthorizedHandler } from './auth-redirect'
 
 const mockNavigateTo = vi.hoisted(() => vi.fn())
 mockNuxtImport('navigateTo', () => mockNavigateTo)
+
+const offline = vi.hoisted(() => ({ purge: vi.fn(), record: vi.fn() }))
+vi.mock('../utils/offlineSession', () => ({
+  purgeOfflineData: offline.purge,
+  recordSessionExpiry: offline.record,
+}))
 
 /**
  * The handler is built here instead of being fished out of a fake
@@ -32,6 +38,8 @@ describe('auth-redirect: 401 handling', () => {
     atPath('/2025/03')
     await handle({ request: '/api/calendars', response: { status: 401 } })
     expect(clear).toHaveBeenCalled()
+    // The installed app's offline copy belonged to the session that just ended.
+    expect(offline.purge).toHaveBeenCalledTimes(1)
     expect(mockNavigateTo).toHaveBeenCalledWith({
       path: '/login',
       query: { redirect: '/2025/03' },
@@ -84,5 +92,18 @@ describe('auth-redirect: 401 handling', () => {
       path: '/login',
       query: { redirect: '/2025/06' },
     })
+  })
+})
+
+describe('auth-redirect: session expiry for the offline calendar', () => {
+  it('hands the header and the current member to the offline session', async () => {
+    const user = ref<{ uid?: string } | null>({ uid: 'u1' })
+    const handle = createSessionExpiryHandler(user)
+    await handle({ response: { headers: new Headers({ 'X-Session-Expires-In': '3600' }) } })
+    expect(offline.record).toHaveBeenLastCalledWith('u1', '3600')
+
+    user.value = null
+    await handle({ response: { headers: new Headers() } })
+    expect(offline.record).toHaveBeenLastCalledWith(undefined, null)
   })
 })

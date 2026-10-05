@@ -75,6 +75,15 @@ mockNuxtImport('useUserSession', () => () => ({
 
 mockNuxtImport('navigateTo', () => mockNavigateTo)
 
+const refreshState = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref } = require('vue')
+  return { standalone: ref(false), refreshing: ref(false), refreshAll: vi.fn() }
+})
+mockNuxtImport('useStandalone', () => () => refreshState.standalone)
+mockNuxtImport('useRefreshing', () => () => refreshState.refreshing)
+mockNuxtImport('refreshAll', () => refreshState.refreshAll)
+
 describe('Header', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -281,5 +290,36 @@ describe('Header', () => {
     expect(wrapper.find('nav').exists()).toBe(false)
     // Should render hero logo link
     expect(wrapper.find('.logo-hero').exists()).toBe(true)
+  })
+
+  describe('refresh button', () => {
+    beforeEach(() => {
+      refreshState.standalone.value = false
+      refreshState.refreshing.value = false
+    })
+
+    it('is there only in the installed app — a browser has its own', async () => {
+      const browser = await mountSuspended(Component)
+      expect(browser.find('[data-action="refresh"]').exists()).toBe(false)
+
+      refreshState.standalone.value = true
+      const app = await mountSuspended(Component)
+      expect(app.find('[data-action="refresh"]').attributes('aria-label')).toBe(
+        'components.Header.refresh',
+      )
+    })
+
+    it('refreshes what is shown, and holds still while it runs', async () => {
+      refreshState.standalone.value = true
+      const wrapper = await mountSuspended(Component)
+      const button = wrapper.find('[data-action="refresh"]')
+      await button.trigger('click')
+      expect(refreshState.refreshAll).toHaveBeenCalledTimes(1)
+
+      refreshState.refreshing.value = true
+      await nextTick()
+      expect(button.attributes('disabled')).toBeDefined()
+      expect(button.find('svg').classes()).toContain('animate-spin')
+    })
   })
 })

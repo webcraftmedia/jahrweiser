@@ -18,7 +18,7 @@
   onMounted(load)
   // For the same reason it owns refreshing them when the member comes back to
   // an app that sat in the background.
-  useRefreshOnResume(refresh)
+  useRefreshable(refresh)
 
   const isVertical = computed(() => props.orientation === 'vertical')
 </script>

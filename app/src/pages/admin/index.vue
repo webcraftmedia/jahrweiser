@@ -72,7 +72,7 @@
 
   /**
    * `load()` for an admin coming back to a dashboard left open in the
-   * background (see useRefreshOnResume). Keeps the tiles and charts on screen
+   * background (see useRefreshable). Keeps the tiles and charts on screen
    * while it asks — `load()` would swap them for the loading state and drop
    * the scroll position with them — and keeps them when the answer does not
    * come; an error message replaces nothing that is still worth reading.
@@ -88,7 +88,7 @@
     }
   }
 
-  useRefreshOnResume(refresh)
+  useRefreshable(refresh)
 
   /** `2026-09` → `Sep 26`, short enough for an axis label. */
   function monthLabel(month: string): string {

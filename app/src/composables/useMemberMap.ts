@@ -276,7 +276,7 @@ export function useMemberMap() {
 
   /**
    * Ask again for a member coming back to the app after a while (see
-   * useRefreshOnResume) — the postal code may have been filled in on another
+   * useRefreshable) — the postal code may have been filled in on another
    * device meanwhile. Joins a request already on its way, which keeps the two
    * rail instances down to one between them.
    */
@@ -335,7 +335,7 @@ export function useMemberMap() {
 
   /**
    * `load()` for a member returning to a map that has been on screen all along
-   * (see useRefreshOnResume). Keeps the map drawn while it asks — `load()` would
+   * (see useRefreshable). Keeps the map drawn while it asks — `load()` would
    * swap it for the loading state — and keeps it when the answer does not come:
    * a map from an hour ago is more use than an error message over it.
    *

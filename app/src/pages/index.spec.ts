@@ -102,10 +102,10 @@ const mockCallbacks = vi.hoisted(() => ({
   skipInitialFetch: false,
 }))
 
-// The resume hook is driven by hand here; when it fires is useRefreshOnResume's
+// The resume hook is driven by hand here; when it fires is useRefreshable's
 // own spec's business.
 const resume = vi.hoisted(() => ({ refresh: null as (() => Promise<void>) | null }))
-mockNuxtImport('useRefreshOnResume', () => (refresh: () => Promise<void>) => {
+mockNuxtImport('useRefreshable', () => (refresh: () => Promise<void>) => {
   resume.refresh = refresh
 })
 
@@ -1782,6 +1782,48 @@ describe('Page: Index', () => {
     consoleSpy.mockRestore()
   })
 
+  describe('pull to refresh', () => {
+    function touch(type: string, y: number) {
+      return new TouchEvent(type, {
+        touches: type === 'touchend' ? [] : [{ clientX: 100, clientY: y } as Touch],
+        changedTouches: [{ clientX: 100, clientY: y } as Touch],
+      })
+    }
+
+    it('shows the indicator while pulling in the installed app', async () => {
+      const media = vi.spyOn(window, 'matchMedia').mockImplementation(
+        (query: string) =>
+          ({
+            matches: query.includes('standalone'),
+            addEventListener: () => {},
+            removeEventListener: () => {},
+          }) as unknown as MediaQueryList,
+      )
+      const wrapper = await mount()
+      const cal = wrapper.find('.cal-wrapper')
+      cal.element.dispatchEvent(touch('touchstart', 100))
+      cal.element.dispatchEvent(touch('touchmove', 300))
+      await nextTick()
+      expect(wrapper.find('.pull-indicator').exists()).toBe(true)
+      expect(wrapper.find('.pull-indicator--armed').exists()).toBe(true)
+      // Let go past the threshold: it spins while the refresh runs, then goes.
+      cal.element.dispatchEvent(touch('touchend', 300))
+      await vi.waitFor(() => {
+        expect(wrapper.find('.pull-indicator').exists()).toBe(false)
+      })
+      media.mockRestore()
+    })
+
+    it('shows nothing in a browser tab', async () => {
+      const wrapper = await mount()
+      const cal = wrapper.find('.cal-wrapper')
+      cal.element.dispatchEvent(touch('touchstart', 100))
+      cal.element.dispatchEvent(touch('touchmove', 300))
+      await nextTick()
+      expect(wrapper.find('.pull-indicator').exists()).toBe(false)
+    })
+  })
+
   describe('refresh on resume', () => {
     const LATER_EVENT = {
       id: 'event-2',
@@ -1882,6 +1924,30 @@ describe('Page: Index', () => {
 
       finish([])
       await navigation
+    })
+
+    it('keeps the shown events when one calendar cannot be reached', async () => {
+      // A phone that just woke up may lose the network halfway through.
+      await mount()
+      mockEventsServiceSet.mockClear()
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      mock$fetch.mockImplementation((url: string, options?: { body?: { calendar: string } }) => {
+        if (url === '/api/calendars') {
+          return Promise.resolve([
+            { name: 'Work', color: '#ff0000' },
+            { name: 'Family', color: '#00ff00' },
+          ])
+        }
+        if (url === '/api/calendar' && options?.body?.calendar === 'Family') {
+          return Promise.reject(new Error('offline'))
+        }
+        return Promise.resolve([])
+      })
+
+      await resume.refresh!()
+
+      expect(mockEventsServiceSet).not.toHaveBeenCalled()
+      warn.mockRestore()
     })
 
     it('has nothing to refresh before the calendar asked for a month', async () => {

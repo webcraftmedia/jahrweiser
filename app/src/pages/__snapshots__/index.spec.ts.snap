@@ -5,6 +5,9 @@ exports[`Page: Index > renders 1`] = `
   <div class="box">
     <div class="calendar row">
       <div class="cal-wrapper stagger-pending">
+        <!-- Pull-to-refresh, installed app only (usePullToRefresh). Follows
+               the finger, then spins while the refresh runs. -->
+        <!--v-if-->
         <div class="cv-header"><span class="periodLabel">January 2025</span>
           <div class="cv-header-nav"><button class="view-toggle" aria-label="pages.index.listView"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 16 16" class="nuxt-icon nuxt-icon--fill view-toggle-icon">
                 <path d="M1 3h14M1 8h14M1 13h14"></path>

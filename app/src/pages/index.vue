@@ -6,8 +6,36 @@
           ref="calWrapper"
           class="cal-wrapper"
           @touchstart.passive="onTouchStart"
+          @touchmove.passive="pullToRefresh.onTouchMove"
           @touchend.passive="onTouchEnd"
         >
+          <!-- Pull-to-refresh, installed app only (usePullToRefresh). Follows
+               the finger, then spins while the refresh runs. -->
+          <div
+            v-if="pullToRefresh.pull.value > 0 || (standalone && refreshing)"
+            class="pull-indicator"
+            :class="{ 'pull-indicator--armed': pullToRefresh.armed.value }"
+            :style="{ height: `${refreshing ? PULL_BUSY_HEIGHT_PX : pullToRefresh.pull.value}px` }"
+            aria-hidden="true"
+          >
+            <svg
+              class="w-5 h-5"
+              :class="{ 'animate-spin': refreshing }"
+              :style="
+                refreshing ? undefined : { transform: `rotate(${pullToRefresh.pull.value * 4}deg)` }
+              "
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+              <path d="M21 3v6h-6" />
+            </svg>
+          </div>
           <div class="cv-header" :style="headerZoomStyle">
             <span class="periodLabel">{{ currentPeriodLabel }}</span>
             <div class="cv-header-nav">
@@ -586,9 +614,11 @@
   function onTouchStart(e: TouchEvent) {
     touchStartX = e.changedTouches[0]!.clientX
     touchStartY = e.changedTouches[0]!.clientY
+    pullToRefresh.onTouchStart(e)
   }
 
   function onTouchEnd(e: TouchEvent) {
+    pullToRefresh.onTouchEnd()
     const dx = e.changedTouches[0]!.clientX - touchStartX
     const dy = e.changedTouches[0]!.clientY - touchStartY
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return
@@ -865,6 +895,7 @@
       }
 
       // Fetch events from all calendars in parallel
+      const failed: string[] = []
       const results = await Promise.all(
         calendars.value.map((cal) =>
           api('/api/calendar', {
@@ -876,6 +907,7 @@
             },
           }).catch((err: unknown) => {
             console.warn(`Failed to fetch calendar "${cal.name}":`, err)
+            failed.push(cal.name)
             return []
           }),
         ),
@@ -884,6 +916,10 @@
       // The member moved on to another month while this was in flight; that
       // month's own fetch decides what is shown.
       if (shownRange !== range) return
+      // A refresh keeps what is shown unless it got everything: a phone that
+      // just woke up may lose the network halfway, and a calendar missing its
+      // events over that is worse than one an hour old.
+      if (refresh && failed.length > 0) return
       rawEvents.value = results.flat()
       if (refresh) {
         eventsService.set(mapToScheduleXEvents())
@@ -910,7 +946,13 @@
     await fetchDataForRange(shownRange.start, shownRange.end, { refresh: true })
   }
 
-  useRefreshOnResume(refreshShownRange)
+  useRefreshable(refreshShownRange)
+
+  const standalone = useStandalone()
+  const refreshing = useRefreshing()
+  const pullToRefresh = usePullToRefresh(standalone)
+  /** The indicator's height while the refresh runs — half the pull it took. */
+  const PULL_BUSY_HEIGHT_PX = PULL_THRESHOLD_PX / 2
 
   /* ── Mark future days ── */
 
@@ -1783,6 +1825,29 @@
     --sx-color-outline-variant: #3d3630;
     --sx-color-primary: #ea580c;
     --sx-color-on-primary: #faf5eb;
+  }
+
+  /* Pull-to-refresh indicator (installed app only) */
+  .pull-indicator {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0.25rem;
+    overflow: hidden;
+    color: rgba(30, 41, 59, 0.5);
+    transition: color 0.15s ease;
+  }
+
+  .pull-indicator--armed {
+    color: #c2410c;
+  }
+
+  .dark .pull-indicator {
+    color: rgba(250, 245, 235, 0.5);
+  }
+
+  .dark .pull-indicator--armed {
+    color: #ea580c;
   }
 
   /* Loading overlay */

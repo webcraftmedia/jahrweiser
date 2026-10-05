@@ -39,7 +39,7 @@
   })
   // The same reasoning for a map left open in a background tab for days — but
   // quietly, so coming back does not first show an empty map.
-  useRefreshOnResume(refresh)
+  useRefreshable(refresh)
 
   /** Invented numbers for the locked preview — see utils/mapPreview.ts. */
   const preview = computed(() => previewAreas(outline.value))

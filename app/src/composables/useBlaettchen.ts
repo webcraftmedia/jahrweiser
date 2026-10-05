@@ -84,7 +84,7 @@ export function useBlaettchen() {
 
   /**
    * Ask again for a member coming back to the app after a while (see
-   * useRefreshOnResume), without passing through the loading state. Joins a
+   * useRefreshable), without passing through the loading state. Joins a
    * request that is already on its way, which is also what keeps the two rail
    * instances down to one request between them.
    */

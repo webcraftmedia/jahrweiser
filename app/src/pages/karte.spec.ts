@@ -8,9 +8,9 @@ import Page from './karte.vue'
 const mock$fetch = vi.fn()
 stubApi(mock$fetch)
 
-// Fired by hand — when a return counts is useRefreshOnResume's own spec's business.
+// Fired by hand — when a return counts is useRefreshable's own spec's business.
 const resume = vi.hoisted(() => ({ refresh: null as (() => Promise<void>) | null }))
-mockNuxtImport('useRefreshOnResume', () => (refresh: () => Promise<void>) => {
+mockNuxtImport('useRefreshable', () => (refresh: () => Promise<void>) => {
   resume.refresh = refresh
 })
 

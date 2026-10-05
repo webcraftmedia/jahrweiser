@@ -9,9 +9,9 @@ const mock$fetch = vi.fn()
 stubApi(mock$fetch)
 
 // Every mounted rail registers here; fired by hand — when a return counts is
-// useRefreshOnResume's own spec's business.
+// useRefreshable's own spec's business.
 const resume = vi.hoisted(() => ({ refreshes: [] as (() => Promise<void>)[] }))
-mockNuxtImport('useRefreshOnResume', () => (refresh: () => Promise<void>) => {
+mockNuxtImport('useRefreshable', () => (refresh: () => Promise<void>) => {
   resume.refreshes.push(refresh)
 })
 

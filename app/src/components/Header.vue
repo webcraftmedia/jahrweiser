@@ -41,6 +41,36 @@
       </NuxtLink>
 
       <div v-show="loggedIn" class="contents">
+        <!-- Refresh: the installed app has no reload button and no
+             pull-to-refresh of its own (see useRefreshable). `ml-auto` keeps
+             it next to the menu instead of in the middle of the bar. -->
+        <button
+          v-if="standalone"
+          type="button"
+          data-action="refresh"
+          class="ml-auto mr-1 inline-flex items-center justify-center w-10 h-10 text-navy/70 dark:text-ivory/70 rounded-lg hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20 disabled:opacity-60"
+          :aria-label="$t('components.Header.refresh')"
+          :title="$t('components.Header.refresh')"
+          :disabled="refreshing"
+          @click="refreshAll"
+        >
+          <svg
+            class="w-5 h-5"
+            :class="{ 'animate-spin': refreshing }"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+            <path d="M21 3v6h-6" />
+          </svg>
+        </button>
+
         <!-- Burger menu button (mobile only) -->
         <button
           type="button"
@@ -255,6 +285,8 @@
   const { sections } = useAppSections()
   const route = useRoute()
   const mobileMenuOpen = ref(false)
+  const standalone = useStandalone()
+  const refreshing = useRefreshing()
   const { openChangelog: triggerChangelog } = useChangelog()
 
   // Address the user by first name; fall back to the email when no name is set.

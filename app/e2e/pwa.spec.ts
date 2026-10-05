@@ -63,7 +63,8 @@ test.describe('PWA: phone browser', () => {
       icons: { src: string; sizes: string; purpose: string }[]
     }
     expect(manifest.name).toBe('Jahrweiser')
-    expect(manifest.start_url).toBe('/')
+    // The mark tells a start from the home screen apart (rememberAppLaunch).
+    expect(manifest.start_url).toBe('/?app')
     expect(manifest.display).toBe('standalone')
     expect(manifest.icons.map(({ sizes, purpose }) => `${sizes} ${purpose}`)).toStrictEqual([
       '192x192 any',
@@ -73,6 +74,50 @@ test.describe('PWA: phone browser', () => {
     for (const icon of manifest.icons) {
       expect((await request.get(icon.src)).status()).toBe(200)
     }
+  })
+})
+
+test.describe('PWA: manifest in the server-rendered page', () => {
+  // Firefox and Safari look for it once, at load; added later by script, they
+  // never see it and offer only a shortcut to the open page.
+  const FIREFOX_ANDROID = 'Mozilla/5.0 (Android 14; Mobile; rv:131.0) Gecko/131.0 Firefox/131.0'
+
+  test('is in the HTML for a phone, not for a desktop', async ({ request }) => {
+    const onPhone = await (
+      await request.get('/login', { headers: { 'user-agent': FIREFOX_ANDROID } })
+    ).text()
+    expect(onPhone).toMatch(/<link[^>]+rel="manifest"[^>]+href="\/manifest\.webmanifest"/)
+    expect(onPhone).toMatch(/<link[^>]+rel="icon"[^>]+sizes="192x192"/)
+
+    const onDesktop = await (await request.get('/login')).text()
+    expect(onDesktop).not.toContain('rel="manifest"')
+  })
+})
+
+test.describe('PWA: Firefox on Android', () => {
+  test.use({
+    userAgent: 'Mozilla/5.0 (Android 14; Mobile; rv:131.0) Gecko/131.0 Firefox/131.0',
+    viewport: { width: 412, height: 915 },
+    isMobile: true,
+    hasTouch: true,
+  })
+
+  test('is never sent to make a shortcut', async ({ page }) => {
+    // What Firefox lacks: the install event Chromium has.
+    await page.addInitScript(() => {
+      let owner: object | null = window
+      while (owner && !Object.prototype.hasOwnProperty.call(owner, 'onbeforeinstallprompt')) {
+        owner = Object.getPrototypeOf(owner) as object | null
+      }
+      if (owner) Reflect.deleteProperty(owner, 'onbeforeinstallprompt')
+    })
+    await loginAs(page, DEFAULT_USER)
+    await expect(page.getByRole('navigation', { name: 'Hauptnavigation' }).first()).toBeVisible()
+    await expect(page.getByRole('complementary', { name: 'Jahrweiser als App' })).toHaveCount(0)
+    await page.locator('[aria-controls="navbar-mobile"]').click()
+    await expect(
+      page.locator('#navbar-mobile').getByRole('button', { name: 'Als App installieren' }),
+    ).toHaveCount(0)
   })
 })
 

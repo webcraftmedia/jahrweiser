@@ -1,6 +1,6 @@
 import type { DeviceEnv } from '~/utils/device'
 
-import { deviceEnv, isDesktopClassIPad } from '~/utils/device'
+import { deviceEnv, isIOS } from '~/utils/device'
 import {
   appInstalled,
   installPrompt,
@@ -34,10 +34,6 @@ export interface HintDismissal {
   until: number
 }
 
-export function isIOS(env: DeviceEnv): boolean {
-  return /iPhone|iPad|iPod/.test(env.userAgent) || isDesktopClassIPad(env)
-}
-
 /**
  * iOS version as a comparable number, major × 100 + minor (16.4 → 1604; a
  * decimal would put 16.10 below 16.4), or null if the user agent does not say.
@@ -55,29 +51,29 @@ const IOS_OTHER_BROWSER = /CriOS|FxiOS|EdgiOS|OPiOS|OPT\/|YaBrowser|DuckDuckGo|D
 const IOS_IN_APP = /FBAN|FBAV|Instagram|Line\/|GSA\/|MicroMessenger/
 
 /**
- * How a member can put the app on the home screen without an install event:
+ * How a member installs the app without an install event:
  *
  * - `share`:  iOS Safari, or since iOS 16.4 any other iOS browser — "Teilen →
  *             Zum Home-Bildschirm".
  * - `safari`: older iOS browsers and in-app web views cannot do that at all;
  *             the way is to open the page in Safari.
- * - `menu`:   Android browsers without `beforeinstallprompt` (Firefox) have
- *             an entry in their own menu.
  * - null:     Chromium — it fires `beforeinstallprompt` when it is ready to
  *             install, or not at all if the app is already installed. The
- *             hint waits for that event instead.
+ *             hint waits for that event; asked for explicitly, it names the
+ *             browser menu's "App installieren" instead (`menu`), which is a
+ *             real install there too.
+ *
+ * Browsers that can only make a shortcut (Firefox on Android) never get here —
+ * see canInstall in src/utils/device.ts.
  */
-export function manualInstallMethod(
-  env: DeviceEnv,
-  hasInstallPrompt: boolean,
-): 'share' | 'safari' | 'menu' | null {
+export function manualInstallMethod(env: DeviceEnv): 'share' | 'safari' | null {
   if (isIOS(env)) {
     const ua = env.userAgent
     if (IOS_IN_APP.test(ua)) return 'safari'
     if (!IOS_OTHER_BROWSER.test(ua)) return 'share'
     return (iosVersion(env) ?? 0) >= 1604 ? 'share' : 'safari'
   }
-  return hasInstallPrompt ? null : 'menu'
+  return null
 }
 
 const NEVER_DISMISSED: HintDismissal = { count: 0, until: 0 }
@@ -112,7 +108,7 @@ export function useInstallHint() {
   const method = computed<InstallMethod | null>(() => {
     if (appInstalled.value || !(offered.value || installRequested.value)) return null
     if (installPrompt.value) return 'prompt'
-    return manualInstallMethod(env, 'onbeforeinstallprompt' in window)
+    return manualInstallMethod(env) ?? (installRequested.value ? 'menu' : null)
   })
 
   /**

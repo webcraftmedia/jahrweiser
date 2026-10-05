@@ -192,7 +192,7 @@
             <!-- Phone or tablet browser only (src/plugins/pwa.client.ts): the
                  way back to installing once the hint was dismissed. -->
             <button
-              v-if="installHintEligible"
+              v-if="installHintEligible && !appInstalled"
               type="button"
               data-action="install"
               class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
@@ -282,7 +282,7 @@
   import { purgeOfflineData } from '../utils/offlineSession'
 
   import LogoSmall from '~/../assets/logo-small.svg'
-  import { installHintEligible, requestInstall } from '~/utils/installPrompt'
+  import { appInstalled, installHintEligible, requestInstall } from '~/utils/installPrompt'
   import { firstNameOf } from '~~/shared/userName'
 
   withDefaults(defineProps<{ variant?: 'bar' | 'hero' }>(), { variant: 'bar' })

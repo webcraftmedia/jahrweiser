@@ -1,5 +1,10 @@
 <script setup lang="ts">
-  import { installHintEligible, requestInstall } from '~/utils/installPrompt'
+  import {
+    appInstalled,
+    installHintEligible,
+    installUnsupported,
+    requestInstall,
+  } from '~/utils/installPrompt'
 
   definePageMeta({
     middleware: ['authenticated'],
@@ -58,7 +63,7 @@
       class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
     >
       <h2 class="text-lg font-semibold mb-2">{{ t('pages.projekt.about.app.heading') }}</h2>
-      <p v-if="standalone" class="text-sm text-navy/80 dark:text-ivory/80">
+      <p v-if="standalone || appInstalled" class="text-sm text-navy/80 dark:text-ivory/80">
         {{ t('pages.projekt.about.app.installed') }}
       </p>
       <template v-else-if="installHintEligible">
@@ -74,6 +79,9 @@
           {{ t('pages.projekt.about.app.button') }}
         </button>
       </template>
+      <p v-else-if="installUnsupported" class="text-sm text-navy/80 dark:text-ivory/80">
+        {{ t('pages.projekt.about.app.unsupported') }}
+      </p>
       <p v-else class="text-sm text-navy/80 dark:text-ivory/80">
         {{ t('pages.projekt.about.app.desktop') }}
       </p>

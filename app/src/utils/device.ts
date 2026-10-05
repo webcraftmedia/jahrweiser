@@ -56,6 +56,31 @@ export function isDesktopClassIPad(env: DeviceEnv): boolean {
 }
 
 /**
+ * The user-agent half of the rule below, on its own: the server has nothing
+ * else to go on when it renders the page (see src/plugins/pwa.server.ts).
+ */
+export function isMobileUserAgent(userAgent: string): boolean {
+  return MOBILE_UA.test(userAgent)
+}
+
+/** iPhone, iPad or iPod — including the iPad that sends a Mac user agent. */
+export function isIOS(env: DeviceEnv): boolean {
+  return /iPhone|iPad|iPod/.test(env.userAgent) || isDesktopClassIPad(env)
+}
+
+/**
+ * Whether this browser can really install the app. Chromium says so with its
+ * install event, iOS through "Teilen → Zum Home-Bildschirm". Firefox and its
+ * relatives on Android only put a *shortcut* on the home screen — a bookmark
+ * to whatever page was open, in a normal tab, under the browser's own badge,
+ * whose "App info → Uninstall" removes the whole browser. The app does not
+ * send anyone there (docu/pwa.md).
+ */
+export function canInstall(env: DeviceEnv, hasInstallEvent: boolean): boolean {
+  return hasInstallEvent || isIOS(env)
+}
+
+/**
  * Phone or tablet. Client Hints first — Chromium answers `mobile` directly and
  * names the platform, which also catches Android tablets (`mobile: false`).
  * Everything else (Safari, Firefox) is judged by its user agent.
@@ -65,7 +90,7 @@ export function isMobileDevice(env: DeviceEnv): boolean {
   if (hints && typeof hints.mobile === 'boolean') {
     return hints.mobile || hints.platform === 'Android' || hints.platform === 'iOS'
   }
-  return MOBILE_UA.test(env.userAgent) || isDesktopClassIPad(env)
+  return isMobileUserAgent(env.userAgent) || isDesktopClassIPad(env)
 }
 
 /** Running as the installed app, started from the home screen. */

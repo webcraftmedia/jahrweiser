@@ -11,7 +11,13 @@ Grundlage ist `@vite-pwa/nuxt` (Workbox, Strategie `generateSW`). Konfiguration:
 ## Drei Arten, den Jahrweiser zu benutzen
 
 Wer was bekommt, entscheidet `src/plugins/pwa.client.ts` mit Hilfe von
-`src/utils/device.ts` (`pwaMode()`), gleich beim Start im Browser:
+`src/utils/device.ts` (`pwaMode()`), gleich beim Start im Browser. Den
+Manifest-Link (und ein großes Vollflächen-Icon) schreibt für Handy-User-Agents
+schon der Server ins HTML (`src/plugins/pwa.server.ts`): Firefox und Safari
+suchen ihn nur einmal beim Laden. Kam er erst per Skript, bot Firefox statt
+„Installieren“ nur eine Verknüpfung an. Der Client ergänzt dieselben
+(per `key` zusammengeführten) Tags für Geräte, die sich als Desktop ausgeben
+(iPad).
 
 |                                        | Manifest-Link | Installations-Hinweis |  Service Worker  |
 | -------------------------------------- | :-----------: | :-------------------: | :--------------: |
@@ -261,9 +267,25 @@ geladen) und nur für angemeldete Mitglieder. Je nach Browser
 | Browser                                                                  | Hinweis                                                                                                                                                                     |
 | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Android Chrome, Edge, Samsung Internet                                   | Knopf „Installieren", öffnet den Installationsdialog (`beforeinstallprompt`). Erscheint erst, wenn der Browser das Ereignis schickt — bei schon installierter App also nie. |
-| Android Firefox u. a. ohne Ereignis                                      | „im Browser-Menü ‚Zum Startbildschirm hinzufügen'"                                                                                                                          |
+| Android Chrome & Co. ohne Ereignis, auf Nachfrage (Menü, Projekt-Seite)  | „im Browser-Menü ⋮ ‚App installieren'" — dort ebenfalls eine echte Installation                                                                                             |
+| Android Firefox, Fennec u. a. (kein Ereignis, kein iOS)                  | **nichts** — weder Hinweis noch Menüeintrag; die Projekt-Seite nennt Browser, in denen es geht                                                                              |
 | iOS Safari, andere iOS-Browser ab 16.4                                   | „Tippe auf ‚Teilen' und dann auf ‚Zum Home-Bildschirm'"                                                                                                                     |
 | iOS-Browser vor 16.4, In-App-Browser (Instagram, Facebook, Google-App …) | „Öffne diese Seite in Safari …"                                                                                                                                             |
+
+**Warum Firefox keinen Hinweis bekommt:** Firefox und seine Ableger (Fennec,
+Mull, …) legen unter Android über „Zum Startbildschirm hinzufügen“ nur eine
+**Verknüpfung** an — ein Lesezeichen auf die gerade offene Seite (z. B.
+`/blaettchen`), das in einem normalen Tab öffnet, das Symbol des Browsers als
+Abzeichen trägt und dessen „App-Info → Deinstallieren“ den **ganzen Browser**
+samt Verlauf löscht (so im Test passiert). Ob Firefox mit dem nun serverseitig
+ausgelieferten Manifest „Installieren“ anbietet, ist am Gerät zu prüfen; bis
+dahin empfiehlt die App diesen Weg nicht (`canInstall` in `src/utils/device.ts`).
+
+**Start aus der App erkennen:** `start_url` ist `/?app`. Wird die App darüber
+gestartet, merkt sich das Gerät das (`localStorage: jahrweiser-app-launched`);
+der Hinweis und der Menüeintrag verschwinden dann auch in Browser-Tabs, und die
+Projekt-Seite sagt, dass die App schon installiert ist — auch wo der Browser
+`display-mode: standalone` nicht meldet.
 
 Das `beforeinstallprompt`-Ereignis kommt einmal kurz nach dem Laden. Es wird
 deshalb schon im Plugin abgefangen (`src/utils/installPrompt.ts`), nicht erst

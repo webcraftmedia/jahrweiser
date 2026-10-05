@@ -2,9 +2,10 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { env, UA } from '../../test/helpers/device-env'
-import { installHintEligible } from '../utils/installPrompt'
+import { installHintEligible, installUnsupported } from '../utils/installPrompt'
+import { pwaHeadLinks } from '../utils/pwaHead'
 
-import plugin, { MANIFEST_URL, checkOfflineCopy } from './pwa.client'
+import plugin, { checkOfflineCopy } from './pwa.client'
 
 import type { DeviceEnv } from '../utils/device'
 
@@ -67,12 +68,13 @@ async function run(device: DeviceEnv) {
   return { hooks }
 }
 
-const MANIFEST_LINK = { link: [{ rel: 'manifest', href: MANIFEST_URL }] }
+const MANIFEST_LINK = { link: pwaHeadLinks() }
 
 describe('pwa plugin', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     installHintEligible.value = false
+    installUnsupported.value = false
     useRuntimeConfig().public.serviceWorker = true
   })
 
@@ -93,6 +95,26 @@ describe('pwa plugin', () => {
     expect(installHintEligible.value).toBe(false)
     hooks['app:mounted']!()
     expect(installHintEligible.value).toBe(true)
+  })
+
+  it('offers no installation where the browser could only make a shortcut', async () => {
+    // Firefox on Android: no install event, not iOS.
+    let owner: object | null = window
+    while (owner && !Object.prototype.hasOwnProperty.call(owner, 'onbeforeinstallprompt')) {
+      owner = Object.getPrototypeOf(owner) as object | null
+    }
+    const descriptor = owner && Object.getOwnPropertyDescriptor(owner, 'onbeforeinstallprompt')
+    if (owner) Reflect.deleteProperty(owner, 'onbeforeinstallprompt')
+    try {
+      const { hooks } = await run(env({ userAgent: UA.androidFirefox }))
+      // The manifest still: a later Firefox may install for real.
+      expect(mocks.useHead).toHaveBeenCalledWith(MANIFEST_LINK)
+      hooks['app:mounted']!()
+      expect(installHintEligible.value).toBe(false)
+      expect(installUnsupported.value).toBe(true)
+    } finally {
+      if (owner && descriptor) Object.defineProperty(owner, 'onbeforeinstallprompt', descriptor)
+    }
   })
 
   it('gives the installed app the manifest and the worker, and no hint', async () => {

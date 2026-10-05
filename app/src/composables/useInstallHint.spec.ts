@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { env, UA } from '../../test/helpers/device-env'
+import { isIOS } from '../utils/device'
 import { appInstalled, installPrompt, installRequested } from '../utils/installPrompt'
 
 import {
@@ -10,7 +11,6 @@ import {
   mayOffer,
   readDismissal,
   iosVersion,
-  isIOS,
   manualInstallMethod,
   useInstallHint,
 } from './useInstallHint'
@@ -67,7 +67,7 @@ describe('install method without an install event', () => {
     ['Chrome on iOS 16.3', IOS_CHROME_16_3, 'safari'],
     ['an in-app browser, however new', IOS_INSTAGRAM, 'safari'],
   ] as const)('%s → %s', (_, userAgent, method) => {
-    expect(manualInstallMethod(env({ userAgent }), false)).toBe(method)
+    expect(manualInstallMethod(env({ userAgent }))).toBe(method)
   })
 
   it('treats an iPad with a Mac user agent as iOS Safari', () => {
@@ -77,15 +77,15 @@ describe('install method without an install event', () => {
       media: ['(pointer: coarse)'],
     })
     expect(isIOS(iPad)).toBe(true)
-    expect(manualInstallMethod(iPad, false)).toBe('share')
+    expect(manualInstallMethod(iPad)).toBe('share')
   })
 
-  it('points other Android browsers (no install event) to their menu', () => {
-    expect(manualInstallMethod(env({ userAgent: UA.androidFirefox }), false)).toBe('menu')
+  it('sends no Android browser to a manual way — Firefox could only make a shortcut', () => {
+    expect(manualInstallMethod(env({ userAgent: UA.androidFirefox }))).toBeNull()
   })
 
   it('leaves Chromium to its install event', () => {
-    expect(manualInstallMethod(env({ userAgent: UA.androidChrome }), true)).toBeNull()
+    expect(manualInstallMethod(env({ userAgent: UA.androidChrome }))).toBeNull()
   })
 
   it('reads the iOS version from either kind of user agent', () => {
@@ -95,9 +95,7 @@ describe('install method without an install event', () => {
   })
 
   it('takes an iOS browser of unknown version for an old one', () => {
-    expect(manualInstallMethod(env({ userAgent: 'Mozilla/5.0 (iPhone) CriOS/1.0' }), false)).toBe(
-      'safari',
-    )
+    expect(manualInstallMethod(env({ userAgent: 'Mozilla/5.0 (iPhone) CriOS/1.0' }))).toBe('safari')
   })
 })
 
@@ -128,10 +126,20 @@ describe('useInstallHint', () => {
     expect(method.value).toBe('prompt')
   })
 
-  it('points to the browser menu where there is no install event (Firefox)', () => {
+  it("names Chrome's own menu when asked for without an install event", () => {
+    // Chrome sends no event when the app is already installed or not yet
+    // ready; its menu entry "App installieren" is a real install all the same.
+    current.env = env({ userAgent: UA.androidChrome })
+    const { method } = useInstallHint()
+    expect(method.value).toBeNull()
+    installRequested.value = true
+    expect(method.value).toBe('menu')
+  })
+
+  it('offers nothing in a browser that could only make a shortcut', () => {
     current.env = env({ userAgent: UA.androidFirefox })
     withoutInstallEvent(() => {
-      expect(useInstallHint().method.value).toBe('menu')
+      expect(useInstallHint().method.value).toBeNull()
     })
   })
 

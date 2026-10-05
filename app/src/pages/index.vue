@@ -235,6 +235,7 @@
   import IconList from '~/assets/icon-list.svg'
   import IconPlus from '~/assets/icon-plus.svg'
   import { paletteEntryForIndex } from '~~/shared/calendar-palette'
+  import { earliestVisibleMonth } from '~~/shared/calendarWindow'
 
   interface RawCalendarEvent {
     calendar: string
@@ -521,7 +522,7 @@
 
   /** Check if a given month is before the earliest allowed month (previous month from today) */
   function isBeforePastLimit(date: Temporal.PlainDate) {
-    const earliest = Temporal.PlainDate.from(localDateStr()).subtract({ months: 1 })
+    const earliest = earliestVisibleMonth(new Date())
     return date.year < earliest.year || (date.year === earliest.year && date.month < earliest.month)
   }
 

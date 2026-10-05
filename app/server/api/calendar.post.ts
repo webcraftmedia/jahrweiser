@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { earliestVisibleDate } from '../../shared/calendarWindow'
 import {
   calendarKey,
   createCalDAVAccount,
@@ -36,11 +37,8 @@ export default defineEventHandler(async (event) => {
 
   const { calendar, startDate, endDate } = await readValidatedBody(event, bodySchema.parse)
 
-  // Restrict how far back users can browse: previous month + 7 days buffer
-  const now = new Date()
-  const firstOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  const earliestAllowed = new Date(firstOfPreviousMonth.getTime() - 7 * 24 * 60 * 60 * 1000)
-  if (startDate < earliestAllowed) {
+  // Restrict how far back users can browse — see shared/calendarWindow.ts.
+  if (startDate < earliestVisibleDate(new Date())) {
     return []
   }
 

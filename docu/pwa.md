@@ -110,6 +110,23 @@ UID des Mitglieds):
 - die Details jedes geöffneten Termins,
 - dazu die Kalender-Seiten selbst im Cache `jahrweiser-pages` (siehe Tabelle).
 
+**Nie mehr Vergangenheit als online:** Der Kalender reicht einen Monat zurück
+(aktueller Monat und Vormonat; das Monatsraster beginnt bis zu 7 Tage davor).
+Diese Grenze steht an genau einer Stelle, `app/shared/calendarWindow.ts`, und
+gilt für Server, Kalender-Seite und Offline-Kopie gleichermaßen. Was davor
+endet, wird gelöscht — nach jedem Speichern und bei jedem Start der App:
+
+| Eintrag        | fällt weg, wenn …                                                     |
+| -------------- | --------------------------------------------------------------------- |
+| Termin-Liste   | ihr Zeitraum vor der Grenze endet                                     |
+| Termin-Details | der Termin vor der Grenze endete; ohne erkennbares Ende nach 61 Tagen |
+| Kalenderliste  | nie (wird bei jedem Laden ersetzt)                                    |
+
+Außerdem ersetzt eine neue Liste die älteren Listen desselben Kalenders, die
+sie ganz abdeckt — das Monatsraster umfasst den vorab geladenen Monat, wer ihn
+ansieht, ersetzt also die Vorab-Kopie. Pro Monat bleibt so im Wesentlichen ein
+Stand.
+
 **Warum IndexedDB und nicht der Service Worker:** Der Kalender wird per POST
 gelesen, mit Kalender, Termin-ID und Datum im Body. Als GET stünden sie in der
 URL und damit samt IP im nginx-Access-Log — wer wann welchen Termin geöffnet
@@ -151,6 +168,9 @@ auch die Daten der App entfernen.
 - Nicht geöffnete Termine haben offline keine Details; ihr Titel steht im
   Kalender, das Detailfenster schließt sich wieder.
 - Monate, die weder angesehen noch vorab geladen wurden, bleiben offline leer.
+- Künftige Monate, die einmal angesehen wurden, bleiben liegen, bis sie aus dem
+  Fenster fallen — die Menge ist damit durch das begrenzt, was das Mitglied
+  tatsächlich ansieht.
 - Ohne Netz meldet Nuxt beim Start einen Fehler `NUXT_E5002` in der Konsole
   (das Build-Manifest unter `/_nuxt/builds/` ist nicht gecacht, siehe Tabelle).
   Folgenlos für die Anzeige.

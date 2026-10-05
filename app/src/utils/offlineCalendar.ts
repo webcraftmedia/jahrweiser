@@ -52,10 +52,15 @@ async function storage() {
   return storageModule
 }
 
-/** Storing must never hold up the calendar, nor break it. */
+/**
+ * Storing must never hold up the calendar, nor break it. Every write is
+ * followed by a sweep, so the copy never reaches further back than the
+ * calendar does online.
+ */
 async function keep(save: () => Promise<void>) {
   try {
     await save()
+    await (await storage()).pruneOfflineData()
     // eslint-disable-next-line no-catch-all/no-catch-all -- Ablegen fuer offline ist Beiwerk: misslingt es, bleibt der Kalender eben nur online lesbar
   } catch (error) {
     console.warn('Could not keep the calendar for offline use:', error)
@@ -91,12 +96,17 @@ async function readThrough<T>(
 // eslint-disable-next-line @typescript-eslint/promise-function-async -- bewusst nicht async: ausserhalb der App das unveraenderte Promise der Anfrage
 export function readCalendars<T>(uid: string | undefined, fetcher: () => Promise<T>) {
   if (!active(uid)) return fetcher()
-  const key = 'calendars'
   return readThrough(
     uid,
     fetcher,
-    async (data, savedAt) => (await storage()).saveEntry({ key, uid, savedAt, data }),
-    async () => (await storage()).loadEntry<T>(key, uid),
+    async (data, savedAt) => {
+      const { CALENDARS_KEY, saveEntry } = await storage()
+      await saveEntry({ key: CALENDARS_KEY, uid, savedAt, data })
+    },
+    async () => {
+      const { CALENDARS_KEY, loadEntry } = await storage()
+      return loadEntry<T>(CALENDARS_KEY, uid)
+    },
   )
 }
 
@@ -147,13 +157,14 @@ export function readCalendarEvents<T extends CalendarEvent>(
     uid,
     fetcher,
     async (data, savedAt) =>
-      (await storage()).saveEntry({
+      (await storage()).saveEventList({
         key: `events:${calendar}:${start}:${end}`,
         uid,
         savedAt,
         calendar,
         start,
         end,
+        until: end,
         data,
       }),
     async () => {
@@ -164,8 +175,14 @@ export function readCalendarEvents<T extends CalendarEvent>(
   )
 }
 
+/** When an event is over, if its details say so — see `until` in offlineData.ts. */
+export function eventEnd(detail: { startDate?: string; endDate?: string }): number | undefined {
+  const time = new Date(detail.endDate ?? detail.startDate ?? Number.NaN).getTime()
+  return Number.isNaN(time) ? undefined : time
+}
+
 // eslint-disable-next-line @typescript-eslint/promise-function-async -- bewusst nicht async: ausserhalb der App das unveraenderte Promise der Anfrage
-export function readEvent<T>(
+export function readEvent<T extends { startDate?: string; endDate?: string }>(
   uid: string | undefined,
   calendar: string,
   id: string,
@@ -177,7 +194,8 @@ export function readEvent<T>(
   return readThrough(
     uid,
     fetcher,
-    async (data, savedAt) => (await storage()).saveEntry({ key, uid, savedAt, data }),
+    async (data, savedAt) =>
+      (await storage()).saveEntry({ key, uid, savedAt, until: eventEnd(data), data }),
     async () => (await storage()).loadEntry<T>(key, uid),
   )
 }

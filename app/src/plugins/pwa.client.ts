@@ -11,13 +11,27 @@ import {
 export const MANIFEST_URL = '/manifest.webmanifest'
 
 /**
- * Started offline with a session that has run out since: the copy on the
- * device is no longer the member's to see. Clear it and go to the login, which
- * offline is the worker's offline page.
+ * At every start, the copy on the device is brought in line (docu/pwa.md):
+ *
+ * - started offline with a session that has run out since: it is no longer
+ *   the member's to see. Clear it and go to the login, which offline is the
+ *   worker's offline page.
+ * - otherwise: drop what ended before the calendar's earliest month — a phone
+ *   left alone for weeks would else keep showing months long out of reach.
  */
-export async function expireOfflineCopy(now = Date.now()) {
+export async function checkOfflineCopy(now = Date.now()) {
   const session = readOfflineSession()
-  if (!session || navigator.onLine || offlineSessionValid(session.uid, now)) return
+  if (!session) return
+  if (navigator.onLine || offlineSessionValid(session.uid, now)) {
+    try {
+      const { pruneOfflineData } = await import('~/utils/offlineData')
+      await pruneOfflineData(now)
+      // eslint-disable-next-line no-catch-all/no-catch-all -- Aufraeumen ist Beiwerk: misslingt es, holt es das naechste Speichern nach
+    } catch (error) {
+      console.warn('Could not tidy the offline copy:', error)
+    }
+    return
+  }
   try {
     await purgeOfflineData()
     // eslint-disable-next-line no-catch-all/no-catch-all -- Loeschen gescheitert: trotzdem weg von den Daten, zum Login
@@ -56,7 +70,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     // The calendar kept on the device for offline use (docu/pwa.md).
     enableOfflineSession()
     nuxtApp.hook('app:mounted', () => {
-      void expireOfflineCopy()
+      void checkOfflineCopy()
     })
     // Not awaited: the app must not wait for the worker. No worker exists in
     // development, and none is registered while the kill switch is on — the

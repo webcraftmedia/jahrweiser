@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  eventEnd,
   isNetworkError,
   mergeEvents,
   nextMonthRange,
@@ -12,9 +13,12 @@ import {
 import { enableOfflineSession } from './offlineSession'
 
 const store = vi.hoisted(() => ({
+  CALENDARS_KEY: 'calendars',
   saveEntry: vi.fn(),
+  saveEventList: vi.fn(),
   loadEntry: vi.fn(),
   loadOverlapping: vi.fn(),
+  pruneOfflineData: vi.fn(),
 }))
 vi.mock('./offlineData', () => store)
 
@@ -52,6 +56,8 @@ describe('offlineCalendar', () => {
     session.valid = true
     useOfflineStand().value = null
     store.saveEntry.mockResolvedValue(undefined)
+    store.saveEventList.mockResolvedValue(undefined)
+    store.pruneOfflineData.mockResolvedValue(0)
   })
 
   describe('outside the installed app', () => {
@@ -81,6 +87,8 @@ describe('offlineCalendar', () => {
       expect(store.saveEntry).toHaveBeenCalledWith(
         expect.objectContaining({ key: 'calendars', uid: 'u1', data: ['A'] }),
       )
+      // Every write is followed by a sweep.
+      expect(store.pruneOfflineData).toHaveBeenCalledTimes(1)
       // Fresh from the server again: no "Stand" line.
       expect(useOfflineStand().value).toBeNull()
     })
@@ -106,10 +114,16 @@ describe('offlineCalendar', () => {
     })
 
     it('stores an opened event under its calendar, id and occurrence', async () => {
-      await readEvent('u1', 'Work', 'e1', undefined, async () => ({ summary: 'S' }))
+      const detail = { summary: 'S', endDate: '2026-10-05T12:00:00Z' }
+      await readEvent('u1', 'Work', 'e1', undefined, async () => detail)
       await settle()
       expect(store.saveEntry).toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'event:Work:e1:', uid: 'u1', data: { summary: 'S' } }),
+        expect.objectContaining({
+          key: 'event:Work:e1:',
+          uid: 'u1',
+          until: Date.parse('2026-10-05T12:00:00Z'),
+          data: detail,
+        }),
       )
     })
 
@@ -157,12 +171,13 @@ describe('offlineCalendar', () => {
       const end = new Date(2000)
       await readCalendarEvents('u1', 'Work', start, end, async () => [event('e1', '1970-01-01')])
       await settle()
-      expect(store.saveEntry).toHaveBeenCalledWith(
+      expect(store.saveEventList).toHaveBeenCalledWith(
         expect.objectContaining({
           key: 'events:Work:1000:2000',
           calendar: 'Work',
           start: 1000,
           end: 2000,
+          until: 2000,
         }),
       )
     })
@@ -270,5 +285,14 @@ describe('offlineCalendar', () => {
     ['text', false],
   ])('tells a lost connection from everything else (%#)', (error, expected) => {
     expect(isNetworkError(error)).toBe(expected)
+  })
+
+  it.each([
+    [{ endDate: '2026-10-05T12:00:00Z' }, Date.parse('2026-10-05T12:00:00Z')],
+    [{ startDate: '2026-10-05' }, Date.parse('2026-10-05')],
+    [{}, undefined],
+    [{ endDate: 'soon' }, undefined],
+  ])('reads when an event is over (%#)', (detail, expected) => {
+    expect(eventEnd(detail)).toBe(expected)
   })
 })

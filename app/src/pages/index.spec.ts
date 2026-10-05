@@ -13,6 +13,8 @@ const mock$fetch = vi.hoisted(() => vi.fn())
 const mockOffline = vi.hoisted(() => ({
   enabled: false,
   saveEntry: vi.fn(),
+  saveEventList: vi.fn(),
+  pruneOfflineData: vi.fn(),
   loadEntry: vi.fn(),
   loadOverlapping: vi.fn(),
 }))
@@ -21,7 +23,10 @@ vi.mock('../utils/offlineSession', () => ({
   offlineSessionValid: () => true,
 }))
 vi.mock('../utils/offlineData', () => ({
+  CALENDARS_KEY: 'calendars',
   saveEntry: mockOffline.saveEntry,
+  saveEventList: mockOffline.saveEventList,
+  pruneOfflineData: mockOffline.pruneOfflineData,
   loadEntry: mockOffline.loadEntry,
   loadOverlapping: mockOffline.loadOverlapping,
 }))
@@ -2073,6 +2078,8 @@ describe('Page: Index', () => {
       mockOffline.enabled = true
       mockUser.value = { uid: 'u1' }
       mockOffline.saveEntry.mockResolvedValue(undefined)
+      mockOffline.saveEventList.mockResolvedValue(undefined)
+      mockOffline.pruneOfflineData.mockResolvedValue(0)
     })
 
     afterEach(() => {
@@ -2098,6 +2105,11 @@ describe('Page: Index', () => {
       // Paging within the same month must not fetch it again.
       await triggerFetchEvents()
       expect(mock$fetch.mock.calls.filter(ahead)).toHaveLength(1)
+      // A refresh renews the copy of the month ahead, too.
+      await resume.refresh!()
+      await vi.waitFor(() => {
+        expect(mock$fetch.mock.calls.filter(ahead)).toHaveLength(2)
+      })
       expect(wrappers[0].find('.offline-stand').exists()).toBe(false)
     })
 

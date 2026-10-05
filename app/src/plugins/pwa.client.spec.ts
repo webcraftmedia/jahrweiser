@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { env, UA } from '../../test/helpers/device-env'
 import { installHintEligible } from '../utils/installPrompt'
 
-import plugin, { MANIFEST_URL, expireOfflineCopy } from './pwa.client'
+import plugin, { MANIFEST_URL, checkOfflineCopy } from './pwa.client'
 
 import type { DeviceEnv } from '../utils/device'
 
@@ -44,6 +44,9 @@ vi.mock('~/utils/offlineSession', () => ({
     offline.session?.uid === uid && offline.session.deadline > now,
   purgeOfflineData: offline.purge,
 }))
+
+const mockPrune = vi.hoisted(() => vi.fn())
+vi.mock('~/utils/offlineData', () => ({ pruneOfflineData: mockPrune }))
 
 function offlineSessionEnabled() {
   return offline.enabled
@@ -134,8 +137,9 @@ describe('pwa plugin', () => {
 
     it('is cleared and the login shown when offline past the deadline', async () => {
       online(false)
-      await expireOfflineCopy(1000)
+      await checkOfflineCopy(1000)
       expect(offline.purge).toHaveBeenCalledTimes(1)
+      expect(mockPrune).not.toHaveBeenCalled()
       expect(replace).toHaveBeenCalledWith('/login')
     })
 
@@ -143,29 +147,41 @@ describe('pwa plugin', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
       offline.purge.mockRejectedValueOnce(new Error('blocked'))
       online(false)
-      await expireOfflineCopy(1000)
+      await checkOfflineCopy(1000)
       expect(replace).toHaveBeenCalledWith('/login')
       expect(warn).toHaveBeenCalled()
       warn.mockRestore()
     })
 
-    it('stays while the deadline lies ahead', async () => {
+    it('stays while the deadline lies ahead, minus what is out of reach', async () => {
       online(false)
-      await expireOfflineCopy(999)
+      await checkOfflineCopy(999)
       expect(offline.purge).not.toHaveBeenCalled()
+      expect(mockPrune).toHaveBeenCalledWith(999)
     })
 
-    it('is left to the server while online', async () => {
+    it('is left to the server while online, and tidied all the same', async () => {
       online(true)
-      await expireOfflineCopy(5000)
+      await checkOfflineCopy(5000)
       expect(offline.purge).not.toHaveBeenCalled()
+      expect(mockPrune).toHaveBeenCalledWith(5000)
+    })
+
+    it('starts even when tidying fails', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      mockPrune.mockRejectedValueOnce(new Error('blocked'))
+      online(true)
+      await expect(checkOfflineCopy(5000)).resolves.toBeUndefined()
+      expect(warn).toHaveBeenCalled()
+      warn.mockRestore()
     })
 
     it('needs nothing when there is no copy', async () => {
       offline.session = null
       online(false)
-      await expireOfflineCopy(5000)
+      await checkOfflineCopy(5000)
       expect(offline.purge).not.toHaveBeenCalled()
+      expect(mockPrune).not.toHaveBeenCalled()
     })
   })
 })

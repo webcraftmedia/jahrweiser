@@ -189,6 +189,17 @@
             >
               {{ $t('components.Header.settings') }}
             </NuxtLink>
+            <!-- Phone or tablet browser only (src/plugins/pwa.client.ts): the
+                 way back to installing once the hint was dismissed. -->
+            <button
+              v-if="installHintEligible"
+              type="button"
+              data-action="install"
+              class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
+              @click="installApp"
+            >
+              {{ $t('components.Header.install-app') }}
+            </button>
             <button
               class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150"
               @click="logout"
@@ -269,6 +280,7 @@
 
 <script setup lang="ts">
   import LogoSmall from '~/../assets/logo-small.svg'
+  import { installHintEligible, requestInstall } from '~/utils/installPrompt'
   import { firstNameOf } from '~~/shared/userName'
 
   withDefaults(defineProps<{ variant?: 'bar' | 'hero' }>(), { variant: 'bar' })
@@ -299,6 +311,11 @@
   function openChangelog() {
     mobileMenuOpen.value = false
     triggerChangelog()
+  }
+
+  function installApp() {
+    mobileMenuOpen.value = false
+    void requestInstall()
   }
 
   async function logout() {

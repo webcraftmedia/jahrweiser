@@ -1,10 +1,15 @@
 <script setup lang="ts">
+  import { installHintEligible, requestInstall } from '~/utils/installPrompt'
+
   definePageMeta({
     middleware: ['authenticated'],
   })
 
   const { t } = useI18n()
   const runtimeConfig = useRuntimeConfig()
+  // The installed app says so; a phone or tablet browser gets the way to
+  // install (src/plugins/pwa.client.ts); a desktop browser gets neither.
+  const standalone = useStandalone()
 
   // What the project offers, spelled out rather than derived from
   // useAppSections(): that composable says what a *member* may open right now,
@@ -46,6 +51,31 @@
       <h2 class="text-lg font-semibold mb-2">{{ t('pages.projekt.about.who.heading') }}</h2>
       <p class="text-sm text-navy/80 dark:text-ivory/80">
         {{ t('pages.projekt.about.who.text') }}
+      </p>
+    </section>
+
+    <section
+      class="bg-white/80 dark:bg-poster-darkCard rounded shadow-lg p-6 border-2 border-navy/15 dark:border-poster-darkBorder"
+    >
+      <h2 class="text-lg font-semibold mb-2">{{ t('pages.projekt.about.app.heading') }}</h2>
+      <p v-if="standalone" class="text-sm text-navy/80 dark:text-ivory/80">
+        {{ t('pages.projekt.about.app.installed') }}
+      </p>
+      <template v-else-if="installHintEligible">
+        <p class="text-sm text-navy/80 dark:text-ivory/80 mb-4">
+          {{ t('pages.projekt.about.app.text') }}
+        </p>
+        <button
+          type="button"
+          data-action="install"
+          class="inline-block bg-sienna hover:brightness-110 text-ivory font-semibold rounded px-4 py-2"
+          @click="requestInstall"
+        >
+          {{ t('pages.projekt.about.app.button') }}
+        </button>
+      </template>
+      <p v-else class="text-sm text-navy/80 dark:text-ivory/80">
+        {{ t('pages.projekt.about.app.desktop') }}
       </p>
     </section>
 

@@ -1,0 +1,120 @@
+<!doctype html>
+<!--
+  Shown by the service worker when a page cannot be loaded because the device
+  is offline (docu/pwa.md). Precached, so it must stand on its own: no request
+  may leave this page — everything it needs is inline or precached itself (the
+  icon). It is the same for every member and contains nothing personal.
+  The icon's file name is kept current by scripts/pwa-icons.mjs.
+-->
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#faf5eb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1714" media="(prefers-color-scheme: dark)" />
+    <title>Offline – Jahrweiser</title>
+    <script>
+      // The app's own dark-mode switch (src/composables/useColorMode.ts) wins
+      // over the system setting, as it does on every other page.
+      try {
+        var stored = localStorage.getItem('jahrweiser-dark')
+        var dark =
+          stored === null ? matchMedia('(prefers-color-scheme: dark)').matches : stored === 'true'
+        if (dark) document.documentElement.className = 'dark'
+      } catch (e) {}
+    </script>
+    <style>
+      :root {
+        --bg: #faf5eb;
+        --text: #1e293b;
+        --muted: rgba(30, 41, 59, 0.7);
+        --accent: #c2410c;
+        --accent-hover: #9a3412;
+        --rule: rgba(194, 65, 12, 0.3);
+      }
+      .dark {
+        --bg: #1a1714;
+        --text: #faf5eb;
+        --muted: #a8937e;
+        --accent: #ea580c;
+        --accent-hover: #c2410c;
+        --rule: rgba(154, 52, 18, 0.5);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--text);
+      }
+      body {
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+        font-family: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-size: 20px;
+        line-height: 1.4;
+      }
+      main {
+        max-width: 26rem;
+        text-align: center;
+      }
+      img {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+      }
+      h1 {
+        margin: 20px 0 8px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--rule);
+        font-family: 'Abril Fatface', Georgia, 'Times New Roman', serif;
+        font-size: 30px;
+        font-weight: normal;
+        letter-spacing: 0.02em;
+      }
+      p {
+        margin: 12px 0 24px;
+        color: var(--muted);
+      }
+      button {
+        padding: 10px 22px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover,
+      button:focus-visible {
+        background: var(--accent-hover);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/pwa/icon-192.0aa33a67.png" alt="" width="96" height="96" />
+      <h1>Du bist offline</h1>
+      <p>
+        Der Jahrweiser braucht eine Internetverbindung. Sobald du wieder online bist, geht es hier
+        weiter.
+      </p>
+      <button type="button" onclick="location.reload()">Erneut versuchen</button>
+    </main>
+    <script>
+      // Back online: load the page the member actually asked for. The URL is
+      // still theirs — the service worker answered it with this page.
+      addEventListener('online', function () {
+        location.reload()
+      })
+    </script>
+  </body>
+</html>

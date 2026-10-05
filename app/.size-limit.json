@@ -1,7 +1,7 @@
 [
   {
     "path": ".output/public/_nuxt/*.js",
-    "limit": "250 kB",
+    "limit": "260 kB",
     "name": "JS bundles"
   },
   {
@@ -13,5 +13,10 @@
     "path": ".output/public/polyfills.js",
     "limit": "1.5 kB",
     "name": "Polyfills (every visitor, before the app)"
+  },
+  {
+    "path": ".output/public/sw.js",
+    "limit": "7 kB",
+    "name": "Service worker (installed app only, incl. precache list)"
   }
 ]

@@ -1,7 +1,16 @@
-import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it } from 'vitest'
+import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { installHintEligible, installRequested } from '../../utils/installPrompt'
 
 import Page from './index.vue'
+
+const standalone = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref } = require('vue')
+  return ref(false)
+})
+mockNuxtImport('useStandalone', () => () => standalone)
 
 describe('Page: Über das Projekt', () => {
   it('names what the project is and what it offers', async () => {
@@ -33,5 +42,38 @@ describe('Page: Über das Projekt', () => {
     const links = wrapper.findAll('a').map((a) => a.attributes('href'))
     expect(links).toContain('https://www.webcraft-media.de/#!impressum')
     expect(links).toContain('https://www.webcraft-media.de/#!datenschutz')
+  })
+
+  describe('the app', () => {
+    afterEach(() => {
+      standalone.value = false
+      installHintEligible.value = false
+      installRequested.value = false
+    })
+
+    it('offers the installation in a phone or tablet browser', async () => {
+      installHintEligible.value = true
+      const wrapper = await mountSuspended(Page, { route: '/projekt' })
+      expect(wrapper.text()).toContain('pages.projekt.about.app.text')
+      await wrapper.find('[data-action="install"]').trigger('click')
+      // No install event in the test browser: the hint with the steps.
+      await vi.waitFor(() => {
+        expect(installRequested.value).toBe(true)
+      })
+    })
+
+    it('says so in the installed app, and offers nothing', async () => {
+      standalone.value = true
+      installHintEligible.value = true
+      const wrapper = await mountSuspended(Page, { route: '/projekt' })
+      expect(wrapper.text()).toContain('pages.projekt.about.app.installed')
+      expect(wrapper.find('[data-action="install"]').exists()).toBe(false)
+    })
+
+    it('points a desktop browser to the phone', async () => {
+      const wrapper = await mountSuspended(Page, { route: '/projekt' })
+      expect(wrapper.text()).toContain('pages.projekt.about.app.desktop')
+      expect(wrapper.find('[data-action="install"]').exists()).toBe(false)
+    })
   })
 })

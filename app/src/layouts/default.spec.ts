@@ -2,6 +2,7 @@ import { mockNuxtImport, renderSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { stubApi } from '../../test/helpers/stub-api'
+import { installHintEligible, installPrompt } from '../utils/installPrompt'
 
 import Layout from './default.vue'
 
@@ -41,6 +42,8 @@ describe('Layout: Default', () => {
   beforeEach(() => {
     mockZoom.zoomLevel.value = 1.0
     mockLoggedIn.value = false
+    installHintEligible.value = false
+    installPrompt.value = null
     mock$fetch.mockImplementation((url: string) =>
       Promise.resolve(url === '/api/blaettchen' ? { issues: [], contact: null } : []),
     )
@@ -78,5 +81,36 @@ describe('Layout: Default', () => {
     // would show at once on some breakpoint.
     expect(html).toContain('hidden md:flex')
     expect(html).toContain('md:hidden')
+  })
+
+  describe('install hint', () => {
+    const HINT = 'aria-label="components.InstallHint.label"'
+
+    beforeEach(() => {
+      // An install event makes the hint render wherever it is mounted.
+      installPrompt.value = Object.assign(new Event('beforeinstallprompt'), {
+        prompt: vi.fn(),
+        userChoice: Promise.resolve({ outcome: 'dismissed' as const }),
+      })
+    })
+
+    it('is offered to signed-in members on a phone or tablet', async () => {
+      mockLoggedIn.value = true
+      installHintEligible.value = true
+      const html = await (await renderSuspended(Layout, { route: '/' })).html()
+      expect(html).toContain(HINT)
+    })
+
+    it('is not even loaded on desktop or in the installed app', async () => {
+      mockLoggedIn.value = true
+      const html = await (await renderSuspended(Layout, { route: '/' })).html()
+      expect(html).not.toContain(HINT)
+    })
+
+    it('is not shown to signed-out visitors', async () => {
+      installHintEligible.value = true
+      const html = await (await renderSuspended(Layout, { route: '/' })).html()
+      expect(html).not.toContain(HINT)
+    })
   })
 })

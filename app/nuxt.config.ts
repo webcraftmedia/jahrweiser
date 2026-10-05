@@ -1,9 +1,22 @@
 import { defineNuxtConfig } from 'nuxt/config'
 
+import pwaIcons from './assets/pwa-icons.json'
+
 const isTest = !!process.env.VITEST
 
 /** Shown in the footer, and the cache-buster for the polyfill script. */
 const appVersion = isTest ? '0.0.0-test' : process.env.npm_package_version || 'development'
+
+/**
+ * Emergency off switch for the service worker (docu/pwa.md): `PWA_KILL_SWITCH=true`
+ * in .env and a redeploy ship a sw.js that clears its caches and unregisters
+ * itself, and the app stops registering a new one.
+ */
+const pwaKillSwitch = process.env.PWA_KILL_SWITCH === 'true'
+
+/** Light and dark page background — what the status bar should blend into. */
+const THEME_LIGHT = '#faf5eb' // ivory
+const THEME_DARK = '#1a1714' // poster-dark
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -23,6 +36,19 @@ export default defineNuxtConfig({
         // textbook example of how that ends.
         { src: `/polyfills.js?v=${appVersion}` },
       ],
+      // Home-screen metadata for iOS and older Android browsers. Harmless on
+      // desktop — unlike `<link rel="manifest">`, which makes Chrome and Edge
+      // offer an install button and is therefore only added on phones and
+      // tablets (src/plugins/pwa.client.ts).
+      meta: [
+        { name: 'theme-color', content: THEME_LIGHT, media: '(prefers-color-scheme: light)' },
+        { name: 'theme-color', content: THEME_DARK, media: '(prefers-color-scheme: dark)' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-title', content: 'Jahrweiser' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+      ],
+      link: [{ rel: 'apple-touch-icon', href: pwaIcons['apple-touch-icon'].src }],
     },
   },
   // Fonts are self-hosted — see the comment in fonts.css for why not Google.
@@ -82,7 +108,88 @@ export default defineNuxtConfig({
     '@nuxtjs/i18n',
     'nuxt-svgo',
     'nuxt-auth-utils',
+    '@vite-pwa/nuxt',
   ],
+  // Service worker and manifest — what is cached, what never is, and why:
+  // docu/pwa.md.
+  pwa: {
+    registerType: 'autoUpdate',
+    selfDestroying: pwaKillSwitch,
+    // Registration is ours (src/plugins/pwa.client.ts): the module's plugin
+    // reloads every open tab when an update activates, which would throw away
+    // a half-written form for an update nobody needs to see right away.
+    injectRegister: false,
+    client: { registerPlugin: false },
+    manifest: {
+      id: '/',
+      name: 'Jahrweiser',
+      short_name: 'Jahrweiser',
+      description: 'Der Kalender von gg-g.info',
+      lang: 'de',
+      dir: 'ltr',
+      start_url: '/',
+      scope: '/',
+      display: 'standalone',
+      background_color: THEME_LIGHT,
+      theme_color: THEME_LIGHT,
+      icons: [
+        { src: pwaIcons['icon-192'].src, sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: pwaIcons['icon-512'].src, sizes: '512x512', type: 'image/png', purpose: 'any' },
+        // The same file: the artwork is full bleed with the letters inside
+        // the safe zone, so it survives every mask (scripts/pwa-icons.mjs).
+        {
+          src: pwaIcons['icon-512'].src,
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable',
+        },
+      ],
+    },
+    workbox: {
+      // The app shell: hashed bundles, fonts, icons and the offline page.
+      // Never HTML and never /api — both carry personal data.
+      globPatterns: ['_nuxt/**/*.{js,css}', '**/*.woff2', 'pwa/*.png', 'offline.html'],
+      // Nuxt's build manifest is not hashed, and the app fetches it with a
+      // cache-busting query the precache would never match anyway.
+      globIgnores: ['_nuxt/builds/**'],
+      // Taken as is. Without this the module installs its own transform,
+      // which rewrites `offline.html` to `/offline` (meant for prerendered
+      // pages) — a URL only the SSR renderer answers, with a 404.
+      manifestTransforms: [(manifest) => ({ manifest, warnings: [] })],
+      // Navigations are not answered from a precached document (that would
+      // be stale SSR HTML) but by the runtime rule below.
+      navigateFallback: null,
+      cleanupOutdatedCaches: true,
+      clientsClaim: true,
+      skipWaiting: true,
+      // One file instead of sw.js + workbox-<hash>.js: one URL to keep
+      // uncached, one to replace in an emergency.
+      inlineWorkboxRuntime: true,
+      // Page requests start while the worker is still booting, so routing
+      // them through it costs no extra round trip.
+      navigationPreload: true,
+      runtimeCaching: [
+        {
+          // Page loads always go to the network; only when that fails is the
+          // precached offline page shown. /api (e.g. a Blättchen PDF opened
+          // directly) and the address book under /admin/cal/ — another app
+          // on the same origin — are left entirely to the browser.
+          urlPattern: ({ request, url }) =>
+            request.mode === 'navigate' &&
+            !url.pathname.startsWith('/api/') &&
+            !url.pathname.startsWith('/admin/cal/'),
+          handler: 'NetworkOnly',
+          options: { precacheFallback: { fallbackURL: '/offline.html' } },
+        },
+      ],
+    },
+    // A service worker in development serves yesterday's bundle against
+    // today's code. `npm run build && npm run preview` to try it.
+    devOptions: { enabled: false },
+  },
+  // `Cache-Control: no-cache` for sw.js, the manifest and the offline page is
+  // set in server/plugins/pwa-headers.ts, not here: route rules end up in the
+  // client entry bundle.
   i18n: {
     restructureDir: './',
     defaultLocale: 'de',
@@ -173,6 +280,8 @@ export default defineNuxtConfig({
     // Keys within public, will be also exposed to the client-side
     public: {
       appVersion,
+      // Read by src/plugins/pwa.client.ts; see `pwaKillSwitch` above.
+      serviceWorker: !pwaKillSwitch,
     },
   },
   hooks: {

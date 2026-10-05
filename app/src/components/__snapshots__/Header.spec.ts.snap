@@ -99,7 +99,10 @@ exports[`Header > renders 1`] = `
                    thing saying it — the link's accessible name does too. -->
               <!--v-if-->
             </a>
-            <div data-v-c970699f="" class="my-2 border-t border-navy/10 dark:border-poster-darkBorder"></div><a data-v-c970699f="" href="/admin" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.admin</a><a data-v-c970699f="" href="/settings" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.settings</a><button data-v-c970699f="" class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.logout-label</button>
+            <div data-v-c970699f="" class="my-2 border-t border-navy/10 dark:border-poster-darkBorder"></div><a data-v-c970699f="" href="/admin" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.admin</a><a data-v-c970699f="" href="/settings" class="block w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.settings</a>
+            <!-- Phone or tablet browser only (src/plugins/pwa.client.ts): the
+                 way back to installing once the hint was dismissed. -->
+            <!--v-if--><button data-v-c970699f="" class="w-full text-left px-4 py-3 text-sm font-medium text-navy dark:text-ivory hover:bg-sienna/10 dark:hover:bg-sienna/20 active:bg-sienna/20 dark:active:bg-sienna/30 transition-all duration-150">components.Header.logout-label</button>
           </nav><!-- Calendar Filter (mobile) -->
           <!--v-if-->
           <!-- Legal Links & Version -->

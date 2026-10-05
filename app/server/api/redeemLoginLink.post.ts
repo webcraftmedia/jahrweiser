@@ -1,11 +1,11 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { useDb } from '../db'
-import { loginTokens, sessions, users } from '../db/schema'
+import { loginTokens, users } from '../db/schema'
 import { withDbTimeout } from '../helpers/dbTimeout'
 import { recordEvent } from '../helpers/events'
-import { ABSOLUTE_TTL_SECONDS, IDLE_TTL_MS } from '../helpers/sessionTtl'
+import { startUserSession } from '../helpers/loginSession'
 
 import type { UserEventType } from '../helpers/events'
 
@@ -23,6 +23,12 @@ const bodySchema = z.object({
  * 256-bit token, which tells you more than the reason ever could.
  */
 export type RedeemFailure = 'unknown' | 'used' | 'expired' | 'disabled'
+
+/**
+ * The code adds two refusals the link cannot have: a wrong guess, and no
+ * guesses left — see server/api/redeemLoginCode.post.ts.
+ */
+export type RedeemCodeFailure = RedeemFailure | 'wrong' | 'locked'
 
 /**
  * Spelled out rather than built from the reason, so that adding a refusal
@@ -75,42 +81,17 @@ export default defineEventHandler(async (event) => {
     throw await refuse('disabled', tokenRow.userUid)
   }
 
-  await withDbTimeout(
-    db.update(loginTokens).set({ consumedAt: new Date() }).where(eq(loginTokens.token, token)),
-  )
-
-  // nuxt-auth-utils auto-generates a top-level `id` for the session and
-  // ignores any `id` we pass in. So: write the cookie first, then read back
-  // the generated id and use it as the PK of our sessions table — that way
-  // the middleware can look the row up from the cookie alone.
-  await setUserSession(
-    event,
-    {
-      user: {
-        uid: user.uid,
-        name: user.displayName,
-        email: user.email,
-        role: user.role,
-      },
-    },
-    // Cookie/seal lives up to the absolute cap; the real validity gate is the
-    // DB `expiresAt`, which the session-check middleware slides on activity.
-    { maxAge: ABSOLUTE_TTL_SECONDS },
-  )
-
-  const sess = (await getUserSession(event)) as { id?: string }
-  if (!sess.id) {
-    // No event for this one: it is a fault in our own session handling, not
-    // something that happened to the member, and the 500 it throws is logged
-    // with its stack by Nitro.
-    throw createError({ statusCode: 500, message: 'Failed to establish session id' })
-  }
-  const expiresAt = new Date(Date.now() + IDLE_TTL_MS)
-  await withDbTimeout(
+  // Conditional, so that only one of the link and the code from the same mail
+  // can win when both are redeemed at the same moment.
+  const consumed = await withDbTimeout(
     db
-      .insert(sessions)
-      .values({ id: sess.id, userUid: user.uid, expiresAt, lastSeenAt: new Date() }),
+      .update(loginTokens)
+      .set({ consumedAt: new Date() })
+      .where(and(eq(loginTokens.token, token), isNull(loginTokens.consumedAt))),
   )
+  if (consumed[0].affectedRows === 0) throw await refuse('used', tokenRow.userUid)
+
+  await startUserSession(event, user)
 
   // Written last, so "ok" in the trail means the session row exists. A member
   // who reports a failed login *after* this point is telling us about their

@@ -1,11 +1,16 @@
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { useDb } from '../db'
 import { loginTokens, userTags, users } from '../db/schema'
 import { createCardDAVAccount, findUserByEmail } from '../helpers/dav'
 import { recordEvent } from '../helpers/events'
-import { isWithinLoginCooldown, markLoginRequested } from '../helpers/loginCooldown'
+import { bindLoginCode } from '../helpers/loginCode'
+import {
+  isWithinLoginCooldown,
+  markLoginRequested,
+  releaseLoginCooldown,
+} from '../helpers/loginCooldown'
 import { sendLoginLink } from '../helpers/loginLink'
 import { isEmailNotFound, markEmailNotFound } from '../helpers/negativeCache'
 import { extractUserFromVCardData } from '../helpers/sync'
@@ -48,6 +53,10 @@ export default defineEventHandler(async (event) => {
     return { cooldown: true }
   }
   markLoginRequested(normalizedEmail)
+  // Past the cooldown and before anything that depends on the address
+  // existing, so every answer carries the same cookie. On a cooldown the
+  // previous binding stays, and with it the code in the mail already sent.
+  const codeNonce = bindLoginCode(event, config)
 
   if (isEmailNotFound(normalizedEmail)) {
     await recordEvent({ type: 'auth.link_unknown', event })
@@ -116,7 +125,8 @@ export default defineEventHandler(async (event) => {
     await db
       .select({ requestedAt: loginTokens.requestedAt })
       .from(loginTokens)
-      .where(eq(loginTokens.userUid, userRow.uid))
+      // Only unspent tokens hold the cooldown — see startUserSession().
+      .where(and(eq(loginTokens.userUid, userRow.uid), isNull(loginTokens.consumedAt)))
       .orderBy(desc(loginTokens.requestedAt))
       .limit(1)
   )[0]
@@ -135,7 +145,13 @@ export default defineEventHandler(async (event) => {
   }
 
   await recordEvent({ type: 'auth.link_requested', userUid: userRow.uid, event })
-  await sendLoginLink(config, userRow, redirect)
+  try {
+    await sendLoginLink(config, userRow, redirect, codeNonce)
+  } catch (error) {
+    // Nothing went out, so nothing to wait for — see releaseLoginCooldown().
+    releaseLoginCooldown(normalizedEmail)
+    throw error
+  }
 
   return {}
 })

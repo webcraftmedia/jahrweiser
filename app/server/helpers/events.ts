@@ -33,9 +33,14 @@ export const USER_EVENT_TYPES = [
   'auth.redeem_expired',
   'auth.redeem_unknown',
   'auth.redeem_disabled',
+  // The login code's own two: a wrong guess, and a code that takes no more
+  // guesses. The refusals it shares with the link (and `redeem_ok`) are
+  // recorded under the link's names with `meta.via = 'code'`.
+  'auth.redeem_wrong',
+  'auth.redeem_locked',
   // Sessions. `invalidated` carries whether it was revoked or simply old.
   // There is no `session.created`: a session is only ever born from a redeemed
-  // link, and `auth.redeem_ok` already says so.
+  // link or code, and `auth.redeem_ok` already says so.
   'session.invalidated',
   // Joining through an invitation link.
   'register.redeemed',

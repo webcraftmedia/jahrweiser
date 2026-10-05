@@ -3,6 +3,7 @@ import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
+import { isWithinLoginCooldown, markLoginRequested } from '../helpers/loginCooldown'
 
 import handler from './redeemLoginLink.post'
 
@@ -109,6 +110,17 @@ describe('redeemLoginLink.post', () => {
     await expect(fn({})).rejects.toMatchObject({ data: { reason: 'disabled' } })
   })
 
+  it('refuses as used when the code from the same mail won the race', async () => {
+    // Both read the row as unspent; only the conditional UPDATE decides.
+    queueDbResults(
+      [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
+      [{ uid: 'u1', deletedAt: null, loginDisabled: false }],
+      [{ affectedRows: 0 }],
+    )
+    await expect(fn({})).rejects.toMatchObject({ data: { reason: 'used' } })
+    expect(globalThis.setUserSession).not.toHaveBeenCalled()
+  })
+
   it('throws 500 when no session id is established', async () => {
     queueDbResults(
       [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
@@ -122,7 +134,7 @@ describe('redeemLoginLink.post', () => {
           loginDisabled: false,
         },
       ],
-      {}, // consume update
+      [{ affectedRows: 1 }], // consume update
     )
     vi.mocked(globalThis.getUserSession).mockResolvedValue({})
     await expect(fn({})).rejects.toThrow('Failed to establish session id')
@@ -141,11 +153,35 @@ describe('redeemLoginLink.post', () => {
           loginDisabled: false,
         },
       ],
-      {}, // consume update
+      [{ affectedRows: 1 }], // consume update
       {}, // session insert
     )
     vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
     await expect(fn({})).resolves.toStrictEqual({})
+  })
+
+  it('ends the request cooldown: the link it protected is spent', async () => {
+    // Log in, log out, ask again within the minute: no "take the link from
+    // that mail" for a link that is already used.
+    markLoginRequested('a@x.de')
+    queueDbResults(
+      [{ token: 'tok', userUid: 'u1', expiresAt: future, consumedAt: null }],
+      [
+        {
+          uid: 'u1',
+          displayName: 'A',
+          email: 'A@x.de',
+          role: 'user',
+          deletedAt: null,
+          loginDisabled: false,
+        },
+      ],
+      [{ affectedRows: 1 }],
+      {},
+    )
+    vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
+    await fn({})
+    expect(isWithinLoginCooldown('a@x.de', 60_000)).toBe(false)
   })
 
   it('records the success only once the session row exists', async () => {
@@ -164,7 +200,7 @@ describe('redeemLoginLink.post', () => {
           loginDisabled: false,
         },
       ],
-      {},
+      [{ affectedRows: 1 }],
       {},
     )
     vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
@@ -189,7 +225,7 @@ describe('redeemLoginLink.post', () => {
           loginDisabled: false,
         },
       ],
-      {},
+      [{ affectedRows: 1 }],
     )
     vi.mocked(globalThis.getUserSession).mockResolvedValue({})
     await expect(fn({})).rejects.toThrow('Failed to establish session id')

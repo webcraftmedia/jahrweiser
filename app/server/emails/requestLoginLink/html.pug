@@ -7,4 +7,7 @@ block content
   p!= t('emails.requestLoginLink.authenticateLink')
     | 
     a.auth(href=authURL)!= authURL
+  if code
+    p!= t('emails.requestLoginLink.code', { minutes: codeMinutes })
+    p.code(style="font-size: 28px; font-weight: bold; letter-spacing: 4px; font-family: monospace;")= code
   p!= t('emails.requestLoginLink.hints', { loginDays })

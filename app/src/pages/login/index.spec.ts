@@ -65,6 +65,21 @@ describe('Page: Login', () => {
     expect(wrapper.text()).not.toContain('pages.login.message.text1')
   })
 
+  it('offers the login code once the mail is on its way, on a cooldown too', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/login?redirect=/karte' })
+    await wrapper.find('input').setValue('test@example.com')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.findComponent({ name: 'LoginCodeForm' }).props('redirect')).toBe('/karte')
+
+    mock$fetch.mockResolvedValue({ cooldown: true })
+    await wrapper.find('[data-action="back"]').trigger('click')
+    await wrapper.find('input').setValue('test@example.com')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.find('#login-code').exists()).toBe(true)
+  })
+
   it('returns to login form on button click', async () => {
     const wrapper = await mountSuspended(Page, {
       route: '/login',
@@ -77,9 +92,9 @@ describe('Page: Login', () => {
     await flushPromises()
 
     // Click "back to login" button to return to form
-    await wrapper.find('[role="alert"] button').trigger('click')
+    await wrapper.find('[data-action="back"]').trigger('click')
 
-    expect(wrapper.find('form').exists()).toBe(true)
+    expect(wrapper.find('input[type="email"]').exists()).toBe(true)
   })
 
   it('shows email error for invalid email', async () => {

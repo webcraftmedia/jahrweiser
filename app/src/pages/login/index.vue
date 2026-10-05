@@ -31,9 +31,13 @@
           <p class="font-medium">{{ $t('pages.login.message.text1') }}</p>
           <p class="mt-2">{{ $t('pages.login.message.text2') }}</p>
         </div>
+        <!-- Offered on a cooldown too: the binding from the first request is
+             still in place, so the code in the mail already sent works. -->
+        <LoginCodeForm :redirect="redirect" class="mb-4" />
         <button
           class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors"
           type="button"
+          data-action="back"
           @click.prevent="showLogin"
         >
           {{ $t('pages.login.message.button') }}

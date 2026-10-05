@@ -105,6 +105,15 @@ export function extractLoginTokenFromMail(message: MaildevMessage): string {
   return match[1]!
 }
 
+/** The login code from the same mail, without its grouping space. */
+export function extractLoginCodeFromMail(message: MaildevMessage): string {
+  const match = /class="code"[^>]*>\s*(\d{3}) (\d{3})/.exec(message.html || '')
+  if (!match) {
+    throw new Error(`No login code found in mail body. Subject: ${message.subject}`)
+  }
+  return `${match[1]}${match[2]}`
+}
+
 /**
  * Opens a magic link and presses the confirmation button.
  *

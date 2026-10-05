@@ -67,3 +67,7 @@ globalThis.getHeader = vi.fn()
 globalThis.getRequestIP = vi.fn()
 globalThis.setHeader = vi.fn()
 globalThis.setResponseStatus = vi.fn()
+// The login code's binding cookie (server/helpers/loginCode.ts).
+globalThis.getCookie = vi.fn()
+globalThis.setCookie = vi.fn()
+globalThis.deleteCookie = vi.fn()

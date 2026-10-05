@@ -67,6 +67,10 @@ SELECT e.at, e.type, e.meta, e.ip_prefix
   nicht mehr gültig; neuen anfordern lassen.
 - **`auth.redeem_disabled`** oder **`auth.link_refused`** → Konto gesperrt oder
   gelöscht. Das ist eine bewusste Entscheidung, kein Fehler.
+- **`auth.redeem_wrong` / `auth.redeem_locked`** → das Mitglied hat den
+  Login-Code aus der Mail getippt (siehe unten), aber falsch bzw. zu oft falsch.
+  Alle Einlöse-Zeilen des Codes tragen `meta.via = 'code'`; ohne diesen Eintrag
+  kam die Anmeldung über den Link.
 - **`auth.link_cooldown` in Serie** → das Mitglied fordert im Minutentakt neue
   Links an und klickt dann den ältesten. Genau die Schleife, die
   `pages.login.cooldown` abfangen soll.
@@ -90,7 +94,9 @@ früher landete es wortlos wieder im Login-Formular, mit einem Link weniger.
 
 1. **Link im eingebauten Browser der Mail-App geöffnet** (Outlook, Gmail,
    WhatsApp). Der loggt sich in seinem eigenen Cookie-Topf ein; im normalen
-   Browser ist das Mitglied weiterhin ausgeloggt. → Link kopieren und in
+   Browser ist das Mitglied weiterhin ausgeloggt. → Statt des Links den
+   **Login-Code** aus derselben Mail auf der Login-Seite eintippen, auf der die
+   Mail angefordert wurde. Alternativ den Link kopieren und in
    Chrome/Safari/Firefox öffnen.
 2. **Cookies blockiert** (Privatmodus, strenge Tracking-Einstellung).
 3. **Gerätedatum grob falsch** — ein Cookie mit Ablauf „in der Vergangenheit"
@@ -118,6 +124,31 @@ Cookie-Problem — die Sitzung wurde nie wieder benutzt.
 geklickt hat: der Virenscanner des Postfachs war schneller. Dagegen steht die
 Klick-Bestätigung auf `/login/{token}` — sie zu umgehen wäre der Rückfall in
 genau dieses Problem.
+
+## Der Login-Code
+
+Jede Mail, die über das Login-Formular angefordert wurde, enthält neben dem
+Link einen sechsstelligen Code. Beides ist dasselbe Credential: Wer eines davon
+einlöst, verbraucht auch das andere. Gedacht ist der Code für alle Fälle, in
+denen der Link einen _anderen_ Browser einloggt als den, in dem das Mitglied
+sitzt — den eingebauten Browser der Mail-App, und auf dem iPhone die App auf
+dem Startbildschirm, die getrennte Cookies von Safari hat.
+
+Die Grenzen (Werte in `app/server/helpers/loginCode.ts`):
+
+| Regel                                   | Wert              | Folge für das Mitglied                               |
+| --------------------------------------- | ----------------- | ---------------------------------------------------- |
+| gilt nur im Browser, der ihn anforderte | Cookie (httpOnly) | anderswo: „Dieser Code gilt nur dort, wo du …“       |
+| Gültigkeit                              | 15 Minuten        | danach neue Mail anfordern; der Link gilt weiter 6 h |
+| Fehlversuche pro Code                   | 5                 | danach nur noch der Link                             |
+| Fehlversuche pro Mitglied und Tag       | 10                | danach nur noch der Link — gegen Durchprobieren      |
+
+Mails aus der Selbstregistrierung und vom Admin verschickte Links enthalten
+keinen Code: Dort gibt es kein Formular, an das er gebunden wäre.
+
+Zur Gegenprobe: `login_tokens.code_attempts` zählt die Versuche;
+`code_key`/`code_hash` sind Hashes, der Code selbst steht nirgends in der
+Datenbank.
 
 ## Schritt 3: Wenn gar keine Spur existiert
 

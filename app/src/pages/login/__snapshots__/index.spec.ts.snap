@@ -44,7 +44,16 @@ exports[`Page: Login > shows success message after login request 1`] = `
       <div data-v-45258083="" class="mb-4 text-base font-body">
         <p data-v-45258083="" class="font-medium">pages.login.message.text1</p>
         <p data-v-45258083="" class="mt-2">pages.login.message.text2</p>
-      </div><button data-v-45258083="" class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors" type="button">pages.login.message.button</button>
+      </div>
+      <!-- Offered on a cooldown too: the binding from the first request is
+             still in place, so the code in the mail already sent works. -->
+      <form data-v-45258083="" class="login-code mt-4 pt-4 border-t border-mustard/40 mb-4" novalidate=""><label for="login-code" class="block mb-2 text-base font-medium font-body">components.LoginCodeForm.label</label>
+        <div class="flex gap-2">
+          <!-- \`one-time-code\` lets iOS and Android offer the code from the mail
+           right above the keyboard. --><input id="login-code" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" class="min-w-0 flex-1 bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder focus:border-sienna dark:focus:border-sienna-dark focus:outline-none rounded p-2.5 text-xl tracking-[0.3em] font-mono text-navy dark:text-ivory" placeholder="components.LoginCodeForm.placeholder" aria-describedby="login-code-error"><button type="submit" disabled="" class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna bg-sienna text-ivory rounded hover:bg-sienna-dark hover:border-sienna-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed">components.LoginCodeForm.button</button>
+        </div>
+        <!--v-if-->
+      </form><button data-v-45258083="" class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors" type="button" data-action="back">pages.login.message.button</button>
     </div>
     <p data-v-45258083="" class="my-4 text-sm font-body text-navy/60 dark:text-poster-darkMuted text-center">pages.login.message.hint</p>
   </div>

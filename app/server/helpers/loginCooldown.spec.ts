@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-import { isWithinLoginCooldown, markLoginRequested } from './loginCooldown'
+import { isWithinLoginCooldown, markLoginRequested, releaseLoginCooldown } from './loginCooldown'
 
 const NOW = 1_700_000_000_000
 const WINDOW_MS = 60_000
@@ -47,5 +47,11 @@ describe('loginCooldown', () => {
     // existence oracle. Nothing here can tell the two apart.
     markLoginRequested('nobody@example.com')
     expect(isWithinLoginCooldown('nobody@example.com', WINDOW_MS)).toBe(true)
+  })
+
+  it('lifts the cooldown again after a request that failed on our side', () => {
+    markLoginRequested('c@example.com')
+    releaseLoginCooldown('c@example.com')
+    expect(isWithinLoginCooldown('c@example.com', WINDOW_MS)).toBe(false)
   })
 })

@@ -1,6 +1,8 @@
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 
+import { eq } from 'drizzle-orm'
+
 import { firstNameOf } from '../../shared/userName'
 import { useDb } from '../db'
 import { loginTokens } from '../db/schema'
@@ -90,6 +92,10 @@ export async function sendLoginLink(
       return
     } catch {
       await recordEvent({ type: 'auth.mail_failed', userUid: user.uid })
+      // Never delivered, so never usable: drop it rather than leave a live
+      // credential behind that also keeps the durable cooldown in
+      // requestLoginLink running for a mail nobody got.
+      await db.delete(loginTokens).where(eq(loginTokens.token, token))
       throw createError({ statusCode: 500, statusMessage: 'Failed to send login email' })
     }
   }

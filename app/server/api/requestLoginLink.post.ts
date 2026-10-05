@@ -6,7 +6,11 @@ import { loginTokens, userTags, users } from '../db/schema'
 import { createCardDAVAccount, findUserByEmail } from '../helpers/dav'
 import { recordEvent } from '../helpers/events'
 import { bindLoginCode } from '../helpers/loginCode'
-import { isWithinLoginCooldown, markLoginRequested } from '../helpers/loginCooldown'
+import {
+  isWithinLoginCooldown,
+  markLoginRequested,
+  releaseLoginCooldown,
+} from '../helpers/loginCooldown'
 import { sendLoginLink } from '../helpers/loginLink'
 import { isEmailNotFound, markEmailNotFound } from '../helpers/negativeCache'
 import { extractUserFromVCardData } from '../helpers/sync'
@@ -140,7 +144,13 @@ export default defineEventHandler(async (event) => {
   }
 
   await recordEvent({ type: 'auth.link_requested', userUid: userRow.uid, event })
-  await sendLoginLink(config, userRow, redirect, codeNonce)
+  try {
+    await sendLoginLink(config, userRow, redirect, codeNonce)
+  } catch (error) {
+    // Nothing went out, so nothing to wait for — see releaseLoginCooldown().
+    releaseLoginCooldown(normalizedEmail)
+    throw error
+  }
 
   return {}
 })

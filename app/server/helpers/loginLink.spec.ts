@@ -2,7 +2,7 @@
 import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { firstDbCall, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
+import { dbCalls, firstDbCall, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
 
 import { codeHashOf, codeKeyOf } from './loginCode'
 import { sendLoginLink } from './loginLink'
@@ -87,6 +87,16 @@ describe('sendLoginLink', () => {
     mockSend.mockRejectedValue(new Error('smtp down'))
     await expect(sendLoginLink(config, user)).rejects.toThrow('Failed to send login email')
     expect(mockSend).toHaveBeenCalledTimes(2)
+  })
+
+  it('drops the token of a mail that never went out', async () => {
+    // A live credential nobody received, which would also keep the durable
+    // cooldown in requestLoginLink running for a mail that does not exist.
+    queueDbResults({}, {})
+    mockSend.mockRejectedValue(new Error('smtp down'))
+    await expect(sendLoginLink(config, user)).rejects.toThrow('Failed to send login email')
+    const methods = dbCalls().map((call) => call.method)
+    expect(methods.indexOf('delete')).toBeGreaterThan(methods.indexOf('insert'))
   })
 
   it('records the send', async () => {

@@ -30,3 +30,13 @@ export function isWithinLoginCooldown(email: string, windowMs: number): boolean 
 export function markLoginRequested(email: string): void {
   lastRequestedAt.set(email, Date.now())
 }
+
+/**
+ * Lift the cooldown again after a request that failed on our side. Otherwise
+ * the next attempt is told a mail already went out — "take the link from that
+ * mail" — when none did. Safe to reveal: the failed request answered with an
+ * error, not with the ambiguous "maybe we sent something".
+ */
+export function releaseLoginCooldown(email: string): void {
+  lastRequestedAt.delete(email)
+}

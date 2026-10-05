@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.18.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.17.0...v1.18.0) (2026-10-05)
+
+
+### Features
+
+* **app:** fold the changelog into minor releases and lead with features ([#457](https://github.com/webcraftmedia/jahrweiser/issues/457)) ([e9f6456](https://github.com/webcraftmedia/jahrweiser/commit/e9f645664933075bccb5a48e8c79f362c4a695b4))
+* **app:** installable app on phones with an offline notice ([#464](https://github.com/webcraftmedia/jahrweiser/issues/464)) ([464f2e2](https://github.com/webcraftmedia/jahrweiser/commit/464f2e28cea5bc0ddcdd2823f07927c77cf213ca))
+* **app:** keep the calendar readable offline in the installed app ([#465](https://github.com/webcraftmedia/jahrweiser/issues/465)) ([60f662c](https://github.com/webcraftmedia/jahrweiser/commit/60f662cc4ed8287e0b5d8ec70e0e75a96c1b7857))
+* **app:** refresh on return, refresh button and pull-to-refresh ([#459](https://github.com/webcraftmedia/jahrweiser/issues/459)) ([8e54a4e](https://github.com/webcraftmedia/jahrweiser/commit/8e54a4e2bea594e7c4c47feb6bfaed9c40014d1d))
+* **db:** log in by a code from the login mail, next to the link ([#460](https://github.com/webcraftmedia/jahrweiser/issues/460)) ([a219fb7](https://github.com/webcraftmedia/jahrweiser/commit/a219fb761c5e57f0cdaced42ac23a0d6581fe116))
+
+
+### Bug Fixes
+
+* **app:** serve fonts from our own origin instead of Google ([#463](https://github.com/webcraftmedia/jahrweiser/issues/463)) ([75fd2bd](https://github.com/webcraftmedia/jahrweiser/commit/75fd2bdb9d21c6caf831172894809d6ba6931f34))
+
 ## [1.17.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.16.0...v1.17.0) (2026-10-04)
 
 

@@ -83,7 +83,7 @@
     "@vitest/coverage-v8": "^5.0.1",
     "acorn": "^8.18.0",
     "browserslist": "^4.29.3",
-    "dotenv": "^18.0.4",
+    "dotenv": "^18.0.5",
     "drizzle-kit": "^0.31.11",
     "eslint": "^10.11.0",
     "eslint-config-it4c": "^0.13.2",

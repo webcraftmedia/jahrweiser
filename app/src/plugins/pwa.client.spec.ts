@@ -5,7 +5,12 @@ import { env, UA } from '../../test/helpers/device-env'
 import { installHintEligible, installUnsupported } from '../utils/installPrompt'
 import { pwaHeadLinks } from '../utils/pwaHead'
 
-import plugin, { checkOfflineCopy, keepStartPagesWhenReady } from './pwa.client'
+import plugin, {
+  checkOfflineCopy,
+  keepStartPagesWhenReady,
+  launchedAddress,
+  openLaunchedAddress,
+} from './pwa.client'
 
 import type { DeviceEnv } from '../utils/device'
 
@@ -301,6 +306,52 @@ describe('pwa plugin', () => {
       ready()
       await done
       expect(keep).toHaveBeenCalledWith(['/?app', '/'])
+    })
+  })
+
+  describe('the address the start asked for', () => {
+    function navigatedTo(url: string | null) {
+      vi.spyOn(performance, 'getEntriesByType').mockReturnValue(
+        url ? [{ name: url } as PerformanceEntry] : [],
+      )
+    }
+
+    function routerAt(fullPath: string) {
+      return { currentRoute: { value: { fullPath } }, replace: vi.fn(async () => {}) }
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('reads it from the navigation entry, path and query', () => {
+      navigatedTo('https://gg-g.info/2026/11?app')
+      expect(launchedAddress()).toBe('/2026/11?app')
+      navigatedTo(null)
+      expect(launchedAddress()).toBeNull()
+    })
+
+    it('opens the calendar address an offline start was answered with the start page for', () => {
+      // The worker served the stored /?app page for /2026/11; Nuxt hydrated on /?app.
+      navigatedTo('https://gg-g.info/2026/11')
+      const router = routerAt('/?app')
+      openLaunchedAddress(router as never)
+      expect(router.replace).toHaveBeenCalledWith('/2026/11')
+    })
+
+    it.each([
+      [
+        'the route already is the address — any online start',
+        'https://gg-g.info/2026/11',
+        '/2026/11',
+      ],
+      ['the address is no calendar page', 'https://gg-g.info/karte', '/'],
+      ['there is no navigation entry', null, '/'],
+    ])('does nothing when %s', (_label, url, route) => {
+      navigatedTo(url)
+      const router = routerAt(route)
+      openLaunchedAddress(router as never)
+      expect(router.replace).not.toHaveBeenCalled()
     })
   })
 })

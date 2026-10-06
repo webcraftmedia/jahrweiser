@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.2...v1.18.3) (2026-10-06)
+
+
+### Bug Fixes
+
+* **app:** open any calendar address offline, not only the start page ([#488](https://github.com/webcraftmedia/jahrweiser/issues/488)) ([7b09508](https://github.com/webcraftmedia/jahrweiser/commit/7b095084e477469eac5b15ec9058ba55b6d2c610))
+
 ## [1.18.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.1...v1.18.2) (2026-10-06)
 
 

@@ -201,6 +201,29 @@ test.describe('PWA: installed app', () => {
     // The address stays the member's, so "Erneut versuchen" reloads that page.
     expect(new URL(page.url()).pathname).toBe('/')
 
+    // An offline start on any calendar address — the one open last, an event —
+    // gets the stored start page when that very address was never stored.
+    await context.setOffline(false)
+    // The offline page reloads itself once the network is back; settle first.
+    await page.goto('/login')
+    await waitForHydration(page)
+    await page.evaluate(async () => {
+      const pages = await caches.open('jahrweiser-pages')
+      await pages.put(
+        '/?app',
+        new Response('<!doctype html><title>start</title><h1>Gespeicherte Startseite</h1>', {
+          headers: { 'content-type': 'text/html' },
+        }),
+      )
+    })
+    await context.setOffline(true)
+    await page.goto('/2026/11')
+    await expect(page.getByRole('heading', { name: 'Gespeicherte Startseite' })).toBeVisible()
+    expect(new URL(page.url()).pathname).toBe('/2026/11')
+    // Not for other pages: those keep the offline notice.
+    await page.goto('/karte')
+    await expect(page.getByRole('heading', { name: 'Du bist offline' })).toBeVisible()
+
     // /api is never answered by the worker, not even with the notice.
     await expect(page.goto('/api/blaettchen')).rejects.toThrow(/ERR_INTERNET_DISCONNECTED/)
   })

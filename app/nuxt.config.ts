@@ -201,13 +201,31 @@ export default defineNuxtConfig({
             cacheName: 'jahrweiser-pages',
             networkTimeoutSeconds: 5,
             expiration: { maxEntries: 12 },
-            precacheFallback: { fallbackURL: '/offline.html' },
             plugins: [
               {
                 cacheWillUpdate: async ({ response }) =>
                   Promise.resolve(
                     response.status === 200 && !response.redirected ? response : null,
                   ),
+              },
+              {
+                // No network and this very address was never stored — the
+                // app may be started on whatever address was open last
+                // (/2026/10, an event), not on its start_url. Any calendar
+                // address can show the stored start page: the app reads the
+                // month and the event from the address and the data from the
+                // device. Only without one, the offline notice. Literals
+                // only: workbox-build copies this function's source into
+                // sw.js (start pages: src/utils/serviceWorker.ts).
+                handlerDidError: async () => {
+                  const pages = await caches.open('jahrweiser-pages')
+                  return (
+                    (await pages.match('/?app')) ??
+                    (await pages.match('/')) ??
+                    (await caches.match('/offline.html', { ignoreSearch: true })) ??
+                    Response.error()
+                  )
+                },
               },
             ],
           },

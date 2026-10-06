@@ -1,3 +1,4 @@
+import { isCalendarPath } from '~/utils/calendarPath'
 import { canInstall, deviceEnv, pwaMode } from '~/utils/device'
 import {
   installHintEligible,
@@ -51,6 +52,32 @@ async function startServiceWorker(enabled: boolean) {
 }
 
 /**
+ * The address this start really asked for, from the browser's navigation
+ * entry — not from the router, which may say something else (see
+ * openLaunchedAddress).
+ */
+export function launchedAddress(): string | null {
+  const [entry] = performance.getEntriesByType('navigation')
+  if (!entry) return null
+  const url = new URL(entry.name)
+  return url.pathname + url.search
+}
+
+/**
+ * Offline, the worker answers any calendar address it has no page for with the
+ * stored start page (`pwa.workbox` in nuxt.config.ts). Nuxt then hydrates on
+ * that page's path, not the address — the app would show this month for a
+ * start on /2026/11 or an event. Once mounted, go where the start pointed.
+ * Online the server renders the right page, and nothing happens here.
+ */
+export function openLaunchedAddress(router = useRouter()): void {
+  const launched = launchedAddress()
+  if (!launched || launched === router.currentRoute.value.fullPath) return
+  if (!isCalendarPath(new URL(launched, 'http://x').pathname)) return
+  void router.replace(launched)
+}
+
+/**
  * Keep the start pages for an offline start, once the worker is ready — see
  * keepStartPages. Run whenever a member is logged in: on a start that already
  * is, and right after the login on a first start that is not.
@@ -87,6 +114,9 @@ export default defineNuxtPlugin((nuxtApp) => {
   rememberAppLaunch(new URLSearchParams(window.location.search))
 
   if (mode === 'installed') {
+    nuxtApp.hook('app:mounted', () => {
+      openLaunchedAddress()
+    })
     // The calendar kept on the device for offline use (docu/pwa.md).
     enableOfflineSession()
     nuxtApp.hook('app:mounted', () => {

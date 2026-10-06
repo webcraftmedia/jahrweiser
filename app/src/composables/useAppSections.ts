@@ -3,6 +3,7 @@ import IconCalendar from '~/assets/icon-calendar.svg'
 import IconInfo from '~/assets/icon-info.svg'
 import IconMap from '~/assets/icon-map.svg'
 import IconTelegram from '~/assets/icon-telegram.svg'
+import { isCalendarPath } from '~/utils/calendarPath'
 
 /** One top-level section of the app, as both navigations render it. */
 export interface AppSection {
@@ -20,16 +21,6 @@ export interface AppSection {
   isActive: (path: string) => boolean
   /** Marks the entry as needing something from the member before it works. */
   warn?: boolean
-}
-
-/**
- * The calendar owns `/` plus the dated permalinks it pushes into the URL
- * (/2026/09, /2026/09/event/<id>) — see the route pattern in pages/index.vue.
- * The pattern stays deliberately flat — a single bounded `\d{4}` followed by
- * a separator — so there is nothing for a backtracking engine to chew on.
- */
-function isCalendarPath(path: string): boolean {
-  return path === '/' || /^\/\d{4}(\/|$)/.test(path)
 }
 
 /**

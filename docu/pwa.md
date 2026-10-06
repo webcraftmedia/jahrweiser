@@ -127,6 +127,22 @@ ausgeloggt — läuft an ihm vorbei; danach wechselt die App nur noch clientseit
 Ohne das sah, wer die App installiert, einmal geöffnet und dann offline
 gestartet hatte, trotz gespeicherter Daten nur „Du bist offline“.
 
+**Jede Kalenderadresse startet offline.** Gestartet wird die App nicht immer
+über `start_url`: Firefox/Fennec nimmt die Adresse, die beim Installieren
+offen war, Android stellt nach dem Schließen oft die zuletzt offene wieder her
+— und der Kalender schreibt die Adresse auf den Monat um (`/2026/10`,
+`/2026/10/event/…`). Fehlt offline genau diese Seite im Cache, liefert der
+Service Worker für **jede Kalenderadresse** die gespeicherte Startseite
+(`/?app`, sonst `/`); erst ohne beide die Offline-Seite (`handlerDidError` in
+`pwa.workbox`, nuxt.config.ts). Nuxt hydriert dann auf dem Pfad dieser Seite,
+nicht auf der Adresse; nach dem Start öffnet die App deshalb die tatsächlich
+aufgerufene Kalenderadresse (`openLaunchedAddress` in
+`src/plugins/pwa.client.ts`, aus dem Navigation-Timing des Browsers). Monat und
+Termine kommen aus IndexedDB.
+
+Der **Folgemonat** wird im Hintergrund nach dem angezeigten Monat geladen —
+wer die App öffnet und sofort offline geht, hat ihn ggf. noch nicht.
+
 **Nie mehr Vergangenheit als online:** Der Kalender reicht einen Monat zurück
 (aktueller Monat und Vormonat; das Monatsraster beginnt bis zu 7 Tage davor).
 Diese Grenze steht an genau einer Stelle, `app/shared/calendarWindow.ts`, und

@@ -127,7 +127,10 @@ export default defineNuxtConfig({
       description: 'Der Kalender von gg-g.info',
       lang: 'de',
       dir: 'ltr',
-      start_url: '/',
+      // The mark tells a start from the home screen apart from a visit in the
+      // browser, also where the browser does not report standalone — see
+      // rememberAppLaunch in src/utils/installPrompt.ts.
+      start_url: '/?app',
       scope: '/',
       display: 'standalone',
       background_color: THEME_LIGHT,

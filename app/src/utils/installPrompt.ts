@@ -14,8 +14,37 @@ export interface BeforeInstallPromptEvent extends Event {
 /** The kept event, until it is used (once) or the app gets installed. */
 export const installPrompt = shallowRef<BeforeInstallPromptEvent | null>(null)
 
-/** Installed during this visit — through the hint or the browser menu. */
+/**
+ * The app is installed on this device: installed during this visit, or
+ * started from the home screen at some point (see rememberAppLaunch).
+ */
 export const appInstalled = ref(false)
+
+/**
+ * Set on this device once the app was started from the home screen — the
+ * manifest's `start_url` carries `?app` for exactly that. A browser tab on the
+ * same device then knows the app is there and stops suggesting it.
+ */
+export const APP_LAUNCHED_KEY = 'jahrweiser-app-launched'
+
+export function rememberAppLaunch(query: URLSearchParams): void {
+  // This start counts in any case; remembering it is what may fail.
+  if (query.has('app')) appInstalled.value = true
+  try {
+    if (appInstalled.value) localStorage.setItem(APP_LAUNCHED_KEY, '1')
+    else if (localStorage.getItem(APP_LAUNCHED_KEY) === '1') appInstalled.value = true
+    // eslint-disable-next-line no-catch-all/no-catch-all -- Speicher gesperrt: dann eben ohne Erinnerung, der Hinweis bleibt
+  } catch {
+    // Nothing to do: the hint simply returns on the next visit in a tab.
+  }
+}
+
+/**
+ * A phone or tablet browser that cannot install the app (Firefox and its
+ * relatives on Android — see canInstall in src/utils/device.ts). The project
+ * page says where it works instead.
+ */
+export const installUnsupported = ref(false)
 
 /**
  * Whether this visitor may see the install hint: a phone or tablet browser.

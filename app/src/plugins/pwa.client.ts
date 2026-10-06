@@ -1,14 +1,17 @@
-import { deviceEnv, pwaMode } from '~/utils/device'
-import { installHintEligible, listenForInstallPrompt } from '~/utils/installPrompt'
+import { canInstall, deviceEnv, pwaMode } from '~/utils/device'
+import {
+  installHintEligible,
+  installUnsupported,
+  listenForInstallPrompt,
+  rememberAppLaunch,
+} from '~/utils/installPrompt'
 import {
   enableOfflineSession,
   offlineSessionValid,
   purgeOfflineData,
   readOfflineSession,
 } from '~/utils/offlineSession'
-
-/** Served by @vite-pwa/nuxt; content in nuxt.config.ts (`pwa.manifest`). */
-export const MANIFEST_URL = '/manifest.webmanifest'
+import { pwaHeadLinks } from '~/utils/pwaHead'
 
 /**
  * At every start, the copy on the device is brought in line (docu/pwa.md):
@@ -61,10 +64,16 @@ async function startServiceWorker(enabled: boolean) {
  *   demand.
  */
 export default defineNuxtPlugin((nuxtApp) => {
-  const mode = pwaMode(deviceEnv())
+  const env = deviceEnv()
+  const mode = pwaMode(env)
   if (mode === 'desktop') return
 
-  useHead({ link: [{ rel: 'manifest', href: MANIFEST_URL }] })
+  // Usually already in the server-rendered page (src/plugins/pwa.server.ts);
+  // the same keys make this a no-op then.
+  useHead({ link: pwaHeadLinks() })
+  // Started from the home screen (`start_url` carries the mark), whether or
+  // not the browser reports standalone: the hint has done its job.
+  rememberAppLaunch(new URLSearchParams(window.location.search))
 
   if (mode === 'installed') {
     // The calendar kept on the device for offline use (docu/pwa.md).
@@ -84,6 +93,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   listenForInstallPrompt()
   nuxtApp.hook('app:mounted', () => {
-    installHintEligible.value = true
+    // Only where installing is real — never point anyone at a shortcut.
+    if (canInstall(env, 'onbeforeinstallprompt' in window)) installHintEligible.value = true
+    else installUnsupported.value = true
   })
 })

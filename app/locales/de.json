@@ -54,7 +54,7 @@
       "dismiss": "Hinweis ausblenden",
       "install": "Installieren",
       "label": "Jahrweiser als App",
-      "menu": "Als App installieren: im Browser-Menü „Zum Startbildschirm hinzufügen“ wählen.",
+      "menu": "Als App installieren: im Browser-Menü ⋮ „App installieren“ wählen.",
       "prompt": "Hol dir den Jahrweiser als App auf den Startbildschirm.",
       "safari": "Als App installieren: Öffne diese Seite in Safari, dann „Teilen“ → „Zum Home-Bildschirm“.",
       "share": "Als App installieren: Tippe auf „Teilen“ und dann auf „Zum Home-Bildschirm“."
@@ -481,8 +481,9 @@
           "button": "Als App installieren",
           "desktop": "Auf dem Handy oder Tablet kannst du den Jahrweiser als App auf den Startbildschirm legen. Öffne ihn dazu dort im Browser und wähle hier „Als App installieren“.",
           "heading": "Den Jahrweiser als App",
-          "installed": "Du nutzt den Jahrweiser schon als App. Aktualisieren kannst du oben über ⟳ oder indem du den Kalender nach unten ziehst.",
-          "text": "Leg dir den Jahrweiser auf den Startbildschirm: Er startet dann wie eine App, ohne Adresszeile, mit einem Fingertipp."
+          "installed": "Der Jahrweiser ist auf diesem Gerät schon als App installiert – du findest ihn auf deinem Startbildschirm.",
+          "text": "Leg dir den Jahrweiser auf den Startbildschirm: Er startet dann wie eine App, ohne Adresszeile, mit einem Fingertipp.",
+          "unsupported": "Dieser Browser kann den Jahrweiser nicht als App installieren, nur ein Lesezeichen auf den Startbildschirm legen. Als App geht es in Chrome, Edge oder Samsung Internet (Android) und in Safari (iPhone, iPad)."
         },
         "help": {
           "heading": "Mithelfen",

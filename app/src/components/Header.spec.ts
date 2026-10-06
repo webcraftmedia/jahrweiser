@@ -1,7 +1,7 @@
 import { renderSuspended, mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest'
 
-import { installHintEligible, installRequested } from '../utils/installPrompt'
+import { appInstalled, installHintEligible, installRequested } from '../utils/installPrompt'
 
 import Component from './Header.vue'
 
@@ -317,6 +317,14 @@ describe('Header', () => {
       expect(phone.find('#navbar-mobile [data-action="install"]').text()).toBe(
         'components.Header.install-app',
       )
+    })
+
+    it('is gone once the app is on this device', async () => {
+      installHintEligible.value = true
+      appInstalled.value = true
+      const wrapper = await mountSuspended(Component)
+      expect(wrapper.find('#navbar-mobile [data-action="install"]').exists()).toBe(false)
+      appInstalled.value = false
     })
 
     it('closes the menu and asks for the installation', async () => {

@@ -1,7 +1,12 @@
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { installHintEligible, installRequested } from '../../utils/installPrompt'
+import {
+  appInstalled,
+  installHintEligible,
+  installRequested,
+  installUnsupported,
+} from '../../utils/installPrompt'
 
 import Page from './index.vue'
 
@@ -49,6 +54,23 @@ describe('Page: Über das Projekt', () => {
       standalone.value = false
       installHintEligible.value = false
       installRequested.value = false
+      installUnsupported.value = false
+      appInstalled.value = false
+    })
+
+    it('says where it works in a browser that could only make a shortcut', async () => {
+      installUnsupported.value = true
+      const wrapper = await mountSuspended(Page, { route: '/projekt' })
+      expect(wrapper.text()).toContain('pages.projekt.about.app.unsupported')
+      expect(wrapper.find('[data-action="install"]').exists()).toBe(false)
+    })
+
+    it('knows the app in a browser tab once it was started from the home screen', async () => {
+      appInstalled.value = true
+      installHintEligible.value = true
+      const wrapper = await mountSuspended(Page, { route: '/projekt' })
+      expect(wrapper.text()).toContain('pages.projekt.about.app.installed')
+      expect(wrapper.find('[data-action="install"]').exists()).toBe(false)
     })
 
     it('offers the installation in a phone or tablet browser', async () => {

@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  APP_LAUNCHED_KEY,
   appInstalled,
   installPrompt,
   installRequested,
   listenForInstallPrompt,
+  rememberAppLaunch,
   requestInstall,
 } from './installPrompt'
 
@@ -77,5 +79,42 @@ describe('requestInstall', () => {
   it('shows the hint with the steps everywhere else', async () => {
     await requestInstall()
     expect(installRequested.value).toBe(true)
+  })
+})
+
+describe('rememberAppLaunch', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    appInstalled.value = false
+  })
+
+  it('knows the app once it was started from the home screen', () => {
+    rememberAppLaunch(new URLSearchParams('app'))
+    expect(appInstalled.value).toBe(true)
+    expect(localStorage.getItem(APP_LAUNCHED_KEY)).toBe('1')
+
+    // Later, in a browser tab on the same device: still known.
+    appInstalled.value = false
+    rememberAppLaunch(new URLSearchParams(''))
+    expect(appInstalled.value).toBe(true)
+  })
+
+  it('knows nothing of an app never started', () => {
+    rememberAppLaunch(new URLSearchParams('month=10'))
+    expect(appInstalled.value).toBe(false)
+  })
+
+  it('still counts this start when storage is blocked', () => {
+    const blocked = () => {
+      throw new DOMException('blocked', 'SecurityError')
+    }
+    vi.spyOn(localStorage, 'setItem').mockImplementation(blocked)
+    rememberAppLaunch(new URLSearchParams('app'))
+    expect(appInstalled.value).toBe(true)
+
+    appInstalled.value = false
+    rememberAppLaunch(new URLSearchParams(''))
+    expect(appInstalled.value).toBe(false)
+    vi.restoreAllMocks()
   })
 })

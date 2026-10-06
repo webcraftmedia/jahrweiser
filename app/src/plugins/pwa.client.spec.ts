@@ -34,10 +34,12 @@ vi.mock('~/utils/installPrompt', async (importOriginal) => ({
 }))
 
 const keep = vi.hoisted(() => vi.fn())
+const keepMessages = vi.hoisted(() => vi.fn())
 vi.mock('~/utils/serviceWorker', () => ({
   registerServiceWorker: mocks.register,
   START_PAGES: ['/?app', '/'],
   keepStartPages: keep,
+  keepMessages,
 }))
 
 const session = vi.hoisted(() => {
@@ -306,6 +308,8 @@ describe('pwa plugin', () => {
       ready()
       await done
       expect(keep).toHaveBeenCalledWith(['/?app', '/'])
+      // The translations go along: without them an offline start shows raw keys.
+      expect(keepMessages).toHaveBeenCalledTimes(1)
     })
   })
 

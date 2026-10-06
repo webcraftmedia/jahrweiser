@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  keepMessages,
   keepStartPages,
+  MESSAGES_CACHE,
   registerServiceWorker,
   SERVICE_WORKER_URL,
   START_PAGES,
@@ -130,5 +132,74 @@ describe('keepStartPages', () => {
 
   it('names the start_url and the plain root', () => {
     expect(START_PAGES).toStrictEqual(['/?app', '/'])
+  })
+})
+
+describe('keepMessages', () => {
+  const MESSAGES = 'https://gg-g.info/_i18n/04c69d8f/de/messages.json'
+
+  function messagesWindow({
+    loaded = [MESSAGES, 'https://gg-g.info/_nuxt/entry.js'],
+    stored = false,
+    online = true,
+    withCaches = true,
+    fetch = vi.fn(async () => ({ ok: true }) as Response),
+  }: {
+    loaded?: string[]
+    stored?: boolean
+    online?: boolean
+    withCaches?: boolean
+    fetch?: ReturnType<typeof vi.fn>
+  } = {}) {
+    const cache = {
+      put: vi.fn(async () => {}),
+      match: vi.fn(async () => (stored ? {} : undefined)),
+    }
+    const open = vi.fn(async () => cache)
+    const win = {
+      navigator: { onLine: online },
+      performance: { getEntriesByType: () => loaded.map((name) => ({ name })) },
+      fetch,
+      ...(withCaches ? { caches: { open } } : {}),
+    }
+    return { win: win as unknown as Window, cache, open, fetch }
+  }
+
+  it('keeps the translations this page loaded, in a cache of their own', async () => {
+    const { win, cache, open, fetch } = messagesWindow()
+    await keepMessages(win)
+    expect(MESSAGES_CACHE).toBe('jahrweiser-i18n')
+    expect(open).toHaveBeenCalledWith('jahrweiser-i18n')
+    expect(fetch).toHaveBeenCalledWith(MESSAGES)
+    expect(cache.put).toHaveBeenCalledWith(MESSAGES, expect.anything())
+  })
+
+  it('fetches nothing it has already — they are named by their content', async () => {
+    const { win, fetch } = messagesWindow({ stored: true })
+    await keepMessages(win)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('keeps no failed answer, and carries on past a failed request', async () => {
+    const failing = messagesWindow({ fetch: vi.fn(async () => ({ ok: false }) as Response) })
+    await keepMessages(failing.win)
+    expect(failing.cache.put).not.toHaveBeenCalled()
+
+    const throwing = messagesWindow({
+      fetch: vi.fn(async () => {
+        throw new TypeError('network')
+      }),
+    })
+    await expect(keepMessages(throwing.win)).resolves.toBeUndefined()
+  })
+
+  it.each([
+    ['offline', { online: false }],
+    ['without a Cache API', { withCaches: false }],
+    ['when no translations were loaded', { loaded: ['https://gg-g.info/_nuxt/entry.js'] }],
+  ])('does nothing %s', async (_label, options) => {
+    const { win, open } = messagesWindow(options)
+    await keepMessages(win)
+    expect(open).not.toHaveBeenCalled()
   })
 })

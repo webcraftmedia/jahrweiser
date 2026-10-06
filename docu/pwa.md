@@ -176,6 +176,17 @@ mit jeder Anfrage mit — wie die Sitzung selbst: 7 Tage nach der letzten
 Aktivität, höchstens 90 Tage nach dem Login. Eine Dauer statt eines Datums,
 damit eine falsch gehende Geräte-Uhr die Frist nicht verschiebt.
 
+**Übersetzungen offline:** Die App holt ihre Texte beim Start von
+`/_i18n/<hash>/de/messages.json` und nicht aus der Seite. Der Service Worker
+cached sie (CacheFirst, eigener Cache `jahrweiser-i18n`, nicht personenbezogen,
+bleibt beim Logout); beim ersten Start legt die App sie zusammen mit den
+Startseiten selbst ab (`keepMessages`). Ohne das stand offline statt der Texte
+der rohe Schlüssel (`pages.index.offlineStand`, `pages.index.today`).
+
+**Termine ohne gespeicherte Details** (offline, nie online geöffnet): Das
+Popup öffnet trotzdem, zeigt, was der Kalender selbst weiß — Titel, Kalender,
+Beginn — und sagt, dass Ort und Beschreibung offline fehlen.
+
 **Offline** liefert der Kalender, was gespeichert ist, und sagt es: „Offline –
 du siehst den Stand vom …". Eine Ablehnung des Servers (401, 403, 404) wird nie
 durch Gespeichertes überdeckt — eine 401 führt wie bisher zum Logout.

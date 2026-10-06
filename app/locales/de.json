@@ -406,6 +406,7 @@
         "calendar": "Kalender:",
         "duration": "Dauer:",
         "location": "Ort:",
+        "offline": "Du bist offline, und dieser Termin wurde noch nicht geöffnet. Ort und Beschreibung siehst du, sobald du wieder online bist.",
         "start": "Beginn:",
         "url": "Link:"
       },

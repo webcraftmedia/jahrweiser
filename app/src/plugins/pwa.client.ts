@@ -84,8 +84,8 @@ export function openLaunchedAddress(router = useRouter()): void {
  */
 export async function keepStartPagesWhenReady(): Promise<void> {
   await navigator.serviceWorker.ready
-  const { START_PAGES, keepStartPages } = await import('~/utils/serviceWorker')
-  await keepStartPages(START_PAGES)
+  const { START_PAGES, keepMessages, keepStartPages } = await import('~/utils/serviceWorker')
+  await Promise.all([keepStartPages(START_PAGES), keepMessages()])
 }
 
 /**

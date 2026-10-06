@@ -139,6 +139,11 @@
             <!-- Event content — rolls down when loaded -->
             <div v-else class="modal-content-reveal">
               <div class="modal-content-inner">
+                <!-- Offline, and this event was never opened online: what the
+                     calendar itself knows, and a word that the rest is missing. -->
+                <p v-if="eventOffline" role="status" class="offline-stand mb-3">
+                  {{ $t('pages.index.details.offline') }}
+                </p>
                 <table class="text-left align-top text-navy dark:text-ivory font-body w-full">
                   <tbody>
                     <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
@@ -157,7 +162,10 @@
                       </th>
                       <td class="py-1.5">{{ eventStartDate }}</td>
                     </tr>
-                    <tr class="border-b border-navy/8 dark:border-poster-darkBorder/50">
+                    <tr
+                      v-show="eventDuration"
+                      class="border-b border-navy/8 dark:border-poster-darkBorder/50"
+                    >
                       <th
                         class="pr-4 py-1.5 font-semibold text-navy/60 dark:text-ivory/60 whitespace-nowrap"
                       >
@@ -221,6 +229,7 @@
   import { useColorMode } from '../composables/useColorMode'
   import { useZoom } from '../composables/useZoom'
   import {
+    isNetworkError,
     nextMonthRange,
     readCalendarEvents,
     readCalendars,
@@ -303,10 +312,29 @@
   }
   const selectedEvent = ref<EventDetail | null>(null)
   const eventLoading = ref(false)
+  /** Offline, without stored details: the popup shows the calendar's own data. */
+  const eventOffline = ref(false)
   const eventTitle = ref('')
   const eventCalendar = ref('')
   const eventCalendarName = computed(() => eventCalendar.value)
-  const eventStartDate = computed(() => selectedEvent.value?.startDate ?? '')
+  /**
+   * The start as people read it — the details carry it as iCal hands it over
+   * (`2026-10-05T18:00:00Z`, `2026-10-05T20:00:00`, or a bare date for an
+   * all-day event). Anything unparseable is shown as it came.
+   */
+  const eventStartDate = computed(() => {
+    const value = selectedEvent.value?.startDate ?? ''
+    const allDay = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    const date = new Date(allDay ? `${value}T00:00:00` : value)
+    if (!value || Number.isNaN(date.getTime())) return value
+    return date.toLocaleString(locale.value, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      ...(allDay ? {} : { hour: '2-digit', minute: '2-digit' }),
+    })
+  })
   const eventDuration = computed(() => selectedEvent.value?.duration?.replace(/^PT?/, '') ?? '')
   const eventLocation = computed(() => selectedEvent.value?.location ?? '')
   const eventUrl = computed(() => selectedEvent.value?.url ?? '')
@@ -1197,9 +1225,10 @@
   }
 
   async function clickItem(data: JahrweiserEvent) {
+    const { _calendar: calendar, _originalId: id, _occurrence: occurrence } = data
     try {
-      const { _calendar: calendar, _originalId: id, _occurrence: occurrence } = data
       selectedEvent.value = null
+      eventOffline.value = false
       eventLoading.value = true
       eventTitle.value = capitalize(data.title || '')
       eventCalendar.value = calendar
@@ -1222,6 +1251,19 @@
       selectedEvent.value = eventData
       // eslint-disable-next-line no-catch-all/no-catch-all -- einzelner api()-Aufruf: Fehler wird geloggt, Modal schliesst und die URL wird zurueckgesetzt
     } catch (error) {
+      // No network and no stored details: the popup stays, with what the
+      // calendar knows (title, calendar, start) and a word on the rest.
+      const listed = isNetworkError(error) ? findRawEvent(id, occurrence) : undefined
+      if (listed) {
+        selectedEvent.value = {
+          summary: listed.title,
+          uid: listed.id,
+          // Formatted by eventStartDate like the details' own start.
+          startDate: listed.startDate,
+        }
+        eventOffline.value = true
+        return
+      }
       console.error(error)
       modal.value?.close()
       const d = currentDate.value

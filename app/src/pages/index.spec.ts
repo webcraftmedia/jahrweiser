@@ -1,4 +1,5 @@
 import { mockNuxtImport, mountSuspended, renderSuspended } from '@nuxt/test-utils/runtime'
+import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { stubApi } from '../../test/helpers/stub-api'
@@ -416,6 +417,45 @@ describe('Page: Index', () => {
     const modal = document.getElementById('default-modal')
     expect(modal?.textContent).toContain('Room A')
     expect(modal?.textContent).toContain('A test event')
+  })
+
+  it.each([
+    ['a timed start in UTC', '2025-01-15T18:00:00Z', true],
+    ['a floating local start', '2025-01-15T20:00:00', true],
+    ['an all-day event', '2025-01-15', false],
+  ])('shows %s as people read it', async (_label, startDate, withTime) => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/event') return Promise.resolve({ summary: 'S', uid: 'e', startDate })
+      return Promise.resolve([])
+    })
+    await mount()
+    mockCallbacks.onEventClick?.({ _calendar: 'Work', _originalId: 'e', title: 'S' })
+    await flushPromises()
+    await nextTick()
+    const allDay = !withTime
+    const expected = new Date(allDay ? `${startDate}T00:00:00` : startDate).toLocaleString('en', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      ...(allDay ? {} : { hour: '2-digit', minute: '2-digit' }),
+    })
+    expect(document.getElementById('default-modal')?.textContent).toContain(expected)
+  })
+
+  it('shows a start it cannot read as it came', async () => {
+    mock$fetch.mockImplementation((url: string) => {
+      if (url === '/api/calendars') return Promise.resolve([{ name: 'Work', color: '#ff0000' }])
+      if (url === '/api/event')
+        return Promise.resolve({ summary: 'S', uid: 'e', startDate: 'soon' })
+      return Promise.resolve([])
+    })
+    await mount()
+    mockCallbacks.onEventClick?.({ _calendar: 'Work', _originalId: 'e', title: 'S' })
+    await flushPromises()
+    await nextTick()
+    expect(document.getElementById('default-modal')?.textContent).toContain('soon')
   })
 
   it('renders modal content without description', async () => {
@@ -2188,6 +2228,41 @@ describe('Page: Index', () => {
       })
       await vi.waitFor(() => {
         expect(mockOffline.loadEntry).toHaveBeenCalledWith('event:Work:event-1:1', 'u1')
+      })
+    })
+
+    describe('an event never opened online', () => {
+      async function clickOffline(event: Record<string, unknown>) {
+        await mount()
+        mockOffline.loadEntry.mockResolvedValue(null)
+        mock$fetch.mockRejectedValue(offlineError())
+        mockCallbacks.onEventClick?.(event)
+        await flushPromises()
+        await nextTick()
+        return document.getElementById('default-modal')!
+      }
+
+      it('still opens, with what the calendar knows and a word on the rest', async () => {
+        const modal = await clickOffline({
+          _calendar: 'Work',
+          _originalId: 'event-1',
+          title: 'Test',
+        })
+        expect(modal.classList.contains('modal-open')).toBe(true)
+        expect(modal.textContent).toContain('pages.index.details.offline')
+        expect(modal.textContent).toContain('Work')
+        // The start from the list, formatted like any other.
+        expect(modal.textContent).toContain('2025')
+        expect(modal.textContent).not.toMatch(/\d{4}-\d{2}-\d{2}T/)
+      })
+
+      it('closes as before when the event is not even in the list', async () => {
+        const modal = await clickOffline({
+          _calendar: 'Work',
+          _originalId: 'gone',
+          title: 'Gone',
+        })
+        expect(modal.classList.contains('modal-open')).toBe(false)
       })
     })
   })

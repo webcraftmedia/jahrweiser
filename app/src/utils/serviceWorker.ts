@@ -1,5 +1,8 @@
 import { PAGES_CACHE } from './offlineSession'
 
+/** The worker's cache for the translations — see `pwa.workbox` in nuxt.config.ts. */
+export const MESSAGES_CACHE = 'jahrweiser-i18n'
+
 /** Path and scope of the service worker that @vite-pwa/nuxt generates. */
 export const SERVICE_WORKER_URL = '/sw.js'
 
@@ -36,6 +39,34 @@ export async function keepStartPages(urls: string[], win: Window = window): Prom
         // eslint-disable-next-line no-catch-all/no-catch-all -- Vorhalten fuer offline ist Beiwerk: eine fehlende Seite bleibt eben ungespeichert
       } catch {
         // Not kept; the next start online tries again.
+      }
+    }),
+  )
+}
+
+/**
+ * Keep the translations this page loaded (`/_i18n/<hash>/de/messages.json`)
+ * for an offline start — the same gap as the start pages: the worker caches
+ * them from the second start on, but the first one fetched them past it.
+ * Found in the page's resource timing, so no build hash has to be known here.
+ */
+export async function keepMessages(win: Window = window): Promise<void> {
+  if (!('caches' in win) || !win.navigator.onLine) return
+  const urls = win.performance
+    .getEntriesByType('resource')
+    .map((entry) => entry.name)
+    .filter((name) => new URL(name).pathname.startsWith('/_i18n/'))
+  if (urls.length === 0) return
+  const cache = await win.caches.open(MESSAGES_CACHE)
+  await Promise.all(
+    [...new Set(urls)].map(async (url) => {
+      try {
+        if (await cache.match(url)) return
+        const response = await win.fetch(url)
+        if (response.ok) await cache.put(url, response)
+        // eslint-disable-next-line no-catch-all/no-catch-all -- Vorhalten fuer offline ist Beiwerk: fehlt es, holt es der naechste Start
+      } catch {
+        // Not kept; the worker stores it on the next start online.
       }
     }),
   )

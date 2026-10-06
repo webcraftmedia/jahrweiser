@@ -173,6 +173,20 @@ export default defineNuxtConfig({
       navigationPreload: true,
       runtimeCaching: [
         {
+          // The translations, which the app fetches at start rather than
+          // taking from the page — without them an offline start shows raw
+          // keys. Named by a hash of their content, so a stored copy is never
+          // stale: CacheFirst. Not personal, so a cache of its own that a
+          // logout leaves alone (src/utils/serviceWorker.ts keeps them on the
+          // first start, too).
+          urlPattern: ({ url }) => url.pathname.startsWith('/_i18n/'),
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'jahrweiser-i18n',
+            expiration: { maxEntries: 4 },
+          },
+        },
+        {
           // Calendar pages, for the installed app's offline calendar
           // (docu/pwa.md): from the network whenever it answers, from this
           // cache when it does not. The page carries the member's name in its

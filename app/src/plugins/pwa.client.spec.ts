@@ -1,11 +1,11 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { env, UA } from '../../test/helpers/device-env'
 import { installHintEligible, installUnsupported } from '../utils/installPrompt'
 import { pwaHeadLinks } from '../utils/pwaHead'
 
-import plugin, { checkOfflineCopy } from './pwa.client'
+import plugin, { checkOfflineCopy, keepStartPagesWhenReady } from './pwa.client'
 
 import type { DeviceEnv } from '../utils/device'
 
@@ -28,7 +28,19 @@ vi.mock('~/utils/installPrompt', async (importOriginal) => ({
   listenForInstallPrompt: mocks.listen,
 }))
 
-vi.mock('~/utils/serviceWorker', () => ({ registerServiceWorker: mocks.register }))
+const keep = vi.hoisted(() => vi.fn())
+vi.mock('~/utils/serviceWorker', () => ({
+  registerServiceWorker: mocks.register,
+  START_PAGES: ['/?app', '/'],
+  keepStartPages: keep,
+}))
+
+const session = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ref } = require('vue')
+  return { loggedIn: ref(false) }
+})
+mockNuxtImport('useUserSession', () => () => session)
 
 const offline = vi.hoisted(() => ({
   enabled: false,
@@ -59,7 +71,14 @@ async function run(device: DeviceEnv) {
   const hooks: Record<string, () => void> = {}
   const nuxtApp = {
     hook: vi.fn((name: string, fn: () => void) => {
-      hooks[name] = fn
+      // Several plugins' worth of hooks under one name run in order.
+      const before = hooks[name]
+      hooks[name] = before
+        ? () => {
+            before()
+            fn()
+          }
+        : fn
     }),
   }
   ;(plugin as unknown as (app: typeof nuxtApp) => void)(nuxtApp)
@@ -204,6 +223,84 @@ describe('pwa plugin', () => {
       await checkOfflineCopy(5000)
       expect(offline.purge).not.toHaveBeenCalled()
       expect(mockPrune).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('the start pages for an offline start', () => {
+    beforeEach(() => {
+      session.loggedIn.value = false
+      Object.defineProperty(navigator, 'serviceWorker', {
+        value: { ready: Promise.resolve({}) },
+        configurable: true,
+      })
+    })
+
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, 'serviceWorker')
+    })
+
+    it('are kept once a member is logged in — right after the login, too', async () => {
+      const { hooks } = await run(env({ userAgent: UA.iPhoneSafari, standalone: true }))
+      hooks['app:mounted']!()
+      await vi.dynamicImportSettled()
+      // The first start of the app usually is the login: nothing to keep yet.
+      expect(keep).not.toHaveBeenCalled()
+
+      session.loggedIn.value = true
+      await vi.waitFor(() => {
+        expect(keep).toHaveBeenCalledWith(['/?app', '/'])
+      })
+    })
+
+    it('are kept straight away on a start that is logged in already', async () => {
+      session.loggedIn.value = true
+      const { hooks } = await run(env({ userAgent: UA.iPhoneSafari, standalone: true }))
+      hooks['app:mounted']!()
+      await vi.waitFor(() => {
+        expect(keep).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    it('failing to keep them leaves the app as it is', async () => {
+      // Quota full, storage blocked: an offline start then shows the notice,
+      // nothing more — and no unhandled rejection.
+      keep.mockRejectedValueOnce(new DOMException('full', 'QuotaExceededError'))
+      session.loggedIn.value = true
+      const { hooks } = await run(env({ userAgent: UA.iPhoneSafari, standalone: true }))
+      expect(() => {
+        hooks['app:mounted']!()
+      }).not.toThrow()
+      await vi.waitFor(() => {
+        expect(keep).toHaveBeenCalledTimes(1)
+      })
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    it('are not kept while the kill switch is on', async () => {
+      useRuntimeConfig().public.serviceWorker = false
+      session.loggedIn.value = true
+      const { hooks } = await run(env({ standalone: true }))
+      hooks['app:mounted']!()
+      await vi.dynamicImportSettled()
+      expect(keep).not.toHaveBeenCalled()
+    })
+
+    it('wait for the worker before anything is kept', async () => {
+      let ready!: () => void
+      Object.defineProperty(navigator, 'serviceWorker', {
+        value: {
+          ready: new Promise<void>((resolve) => {
+            ready = resolve
+          }),
+        },
+        configurable: true,
+      })
+      const done = keepStartPagesWhenReady()
+      await vi.dynamicImportSettled()
+      expect(keep).not.toHaveBeenCalled()
+      ready()
+      await done
+      expect(keep).toHaveBeenCalledWith(['/?app', '/'])
     })
   })
 })

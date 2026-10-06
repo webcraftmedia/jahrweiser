@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.4](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.3...v1.18.4) (2026-10-06)
+
+
+### Bug Fixes
+
+* **app:** translations and event popup in the offline calendar ([#490](https://github.com/webcraftmedia/jahrweiser/issues/490)) ([01bf0ed](https://github.com/webcraftmedia/jahrweiser/commit/01bf0edcfc8bee7cba9ce19981efd1e81d563dea))
+
 ## [1.18.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.2...v1.18.3) (2026-10-06)
 
 

@@ -51,6 +51,17 @@ async function startServiceWorker(enabled: boolean) {
 }
 
 /**
+ * Keep the start pages for an offline start, once the worker is ready — see
+ * keepStartPages. Run whenever a member is logged in: on a start that already
+ * is, and right after the login on a first start that is not.
+ */
+export async function keepStartPagesWhenReady(): Promise<void> {
+  await navigator.serviceWorker.ready
+  const { START_PAGES, keepStartPages } = await import('~/utils/serviceWorker')
+  await keepStartPages(START_PAGES)
+}
+
+/**
  * Decides which part of the installable-app code a visitor gets (docu/pwa.md):
  *
  * - desktop browser: nothing. No manifest link — its presence is what makes
@@ -88,6 +99,18 @@ export default defineNuxtPlugin((nuxtApp) => {
     // without a worker.
     const enabled = useRuntimeConfig().public.serviceWorker && !import.meta.dev
     startServiceWorker(enabled).catch(() => {})
+    if (enabled && 'serviceWorker' in navigator) {
+      const { loggedIn } = useUserSession()
+      nuxtApp.hook('app:mounted', () => {
+        watch(
+          loggedIn,
+          (isLoggedIn) => {
+            if (isLoggedIn) keepStartPagesWhenReady().catch(() => {})
+          },
+          { immediate: true },
+        )
+      })
+    }
     return
   }
 

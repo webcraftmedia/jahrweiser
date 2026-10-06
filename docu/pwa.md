@@ -116,6 +116,17 @@ UID des Mitglieds):
 - die Details jedes geöffneten Termins,
 - dazu die Kalender-Seiten selbst im Cache `jahrweiser-pages` (siehe Tabelle).
 
+**Die Startseiten für einen Start ohne Netz** (`/?app` = `start_url`, und `/`
+für Apps, die vor dieser Markierung installiert wurden) legt die App selbst ab,
+**sobald ein Mitglied eingeloggt ist und der Service Worker bereit ist** —
+direkt beim Start, oder gleich nach dem Login (`keepStartPages` in
+`src/utils/serviceWorker.ts`, ausgelöst in `src/plugins/pwa.client.ts`). Der
+Service Worker selbst kann das nicht: Er legt nur Seiten ab, deren Aufruf durch
+ihn lief, und der erste Start der App — der ihn erst registriert, meist noch
+ausgeloggt — läuft an ihm vorbei; danach wechselt die App nur noch clientseitig.
+Ohne das sah, wer die App installiert, einmal geöffnet und dann offline
+gestartet hatte, trotz gespeicherter Daten nur „Du bist offline“.
+
 **Nie mehr Vergangenheit als online:** Der Kalender reicht einen Monat zurück
 (aktueller Monat und Vormonat; das Monatsraster beginnt bis zu 7 Tage davor).
 Diese Grenze steht an genau einer Stelle, `app/shared/calendarWindow.ts`, und

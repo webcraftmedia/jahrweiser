@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.0...v1.18.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* **app:** never send Firefox users to a home-screen shortcut ([#484](https://github.com/webcraftmedia/jahrweiser/issues/484)) ([cf2a593](https://github.com/webcraftmedia/jahrweiser/commit/cf2a593098cc3bd3ee333b7298f80178abd4c129))
+
 ## [1.18.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.17.0...v1.18.0) (2026-10-05)
 
 

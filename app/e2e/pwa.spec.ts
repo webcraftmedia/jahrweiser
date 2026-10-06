@@ -324,6 +324,20 @@ test.describe('PWA: installed app, calendar offline', () => {
       'du siehst den Stand vom',
     )
 
+    // The bar stays under the header while the month scrolls beneath it.
+    // A short window, so the two mock events are enough to scroll.
+    await page.setViewportSize({ width: 412, height: 360 })
+    const bar = page.getByRole('status').filter({ hasText: 'du siehst den Stand vom' })
+    const before = (await bar.boundingBox())!.y
+    const scrolled = await page.locator('.content').evaluate((el) => {
+      el.scrollTop = el.scrollHeight
+      return el.scrollTop
+    })
+    expect(scrolled).toBeGreaterThan(0)
+    await page.waitForTimeout(300)
+    expect(Math.abs((await bar.boundingBox())!.y - before)).toBeLessThan(2)
+    await page.setViewportSize({ width: 412, height: 915 })
+
     // Back online, logging out leaves nothing of the member on the device.
     await context.setOffline(false)
     await page.route('**/api/_auth/session', async (route) =>

@@ -2180,6 +2180,8 @@ describe('Page: Index', () => {
         expect(wrapper.find('.offline-stand').exists()).toBe(true)
       })
       expect(wrapper.find('.offline-stand').text()).toContain('pages.index.offlineStand')
+      // In the sticky top with the header, so it stays in view while scrolling.
+      expect(wrapper.find('.cv-top > .offline-stand').exists()).toBe(true)
       await vi.waitFor(() => {
         expect(
           mockEventsServiceSet.mock.calls.some((call: unknown[][]) =>
@@ -2196,6 +2198,20 @@ describe('Page: Index', () => {
               new Date(2025, 1, 1).getTime(),
         ),
       ).toHaveLength(0)
+    })
+
+    it('measures the sticky top again when the offline bar comes and goes', async () => {
+      await mount()
+      const setProperty = vi.spyOn(document.documentElement.style, 'setProperty')
+      useOfflineStand().value = Date.now()
+      await vi.waitFor(() => {
+        expect(setProperty).toHaveBeenCalledWith('--header-height', expect.any(String))
+      })
+      setProperty.mockClear()
+      useOfflineStand().value = null
+      await vi.waitFor(() => {
+        expect(setProperty).toHaveBeenCalledWith('--header-height', expect.any(String))
+      })
     })
 
     it('fetches ahead quietly even when that fails', async () => {

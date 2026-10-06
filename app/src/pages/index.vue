@@ -36,44 +36,53 @@
               <path d="M21 3v6h-6" />
             </svg>
           </div>
-          <div class="cv-header" :style="headerZoomStyle">
-            <span class="periodLabel">{{ currentPeriodLabel }}</span>
-            <div class="cv-header-nav">
-              <button
-                class="view-toggle"
-                :aria-label="isListView ? $t('pages.index.monthView') : $t('pages.index.listView')"
-                @click="toggleView"
-              >
-                <IconGrid v-if="isListView" class="view-toggle-icon" />
-                <IconList v-else class="view-toggle-icon" />
-                <span class="view-toggle-label">{{
-                  isListView ? $t('pages.index.monthView') : $t('pages.index.listView')
-                }}</span>
-              </button>
-              <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-              <button
-                v-show="!isPastLimit"
-                :aria-label="prevMonthLabel"
-                @click="navigatePeriod(-1)"
-              >
-                <span class="nav-arrow">‹</span><span class="nav-label"> {{ prevMonthLabel }}</span>
-              </button>
-              <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
-              <button :disabled="isCurrentMonth" @click="navigateToToday()">
-                {{ $t('pages.index.today') }}
-              </button>
-              <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-              <button :aria-label="nextMonthLabel" @click="navigatePeriod(1)">
-                <span class="nav-label">{{ nextMonthLabel }} </span><span class="nav-arrow">›</span>
-              </button>
-              <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+          <!-- Header and offline bar stick together at the top of the scroll
+               area: the bar says where what is shown comes from, so it has to
+               stay in view while scrolling through the month. -->
+          <div class="cv-top">
+            <div class="cv-header" :style="headerZoomStyle">
+              <span class="periodLabel">{{ currentPeriodLabel }}</span>
+              <div class="cv-header-nav">
+                <button
+                  class="view-toggle"
+                  :aria-label="
+                    isListView ? $t('pages.index.monthView') : $t('pages.index.listView')
+                  "
+                  @click="toggleView"
+                >
+                  <IconGrid v-if="isListView" class="view-toggle-icon" />
+                  <IconList v-else class="view-toggle-icon" />
+                  <span class="view-toggle-label">{{
+                    isListView ? $t('pages.index.monthView') : $t('pages.index.listView')
+                  }}</span>
+                </button>
+                <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+                <button
+                  v-show="!isPastLimit"
+                  :aria-label="prevMonthLabel"
+                  @click="navigatePeriod(-1)"
+                >
+                  <span class="nav-arrow">‹</span
+                  ><span class="nav-label"> {{ prevMonthLabel }}</span>
+                </button>
+                <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+                <button :disabled="isCurrentMonth" @click="navigateToToday()">
+                  {{ $t('pages.index.today') }}
+                </button>
+                <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
+                <button :aria-label="nextMonthLabel" @click="navigatePeriod(1)">
+                  <span class="nav-label">{{ nextMonthLabel }} </span
+                  ><span class="nav-arrow">›</span>
+                </button>
+                <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
+              </div>
             </div>
-          </div>
-          <!-- Only in the installed app, with the network gone: what is shown
+            <!-- Only in the installed app, with the network gone: what is shown
                is the copy kept on the device, and this says from when. -->
-          <p v-if="offlineStand !== null" role="status" class="offline-stand">
-            {{ $t('pages.index.offlineStand', { stand: formatStand(offlineStand) }) }}
-          </p>
+            <p v-if="offlineStand !== null" role="status" class="offline-stand">
+              {{ $t('pages.index.offlineStand', { stand: formatStand(offlineStand) }) }}
+            </p>
+          </div>
           <ScheduleXCalendar :calendar-app="calendarApp!" :style="calendarBodyZoomStyle" />
           <!-- Loading overlay -->
           <div v-show="calLoading" class="cal-loading-overlay">
@@ -602,7 +611,8 @@
   function scrollToEl(el: Element) {
     const container = el.closest('.content')
     if (!container) return
-    const headerHeight = document.querySelector('.cv-header')?.getBoundingClientRect().height ?? 0
+    // The whole sticky top — header and, offline, the bar below it.
+    const headerHeight = document.querySelector('.cv-top')?.getBoundingClientRect().height ?? 0
     const top =
       el.getBoundingClientRect().top -
       container.getBoundingClientRect().top +
@@ -752,7 +762,7 @@
   }
 
   function updateHeaderHeight() {
-    const header = document.querySelector('.cv-header')
+    const header = document.querySelector('.cv-top')
     if (header) {
       document.documentElement.style.setProperty(
         '--header-height',
@@ -760,6 +770,12 @@
       )
     }
   }
+
+  // The offline bar makes the sticky top taller (or shorter, once gone):
+  // measure again, so a day scrolled to does not end up under it.
+  watch(offlineStand, () => {
+    void nextTick(updateHeaderHeight)
+  })
 
   function onResize() {
     updateHeaderHeight()
@@ -1388,6 +1404,13 @@
 
   /* --- Custom header (month navigation bar) --- */
 
+  .cv-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #faf5eb;
+  }
+
   .cv-header {
     display: flex;
     align-items: center;
@@ -1395,9 +1418,6 @@
     padding: 0.25em 0;
     background-color: #faf5eb;
     border-bottom: 1px solid rgba(194, 65, 12, 0.2);
-    position: sticky;
-    top: 0;
-    z-index: 10;
   }
 
   @media (max-width: 1536px) {
@@ -1817,6 +1837,10 @@
   }
 
   /* --- Header (dark) --- */
+
+  .dark .cv-top {
+    background-color: #1a1714;
+  }
 
   .dark .cv-header {
     background-color: #1a1714;

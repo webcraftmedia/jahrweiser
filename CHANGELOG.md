@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.1...v1.18.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* **app:** show the calendar on an offline start of a freshly installed app ([#486](https://github.com/webcraftmedia/jahrweiser/issues/486)) ([98b6d4e](https://github.com/webcraftmedia/jahrweiser/commit/98b6d4ef568ebcbd415ebcbe6531c68285d0aa6e))
+
 ## [1.18.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.0...v1.18.1) (2026-10-06)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.5](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.4...v1.18.5) (2026-10-06)
+
+
+### Bug Fixes
+
+* **app:** keep the offline bar in view while the calendar scrolls ([#492](https://github.com/webcraftmedia/jahrweiser/issues/492)) ([4073256](https://github.com/webcraftmedia/jahrweiser/commit/4073256848d882ed21264bbe1c67789762f36786))
+
 ## [1.18.4](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.3...v1.18.4) (2026-10-06)
 
 

@@ -21,6 +21,7 @@
   <!-- Bar variant (default nav bar) -->
   <nav
     v-else
+    ref="navBar"
     class="relative z-50 bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
@@ -134,6 +135,7 @@
         <div
           id="navbar-mobile"
           :class="mobileMenuOpen ? 'menu-open' : ''"
+          :style="mobileMenuOpen ? { maxHeight: menuMaxHeight } : undefined"
           class="mobile-menu md:hidden"
         >
           <!-- User Info Header -->
@@ -310,7 +312,34 @@
   // Address the user by first name; fall back to the email when no name is set.
   const welcomeName = computed(() => firstNameOf(user.value?.name) || user.value?.email)
 
+  const navBar = ref<HTMLElement>()
+  /**
+   * The room between the bar and the bottom edge, for the open menu. Taller
+   * than that — a long calendar list does it — the menu scrolls in itself
+   * instead of reaching past the page, which would make the whole document
+   * scrollable. In the bar's own units: the bar is zoomed (`chromeZoom`), the
+   * measurement is not.
+   */
+  const menuMaxHeight = ref<string>()
+
+  // Only ever called with the menu there, and the menu lives in the bar.
+  function fitMenu() {
+    const room = window.innerHeight - navBar.value!.getBoundingClientRect().bottom
+    menuMaxHeight.value = `${Math.max(0, room) / chromeZoom.value}px`
+  }
+
+  function onResize() {
+    if (mobileMenuOpen.value) fitMenu()
+  }
+  onMounted(() => {
+    window.addEventListener('resize', onResize)
+  })
+  onBeforeUnmount(() => {
+    window.removeEventListener('resize', onResize)
+  })
+
   function toggleMobileMenu() {
+    if (!mobileMenuOpen.value) fitMenu()
     mobileMenuOpen.value = !mobileMenuOpen.value
   }
 
@@ -379,9 +408,17 @@
     transform: translateY(-0.5rem);
     opacity: 0;
     pointer-events: none;
+    /* Closed, it takes no room at all. Invisible is not enough: an absolutely
+       positioned box still counts towards the document's height, and one that
+       reaches past the bottom edge makes the whole page scrollable — the
+       calendar then scrolled the header away whenever it jumped to today.
+       The height goes only once the fade-out is done. */
+    max-height: 0;
+    overflow: hidden;
     transition:
       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.25s ease;
+      opacity 0.25s ease,
+      max-height 0s linear 0.3s;
   }
   :is(.dark .mobile-menu) {
     background-color: #1a1714;
@@ -390,6 +427,11 @@
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.25s ease;
   }
 
   /* Section icons in the mobile menu. Held back like the rail's, and for the

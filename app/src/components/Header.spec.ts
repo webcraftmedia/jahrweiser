@@ -285,6 +285,67 @@ describe('Header', () => {
     expect(burger.find('.rounded-full').exists()).toBe(true)
   })
 
+  describe('the open menu', () => {
+    const innerHeight = window.innerHeight
+    function barBottomAt(bottom: number) {
+      return vi
+        .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+        .mockReturnValue({ bottom } as DOMRect)
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+      window.innerHeight = innerHeight
+    })
+
+    it('ends at the bottom edge and takes no room while closed', async () => {
+      window.innerHeight = 640
+      barBottomAt(64)
+      const wrapper = await mountSuspended(Component)
+      const menu = () => wrapper.find('#navbar-mobile')
+      expect(menu().attributes('style')).toBeUndefined()
+
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      expect(menu().attributes('style')).toContain('max-height: 576px')
+
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      expect(menu().attributes('style')).toBeUndefined()
+    })
+
+    it('counts in the zoom of the bar, which the measurement does not', async () => {
+      mockZoomState.zoomLevel.value = 1.5 // chromeZoom 1.15
+      window.innerHeight = 640
+      barBottomAt(64)
+      const wrapper = await mountSuspended(Component)
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      expect(wrapper.find('#navbar-mobile').attributes('style')).toContain(
+        `max-height: ${576 / 1.15}px`,
+      )
+    })
+
+    it('follows a resize while open, and only then', async () => {
+      window.innerHeight = 640
+      barBottomAt(64)
+      const wrapper = await mountSuspended(Component)
+      window.dispatchEvent(new Event('resize'))
+      await nextTick()
+      expect(wrapper.find('#navbar-mobile').attributes('style')).toBeUndefined()
+
+      await wrapper.find('[aria-controls="navbar-mobile"]').trigger('click')
+      window.innerHeight = 400
+      window.dispatchEvent(new Event('resize'))
+      await nextTick()
+      expect(wrapper.find('#navbar-mobile').attributes('style')).toContain('max-height: 336px')
+    })
+
+    it('stops listening once gone', async () => {
+      const remove = vi.spyOn(window, 'removeEventListener')
+      const wrapper = await mountSuspended(Component)
+      wrapper.unmount()
+      expect(remove).toHaveBeenCalledWith('resize', expect.any(Function))
+    })
+  })
+
   it('applies zoom style when chromeZoom is not 1', async () => {
     mockZoomState.zoomLevel.value = 1.5
     const wrapper = await mountSuspended(Component)

@@ -9,7 +9,8 @@
         <span class="font-display text-navy dark:text-ivory text-2xl md:text-3xl tracking-wide"
           >Jahrweiser</span
         >
-        <span class="font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5"
+        <span
+          class="header-region font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5"
           >Bergstraße</span
         >
       </div>
@@ -24,13 +25,16 @@
     class="relative z-50 bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
+    <!-- One row at any width, the menu always top right: nothing here may
+         wrap. On the narrowest phones the wordmark gives way (see
+         .header-wordmark); with the zoom on top it is cut short instead. -->
     <div
-      class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto py-2 px-2 2xl:px-0"
+      class="max-w-screen-2xl flex flex-nowrap items-center justify-between gap-2 mx-auto py-2 px-2 2xl:px-0"
     >
-      <NuxtLink to="/" class="flex items-center gap-2">
-        <LogoSmall class="logo-bar" />
+      <NuxtLink to="/" class="flex items-center gap-2 min-w-0">
+        <LogoSmall class="logo-bar shrink-0" />
         <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-        <div>
+        <div class="header-wordmark min-w-0 truncate">
           <span class="font-display text-navy dark:text-ivory text-2xl tracking-wide"
             >Jahrweiser</span
           >
@@ -49,7 +53,7 @@
           v-if="standalone"
           type="button"
           data-action="refresh"
-          class="ml-auto mr-1 inline-flex items-center justify-center w-10 h-10 text-navy/70 dark:text-ivory/70 rounded-lg hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20 disabled:opacity-60"
+          class="ml-auto mr-1 shrink-0 inline-flex items-center justify-center w-10 h-10 text-navy/70 dark:text-ivory/70 rounded-lg hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20 disabled:opacity-60"
           :aria-label="$t('components.Header.refresh')"
           :title="$t('components.Header.refresh')"
           :disabled="refreshing"
@@ -75,7 +79,7 @@
         <!-- Burger menu button (mobile only) -->
         <button
           type="button"
-          class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
+          class="relative shrink-0 inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
           aria-controls="navbar-mobile"
           :aria-expanded="mobileMenuOpen"
           @click="toggleMobileMenu"
@@ -241,7 +245,7 @@
 
           <!-- Legal Links & Version -->
           <div
-            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
+            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-navy/60 dark:text-ivory/60"
           >
             <a
               href="https://www.webcraft-media.de/#!impressum"
@@ -363,6 +367,15 @@
   .logo-bar {
     width: 44px;
     height: 44px;
+  }
+  /* Logo, wordmark, refresh and menu button need about 300px; below that the
+     wordmark would push the menu into a second row. On the login page's
+     larger logo the region gives way instead, and the name stays. */
+  @media (max-width: 359px) {
+    .header-wordmark,
+    .header-region {
+      display: none;
+    }
   }
   .logo-hero {
     width: 40px;

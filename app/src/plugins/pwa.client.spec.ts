@@ -123,8 +123,8 @@ describe('pwa plugin', () => {
     expect(installHintEligible.value).toBe(true)
   })
 
-  it('offers no installation where the browser could only make a shortcut', async () => {
-    // Firefox on Android: no install event, not iOS.
+  it('offers Firefox on Android its own way, without an install event', async () => {
+    // Its menu installs; the event it never sends.
     let owner: object | null = window
     while (owner && !Object.prototype.hasOwnProperty.call(owner, 'onbeforeinstallprompt')) {
       owner = Object.getPrototypeOf(owner) as object | null
@@ -133,7 +133,26 @@ describe('pwa plugin', () => {
     if (owner) Reflect.deleteProperty(owner, 'onbeforeinstallprompt')
     try {
       const { hooks } = await run(env({ userAgent: UA.androidFirefox }))
-      // The manifest still: a later Firefox may install for real.
+      // The manifest is what makes its menu say "Installieren".
+      expect(mocks.useHead).toHaveBeenCalledWith(MANIFEST_LINK)
+      hooks['app:mounted']!()
+      expect(installHintEligible.value).toBe(true)
+      expect(installUnsupported.value).toBe(false)
+    } finally {
+      if (owner && descriptor) Object.defineProperty(owner, 'onbeforeinstallprompt', descriptor)
+    }
+  })
+
+  it('offers no installation where the browser could only make a shortcut', async () => {
+    // An in-app browser on Android: no install event, not iOS, not Firefox.
+    let owner: object | null = window
+    while (owner && !Object.prototype.hasOwnProperty.call(owner, 'onbeforeinstallprompt')) {
+      owner = Object.getPrototypeOf(owner) as object | null
+    }
+    const descriptor = owner && Object.getOwnPropertyDescriptor(owner, 'onbeforeinstallprompt')
+    if (owner) Reflect.deleteProperty(owner, 'onbeforeinstallprompt')
+    try {
+      const { hooks } = await run(env({ userAgent: UA.androidWebView }))
       expect(mocks.useHead).toHaveBeenCalledWith(MANIFEST_LINK)
       hooks['app:mounted']!()
       expect(installHintEligible.value).toBe(false)

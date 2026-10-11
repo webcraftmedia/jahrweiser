@@ -2,7 +2,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { env, UA } from '../../test/helpers/device-env'
 
-import { deviceEnv, isDesktopClassIPad, isMobileDevice, isStandalone, pwaMode } from './device'
+import {
+  canInstall,
+  deviceEnv,
+  isAndroidFirefox,
+  isDesktopClassIPad,
+  isMobileDevice,
+  isStandalone,
+  pwaMode,
+} from './device'
 
 describe('isMobileDevice', () => {
   it.each([
@@ -92,6 +100,31 @@ describe('pwaMode', () => {
 
   it('is `desktop` in a desktop browser', () => {
     expect(pwaMode(env({ userAgent: UA.windowsChrome }))).toBe('desktop')
+  })
+})
+
+describe('canInstall', () => {
+  it('trusts the install event wherever it comes', () => {
+    expect(canInstall(env({ userAgent: UA.androidWebView }), true)).toBe(true)
+  })
+
+  it.each([
+    ['iOS Safari', UA.iPhoneSafari],
+    ['Firefox on Android', UA.androidFirefox],
+  ])('knows %s installs without one', (_, userAgent) => {
+    expect(canInstall(env({ userAgent }), false)).toBe(true)
+  })
+
+  it('leaves out browsers that could only make a shortcut', () => {
+    expect(canInstall(env({ userAgent: UA.androidWebView }), false)).toBe(false)
+  })
+})
+
+describe('isAndroidFirefox', () => {
+  it('takes Firefox on Android, not on the desktop, not Chrome', () => {
+    expect(isAndroidFirefox(env({ userAgent: UA.androidFirefox }))).toBe(true)
+    expect(isAndroidFirefox(env({ userAgent: UA.linuxFirefox }))).toBe(false)
+    expect(isAndroidFirefox(env({ userAgent: UA.androidChrome }))).toBe(false)
   })
 })
 

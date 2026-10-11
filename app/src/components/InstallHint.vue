@@ -3,7 +3,8 @@
    * A one-line suggestion to put the app on the home screen, on phones and
    * tablets only. How depends on the browser (see useInstallHint): Chromium
    * gets a button that opens its install dialog, iOS an instruction for the
-   * share sheet, browsers that cannot install a pointer to one that can.
+   * share sheet, Firefox on Android the entry in its menu (no page can open
+   * that dialog), browsers that cannot install a pointer to one that can.
    * Dismissed once, it stays away on this device.
    */
   import LogoSmall from '~/../assets/logo-small.svg'
@@ -22,6 +23,9 @@
       <template v-if="method === 'prompt'">{{ $t('components.InstallHint.prompt') }}</template>
       <template v-else-if="method === 'share'">{{ $t('components.InstallHint.share') }}</template>
       <template v-else-if="method === 'safari'">{{ $t('components.InstallHint.safari') }}</template>
+      <template v-else-if="method === 'firefox'">{{
+        $t('components.InstallHint.firefox')
+      }}</template>
       <template v-else>{{ $t('components.InstallHint.menu') }}</template>
     </p>
     <button

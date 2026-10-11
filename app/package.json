@@ -15,6 +15,7 @@
     "test:lint:eslint": "eslint --max-warnings 0 .",
     "test:lint:locales": "scripts/locales/locales.sh ./locales",
     "test:size": "size-limit",
+    "test:size:login": "node scripts/login-size.mjs",
     "test:baseline": "node scripts/browser-baseline.mjs",
     "test:e2e": "playwright test",
     "test:e2e:full-stack": "playwright test --config=playwright.full-stack.config.ts",

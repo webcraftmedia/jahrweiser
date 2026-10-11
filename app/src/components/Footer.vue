@@ -17,13 +17,16 @@
         <button
           class="hover:text-sienna dark:hover:text-sienna-light transition-colors cursor-pointer"
           :title="$t('components.Footer.changelog')"
-          @click="changelogModal?.open()"
+          @click="openChangelog"
         >
           v{{ runtimeConfig.public.appVersion }}
         </button>
         <!-- eslint-enable @intlify/vue-i18n/no-raw-text -->
       </span>
-      <ChangelogModal ref="changelogModal" />
+      <!-- Loaded on first use, not with the page: modal, entries and markdown
+           are ~20 KB every visitor would otherwise parse — on the login page
+           too, before the form works (scripts/login-size.mjs). -->
+      <LazyChangelogModal v-if="changelogWanted" ref="changelogModal" />
 
       <!-- Zoom + Dark mode -->
       <div
@@ -121,9 +124,26 @@
   const { isDark, toggle: toggleDark } = useColorMode()
   const { shouldOpen: changelogShouldOpen } = useChangelog()
 
+  const changelogWanted = ref(false)
+
+  function openChangelog() {
+    if (changelogModal.value) void changelogModal.value.open()
+    // Mounts it; the watcher below opens it once its chunk has arrived.
+    else changelogWanted.value = true
+  }
+  // Once: its first change is the lazy modal arriving; later ones only
+  // follow it out again on unmount.
+  watch(
+    changelogModal,
+    (modal) => {
+      void modal!.open()
+    },
+    { once: true },
+  )
+
   watch(changelogShouldOpen, (v) => {
     if (v) {
-      changelogModal.value?.open()
+      openChangelog()
       changelogShouldOpen.value = false
     }
   })

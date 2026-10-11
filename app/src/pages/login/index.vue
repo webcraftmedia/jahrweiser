@@ -145,7 +145,10 @@
 </template>
 
 <script setup lang="ts">
-  import { z } from 'zod'
+  // Only the pattern behind `z.email()`, which the server checks the address
+  // with: the same rule, without the ~50 KB of zod the login page would
+  // otherwise parse before it can be used (scripts/login-size.mjs).
+  import { regexes } from 'zod/v4/core'
 
   import { withTimeout } from '../../utils/withTimeout'
 
@@ -208,13 +211,12 @@
 
   // The client with the 401 handling — see useApi().
   const api = useApi()
-  const emailSchema = z.email()
 
   async function requestLoginLink() {
     // Trim first: autofill/copy-paste often append whitespace, which makes the
     // request silently fail client-side validation and never reach the backend.
     const email = credentials.email.trim()
-    if (!emailSchema.safeParse(email).success) {
+    if (!regexes.email.test(email)) {
       emailError.value = true
       return
     }

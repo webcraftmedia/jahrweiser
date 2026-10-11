@@ -44,6 +44,39 @@ test.describe('Login Page', () => {
     expect(sentEmail).toBe('test@example.com')
   })
 
+  test('keeps what was typed while the app was still loading', async ({ page }) => {
+    // A slow phone: the server-rendered form is on screen for seconds before
+    // the app takes it over. Hold the app's scripts back to get there.
+    let release!: () => void
+    const released = new Promise<void>((resolve) => (release = resolve))
+    await page.route('**/_nuxt/*.js', async (route) => {
+      await released
+      await route.continue()
+    })
+    let sentEmail: string | undefined
+    await page.route('**/api/requestLoginLink', async (route) => {
+      sentEmail = route.request().postDataJSON()?.email
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+    })
+
+    // `commit`: the held module scripts keep DOMContentLoaded from firing.
+    await page.goto('/login', { waitUntil: 'commit' })
+    await expect(page.locator('#email-address-icon')).toBeVisible()
+    const submit = page.getByRole('button', { name: 'Einloggen' })
+    // Not yet: a native submit would reload the page with the address in the URL.
+    await expect(submit).toBeDisabled()
+    await page.locator('#email-address-icon').fill('early@example.com')
+
+    release()
+    await expect(submit).toBeEnabled()
+    await expect(page.locator('#email-address-icon')).toHaveValue('early@example.com')
+    await submit.click()
+
+    await expect(page.getByText('Prüfe dein Postfach')).toBeVisible({ timeout: 10_000 })
+    expect(sentEmail).toBe('early@example.com')
+    expect(page.url()).not.toContain('early')
+  })
+
   test('shows error feedback when the request fails', async ({ page }) => {
     await page.route('**/api/requestLoginLink', async (route) =>
       route.fulfill({

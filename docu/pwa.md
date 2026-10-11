@@ -306,18 +306,27 @@ geladen) und nur für angemeldete Mitglieder. Je nach Browser
 | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Android Chrome, Edge, Samsung Internet                                   | Knopf „Installieren", öffnet den Installationsdialog (`beforeinstallprompt`). Erscheint erst, wenn der Browser das Ereignis schickt — bei schon installierter App also nie. |
 | Android Chrome & Co. ohne Ereignis, auf Nachfrage (Menü, Projekt-Seite)  | „im Browser-Menü ⋮ ‚App installieren'" — dort ebenfalls eine echte Installation                                                                                             |
-| Android Firefox, Fennec u. a. (kein Ereignis, kein iOS)                  | **nichts** — weder Hinweis noch Menüeintrag; die Projekt-Seite nennt Browser, in denen es geht                                                                              |
+| Android Firefox, Fennec, IronFox u. a. (kein Ereignis)                   | „Tippe im Firefox-Menü ⋮ auf ‚Installieren'" — kein Knopf: diesen Dialog kann keine Seite öffnen                                                                            |
 | iOS Safari, andere iOS-Browser ab 16.4                                   | „Tippe auf ‚Teilen' und dann auf ‚Zum Home-Bildschirm'"                                                                                                                     |
 | iOS-Browser vor 16.4, In-App-Browser (Instagram, Facebook, Google-App …) | „Öffne diese Seite in Safari …"                                                                                                                                             |
+| Andere Android-Browser ohne Ereignis (In-App-WebViews u. a.)             | **nichts** — weder Hinweis noch Menüeintrag; die Projekt-Seite nennt Browser, in denen es geht                                                                              |
 
-**Warum Firefox keinen Hinweis bekommt:** Firefox und seine Ableger (Fennec,
-Mull, …) legen unter Android über „Zum Startbildschirm hinzufügen“ nur eine
-**Verknüpfung** an — ein Lesezeichen auf die gerade offene Seite (z. B.
-`/blaettchen`), das in einem normalen Tab öffnet, das Symbol des Browsers als
-Abzeichen trägt und dessen „App-Info → Deinstallieren“ den **ganzen Browser**
-samt Verlauf löscht (so im Test passiert). Ob Firefox mit dem nun serverseitig
-ausgelieferten Manifest „Installieren“ anbietet, ist am Gerät zu prüfen; bis
-dahin empfiehlt die App diesen Weg nicht (`canInstall` in `src/utils/device.ts`).
+**Firefox auf Android:** Firefox (und Ableger wie Fennec, IronFox) zeigt im
+Menü **„Installieren“** statt „Zum Startbildschirm hinzufügen“, sobald die
+Seite ein installierbares Manifest hat: HTTPS, `display` nicht `browser`, ein
+Icon ab 192 px mit `purpose` any oder maskable — einen Service Worker verlangt
+Firefox dafür nicht (`installableManifest()` in android-components). Das
+Manifest liefert der Server für Handy-User-Agents schon im HTML aus (siehe
+oben); am Gerät bestätigt (Oktober 2026). Die so installierte App startet über
+`start_url` ohne Adressleiste. Technisch bleibt sie eine angeheftete
+Verknüpfung mit Firefox-Abzeichen — eine WebAPK wie bei Chrome kann Firefox
+nicht erzeugen —, und „App-Info → Deinstallieren“ am Symbol löscht deshalb den
+**ganzen Browser** samt Verlauf; zum Entfernen „Entfernen“ wählen.
+
+Ein `beforeinstallprompt` schickt Firefox nicht, also gibt es keinen Knopf,
+der den Dialog öffnet; der Hinweis nennt den Menüeintrag (`isAndroidFirefox` /
+`canInstall` in `src/utils/device.ts`). Auf „Zum Startbildschirm hinzufügen“ —
+die reine Verknüpfung, die in einem normalen Tab öffnet — verweist die App nie.
 
 **Start aus der App erkennen:** `start_url` ist `/?app`. Wird die App darüber
 gestartet, merkt sich das Gerät das (`localStorage: jahrweiser-app-launched`);

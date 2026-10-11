@@ -69,15 +69,24 @@ export function isIOS(env: DeviceEnv): boolean {
 }
 
 /**
+ * Firefox and its relatives (Fennec, IronFox, …) on Android. They install
+ * through their own menu — there is no install event a page could answer.
+ */
+export function isAndroidFirefox(env: DeviceEnv): boolean {
+  return env.userAgent.includes('Android') && env.userAgent.includes('Firefox/')
+}
+
+/**
  * Whether this browser can really install the app. Chromium says so with its
- * install event, iOS through "Teilen → Zum Home-Bildschirm". Firefox and its
- * relatives on Android only put a *shortcut* on the home screen — a bookmark
- * to whatever page was open, in a normal tab, under the browser's own badge,
- * whose "App info → Uninstall" removes the whole browser. The app does not
- * send anyone there (docu/pwa.md).
+ * install event, iOS through "Teilen → Zum Home-Bildschirm", Firefox on Android
+ * through "Installieren" in its menu: offered there for a page with an
+ * installable manifest — no service worker needed — and the app then starts
+ * on its own, without the address bar. Where the menu says only "Zum
+ * Startbildschirm hinzufügen", that is a *shortcut* — a bookmark in a normal
+ * tab — and the app sends nobody there (docu/pwa.md).
  */
 export function canInstall(env: DeviceEnv, hasInstallEvent: boolean): boolean {
-  return hasInstallEvent || isIOS(env)
+  return hasInstallEvent || isIOS(env) || isAndroidFirefox(env)
 }
 
 /**

@@ -80,8 +80,12 @@ describe('install method without an install event', () => {
     expect(manualInstallMethod(iPad)).toBe('share')
   })
 
-  it('sends no Android browser to a manual way — Firefox could only make a shortcut', () => {
-    expect(manualInstallMethod(env({ userAgent: UA.androidFirefox }))).toBeNull()
+  it('sends Firefox on Android to "Installieren" in its menu', () => {
+    expect(manualInstallMethod(env({ userAgent: UA.androidFirefox }))).toBe('firefox')
+  })
+
+  it('sends no other Android browser to a manual way', () => {
+    expect(manualInstallMethod(env({ userAgent: UA.androidWebView }))).toBeNull()
   })
 
   it('leaves Chromium to its install event', () => {
@@ -136,8 +140,15 @@ describe('useInstallHint', () => {
     expect(method.value).toBe('menu')
   })
 
-  it('offers nothing in a browser that could only make a shortcut', () => {
+  it('names the menu entry in Firefox on Android, which has no install event', () => {
     current.env = env({ userAgent: UA.androidFirefox })
+    withoutInstallEvent(() => {
+      expect(useInstallHint().method.value).toBe('firefox')
+    })
+  })
+
+  it('offers nothing in a browser that could only make a shortcut', () => {
+    current.env = env({ userAgent: UA.androidWebView })
     withoutInstallEvent(() => {
       expect(useInstallHint().method.value).toBeNull()
     })

@@ -52,6 +52,7 @@
     },
     "InstallHint": {
       "dismiss": "Hinweis ausblenden",
+      "firefox": "Als App installieren: Tippe im Firefox-Menü ⋮ auf „Installieren“.",
       "install": "Installieren",
       "label": "Jahrweiser als App",
       "menu": "Als App installieren: im Browser-Menü ⋮ „App installieren“ wählen.",
@@ -484,7 +485,7 @@
           "heading": "Den Jahrweiser als App",
           "installed": "Der Jahrweiser ist auf diesem Gerät schon als App installiert – du findest ihn auf deinem Startbildschirm.",
           "text": "Leg dir den Jahrweiser auf den Startbildschirm: Er startet dann wie eine App, ohne Adresszeile, mit einem Fingertipp.",
-          "unsupported": "Dieser Browser kann den Jahrweiser nicht als App installieren, nur ein Lesezeichen auf den Startbildschirm legen. Als App geht es in Chrome, Edge oder Samsung Internet (Android) und in Safari (iPhone, iPad)."
+          "unsupported": "Dieser Browser kann den Jahrweiser nicht als App installieren, nur ein Lesezeichen auf den Startbildschirm legen. Als App geht es in Chrome, Edge, Firefox oder Samsung Internet (Android) und in Safari (iPhone, iPad)."
         },
         "help": {
           "heading": "Mithelfen",

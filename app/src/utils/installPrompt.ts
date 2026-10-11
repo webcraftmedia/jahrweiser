@@ -40,8 +40,8 @@ export function rememberAppLaunch(query: URLSearchParams): void {
 }
 
 /**
- * A phone or tablet browser that cannot install the app (Firefox and its
- * relatives on Android — see canInstall in src/utils/device.ts). The project
+ * A phone or tablet browser that cannot install the app (in-app web views and
+ * the like on Android — see canInstall in src/utils/device.ts). The project
  * page says where it works instead.
  */
 export const installUnsupported = ref(false)

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.19.1...v1.19.2) (2026-10-11)
+
+
+### Performance Improvements
+
+* **app:** load a quarter less JavaScript before the login form works ([#500](https://github.com/webcraftmedia/jahrweiser/issues/500)) ([0bb099d](https://github.com/webcraftmedia/jahrweiser/commit/0bb099d5d512aca4b3e1d062bf1558776848e6e7))
+
 ## [1.19.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.19.0...v1.19.1) (2026-10-11)
 
 

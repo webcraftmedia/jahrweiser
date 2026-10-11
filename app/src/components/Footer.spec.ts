@@ -99,19 +99,51 @@ describe('Footer', () => {
     const versionBtn = wrapper.find('button[title="components.Footer.changelog"]')
     expect(versionBtn.exists()).toBe(true)
     await versionBtn.trigger('click')
-    await flushPromises()
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('.modal-open').exists()).toBe(true)
+    // The modal's chunk loads first.
+    await vi.waitFor(() => {
+      expect(wrapper.find('.modal-open').exists()).toBe(true)
+    })
+    // Every mounted footer watches the shared state; this one must not answer
+    // for the next test's.
+    wrapper.unmount()
   })
 
   it('opens changelog modal via shared state', async () => {
-    const wrapper = await mountSuspended(Component)
+    await mountSuspended(Component)
     changelogShouldOpen.value = true
     await flushPromises()
-    // Watcher fires: calls open() and resets shouldOpen
+    // Watcher fires: opens the modal and resets shouldOpen
     expect(changelogShouldOpen.value).toBe(false)
-    // Verify the modal was asked to open (same method tested by click test above)
-    await wrapper.vm.$nextTick()
+    // In the document, not this wrapper: footers left mounted by earlier tests
+    // watch the same state, and whichever runs first answers.
+    await vi.waitFor(() => {
+      expect(document.querySelector('.modal-open')).not.toBeNull()
+    })
+  })
+
+  it('loads the changelog only once it is asked for', async () => {
+    const wrapper = await mountSuspended(Component)
+    expect(wrapper.find('.modal-open').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'ChangelogModal' }).exists()).toBe(false)
+  })
+
+  it('opens the already loaded changelog again', async () => {
+    const wrapper = await mountSuspended(Component)
+    const versionBtn = wrapper.find('button[title="components.Footer.changelog"]')
+    await versionBtn.trigger('click')
+    await vi.waitFor(() => {
+      expect(wrapper.find('.modal-open').exists()).toBe(true)
+    })
+    // Closed, then asked for once more: same instance, opened directly.
+    await wrapper.find('.modal-open button').trigger('click')
+    await vi.waitFor(() => {
+      expect(wrapper.find('.modal-open').exists()).toBe(false)
+    })
+    await versionBtn.trigger('click')
+    await vi.waitFor(() => {
+      expect(wrapper.find('.modal-open').exists()).toBe(true)
+    })
+    wrapper.unmount()
   })
 
   it('toggles dark mode', async () => {

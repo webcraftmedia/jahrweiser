@@ -277,9 +277,14 @@ export default defineNuxtConfig({
       alwaysRedirect: true,
     }, */
     strategy: 'no_prefix',
-    /* bundle: {
-      optimizeTranslationDirective: false,
-    }, */
+    bundle: {
+      // Every message lives in locales/de.json, which is compiled at build
+      // time — nothing is added or compiled at runtime (no setLocaleMessage,
+      // no <i18n> blocks, no messages passed to useI18n). The message compiler
+      // (~17 KB) would only be dead weight in every page, the login page
+      // included (scripts/login-size.mjs).
+      runtimeOnly: true,
+    },
   },
   runtimeConfig: {
     // The private keys which are only available within server-side.

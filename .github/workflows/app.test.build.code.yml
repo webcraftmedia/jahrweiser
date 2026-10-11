@@ -52,6 +52,12 @@ jobs:
         run: npm run test:size
         working-directory: ${{env.WORKING_DIRECTORY}}
 
+      # The total above says nothing about one page. This one holds what the
+      # login page loads before its form works — see scripts/login-size.mjs.
+      - name: Frontend | Login Size Check
+        run: npm run test:size:login
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
       # Runs here rather than in its own job because it inspects the built
       # bundle: a dependency that starts emitting syntax or APIs the browsers
       # in app/.browserslistrc do not have has to fail the build, not a member's

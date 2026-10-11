@@ -138,6 +138,35 @@ describe('Page: Login', () => {
     })
   })
 
+  it('enables the button once the page has taken over', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/login' })
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+  })
+
+  it('keeps an address typed before the page took over', async () => {
+    // Stands in for the server-rendered field the member typed into while the
+    // app was still loading — the page reads it by its id before mounting.
+    // Alone in the document: earlier tests leave their mounted fields behind.
+    document.querySelectorAll('#email-address-icon').forEach((field) => {
+      field.remove()
+    })
+    const early = document.createElement('input')
+    early.id = 'email-address-icon'
+    early.value = ' early@example.com '
+    document.body.prepend(early)
+    try {
+      const wrapper = await mountSuspended(Page, { route: '/login' })
+      expect((wrapper.find('input').element as HTMLInputElement).value).toBe('early@example.com')
+    } finally {
+      early.remove()
+    }
+  })
+
+  it('leaves the field empty when nothing was typed early', async () => {
+    const wrapper = await mountSuspended(Page, { route: '/login' })
+    expect((wrapper.find('input').element as HTMLInputElement).value).toBe('')
+  })
+
   it('redirects to home when already logged in', async () => {
     mockLoggedIn.value = true
     await mountSuspended(Page, { route: '/login' })

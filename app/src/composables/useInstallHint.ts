@@ -1,6 +1,6 @@
 import type { DeviceEnv } from '~/utils/device'
 
-import { deviceEnv, isIOS } from '~/utils/device'
+import { deviceEnv, isAndroidFirefox, isIOS } from '~/utils/device'
 import {
   appInstalled,
   installPrompt,
@@ -15,7 +15,7 @@ import {
  * browser, not the installed app).
  */
 
-export type InstallMethod = 'prompt' | 'share' | 'safari' | 'menu'
+export type InstallMethod = 'prompt' | 'share' | 'safari' | 'menu' | 'firefox'
 
 /** Per device, not per member: it is the device that does or does not have the app. */
 export const INSTALL_HINT_DISMISSED_KEY = 'jahrweiser-install-hint-dismissed'
@@ -57,22 +57,25 @@ const IOS_IN_APP = /FBAN|FBAV|Instagram|Line\/|GSA\/|MicroMessenger/
  *             Zum Home-Bildschirm".
  * - `safari`: older iOS browsers and in-app web views cannot do that at all;
  *             the way is to open the page in Safari.
+ * - `firefox`: Firefox on Android — "Installieren" in its menu. No page can
+ *             open that dialog, so the hint names the menu entry.
  * - null:     Chromium — it fires `beforeinstallprompt` when it is ready to
  *             install, or not at all if the app is already installed. The
  *             hint waits for that event; asked for explicitly, it names the
  *             browser menu's "App installieren" instead (`menu`), which is a
  *             real install there too.
  *
- * Browsers that can only make a shortcut (Firefox on Android) never get here —
- * see canInstall in src/utils/device.ts.
+ * Browsers that can only make a shortcut never get here — see canInstall in
+ * src/utils/device.ts.
  */
-export function manualInstallMethod(env: DeviceEnv): 'share' | 'safari' | null {
+export function manualInstallMethod(env: DeviceEnv): 'share' | 'safari' | 'firefox' | null {
   if (isIOS(env)) {
     const ua = env.userAgent
     if (IOS_IN_APP.test(ua)) return 'safari'
     if (!IOS_OTHER_BROWSER.test(ua)) return 'share'
     return (iosVersion(env) ?? 0) >= 1604 ? 'share' : 'safari'
   }
+  if (isAndroidFirefox(env)) return 'firefox'
   return null
 }
 

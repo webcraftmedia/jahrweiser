@@ -1,6 +1,6 @@
 {
   "name": "jahrweiser",
-  "version": "1.18.5",
+  "version": "1.19.0",
   "type": "module",
   "private": true,
   "scripts": {

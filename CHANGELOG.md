@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.19.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.5...v1.19.0) (2026-10-11)
+
+
+### Features
+
+* **app:** point Firefox on Android to its "Installieren" menu entry ([#496](https://github.com/webcraftmedia/jahrweiser/issues/496)) ([c3be287](https://github.com/webcraftmedia/jahrweiser/commit/c3be2879c7d59363823e0380f60d9468153648ad))
+
+
+### Bug Fixes
+
+* **app:** keep the address typed before the login page has loaded ([#495](https://github.com/webcraftmedia/jahrweiser/issues/495)) ([85def9e](https://github.com/webcraftmedia/jahrweiser/commit/85def9e3a400f2fa37d20d9a7c3cb50d8b8af4ae))
+* **app:** one-row header and a fully visible login code on narrow phones ([#494](https://github.com/webcraftmedia/jahrweiser/issues/494)) ([8c9ef8d](https://github.com/webcraftmedia/jahrweiser/commit/8c9ef8d1f2701cfbbecc3b0b71d0c50ed0cee497))
+
 ## [1.18.5](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.4...v1.18.5) (2026-10-06)
 
 

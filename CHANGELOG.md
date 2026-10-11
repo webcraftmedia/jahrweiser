@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.19.0...v1.19.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **app:** keep the closed mobile menu from making the page scroll ([#498](https://github.com/webcraftmedia/jahrweiser/issues/498)) ([c4176d0](https://github.com/webcraftmedia/jahrweiser/commit/c4176d0d174b64d25b74d697f4af903ad4beda93))
+
 ## [1.19.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.5...v1.19.0) (2026-10-11)
 
 

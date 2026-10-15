@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.19.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.19.2...v1.19.3) (2026-10-15)
+
+
+### Build System & Dependencies
+
+* **deps-dev:** bump @playwright/test from 1.63.0 to 1.64.0 in /app ([#512](https://github.com/webcraftmedia/jahrweiser/issues/512)) ([5336996](https://github.com/webcraftmedia/jahrweiser/commit/5336996f3cd9f9222517bd9fd4e27f93e01c5ecd))
+* **deps-dev:** bump acorn from 8.18.0 to 8.19.0 in /app ([#511](https://github.com/webcraftmedia/jahrweiser/issues/511)) ([7d24aa1](https://github.com/webcraftmedia/jahrweiser/commit/7d24aa11502a33ccbdbca93cd273e45b98586d17))
+* **deps-dev:** bump dotenv from 18.0.5 to 18.0.6 in /app ([#504](https://github.com/webcraftmedia/jahrweiser/issues/504)) ([26ae88e](https://github.com/webcraftmedia/jahrweiser/commit/26ae88eac142e2a98bfb47cf9befa592c83e076e))
+* **deps-dev:** bump eslint from 10.11.0 to 10.12.0 in /app ([#509](https://github.com/webcraftmedia/jahrweiser/issues/509)) ([cfa6c68](https://github.com/webcraftmedia/jahrweiser/commit/cfa6c68237469802cf067dfadd7ffa747ef8da3c))
+* **deps-dev:** bump happy-dom from 20.14.5 to 20.14.6 in /app ([#508](https://github.com/webcraftmedia/jahrweiser/issues/508)) ([26821f3](https://github.com/webcraftmedia/jahrweiser/commit/26821f391ff160376a45664b9e05c77d3bee989a))
+* **deps-dev:** bump the size-limit group in /app with 2 updates ([#503](https://github.com/webcraftmedia/jahrweiser/issues/503)) ([5f40b39](https://github.com/webcraftmedia/jahrweiser/commit/5f40b395ad5d953521e3379fdbddfb4636d1ea70))
+* **deps-dev:** bump vue-tsc from 3.3.11 to 3.3.12 in /app ([#514](https://github.com/webcraftmedia/jahrweiser/issues/514)) ([50ab24d](https://github.com/webcraftmedia/jahrweiser/commit/50ab24de0ea651b6b096f2bf2a14fa303c64228d))
+* **deps:** bump actions/setup-node from 7.0.0 to 7.1.0 ([#502](https://github.com/webcraftmedia/jahrweiser/issues/502)) ([1570b26](https://github.com/webcraftmedia/jahrweiser/commit/1570b26accbbcfc5cc840ca6fce69cbf326b86e2))
+* **deps:** bump drizzle-orm from 0.45.3 to 0.45.4 in /app ([#507](https://github.com/webcraftmedia/jahrweiser/issues/507)) ([3e8f73c](https://github.com/webcraftmedia/jahrweiser/commit/3e8f73c5c4c860f9bb7592409ee235a8ba3b400f))
+* **deps:** bump nodemailer from 10.0.13 to 10.0.16 in /app ([#510](https://github.com/webcraftmedia/jahrweiser/issues/510)) ([2868e62](https://github.com/webcraftmedia/jahrweiser/commit/2868e625a00b493031c3f9eb9958f12a6e07c7d0))
+* **deps:** bump nuxt from 4.5.2 to 4.6.0 in /app ([#515](https://github.com/webcraftmedia/jahrweiser/issues/515)) ([b88f51c](https://github.com/webcraftmedia/jahrweiser/commit/b88f51cf274a62ae7b2d7421c7fe732733c015f9))
+* **deps:** bump nuxt-auth-utils from 0.5.30 to 0.5.31 in /app ([#513](https://github.com/webcraftmedia/jahrweiser/issues/513)) ([889204e](https://github.com/webcraftmedia/jahrweiser/commit/889204e3254b324c2346e4b66ab84c9260b5c85d))
+* **deps:** bump tsdav from 2.3.4 to 2.4.0 in /app ([#506](https://github.com/webcraftmedia/jahrweiser/issues/506)) ([2af582e](https://github.com/webcraftmedia/jahrweiser/commit/2af582ead9d33ceeab5a4a8543dc0d4857eec57c))
+* **deps:** bump vue-router from 5.3.1 to 5.4.0 in /app ([#505](https://github.com/webcraftmedia/jahrweiser/issues/505)) ([61eacb6](https://github.com/webcraftmedia/jahrweiser/commit/61eacb6078a357640efba6a84b4bd0234d9972b1))
+
+
+### Miscellaneous Chores
+
+* **other:** license the project under Apache 2.0 ([#516](https://github.com/webcraftmedia/jahrweiser/issues/516)) ([d71d97d](https://github.com/webcraftmedia/jahrweiser/commit/d71d97d3b944d28115880e56ae6facdca9de58dd))
+* **release:** list every commit type in the changelog ([#517](https://github.com/webcraftmedia/jahrweiser/issues/517)) ([f85efcb](https://github.com/webcraftmedia/jahrweiser/commit/f85efcb51b6c42cd099bd72e74cd37732b5dc00e))
+
 ## [1.19.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.19.1...v1.19.2) (2026-10-11)
 
 

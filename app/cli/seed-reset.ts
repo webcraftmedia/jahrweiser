@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 
 import { deleteVCard, fetchAddressBooks, fetchVCards } from 'tsdav'
@@ -24,6 +25,12 @@ const account = createCardDAVAccount({
   DAV_URL_CARD: config.DAV_URL_CARD,
 })
 const fetchHeaders = headers(account)
+
+// A fresh Baikal has no principal yet and answers every DAV request with an
+// HTML error page, which addressbook discovery rightly rejects. The e2e suite
+// resets before it seeds, so provision first. No-op if already provisioned.
+console.warn('[seed-reset] ensuring Baikal DAV user is provisioned')
+execSync('npm run --silent cli:baikal:bootstrap', { stdio: 'inherit' })
 
 console.warn(
   `[seed-reset] wiping DAV addressbook + MariaDB sidecar (correlationId=${randomUUID()})`,

@@ -30,6 +30,11 @@ ein Release riskant macht, nicht nach Fachbereichen:
 | `release` | release-please |
 | `other` | der ehrliche Rest |
 
+Jeder Typ, den das PR-Linting zulässt, landet im Changelog und erweitert den
+Release-PR — auch `build(deps)` von Dependabot, `chore`, `ci` und `test`.
+release-please blendet diese Typen per Default aus; `changelog-sections` in
+`release-please-config.json` schaltet sie sichtbar.
+
 ### Nutzersichtbare Texte
 
 Sie liegen vollständig in `app/locales/de.json` und `app/server/emails/_locales/de.json`,

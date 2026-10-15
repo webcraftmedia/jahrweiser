@@ -179,3 +179,10 @@ For the github webhook configure the following:
 | SSL verification                                     | Enable SSL verification       |
 | Which events would you like to trigger this webhook? | Send me everything.           |
 | Active                                               | [x]                           |
+
+## Lizenz
+
+[Apache License 2.0](LICENSE), Copyright Ulf Gebhardt — siehe [NOTICE](NOTICE).
+
+Ausnahme: `admin/` ist eine angepasste Kopie von InfCloud und steht unter der
+[GNU AGPL 3.0](admin/license.txt).

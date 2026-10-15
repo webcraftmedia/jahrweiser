@@ -1,0 +1,11 @@
+Jahrweiser
+Copyright 2023-2026 Ulf Gebhardt
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE),
+with the following exception:
+
+admin/ contains a modified copy of InfCloud (CalDavZAP/CardDavMATE),
+Copyright (C) 2011-2015 Jan Mate, Andrej Lezo, Matej Mihalik (inf-it.com),
+licensed under the GNU Affero General Public License,
+Version 3 (see admin/license.txt). That directory is not covered by the
+Apache License; it remains under the AGPL-3.0.

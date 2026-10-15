@@ -102,7 +102,7 @@ test.describe('PWA: Firefox on Android', () => {
     hasTouch: true,
   })
 
-  test('is never sent to make a shortcut', async ({ page }) => {
+  test('is pointed to "Installieren" in its menu, never to a shortcut', async ({ page }) => {
     // What Firefox lacks: the install event Chromium has.
     await page.addInitScript(() => {
       let owner: object | null = window
@@ -112,12 +112,21 @@ test.describe('PWA: Firefox on Android', () => {
       if (owner) Reflect.deleteProperty(owner, 'onbeforeinstallprompt')
     })
     await loginAs(page, DEFAULT_USER)
-    await expect(page.getByRole('navigation', { name: 'Hauptnavigation' }).first()).toBeVisible()
-    await expect(page.getByRole('complementary', { name: 'Jahrweiser als App' })).toHaveCount(0)
+    const hint = page.getByRole('complementary', { name: 'Jahrweiser als App' })
+    await expect(hint).toContainText('„Installieren“')
+    await expect(hint).not.toContainText('Startbildschirm hinzufügen')
+    // No dialog any page could open: nothing to press but the menu entry.
+    await expect(hint.getByRole('button', { name: 'Installieren' })).toHaveCount(0)
+
+    // Dismissed, the menu still has the way back.
+    await hint.getByRole('button', { name: 'Hinweis ausblenden' }).click()
+    await expect(hint).toHaveCount(0)
     await page.locator('[aria-controls="navbar-mobile"]').click()
-    await expect(
-      page.locator('#navbar-mobile').getByRole('button', { name: 'Als App installieren' }),
-    ).toHaveCount(0)
+    await page
+      .locator('#navbar-mobile')
+      .getByRole('button', { name: 'Als App installieren' })
+      .click()
+    await expect(hint).toContainText('„Installieren“')
   })
 })
 

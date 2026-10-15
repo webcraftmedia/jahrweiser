@@ -9,7 +9,8 @@
         <span class="font-display text-navy dark:text-ivory text-2xl md:text-3xl tracking-wide"
           >Jahrweiser</span
         >
-        <span class="font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5"
+        <span
+          class="header-region font-hand text-mustard text-xs md:text-sm tracking-widest ml-1 md:ml-1.5"
           >Bergstraße</span
         >
       </div>
@@ -20,16 +21,20 @@
   <!-- Bar variant (default nav bar) -->
   <nav
     v-else
+    ref="navBar"
     class="relative z-50 bg-ivory dark:bg-poster-dark border-b-2 border-sienna/30 dark:border-sienna-dark/50 w-full shrink-0"
     :style="chromeZoom !== 1 ? { zoom: chromeZoom } : undefined"
   >
+    <!-- One row at any width, the menu always top right: nothing here may
+         wrap. On the narrowest phones the wordmark gives way (see
+         .header-wordmark); with the zoom on top it is cut short instead. -->
     <div
-      class="max-w-screen-2xl flex flex-wrap items-center justify-between mx-auto py-2 px-2 2xl:px-0"
+      class="max-w-screen-2xl flex flex-nowrap items-center justify-between gap-2 mx-auto py-2 px-2 2xl:px-0"
     >
-      <NuxtLink to="/" class="flex items-center gap-2">
-        <LogoSmall class="logo-bar" />
+      <NuxtLink to="/" class="flex items-center gap-2 min-w-0">
+        <LogoSmall class="logo-bar shrink-0" />
         <!-- eslint-disable @intlify/vue-i18n/no-raw-text -->
-        <div>
+        <div class="header-wordmark min-w-0 truncate">
           <span class="font-display text-navy dark:text-ivory text-2xl tracking-wide"
             >Jahrweiser</span
           >
@@ -48,7 +53,7 @@
           v-if="standalone"
           type="button"
           data-action="refresh"
-          class="ml-auto mr-1 inline-flex items-center justify-center w-10 h-10 text-navy/70 dark:text-ivory/70 rounded-lg hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20 disabled:opacity-60"
+          class="ml-auto mr-1 shrink-0 inline-flex items-center justify-center w-10 h-10 text-navy/70 dark:text-ivory/70 rounded-lg hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20 disabled:opacity-60"
           :aria-label="$t('components.Header.refresh')"
           :title="$t('components.Header.refresh')"
           :disabled="refreshing"
@@ -74,7 +79,7 @@
         <!-- Burger menu button (mobile only) -->
         <button
           type="button"
-          class="relative inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
+          class="relative shrink-0 inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-navy/70 dark:text-ivory/70 rounded-lg md:hidden hover:bg-navy/10 dark:hover:bg-ivory/10 focus:outline-none focus:ring-2 focus:ring-navy/20 dark:focus:ring-ivory/20"
           aria-controls="navbar-mobile"
           :aria-expanded="mobileMenuOpen"
           @click="toggleMobileMenu"
@@ -130,6 +135,7 @@
         <div
           id="navbar-mobile"
           :class="mobileMenuOpen ? 'menu-open' : ''"
+          :style="mobileMenuOpen ? { maxHeight: menuMaxHeight } : undefined"
           class="mobile-menu md:hidden"
         >
           <!-- User Info Header -->
@@ -239,7 +245,7 @@
 
           <!-- Legal Links & Version -->
           <div
-            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex items-center gap-4 text-xs text-navy/60 dark:text-ivory/60"
+            class="border-t border-navy/10 dark:border-poster-darkBorder px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-navy/60 dark:text-ivory/60"
           >
             <a
               href="https://www.webcraft-media.de/#!impressum"
@@ -306,7 +312,34 @@
   // Address the user by first name; fall back to the email when no name is set.
   const welcomeName = computed(() => firstNameOf(user.value?.name) || user.value?.email)
 
+  const navBar = ref<HTMLElement>()
+  /**
+   * The room between the bar and the bottom edge, for the open menu. Taller
+   * than that — a long calendar list does it — the menu scrolls in itself
+   * instead of reaching past the page, which would make the whole document
+   * scrollable. In the bar's own units: the bar is zoomed (`chromeZoom`), the
+   * measurement is not.
+   */
+  const menuMaxHeight = ref<string>()
+
+  // Only ever called with the menu there, and the menu lives in the bar.
+  function fitMenu() {
+    const room = window.innerHeight - navBar.value!.getBoundingClientRect().bottom
+    menuMaxHeight.value = `${Math.max(0, room) / chromeZoom.value}px`
+  }
+
+  function onResize() {
+    if (mobileMenuOpen.value) fitMenu()
+  }
+  onMounted(() => {
+    window.addEventListener('resize', onResize)
+  })
+  onBeforeUnmount(() => {
+    window.removeEventListener('resize', onResize)
+  })
+
   function toggleMobileMenu() {
+    if (!mobileMenuOpen.value) fitMenu()
     mobileMenuOpen.value = !mobileMenuOpen.value
   }
 
@@ -334,6 +367,15 @@
   .logo-bar {
     width: 44px;
     height: 44px;
+  }
+  /* Logo, wordmark, refresh and menu button need about 300px; below that the
+     wordmark would push the menu into a second row. On the login page's
+     larger logo the region gives way instead, and the name stays. */
+  @media (max-width: 359px) {
+    .header-wordmark,
+    .header-region {
+      display: none;
+    }
   }
   .logo-hero {
     width: 40px;
@@ -366,9 +408,17 @@
     transform: translateY(-0.5rem);
     opacity: 0;
     pointer-events: none;
+    /* Closed, it takes no room at all. Invisible is not enough: an absolutely
+       positioned box still counts towards the document's height, and one that
+       reaches past the bottom edge makes the whole page scrollable — the
+       calendar then scrolled the header away whenever it jumped to today.
+       The height goes only once the fade-out is done. */
+    max-height: 0;
+    overflow: hidden;
     transition:
       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.25s ease;
+      opacity 0.25s ease,
+      max-height 0s linear 0.3s;
   }
   :is(.dark .mobile-menu) {
     background-color: #1a1714;
@@ -377,6 +427,11 @@
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.25s ease;
   }
 
   /* Section icons in the mobile menu. Held back like the rail's, and for the

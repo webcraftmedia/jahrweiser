@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.19.2](https://github.com/webcraftmedia/jahrweiser/compare/v1.19.1...v1.19.2) (2026-10-11)
+
+
+### Performance Improvements
+
+* **app:** load a quarter less JavaScript before the login form works ([#500](https://github.com/webcraftmedia/jahrweiser/issues/500)) ([0bb099d](https://github.com/webcraftmedia/jahrweiser/commit/0bb099d5d512aca4b3e1d062bf1558776848e6e7))
+
+## [1.19.1](https://github.com/webcraftmedia/jahrweiser/compare/v1.19.0...v1.19.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **app:** keep the closed mobile menu from making the page scroll ([#498](https://github.com/webcraftmedia/jahrweiser/issues/498)) ([c4176d0](https://github.com/webcraftmedia/jahrweiser/commit/c4176d0d174b64d25b74d697f4af903ad4beda93))
+
+## [1.19.0](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.5...v1.19.0) (2026-10-11)
+
+
+### Features
+
+* **app:** point Firefox on Android to its "Installieren" menu entry ([#496](https://github.com/webcraftmedia/jahrweiser/issues/496)) ([c3be287](https://github.com/webcraftmedia/jahrweiser/commit/c3be2879c7d59363823e0380f60d9468153648ad))
+
+
+### Bug Fixes
+
+* **app:** keep the address typed before the login page has loaded ([#495](https://github.com/webcraftmedia/jahrweiser/issues/495)) ([85def9e](https://github.com/webcraftmedia/jahrweiser/commit/85def9e3a400f2fa37d20d9a7c3cb50d8b8af4ae))
+* **app:** one-row header and a fully visible login code on narrow phones ([#494](https://github.com/webcraftmedia/jahrweiser/issues/494)) ([8c9ef8d](https://github.com/webcraftmedia/jahrweiser/commit/8c9ef8d1f2701cfbbecc3b0b71d0c50ed0cee497))
+
 ## [1.18.5](https://github.com/webcraftmedia/jahrweiser/compare/v1.18.4...v1.18.5) (2026-10-06)
 
 

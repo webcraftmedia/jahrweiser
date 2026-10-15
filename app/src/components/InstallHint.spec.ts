@@ -31,6 +31,7 @@ describe('InstallHint', () => {
     ['share', 'components.InstallHint.share'],
     ['safari', 'components.InstallHint.safari'],
     ['menu', 'components.InstallHint.menu'],
+    ['firefox', 'components.InstallHint.firefox'],
   ] as const)('explains the %s way, without an install button', async (method, text) => {
     hint.method.value = method
     const wrapper = await mountSuspended(InstallHint)

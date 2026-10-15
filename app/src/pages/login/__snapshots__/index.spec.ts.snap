@@ -20,7 +20,11 @@ exports[`Page: Login > renders login form 1`] = `
                     <path data-v-45258083="" d="M11.241 9.817c-.36.275-.801.425-1.255.427-.428 0-.845-.138-1.187-.395L0 2.6V14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2.5l-8.759 7.317Z"></path>
                   </svg></div><input data-v-45258083="" id="email-address-icon" type="email" name="email" autocomplete="email" class="login-input bg-ivory dark:bg-poster-dark border-2 text-navy dark:text-ivory text-base rounded font-body focus:border-sienna dark:focus:border-sienna-dark focus:outline-none block w-full ps-10 p-3 placeholder-navy/40 dark:placeholder-poster-darkMuted border-navy/20 dark:border-poster-darkBorder" placeholder="pages.login.form.email.placeholder">
               </div>
-            </div><button data-v-45258083="" type="submit" class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:brightness-100">pages.login.form.button</button>
+            </div>
+            <!-- Disabled until hydrated: before that a tap submits the form
+                 natively — a GET that reloads the page with the address in
+                 the URL (and so in the access log). A disabled default button
+                 also stops Enter from doing the same. --><button data-v-45258083="" type="submit" class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:brightness-100">pages.login.form.button</button>
             <!--v-if-->
           </form>
         </div>
@@ -47,10 +51,13 @@ exports[`Page: Login > shows success message after login request 1`] = `
       </div>
       <!-- Offered on a cooldown too: the binding from the first request is
              still in place, so the code in the mail already sent works. -->
-      <form data-v-45258083="" class="login-code mt-4 pt-4 border-t border-mustard/40 mb-4" novalidate=""><label for="login-code" class="block mb-2 text-base font-medium font-body">components.LoginCodeForm.label</label>
-        <div class="flex gap-2">
+      <form data-v-11ff3965="" data-v-45258083="" class="login-code mt-4 pt-4 border-t border-mustard/40 mb-4" novalidate=""><label data-v-11ff3965="" for="login-code" class="block mb-2 text-base font-medium font-body">components.LoginCodeForm.label</label>
+        <!-- Wraps rather than squeezes: the field never gets narrower than the six
+         digits it holds, so on a narrow phone, or zoomed in, the button moves
+         below it instead of cutting the code off. -->
+        <div data-v-11ff3965="" class="flex flex-wrap gap-2">
           <!-- \`one-time-code\` lets iOS and Android offer the code from the mail
-           right above the keyboard. --><input id="login-code" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" class="min-w-0 flex-1 bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder focus:border-sienna dark:focus:border-sienna-dark focus:outline-none rounded p-2.5 text-xl tracking-[0.3em] font-mono text-navy dark:text-ivory" placeholder="components.LoginCodeForm.placeholder" aria-describedby="login-code-error"><button type="submit" disabled="" class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna bg-sienna text-ivory rounded hover:bg-sienna-dark hover:border-sienna-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed">components.LoginCodeForm.button</button>
+           right above the keyboard. --><input data-v-11ff3965="" id="login-code" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" class="code-input flex-1 bg-ivory dark:bg-poster-dark border-2 border-navy/20 dark:border-poster-darkBorder focus:border-sienna dark:focus:border-sienna-dark focus:outline-none rounded p-2.5 text-xl tracking-[0.3em] font-mono text-navy dark:text-ivory" placeholder="components.LoginCodeForm.placeholder" aria-describedby="login-code-error"><button data-v-11ff3965="" type="submit" disabled="" class="shrink-0 px-5 py-2 text-base font-semibold font-body border-2 border-sienna bg-sienna text-ivory rounded hover:bg-sienna-dark hover:border-sienna-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed">components.LoginCodeForm.button</button>
         </div>
         <!--v-if-->
       </form><button data-v-45258083="" class="px-5 py-2 text-base font-semibold font-body border-2 border-sienna text-sienna dark:text-sienna-light dark:border-sienna-dark rounded hover:bg-sienna hover:text-ivory dark:hover:bg-sienna-dark dark:hover:text-ivory transition-colors" type="button" data-action="back">pages.login.message.button</button>

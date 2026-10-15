@@ -226,6 +226,13 @@
 </template>
 
 <script setup lang="ts">
+  // First, before schedule-x: it expects `Temporal` on the global object. Here
+  // and not in a plugin, so the ~55 KB reach only the calendar and not every
+  // page — above all not the login page, which a slow phone has to parse
+  // before anyone can type. The server polyfills on its own
+  // (server/plugins/temporal.ts).
+  // eslint-disable-next-line import/no-unassigned-import -- side-effect: polyfills Temporal API globally
+  import 'temporal-polyfill/global'
   import { createCalendar, createViewMonthGrid, createViewList } from '@schedule-x/calendar'
   import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls'
   import { createEventsServicePlugin } from '@schedule-x/events-service'

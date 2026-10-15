@@ -65,7 +65,7 @@
             </div>
             <div class="login-stagger" style="--stagger: 1">
               <label
-                for="email-address-icon"
+                :for="EMAIL_FIELD_ID"
                 class="block mb-2 text-base font-medium font-body"
                 :class="
                   emailError ? 'text-sienna dark:text-sienna-light' : 'text-navy dark:text-ivory'
@@ -97,7 +97,7 @@
                   </svg>
                 </div>
                 <input
-                  id="email-address-icon"
+                  :id="EMAIL_FIELD_ID"
                   v-model.trim="credentials.email"
                   type="email"
                   name="email"
@@ -113,9 +113,13 @@
                 />
               </div>
             </div>
+            <!-- Disabled until hydrated: before that a tap submits the form
+                 natively — a GET that reloads the page with the address in
+                 the URL (and so in the access log). A disabled default button
+                 also stops Enter from doing the same. -->
             <button
               type="submit"
-              :disabled="loading"
+              :disabled="loading || !hydrated"
               class="login-submit w-full text-ivory bg-sienna hover:brightness-110 dark:bg-sienna-dark dark:hover:brightness-110 focus:ring-4 focus:outline-none focus:ring-sienna/30 font-semibold font-body rounded text-base px-5 py-3 text-center disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:brightness-100"
             >
               {{ loading ? $t('pages.login.form.loading') : $t('pages.login.form.button') }}
@@ -141,7 +145,10 @@
 </template>
 
 <script setup lang="ts">
-  import { z } from 'zod'
+  // Only the pattern behind `z.email()`, which the server checks the address
+  // with: the same rule, without the ~50 KB of zod the login page would
+  // otherwise parse before it can be used (scripts/login-size.mjs).
+  import { regexes } from 'zod/v4/core'
 
   import { withTimeout } from '../../utils/withTimeout'
 
@@ -154,6 +161,8 @@
    * do anything with.
    */
   const REQUEST_TIMEOUT_MS = 30_000
+
+  const EMAIL_FIELD_ID = 'email-address-icon'
 
   const { loggedIn } = useUserSession()
   const route = useRoute()
@@ -182,15 +191,32 @@
     email: '',
   })
 
+  /** False until Vue has taken over the server-rendered form — see the button. */
+  const hydrated = ref(false)
+
+  /**
+   * The address typed while the app was still loading. On a slow phone the
+   * form is on screen for seconds before Vue takes it over, and v-model then
+   * sets the field to its own (empty) value — Vue keeps what was typed only
+   * for `type="text"`, not for `type="email"`. Picked up before that happens:
+   * at this point the field is still the server-rendered one.
+   */
+  onBeforeMount(() => {
+    const field = document.getElementById(EMAIL_FIELD_ID) as HTMLInputElement | null
+    if (field?.value) credentials.email = field.value.trim()
+  })
+  onMounted(() => {
+    hydrated.value = true
+  })
+
   // The client with the 401 handling — see useApi().
   const api = useApi()
-  const emailSchema = z.email()
 
   async function requestLoginLink() {
     // Trim first: autofill/copy-paste often append whitespace, which makes the
     // request silently fail client-side validation and never reach the backend.
     const email = credentials.email.trim()
-    if (!emailSchema.safeParse(email).success) {
+    if (!regexes.email.test(email)) {
       emailError.value = true
       return
     }

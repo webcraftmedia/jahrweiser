@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.4](https://github.com/webcraftmedia/jahrweiser/compare/jahrweiser-v1.19.3...jahrweiser-v1.19.4) (2026-10-18)
+
+
+### Miscellaneous Chores
+
+* **release:** name release pull requests and tags after the project ([#519](https://github.com/webcraftmedia/jahrweiser/issues/519)) ([da27cde](https://github.com/webcraftmedia/jahrweiser/commit/da27cde4018017cbfe051c1916df616959a8265c))
+
 ## [1.19.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.19.2...v1.19.3) (2026-10-15)
 
 

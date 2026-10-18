@@ -33,7 +33,9 @@ ein Release riskant macht, nicht nach Fachbereichen:
 Jeder Typ, den das PR-Linting zulässt, landet im Changelog und erweitert den
 Release-PR — auch `build(deps)` von Dependabot, `chore`, `ci` und `test`.
 release-please blendet diese Typen per Default aus; `changelog-sections` in
-`release-please-config.json` schaltet sie sichtbar.
+`release-please-config.json` schaltet sie sichtbar. Releases heißen nach dem
+`package-name` der Config: Release-PR `chore(release): release jahrweiser <version>`,
+Tag `jahrweiser-v<version>`.
 
 ### Nutzersichtbare Texte
 

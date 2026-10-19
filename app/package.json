@@ -61,7 +61,7 @@
     "drizzle-orm": "^0.45.4",
     "email-templates": "^13.0.1",
     "ical.js": "^2.2.1",
-    "mysql2": "^3.24.5",
+    "mysql2": "^3.24.6",
     "nodemailer": "^10.1.0",
     "nuxt": "^4.6.0",
     "nuxt-auth-utils": "^0.5.31",

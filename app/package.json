@@ -93,7 +93,7 @@
     "eslint-config-it4c": "^0.13.2",
     "fake-indexeddb": "^6.2.6",
     "happy-dom": "^21.0.1",
-    "prettier": "^3.9.9",
+    "prettier": "^3.9.10",
     "size-limit": "^14.0.0",
     "vitest": "^5.0.0",
     "vue-tsc": "^3.3.13"

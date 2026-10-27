@@ -92,7 +92,7 @@
     "eslint": "^10.13.0",
     "eslint-config-it4c": "^0.13.2",
     "fake-indexeddb": "^6.2.6",
-    "happy-dom": "^21.0.1",
+    "happy-dom": "^21.0.4",
     "prettier": "^3.9.10",
     "size-limit": "^14.0.0",
     "vitest": "^5.0.0",

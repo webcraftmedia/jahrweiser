@@ -46,7 +46,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@fontsource-variable/source-sans-3": "^5.3.0",
+    "@fontsource-variable/source-sans-3": "^5.3.1",
     "@fontsource/abril-fatface": "^5.3.0",
     "@fontsource/permanent-marker": "^5.3.0",
     "@nuxtjs/i18n": "^10.6.0",

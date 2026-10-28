@@ -1,7 +1,8 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ZodError } from 'zod'
+
+import { nitro } from '../../test/setup-server'
 
 import handler from './feedback.post'
 
@@ -13,7 +14,7 @@ vi.mock('../helpers/email', () => ({
 
 const fn = handler as unknown as (e: unknown) => Promise<{ sent: boolean }>
 
-const originalConfig = globalThis.useRuntimeConfig
+const originalConfig = nitro.useRuntimeConfig
 
 const CONTEXT = {
   page: '/2026/09',
@@ -47,7 +48,7 @@ function eventBody(overrides: Record<string, unknown> = {}) {
 
 /** Make `readValidatedBody` hand the handler this payload. */
 function posting(payload: unknown) {
-  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+  vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
     (v as (d: unknown) => unknown)(payload),
   )
 }
@@ -58,7 +59,7 @@ function posting(payload: unknown) {
  * reaching into the module.
  */
 function signedInAs(uid: string, user: Record<string, unknown> = {}) {
-  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+  vi.mocked(nitro.requireUserSession).mockResolvedValue({
     user: { uid, name: 'Anna Mustermann', email: 'anna@example.com', role: 'user', ...user },
   })
 }
@@ -77,7 +78,7 @@ describe('feedback.post', () => {
   })
 
   afterEach(() => {
-    globalThis.useRuntimeConfig = originalConfig
+    nitro.useRuntimeConfig = originalConfig
   })
 
   it('sends the report to the configured address', async () => {
@@ -149,7 +150,7 @@ describe('feedback.post', () => {
   it('does not move a suggested event across time zones', async () => {
     // The regression this guards: reading the input value with `new Date()` and
     // rendering it in APP_TIMEZONE shifts the evening by the UTC offset.
-    globalThis.useRuntimeConfig = () => ({
+    nitro.useRuntimeConfig = () => ({
       FEEDBACK_EMAIL: 'feedback@example.com',
       FEEDBACK_RATE_LIMIT_MS: 0,
       APP_TIMEZONE: 'Pacific/Auckland',
@@ -205,7 +206,7 @@ describe('feedback.post', () => {
   })
 
   it('rejects a session without a uid', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { email: 'anna@example.com' },
     })
     await expect(fn({})).rejects.toThrow('No user context')
@@ -213,12 +214,12 @@ describe('feedback.post', () => {
   })
 
   it('rejects a session without an address to reply to', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({ user: { uid: 'u-noemail' } })
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({ user: { uid: 'u-noemail' } })
     await expect(fn({})).rejects.toThrow('No user context')
   })
 
   it('refuses when no feedback address is configured', async () => {
-    globalThis.useRuntimeConfig = () => ({
+    nitro.useRuntimeConfig = () => ({
       FEEDBACK_EMAIL: '',
       FEEDBACK_RATE_LIMIT_MS: 60000,
     })
@@ -324,7 +325,7 @@ describe('feedback.post', () => {
     })
 
     it('is off when the limit is configured to zero', async () => {
-      globalThis.useRuntimeConfig = () => ({
+      nitro.useRuntimeConfig = () => ({
         FEEDBACK_EMAIL: 'feedback@example.com',
         FEEDBACK_RATE_LIMIT_MS: 0,
         APP_TIMEZONE: 'Europe/Berlin',

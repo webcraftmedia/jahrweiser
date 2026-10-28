@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
+import { nitro } from '../../../test/setup-server'
 
 import handler from './[token].get'
 
@@ -19,18 +19,18 @@ describe('register/[token].get', () => {
   })
 
   it('returns notfound when no token is given', async () => {
-    vi.mocked(globalThis.getRouterParam).mockReturnValue(undefined)
+    vi.mocked(nitro.getRouterParam).mockReturnValue(undefined)
     await expect(fn({})).resolves.toStrictEqual({ status: 'notfound', invitedBy: null })
   })
 
   it('returns notfound when the link does not exist', async () => {
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('tok')
+    vi.mocked(nitro.getRouterParam).mockReturnValue('tok')
     queueDbResults([])
     await expect(fn({})).resolves.toStrictEqual({ status: 'notfound', invitedBy: null })
   })
 
   it('returns the status and inviter for a valid link', async () => {
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('tok')
+    vi.mocked(nitro.getRouterParam).mockReturnValue('tok')
     queueDbResults(
       [{ link: { revokedAt: null, expiresAt: null, maxUses: null }, invitedBy: 'Admin Adam' }],
       [{ count: '0' }],
@@ -39,7 +39,7 @@ describe('register/[token].get', () => {
   })
 
   it('treats a missing count row as zero uses', async () => {
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('tok')
+    vi.mocked(nitro.getRouterParam).mockReturnValue('tok')
     queueDbResults(
       [{ link: { revokedAt: null, expiresAt: null, maxUses: 1 }, invitedBy: null }],
       [], // count query returns no row

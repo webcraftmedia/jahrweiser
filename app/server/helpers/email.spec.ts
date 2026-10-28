@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi } from 'vitest'
+
+import { nitro } from '../../test/setup-server'
 
 import { emailRenderer, defaultParams } from './email'
 
@@ -55,8 +56,8 @@ describe('email helper', () => {
     mockCreateTransport.mockClear()
 
     // Override useRuntimeConfig globally, reset modules, and re-import
-    const originalUseRuntimeConfig = globalThis.useRuntimeConfig
-    globalThis.useRuntimeConfig = (() => ({
+    const originalUseRuntimeConfig = nitro.useRuntimeConfig
+    nitro.useRuntimeConfig = () => ({
       SMTP_HOST: 'smtp.example.com',
       SMTP_PORT: 587,
       SMTP_IGNORE_TLS: false,
@@ -66,12 +67,12 @@ describe('email helper', () => {
       SMTP_MAX_CONNECTIONS: 5,
       SMTP_MAX_MESSAGES: 100,
       CLIENT_URI: 'http://localhost:3000',
-    })) as typeof globalThis.useRuntimeConfig
+    })
 
     vi.resetModules()
     await import('./email')
 
-    globalThis.useRuntimeConfig = originalUseRuntimeConfig
+    nitro.useRuntimeConfig = originalUseRuntimeConfig
 
     expect(mockCreateTransport).toHaveBeenCalledWith(
       expect.objectContaining({

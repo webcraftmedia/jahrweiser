@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { dbCalls, firstDbCall, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
+import { nitro } from '../../test/setup-server'
 
 import { resetPlzAreaCache } from './memberMap'
 import {
@@ -35,7 +35,7 @@ const GEOMETRY: LoadedAreas = {
 /** Serve (or withhold, with null) the geometry artefact `loadPlzAreas` reads. */
 function storageServing(value: unknown): void {
   resetPlzAreaCache()
-  vi.mocked(globalThis.useStorage).mockReturnValue({
+  vi.mocked(nitro.useStorage).mockReturnValue({
     getItem: vi.fn().mockResolvedValue(value),
   })
 }

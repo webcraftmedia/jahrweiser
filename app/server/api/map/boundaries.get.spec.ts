@@ -1,7 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ZodError } from 'zod'
+
+import { nitro } from '../../../test/setup-server'
 
 import handler from './boundaries.get'
 
@@ -36,10 +37,10 @@ describe('map/boundaries.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockLoadBoundaries.mockResolvedValue(BORDERS)
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'A', email: 'a@x.de', role: 'user' },
     })
-    vi.mocked(globalThis.getQuery).mockReturnValue({
+    vi.mocked(nitro.getQuery).mockReturnValue({
       minX: '0',
       minY: '0',
       maxX: '3000',
@@ -48,7 +49,7 @@ describe('map/boundaries.get', () => {
   })
 
   it('requires a session', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(fn({})).rejects.toThrow('Unauthorized')
   })
 
@@ -67,7 +68,7 @@ describe('map/boundaries.get', () => {
     ['a view zoomed out past what the detail can show', '30', 'M0 0l2000 2000z'],
   ])('picks the resolution for %s', async (_case, perPixel, expected) => {
     // The client is the only party that knows how big a pixel is, so it says.
-    vi.mocked(globalThis.getQuery).mockReturnValue({
+    vi.mocked(nitro.getQuery).mockReturnValue({
       minX: '0',
       minY: '0',
       maxX: '3000',
@@ -81,7 +82,7 @@ describe('map/boundaries.get', () => {
   it('answers only the levels the view has room for', async () => {
     // The map asks for the district layer only once its scale can carry it —
     // at country zoom that would be a wall of lines and 380 kB of path data.
-    vi.mocked(globalThis.getQuery).mockReturnValue({
+    vi.mocked(nitro.getQuery).mockReturnValue({
       minX: '0',
       minY: '0',
       maxX: '3000',
@@ -93,7 +94,7 @@ describe('map/boundaries.get', () => {
   })
 
   it('asks for each level once, however often it was named', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({
+    vi.mocked(nitro.getQuery).mockReturnValue({
       minX: '0',
       minY: '0',
       maxX: '3000',
@@ -105,7 +106,7 @@ describe('map/boundaries.get', () => {
   })
 
   it('leaves out what lies outside the rectangle', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({
+    vi.mocked(nitro.getQuery).mockReturnValue({
       minX: '8000',
       minY: '8000',
       maxX: '9000',
@@ -125,7 +126,7 @@ describe('map/boundaries.get', () => {
     ],
     ['no level at all', { minX: '0', minY: '0', maxX: '1', maxY: '1', levels: '' }],
   ])('rejects %s', async (_case, query) => {
-    vi.mocked(globalThis.getQuery).mockReturnValue(query)
+    vi.mocked(nitro.getQuery).mockReturnValue(query)
     await expect(fn({})).rejects.toThrow(ZodError)
   })
 

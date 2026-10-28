@@ -1,7 +1,7 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import { nitro } from '../../test/setup-server'
 import { IDLE_TTL_MS } from '../helpers/sessionTtl'
 
 const mockLimit = vi.fn()
@@ -102,7 +102,7 @@ describe('session-check middleware', () => {
       },
     ])
     await run({ path: '/api/calendars' })
-    expect(globalThis.setHeader).toHaveBeenCalledWith(
+    expect(nitro.setHeader).toHaveBeenCalledWith(
       { path: '/api/calendars' },
       'X-Session-Expires-In',
       '3600',
@@ -120,7 +120,7 @@ describe('session-check middleware', () => {
       },
     ])
     await run({ path: '/' })
-    expect(globalThis.setHeader).toHaveBeenCalledWith(
+    expect(nitro.setHeader).toHaveBeenCalledWith(
       { path: '/' },
       'X-Session-Expires-In',
       String(IDLE_TTL_MS / 1000),
@@ -140,7 +140,7 @@ describe('session-check middleware', () => {
     await expect(run({ path: '/api/calendars' })).rejects.toMatchObject({ statusCode: 401 })
     expect(mockClearUserSession).toHaveBeenCalledTimes(1)
     expect(mockUpdate).not.toHaveBeenCalled()
-    expect(globalThis.setHeader).not.toHaveBeenCalled()
+    expect(nitro.setHeader).not.toHaveBeenCalled()
   })
 
   // Recorded before the cookie is cleared: afterwards the browser stops sending

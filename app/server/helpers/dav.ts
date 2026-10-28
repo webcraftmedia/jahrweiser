@@ -361,7 +361,11 @@ export const findUserByToken = async (account: DAVAccount, token: string) =>
 export const findUserByEmail = async (account: DAVAccount, email: string) =>
   findUserByProperty(account, 'EMAIL', email.toLowerCase(), 'i;unicode-casemap')
 
-export const saveUser = async (account: DAVAccount, user: DAVResponse, vcard: ICAL.Component) =>
+export const saveUser = async (
+  account: DAVAccount,
+  user: Pick<DAVResponse, 'href' | 'props'>,
+  vcard: ICAL.Component,
+) =>
   updateVCard({
     vCard: {
       url: account.serverUrl + user.href!,

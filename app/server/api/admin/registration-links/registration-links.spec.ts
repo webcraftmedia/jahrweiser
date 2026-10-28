@@ -1,9 +1,9 @@
 // @vitest-environment node
-import '../../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { createMockVCard } from '../../../../test/fixtures/vcard-data'
 import { mockDb, queueDbResults, resetDb } from '../../../../test/helpers/mock-db'
+import { nitro } from '../../../../test/setup-server'
 
 import createHandler from './create.post'
 import deleteHandler from './delete.post'
@@ -39,22 +39,22 @@ const deleteFn = deleteHandler as unknown as (e: unknown) => Promise<unknown>
 const reactivateFn = reactivateHandler as unknown as (e: unknown) => Promise<unknown>
 
 function asAdmin() {
-  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+  vi.mocked(nitro.requireUserSession).mockResolvedValue({
     user: { uid: 'admin-1', name: 'Admin', email: 'admin@example.com', role: 'admin' },
   })
 }
 function asUser() {
-  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+  vi.mocked(nitro.requireUserSession).mockResolvedValue({
     user: { uid: 'u1', name: 'User', email: 'user@example.com', role: 'user' },
   })
 }
 function asOtherAdmin() {
-  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+  vi.mocked(nitro.requireUserSession).mockResolvedValue({
     user: { uid: 'admin-2', name: 'Other', email: 'other@example.com', role: 'admin' },
   })
 }
 function body(value: Record<string, unknown>) {
-  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+  vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
     (v as (d: unknown) => unknown)(value),
   )
 }

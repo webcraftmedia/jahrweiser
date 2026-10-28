@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { createMockVCard } from '../../../test/fixtures/vcard-data'
+import { nitro } from '../../../test/setup-server'
 
 import handler from './grantable-calendars.get'
 
@@ -29,7 +29,7 @@ const handlerFn = handler as unknown as (
 ) => Promise<{ key: string; label: string }[]>
 
 function asAdmin() {
-  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+  vi.mocked(nitro.requireUserSession).mockResolvedValue({
     user: { uid: 'admin-1', name: 'Admin', email: 'admin@example.com', role: 'admin' },
   })
 }
@@ -41,7 +41,7 @@ describe('admin/grantable-calendars', () => {
   })
 
   it('rejects non-admins', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'User', email: 'user@example.com', role: 'user' },
     })
     await expect(handlerFn({})).rejects.toThrow('Not Authorized')

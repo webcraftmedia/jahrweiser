@@ -156,7 +156,8 @@ export default defineEventHandler(async (event) => {
     .select({ value: sql<string>`count(*)` })
     .from(users)
     .where(where)
-  const total = Number(counted[0].value)
+  // count(*) without GROUP BY always yields exactly one row.
+  const total = Number(counted[0]!.value)
 
   const rows = await db
     .select({

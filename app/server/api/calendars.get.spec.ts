@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { nitro } from '../../test/setup-server'
 
 import handler from './calendars.get'
 
@@ -20,7 +21,7 @@ const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>
 describe('calendars.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
     })
   })

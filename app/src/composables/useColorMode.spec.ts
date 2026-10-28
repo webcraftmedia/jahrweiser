@@ -27,7 +27,7 @@ describe('useColorMode', () => {
   })
 
   /** The circle inside the overlay — it carries colour and animation. */
-  const circle = () => document.querySelector('.color-switch-circle')
+  const circle = () => document.querySelector<HTMLElement>('.color-switch-circle')
 
   it('defaults to light mode', () => {
     const { isDark } = useColorMode()

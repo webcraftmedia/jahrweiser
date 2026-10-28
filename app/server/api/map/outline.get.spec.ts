@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { nitro } from '../../../test/setup-server'
 
 import handler from './outline.get'
 
@@ -14,13 +15,13 @@ const fn = handler as unknown as (e: unknown) => Promise<MapOutline>
 describe('map/outline.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'A', email: 'a@x.de', role: 'user' },
     })
   })
 
   it('requires a session', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(fn({})).rejects.toThrow('Unauthorized')
   })
 
@@ -39,7 +40,7 @@ describe('map/outline.get', () => {
     mockLoadPlzAreas.mockResolvedValue({ viewBox: '0 0 1 1', outline: '', areas: new Map() })
     await expect(fn({})).resolves.toBeDefined()
     // No DB lookup of the caller's own postal code happened.
-    expect(globalThis.requireUserSession).toHaveBeenCalledTimes(1)
+    expect(nitro.requireUserSession).toHaveBeenCalledTimes(1)
   })
 
   it('fails loudly when the artefact was never built', async () => {

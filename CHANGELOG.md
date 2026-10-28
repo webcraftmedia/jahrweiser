@@ -1,5 +1,49 @@
 # Changelog
 
+## [1.19.4](https://github.com/webcraftmedia/jahrweiser/compare/jahrweiser-v1.19.3...jahrweiser-v1.19.4) (2026-10-28)
+
+
+### Bug Fixes
+
+* **app:** make the typecheck check something ([#551](https://github.com/webcraftmedia/jahrweiser/issues/551)) ([801b890](https://github.com/webcraftmedia/jahrweiser/commit/801b8900a544732f78004b5c676e3b64959dc065))
+* **app:** type errors in app code the typecheck never saw ([#549](https://github.com/webcraftmedia/jahrweiser/issues/549)) ([983954d](https://github.com/webcraftmedia/jahrweiser/commit/983954dc4d1e7c4c3a8016ba93605fbea932e432))
+* **app:** type errors in scripts, e2e suites and configs ([#550](https://github.com/webcraftmedia/jahrweiser/issues/550)) ([fc91679](https://github.com/webcraftmedia/jahrweiser/commit/fc91679a3424f05137713e476c6cdf29f240686a))
+
+
+### Tests
+
+* **app:** check the e2e mocks against the server's response types ([#552](https://github.com/webcraftmedia/jahrweiser/issues/552)) ([0341ffe](https://github.com/webcraftmedia/jahrweiser/commit/0341ffe3b81f4cb810dbde196931149820d121c2))
+* **app:** run the full-stack e2e suite against the production build ([#547](https://github.com/webcraftmedia/jahrweiser/issues/547)) ([fa35197](https://github.com/webcraftmedia/jahrweiser/commit/fa35197ea0c504684e21a50db0a791a4e0d04d12))
+* **app:** type the Nitro globals the server specs mock ([#548](https://github.com/webcraftmedia/jahrweiser/issues/548)) ([9ce220f](https://github.com/webcraftmedia/jahrweiser/commit/9ce220fd987c14fc4ed33ffddf1f7666b4f7d1c4))
+
+
+### Build System & Dependencies
+
+* **deps-dev:** bump @playwright/test from 1.64.0 to 1.64.1 in /app ([#522](https://github.com/webcraftmedia/jahrweiser/issues/522)) ([89048f2](https://github.com/webcraftmedia/jahrweiser/commit/89048f2d99092ad55afef245723920a182cf6aaf))
+* **deps-dev:** bump @types/node from 26.6.4 to 26.6.5 in /app ([#534](https://github.com/webcraftmedia/jahrweiser/issues/534)) ([fd38d75](https://github.com/webcraftmedia/jahrweiser/commit/fd38d750de56a8aac9e6d5a46e66cdf7e6ccb776))
+* **deps-dev:** bump browserslist from 4.29.3 to 4.29.4 in /app ([#546](https://github.com/webcraftmedia/jahrweiser/issues/546)) ([f67db6e](https://github.com/webcraftmedia/jahrweiser/commit/f67db6e6ebfb98c96c3d85ea333a4f7cd8dff6bb))
+* **deps-dev:** bump dotenv from 18.0.7 to 18.0.9 in /app ([#537](https://github.com/webcraftmedia/jahrweiser/issues/537)) ([cf4aa89](https://github.com/webcraftmedia/jahrweiser/commit/cf4aa89f3a811099a08d5d126b365f5f697d5107))
+* **deps-dev:** bump eslint from 10.12.0 to 10.13.0 in /app ([#545](https://github.com/webcraftmedia/jahrweiser/issues/545)) ([7561196](https://github.com/webcraftmedia/jahrweiser/commit/7561196475386a079c9a37ecb1611612ff5172ba))
+* **deps-dev:** bump fake-indexeddb from 6.2.5 to 6.2.6 in /app ([#543](https://github.com/webcraftmedia/jahrweiser/issues/543)) ([b3fedba](https://github.com/webcraftmedia/jahrweiser/commit/b3fedba37516f7702f602c7223f62bfbaa3bffa1))
+* **deps-dev:** bump happy-dom from 21.0.1 to 21.0.4 in /app ([#539](https://github.com/webcraftmedia/jahrweiser/issues/539)) ([8428521](https://github.com/webcraftmedia/jahrweiser/commit/8428521f166a576b41ab6db7cd2eeeaed185893a))
+* **deps-dev:** bump prettier from 3.9.9 to 3.9.10 in /app ([#530](https://github.com/webcraftmedia/jahrweiser/issues/530)) ([6fe153d](https://github.com/webcraftmedia/jahrweiser/commit/6fe153d1d268f455a8c0bea43df0315c6ffbc5b2))
+* **deps-dev:** bump the size-limit group in /app with 2 updates ([#536](https://github.com/webcraftmedia/jahrweiser/issues/536)) ([7e6f926](https://github.com/webcraftmedia/jahrweiser/commit/7e6f926fbe75662a0c667e4af68311d4c7cfbaf0))
+* **deps-dev:** bump the vitest group across 1 directory with 3 updates ([#538](https://github.com/webcraftmedia/jahrweiser/issues/538)) ([a5d9a04](https://github.com/webcraftmedia/jahrweiser/commit/a5d9a04e6115a2197d0d9bd29113db7b7b21ba47))
+* **deps:** bump @fontsource-variable/source-sans-3 from 5.3.0 to 5.3.1 in /app ([#525](https://github.com/webcraftmedia/jahrweiser/issues/525)) ([6c4c445](https://github.com/webcraftmedia/jahrweiser/commit/6c4c4452d0b76df4a5ce398f97d845a3208f45c6))
+* **deps:** bump eslint-config-it4c from 0.13.2 to 0.14.1 in /app ([#542](https://github.com/webcraftmedia/jahrweiser/issues/542)) ([9daed16](https://github.com/webcraftmedia/jahrweiser/commit/9daed161bfb36dfe226d45b63eec4559796f68c5))
+* **deps:** bump mysql2 from 3.24.5 to 3.24.6 in /app ([#523](https://github.com/webcraftmedia/jahrweiser/issues/523)) ([6e0ebd0](https://github.com/webcraftmedia/jahrweiser/commit/6e0ebd0e95463326dc4546cbe4f4b29bf83c6505))
+* **deps:** bump nodemailer from 10.1.0 to 10.2.1 in /app ([#540](https://github.com/webcraftmedia/jahrweiser/issues/540)) ([7d48800](https://github.com/webcraftmedia/jahrweiser/commit/7d48800e7eb42985a714290bd82588474cf79f67))
+* **deps:** bump nuxt from 4.6.0 to 4.6.2 in /app ([#544](https://github.com/webcraftmedia/jahrweiser/issues/544)) ([e902998](https://github.com/webcraftmedia/jahrweiser/commit/e90299887ea9d11e2e8844c8672779f069600855))
+* **deps:** bump nuxt-auth-utils from 0.5.31 to 0.5.32 in /app ([#541](https://github.com/webcraftmedia/jahrweiser/issues/541)) ([07239be](https://github.com/webcraftmedia/jahrweiser/commit/07239be09f61977d83f9b3acfc0ba04d1469190f))
+* **deps:** bump tsdav from 2.4.0 to 2.5.0 in /app ([#532](https://github.com/webcraftmedia/jahrweiser/issues/532)) ([2bd6311](https://github.com/webcraftmedia/jahrweiser/commit/2bd6311c56e892fe8f83fd30f874fa95cdd5cd31))
+* **deps:** bump vue from 3.5.43 to 3.5.44 in /app ([#528](https://github.com/webcraftmedia/jahrweiser/issues/528)) ([ec3c24a](https://github.com/webcraftmedia/jahrweiser/commit/ec3c24a743a046a5f5ded806d775624f6dd7e354))
+* **deps:** bump zod from 4.6.5 to 4.6.7 in /app ([#526](https://github.com/webcraftmedia/jahrweiser/issues/526)) ([d3a7836](https://github.com/webcraftmedia/jahrweiser/commit/d3a78369a5e84cde36c463acc1c7921a30134fa3))
+
+
+### Miscellaneous Chores
+
+* **release:** name release pull requests and tags after the project ([#519](https://github.com/webcraftmedia/jahrweiser/issues/519)) ([da27cde](https://github.com/webcraftmedia/jahrweiser/commit/da27cde4018017cbfe051c1916df616959a8265c))
+
 ## [1.19.3](https://github.com/webcraftmedia/jahrweiser/compare/v1.19.2...v1.19.3) (2026-10-15)
 
 

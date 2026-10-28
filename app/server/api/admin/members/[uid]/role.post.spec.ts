@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { firstDbCall, mockDb, queueDbResults, resetDb } from '../../../../../test/helpers/mock-db'
+import { nitro } from '../../../../../test/setup-server'
 
 import handler from './role.post'
 
@@ -18,7 +18,7 @@ const fn = handler as unknown as (e: unknown) => Promise<{ role: string }>
 const member = { uid: 'u1', deletedAt: null, loginDisabled: false, role: 'user' }
 
 function sending(role: string) {
-  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+  vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
     (v as (d: unknown) => unknown)({ role }),
   )
 }
@@ -27,22 +27,22 @@ describe('admin/members/[uid]/role.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'a1', email: 'admin@example.de', name: 'Admin', role: 'admin' },
     })
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('u1')
+    vi.mocked(nitro.getRouterParam).mockReturnValue('u1')
     sending('admin')
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', role: 'user' },
     })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
   })
 
   it('refuses a request without a uid', async () => {
-    vi.mocked(globalThis.getRouterParam).mockReturnValue(undefined)
+    vi.mocked(nitro.getRouterParam).mockReturnValue(undefined)
     await expect(fn({})).rejects.toMatchObject({ statusCode: 400 })
   })
 
@@ -65,7 +65,7 @@ describe('admin/members/[uid]/role.post', () => {
 
   it('refuses to let an admin change their own role', async () => {
     // The straightforward way to end up with no admin at all.
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('a1')
+    vi.mocked(nitro.getRouterParam).mockReturnValue('a1')
     sending('user')
     queueDbResults([{ ...member, uid: 'a1', role: 'admin' }])
     await expect(fn({})).rejects.toMatchObject({ statusCode: 400 })

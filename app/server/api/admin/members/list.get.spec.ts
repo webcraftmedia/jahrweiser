@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { dbCalls, mockDb, queueDbResults, resetDb } from '../../../../test/helpers/mock-db'
+import { nitro } from '../../../../test/setup-server'
 
 import handler, { criteriaFor } from './list.get'
 
@@ -46,10 +46,10 @@ describe('admin/members/list.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'a1', email: 'admin@example.de', name: 'Admin', role: 'admin' },
     })
-    vi.mocked(globalThis.getQuery).mockReturnValue({})
+    vi.mocked(nitro.getQuery).mockReturnValue({})
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-09-03T08:00:00.000Z'))
   })
@@ -59,7 +59,7 @@ describe('admin/members/list.get', () => {
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', role: 'user' },
     })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
@@ -108,7 +108,7 @@ describe('admin/members/list.get', () => {
   })
 
   it('searches names through the handler too, not only addresses', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({ q: 'muster' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ q: 'muster' })
     queue([row()])
     await expect(fn({})).resolves.toMatchObject({ total: 1 })
     expect(mockRecordEvent).not.toHaveBeenCalled()
@@ -152,7 +152,7 @@ describe('admin/members/list.get', () => {
   it('passes a name search on as a pattern and an address search as a value', async () => {
     // The wiring check; the rule itself is pinned in the `criteriaFor` block
     // below, where it can be read without a database in the way.
-    vi.mocked(globalThis.getQuery).mockReturnValue({ q: 'anna@example.de' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ q: 'anna@example.de' })
     queue([row()])
     await fn({})
     const wheres = dbCalls().filter((c) => c.method === 'where')
@@ -162,7 +162,7 @@ describe('admin/members/list.get', () => {
   it.each([['active'], ['blocked'], ['deleted']])(
     'narrows the list to %s members',
     async (status) => {
-      vi.mocked(globalThis.getQuery).mockReturnValue({ status })
+      vi.mocked(nitro.getQuery).mockReturnValue({ status })
       queue([row()])
       await expect(fn({})).resolves.toMatchObject({ total: 1 })
     },
@@ -171,7 +171,7 @@ describe('admin/members/list.get', () => {
   it('pages with a fixed size the caller cannot widen', async () => {
     // A page size in the query string is an invitation to ask for all of them
     // at once — which is the shape of data this endpoint exists to avoid.
-    vi.mocked(globalThis.getQuery).mockReturnValue({ page: '3', perPage: '1000' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ page: '3', perPage: '1000' })
     queue([row()], 61)
     const result = await fn({})
     expect(result).toMatchObject({ page: 3, perPage: 25, total: 61 })
@@ -181,7 +181,7 @@ describe('admin/members/list.get', () => {
   })
 
   it('refuses a page number that is not one', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({ page: '0' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ page: '0' })
     await expect(fn({})).rejects.toThrow(/too_small|greater than or equal/i)
   })
 

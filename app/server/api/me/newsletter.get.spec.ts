@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
+import { nitro } from '../../../test/setup-server'
 
 import handler from './newsletter.get'
 
@@ -14,13 +14,13 @@ describe('me/newsletter.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'A', email: 'a@x.de', role: 'user' },
     })
   })
 
   it('rejects when the session has no uid', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({ user: { email: 'a@x.de' } })
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({ user: { email: 'a@x.de' } })
     await expect(fn({})).rejects.toThrow('No user context')
   })
 

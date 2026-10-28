@@ -1,5 +1,4 @@
 // @vitest-environment node
-import '../../../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import {
@@ -9,6 +8,7 @@ import {
   queueDbResults,
   resetDb,
 } from '../../../../../test/helpers/mock-db'
+import { nitro } from '../../../../../test/setup-server'
 
 import handler from './sessions.post'
 
@@ -24,7 +24,7 @@ const fn = handler as unknown as (e: unknown) => Promise<{ revokedSessions: numb
 describe('admin/members/[uid]/sessions.post', () => {
   /** The body the detail page sends: nothing, or one session id. */
   function sending(body: { sessionId?: string }) {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
       (v as (d: unknown) => unknown)(body),
     )
   }
@@ -32,22 +32,22 @@ describe('admin/members/[uid]/sessions.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'a1', email: 'admin@example.de', name: 'Admin', role: 'admin' },
     })
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('u1')
+    vi.mocked(nitro.getRouterParam).mockReturnValue('u1')
     sending({})
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', role: 'user' },
     })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
   })
 
   it('refuses a request without a uid', async () => {
-    vi.mocked(globalThis.getRouterParam).mockReturnValue(undefined)
+    vi.mocked(nitro.getRouterParam).mockReturnValue(undefined)
     await expect(fn({})).rejects.toMatchObject({ statusCode: 400 })
   })
 

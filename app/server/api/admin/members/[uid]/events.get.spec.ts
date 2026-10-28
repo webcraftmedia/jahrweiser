@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { dbCalls, mockDb, queueDbResults, resetDb } from '../../../../../test/helpers/mock-db'
+import { nitro } from '../../../../../test/setup-server'
 
 import handler from './events.get'
 
@@ -35,22 +35,22 @@ describe('admin/members/[uid]/events.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'a1', email: 'admin@example.de', name: 'Admin', role: 'admin' },
     })
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('u1')
-    vi.mocked(globalThis.getQuery).mockReturnValue({})
+    vi.mocked(nitro.getRouterParam).mockReturnValue('u1')
+    vi.mocked(nitro.getQuery).mockReturnValue({})
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', role: 'user' },
     })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
   })
 
   it('refuses a request without a uid', async () => {
-    vi.mocked(globalThis.getRouterParam).mockReturnValue(undefined)
+    vi.mocked(nitro.getRouterParam).mockReturnValue(undefined)
     await expect(fn({})).rejects.toMatchObject({ statusCode: 400 })
   })
 
@@ -102,19 +102,19 @@ describe('admin/members/[uid]/events.get', () => {
   it('filters by group rather than by an exhaustive list of types', async () => {
     // So that a new event type shows up under its group without this endpoint
     // having to learn about it — the same reason the column is a varchar.
-    vi.mocked(globalThis.getQuery).mockReturnValue({ group: 'auth' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ group: 'auth' })
     queueDbResults([eventRow()])
     await fn({})
     expect(JSON.stringify(dbCalls().map((c) => c.method))).toContain('where')
   })
 
   it('refuses a group nobody defined', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({ group: 'everything' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ group: 'everything' })
     await expect(fn({})).rejects.toThrow(/invalid|expected|received/i)
   })
 
   it('pages with a fixed size', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({ page: '2' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ page: '2' })
     queueDbResults([])
     const result = await fn({})
     expect(result).toMatchObject({ page: 2, perPage: 50 })

@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { nitro } from '../../test/setup-server'
 
 import handler from './blaettchen.get'
 
@@ -23,13 +24,13 @@ function enoent(): NodeJS.ErrnoException {
 describe('blaettchen.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'User', email: 'user@example.com', role: 'user' },
     })
   })
 
   it('requires a session — the paper is written by and for the members', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(handlerFn({})).rejects.toThrow('Unauthorized')
     expect(mockReaddir).not.toHaveBeenCalled()
   })
@@ -61,16 +62,16 @@ describe('blaettchen.get', () => {
   })
 
   it('reports no contact rather than an empty one when none is configured', async () => {
-    const original = globalThis.useRuntimeConfig
-    globalThis.useRuntimeConfig = (() => ({
+    const original = nitro.useRuntimeConfig
+    nitro.useRuntimeConfig = () => ({
       ...original(),
       BLAETTCHEN_CONTACT_EMAIL: '',
-    })) as typeof globalThis.useRuntimeConfig
+    })
     mockReaddir.mockResolvedValue([])
     // The page then skips the call for contributions instead of rendering a
     // `mailto:` that goes nowhere.
     await expect(handlerFn({})).resolves.toHaveProperty('contact', null)
-    globalThis.useRuntimeConfig = original
+    nitro.useRuntimeConfig = original
   })
 
   it('skips files that do not follow the convention instead of failing', async () => {

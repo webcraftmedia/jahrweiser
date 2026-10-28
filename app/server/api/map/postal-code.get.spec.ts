@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { nitro } from '../../../test/setup-server'
 
 import handler from './postal-code.get'
 
@@ -24,7 +25,7 @@ const fn = handler as unknown as (e: unknown) => Promise<PostalCodeLookup>
 
 /** The handler reads its query through h3's `getQuery`, which the setup stubs. */
 function asking(plz: unknown) {
-  vi.mocked(globalThis.getQuery).mockReturnValue({ plz })
+  vi.mocked(nitro.getQuery).mockReturnValue({ plz })
   return fn({})
 }
 
@@ -32,13 +33,13 @@ describe('map/postal-code.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockLoadPlzAreas.mockResolvedValue(GEOMETRY)
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'A', email: 'a@x.de', role: 'user' },
     })
   })
 
   it('requires a session, like everything else on the map', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(asking('64673')).rejects.toThrow('Unauthorized')
   })
 

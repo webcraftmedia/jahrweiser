@@ -1,7 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ZodError } from 'zod'
+
+import { nitro } from '../../../test/setup-server'
 
 import handler from './places.get'
 
@@ -25,10 +26,10 @@ describe('map/places.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockLoadPlaces.mockResolvedValue(PLACES)
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'A', email: 'a@x.de', role: 'user' },
     })
-    vi.mocked(globalThis.getQuery).mockReturnValue({
+    vi.mocked(nitro.getQuery).mockReturnValue({
       minX: '900',
       minY: '900',
       maxX: '1100',
@@ -37,7 +38,7 @@ describe('map/places.get', () => {
   })
 
   it('requires a session', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(fn({})).rejects.toThrow('Unauthorized')
   })
 
@@ -49,7 +50,7 @@ describe('map/places.get', () => {
   })
 
   it('stops at the limit — the artefact is sorted, so the first found are the ones worth showing', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({
+    vi.mocked(nitro.getQuery).mockReturnValue({
       minX: '0',
       minY: '0',
       maxX: '12000',
@@ -62,12 +63,12 @@ describe('map/places.get', () => {
   })
 
   it('rejects a rectangle it cannot read', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({ minX: 'links' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ minX: 'links' })
     await expect(fn({})).rejects.toThrow(ZodError)
   })
 
   it('refuses to be asked for more than it will ever draw', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({
+    vi.mocked(nitro.getQuery).mockReturnValue({
       minX: '0',
       minY: '0',
       maxX: '1',

@@ -8,6 +8,14 @@ Three layers of tests:
 | E2E (mock) | `npm run test:e2e` | UI flows against mocked API responses (no backend needed) |
 | E2E (full-stack) | `npm run test:e2e:full-stack` | Real app hitting real Baikal + MariaDB + Maildev |
 
+## Typecheck
+
+`npm run test:lint:typecheck` runs `vue-tsc -b --noEmit`. The `-b` is load-bearing:
+`app/tsconfig.json` is a solution config (`"files": []` plus `references` to the
+generated `.nuxt/tsconfig.{app,server,shared,node}.json`), and without build mode
+tsc does not follow references — it checks no file at all and exits 0. That is
+how a year of type errors piled up unseen.
+
 ## Unit tests
 
 ```sh

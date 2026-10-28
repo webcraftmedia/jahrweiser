@@ -79,7 +79,7 @@ test.describe('full-stack newsletter', () => {
 
     // 4. Confirm the mail arrived for Alice and carries an unsubscribe link.
     const mail = await waitForMailFor(ALICE)
-    const unsubscribeUrl = extractUnsubscribeUrl(mail.text || mail.html)
+    const unsubscribeUrl = extractUnsubscribeUrl(mail.text || mail.html || '')
 
     // 4a. Subject must carry the upcoming ISO week label (e.g. "KW22") — the
     // pug subject template is otherwise easy to break silently.
@@ -122,7 +122,7 @@ test.describe('full-stack newsletter', () => {
     await deleteAllMail()
     await triggerSendNewsletter(request)
     const mail = await waitForMailFor(ALICE)
-    const unsubscribeUrl = extractUnsubscribeUrl(mail.text || mail.html)
+    const unsubscribeUrl = extractUnsubscribeUrl(mail.text || mail.html || '')
 
     const res = await request.get(unsubscribeUrl)
     expect(res.status()).toBe(200)

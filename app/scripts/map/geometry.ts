@@ -60,10 +60,12 @@ function simplifyOpen(points: Point[], tolerance: number): Point[] {
     let maxDistance = 0
     let index = -1
     for (let i = from + 1; i < to; i++) {
-      const distance = segmentDistance(points[i], points[from], points[to])
+      const distance = segmentDistance(points[i]!, points[from]!, points[to]!)
       if (
         distance > maxDistance ||
-        (index !== -1 && distance === maxDistance && pointKey(points[i]) < pointKey(points[index]))
+        (index !== -1 &&
+          distance === maxDistance &&
+          pointKey(points[i]!) < pointKey(points[index]!))
       ) {
         maxDistance = distance
         index = i
@@ -97,8 +99,8 @@ export function dedupe(ring: Ring): Ring {
   const out = collapse(ring)
   while (
     out.length > 1 &&
-    out[0][0] === out[out.length - 1][0] &&
-    out[0][1] === out[out.length - 1][1]
+    out[0]![0] === out[out.length - 1]![0] &&
+    out[0]![1] === out[out.length - 1]![1]
   ) {
     out.pop()
   }
@@ -144,13 +146,13 @@ function selfIntersects(points: Point[], closed: boolean): boolean {
   const count = closed ? points.length : points.length - 1
   if (count < 4) return false
   for (let i = 0; i < count; i++) {
-    const a1 = points[i]
-    const a2 = points[(i + 1) % points.length]
+    const a1 = points[i]!
+    const a2 = points[(i + 1) % points.length]!
     // From i + 2: neighbouring segments share an endpoint by construction.
     for (let j = i + 2; j < count; j++) {
       // The first and the final segment of a ring are neighbours as well.
       if (closed && i === 0 && j === count - 1) continue
-      if (segmentsCross(a1, a2, points[j], points[(j + 1) % points.length])) return true
+      if (segmentsCross(a1, a2, points[j]!, points[(j + 1) % points.length]!)) return true
     }
   }
   return false
@@ -187,10 +189,10 @@ function appendNumber(out: string, value: number): string {
 /** One open polyline as an `M`-relative-`l` subpath — a border, not a body. */
 export function lineToPath(line: Ring): string {
   if (line.length < 2) return ''
-  let d = `M${line[0][0]} ${line[0][1]}l`
-  let [px, py] = line[0]
+  let d = `M${line[0]![0]} ${line[0]![1]}l`
+  let [px, py] = line[0]!
   for (let i = 1; i < line.length; i++) {
-    const [x, y] = line[i]
+    const [x, y] = line[i]!
     d = appendNumber(d, x - px)
     d = appendNumber(d, y - py)
     px = x

@@ -105,7 +105,7 @@ test.describe('Karte', () => {
       const x = frame.x + frame.width / 2
       const y = frame.y + frame.height / 2
       const cdp = await page.context().newCDPSession(page)
-      const touch = (gaps: number[], type: string) =>
+      const touch = (gaps: number[], type: 'touchStart' | 'touchMove' | 'touchEnd') =>
         cdp.send('Input.dispatchTouchEvent', {
           type,
           touchPoints: gaps.flatMap((gap, index) => [

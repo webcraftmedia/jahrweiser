@@ -68,6 +68,22 @@ DAV_URL=http://localhost:8088/dav.php \
 SYNC_SECRET=test-sync-secret npm run test:e2e:full-stack
 ```
 
+### Dev server or production build
+
+`E2E_SERVER` picks what Playwright starts:
+
+- `dev` (default) — `nuxt dev`. Quick to restart while working on a spec.
+- `prod` — `nuxt build`, then `node .output/server/index.mjs`, the way
+  `deploy.sh` runs the app. CI uses this, so the suite also covers what only
+  exists in the built bundle. Locally: `E2E_SERVER=prod npm run test:e2e:full-stack`.
+
+In `prod` the suite's settings (`LOGIN_RATE_LIMIT_MS=0`, `BLAETTCHEN_DIR`, …)
+are passed to the *build*: `nuxt.config.ts` reads `process.env` into
+`runtimeConfig`, and the build bakes that into `.output`. At runtime only
+`NUXT_*` variables override it. `NUXT_SESSION_PASSWORD` is passed at runtime,
+because `node` does not read `.env` and `nuxt dev` is the only mode in which
+nuxt-auth-utils makes one up.
+
 The tests call `cli:seed:reset` and `cli:seed:demo` in `beforeAll` so they're
 self-provisioning. They wipe state between runs.
 

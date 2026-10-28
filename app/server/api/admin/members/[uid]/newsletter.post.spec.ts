@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { firstDbCall, mockDb, queueDbResults, resetDb } from '../../../../../test/helpers/mock-db'
+import { nitro } from '../../../../../test/setup-server'
 
 import handler from './newsletter.post'
 
@@ -16,7 +16,7 @@ vi.mock('~~/server/helpers/events', () => ({
 const fn = handler as unknown as (e: unknown) => Promise<{ subscribed: boolean }>
 
 function sending(subscribed: boolean) {
-  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+  vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
     (v as (d: unknown) => unknown)({ subscribed }),
   )
 }
@@ -25,22 +25,22 @@ describe('admin/members/[uid]/newsletter.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'a1', email: 'admin@example.de', name: 'Admin', role: 'admin' },
     })
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('u1')
+    vi.mocked(nitro.getRouterParam).mockReturnValue('u1')
     sending(false)
   })
 
   it('refuses anybody who is not an admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', role: 'user' },
     })
     await expect(fn({})).rejects.toMatchObject({ statusCode: 403 })
   })
 
   it('refuses a request without a uid', async () => {
-    vi.mocked(globalThis.getRouterParam).mockReturnValue(undefined)
+    vi.mocked(nitro.getRouterParam).mockReturnValue(undefined)
     await expect(fn({})).rejects.toMatchObject({ statusCode: 400 })
   })
 
@@ -82,7 +82,7 @@ describe('admin/members/[uid]/newsletter.post', () => {
   })
 
   it('refuses a body that does not say what to do', async () => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
       (v as (d: unknown) => unknown)({}),
     )
     await expect(fn({})).rejects.toThrow(/invalid|expected|received/i)

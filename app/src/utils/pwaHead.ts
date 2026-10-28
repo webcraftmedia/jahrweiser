@@ -13,10 +13,10 @@ export const MANIFEST_URL = '/manifest.webmanifest'
  */
 export function pwaHeadLinks() {
   return [
-    { key: 'pwa-manifest', rel: 'manifest', href: MANIFEST_URL },
+    { key: 'pwa-manifest', rel: 'manifest' as const, href: MANIFEST_URL },
     {
       key: 'pwa-icon',
-      rel: 'icon',
+      rel: 'icon' as const,
       type: 'image/png',
       sizes: '192x192',
       href: pwaIcons['icon-192'].src,

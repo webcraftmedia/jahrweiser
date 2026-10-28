@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { createMockVCard } from '../../../test/fixtures/vcard-data'
+import { nitro } from '../../../test/setup-server'
 
 import handler from './getUserTags.post'
 
@@ -34,20 +34,20 @@ describe('getUserTags.post', () => {
     mockCreateCalDAVAccount.mockReturnValue({ accountType: 'caldav' })
     mockCreateCardDAVAccount.mockReturnValue({ accountType: 'carddav' })
     mockFindCalendars.mockResolvedValue(CALENDARS)
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({ email: 'user@example.com' })
     })
   })
 
   it('throws when not admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
     })
     await expect(handlerFn({})).rejects.toThrow('Not Authorized')
   })
 
   it('throws when admin not found in DAV', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
     })
     mockFindUserByEmail.mockResolvedValue(false)
@@ -57,7 +57,7 @@ describe('getUserTags.post', () => {
   it('falls back to the key when a tag names no existing calendar', async () => {
     // A dangling grant must stay visible in the picker rather than render as a
     // blank checkbox the admin cannot reason about.
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
     })
     const adminVcard = createMockVCard({ email: 'admin@example.com', adminTags: 'geloescht' })
@@ -69,7 +69,7 @@ describe('getUserTags.post', () => {
   })
 
   it('returns empty array when admin has no adminTags', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
     })
     const adminVcard = createMockVCard({ email: 'admin@example.com' })
@@ -86,7 +86,7 @@ describe('getUserTags.post', () => {
   })
 
   it('returns all tags with state:false when user not found', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
     })
     const adminVcard = createMockVCard({
@@ -111,7 +111,7 @@ describe('getUserTags.post', () => {
   })
 
   it('returns tags with correct state when user found', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
     })
     const adminVcard = createMockVCard({

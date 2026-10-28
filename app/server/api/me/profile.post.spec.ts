@@ -1,9 +1,9 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import ICAL from 'ical.js'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { firstDbCall, mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
+import { nitro } from '../../../test/setup-server'
 
 import handler from './profile.post'
 
@@ -43,7 +43,7 @@ function vcard(lines: string[]): ICAL.Component {
 
 /** Post the default profile with a different postal code. */
 function sending(postalCode: string): void {
-  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+  vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
     (v as (d: unknown) => unknown)({ firstName: 'Alicia', lastName: 'Wonder', postalCode }),
   )
 }
@@ -59,7 +59,7 @@ describe('profile.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'Anna Mustermann', email: 'anna@example.com', role: 'user' },
     })
     mockLoadPlzAreas.mockResolvedValue(GEOMETRY)
@@ -68,7 +68,7 @@ describe('profile.post', () => {
   })
 
   it('rejects when the session has no uid', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'x', email: 'x@x.de', role: 'user' },
     })
     await expect(fn({})).rejects.toThrow('No user context')

@@ -17,7 +17,7 @@ const mockZoomState = vi.hoisted(() => {
 
 const mockCalendarFilter = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { ref, readonly } = require('vue')
+  const { ref, readonly } = require('vue') as typeof import('vue')
   const legend = ref<{ name: string; dotColor: string }[]>([])
   const hiddenCalendars = ref(new Set<string>())
   return { legend, hiddenCalendars, ref, readonly }

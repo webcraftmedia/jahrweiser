@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { nitro } from '../../../test/setup-server'
 
 import handler from './metrics.get'
 
@@ -42,13 +43,13 @@ describe('admin/metrics.get', () => {
     mockCurrent.mockResolvedValue(CURRENT)
     mockSeries.mockResolvedValue(MONTHS)
     mockActivity.mockResolvedValue(ACTIVITY)
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'admin-1', name: 'Admin', email: 'admin@example.com', role: 'admin' },
     })
   })
 
   it('refuses a member — how many people opted out is nobody else’s business', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'User', email: 'user@example.com', role: 'user' },
     })
     await expect(fn({})).rejects.toThrow('Not Authorized')
@@ -56,7 +57,7 @@ describe('admin/metrics.get', () => {
   })
 
   it('refuses an anonymous request', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(fn({})).rejects.toThrow('Unauthorized')
   })
 

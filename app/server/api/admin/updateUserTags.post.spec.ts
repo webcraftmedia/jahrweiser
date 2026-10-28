@@ -1,9 +1,9 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { createMockVCard } from '../../../test/fixtures/vcard-data'
 import { mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
+import { nitro } from '../../../test/setup-server'
 
 import handler from './updateUserTags.post'
 
@@ -47,7 +47,7 @@ describe('updateUserTags.post', () => {
   })
 
   function setupAdmin() {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'admin-uid', name: 'Admin User', email: 'admin@example.com', role: 'admin' },
     })
     const adminVcard = createMockVCard({ email: 'admin@example.com', adminTags: 'Tag1,Tag2,Tag3' })
@@ -58,10 +58,10 @@ describe('updateUserTags.post', () => {
   }
 
   it('throws when not admin', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
     })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [],
@@ -72,10 +72,10 @@ describe('updateUserTags.post', () => {
   })
 
   it('throws when admin not found in DAV', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
     })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [],
@@ -87,7 +87,7 @@ describe('updateUserTags.post', () => {
   })
 
   it('handles admin with no adminTags (empty fallback)', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Admin', email: 'admin@example.com', role: 'admin' },
     })
     const adminVcard = createMockVCard({ email: 'admin@example.com' }) // no adminTags
@@ -95,7 +95,7 @@ describe('updateUserTags.post', () => {
       user: { href: '/admin.vcf' },
       vcard: adminVcard,
     })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'new@example.com',
         tags: [{ name: 'Tag1', state: true }],
@@ -113,7 +113,7 @@ describe('updateUserTags.post', () => {
 
   it('creates new user with filtered tags', async () => {
     setupAdmin()
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'new@example.com',
         tags: [
@@ -135,7 +135,7 @@ describe('updateUserTags.post', () => {
   // calendars, and to whom.
   it('records who granted what, and to whom', async () => {
     setupAdmin()
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) =>
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) =>
       (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [{ name: 'Tag1', state: true }],
@@ -166,7 +166,7 @@ describe('updateUserTags.post', () => {
     resetDb()
     queueDbResults([])
     setupAdmin()
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) =>
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) =>
       (validator as (data: unknown) => unknown)({
         email: 'brand-new@example.com',
         tags: [{ name: 'Tag1', state: true }],
@@ -190,7 +190,7 @@ describe('updateUserTags.post', () => {
     // No `categories` argument → fixture doesn't add the property
     const userVcard = createMockVCard({ email: 'user@example.com' })
     expect(userVcard.getFirstProperty('categories')).toBeNull()
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [{ name: 'Tag1', state: true }],
@@ -215,7 +215,7 @@ describe('updateUserTags.post', () => {
   it('adds tag to existing user', async () => {
     setupAdmin()
     const userVcard = createMockVCard({ email: 'user@example.com', categories: ['Tag1'] })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [
@@ -246,7 +246,7 @@ describe('updateUserTags.post', () => {
       email: 'user@example.com',
       categories: ['Tag1', 'Tag2'],
     })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [
@@ -271,7 +271,7 @@ describe('updateUserTags.post', () => {
   it('sends email and returns true when sendMail=true and new tags exist', async () => {
     setupAdmin()
     const userVcard = createMockVCard({ email: 'user@example.com', categories: ['Tag1'] })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [
@@ -299,7 +299,7 @@ describe('updateUserTags.post', () => {
       email: 'user@example.com',
       categories: ['Tag1', 'Tag2'],
     })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [
@@ -322,7 +322,7 @@ describe('updateUserTags.post', () => {
 
   it('returns false when sendMail=false', async () => {
     setupAdmin()
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'new@example.com',
         tags: [{ name: 'Tag1', state: true }],
@@ -338,7 +338,7 @@ describe('updateUserTags.post', () => {
   })
 
   it('uses email as adminName when session has no name', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: '', email: 'admin@example.com', role: 'admin' },
     })
     const adminVcard = createMockVCard({ email: 'admin@example.com', adminTags: 'Tag1,Tag2,Tag3' })
@@ -347,7 +347,7 @@ describe('updateUserTags.post', () => {
       vcard: adminVcard,
     })
     const userVcard = createMockVCard({ email: 'user@example.com', categories: ['Tag1'] })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [{ name: 'Tag2', state: true }],
@@ -375,7 +375,7 @@ describe('updateUserTags.post', () => {
   it('throws when email sending fails', async () => {
     setupAdmin()
     const userVcard = createMockVCard({ email: 'user@example.com', categories: ['Tag1'] })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         email: 'user@example.com',
         tags: [{ name: 'Tag2', state: true }],

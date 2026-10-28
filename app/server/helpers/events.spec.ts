@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { dbCalls, firstDbCall, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
+import { nitro } from '../../test/setup-server'
 
 import {
   EVENT_RETENTION_DAYS,
@@ -106,14 +106,14 @@ describe('recordEvent', () => {
   })
 
   it('stores only the network an event came from', async () => {
-    vi.mocked(globalThis.getRequestIP).mockReturnValue('192.0.2.44')
+    vi.mocked(nitro.getRequestIP).mockReturnValue('192.0.2.44')
     await recordEvent({ type: 'auth.link_requested', userUid: 'u1', event: {} as never })
-    expect(vi.mocked(globalThis.getRequestIP)).toHaveBeenCalledWith({}, { xForwardedFor: true })
+    expect(vi.mocked(nitro.getRequestIP)).toHaveBeenCalledWith({}, { xForwardedFor: true })
     expect(firstDbCall('values')?.[0]).toMatchObject({ ipPrefix: '192.0.2.0' })
   })
 
   it('stores no origin when the request has none to give', async () => {
-    vi.mocked(globalThis.getRequestIP).mockReturnValue(undefined)
+    vi.mocked(nitro.getRequestIP).mockReturnValue(undefined)
     await recordEvent({ type: 'auth.link_requested', userUid: 'u1', event: {} as never })
     expect(firstDbCall('values')?.[0]).toMatchObject({ ipPrefix: null })
   })

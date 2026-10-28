@@ -322,23 +322,23 @@ describe('occurrenceAt', () => {
 
 describe('date formatting', () => {
   it('formats all-day dates independent of the server timezone', () => {
-    const time = ICAL.Time.fromString('2025-03-01')
+    const time = ICAL.Time.fromDateString('2025-03-01')
     expect(toDateString(time)).toBe('2025-03-01')
   })
 
   it('turns an exclusive DTEND into the last covered day', () => {
-    expect(toInclusiveEndDateString(ICAL.Time.fromString('2025-03-02'))).toBe('2025-03-01')
+    expect(toInclusiveEndDateString(ICAL.Time.fromDateString('2025-03-02'))).toBe('2025-03-01')
   })
 
   it('anchors all-day values at UTC midnight for comparisons', () => {
-    expect(toComparableDate(ICAL.Time.fromString('2025-03-01')).toISOString()).toBe(
+    expect(toComparableDate(ICAL.Time.fromDateString('2025-03-01')).toISOString()).toBe(
       '2025-03-01T00:00:00.000Z',
     )
   })
 
   it('keeps the exact instant for timed values', () => {
-    expect(toComparableDate(ICAL.Time.fromString('2025-03-01T10:00:00Z')).toISOString()).toBe(
-      '2025-03-01T10:00:00.000Z',
-    )
+    expect(
+      toComparableDate(ICAL.Time.fromDateTimeString('2025-03-01T10:00:00Z')).toISOString(),
+    ).toBe('2025-03-01T10:00:00.000Z')
   })
 })

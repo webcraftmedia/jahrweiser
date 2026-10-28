@@ -67,7 +67,7 @@ const mockColorMode = vi.hoisted(() => {
 
 const mockCalendarFilter = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { ref, readonly } = require('vue')
+  const { ref, readonly } = require('vue') as typeof import('vue')
   const legend = ref<{ name: string; dotColor: string }[]>([])
   const hiddenCalendars = ref(new Set<string>())
   return { legend, hiddenCalendars, ref, readonly }
@@ -374,7 +374,7 @@ describe('Page: Index', () => {
   it('returns mapped events from fetchEvents', async () => {
     await mount()
     const callWithEvents = mockEventsServiceSet.mock.calls.find(
-      (c: unknown[][]) => c[0]?.length > 0,
+      (c: unknown[][]) => (c[0]?.length ?? 0) > 0,
     )
     expect(callWithEvents).toBeTruthy()
     const events = callWithEvents![0]
@@ -1161,7 +1161,7 @@ describe('Page: Index', () => {
     await mount()
     // Find the call that has the 'Timed' event (not the initial 'Test' event)
     await triggerFetchEvents()
-    const callWithTimed = mockEventsServiceSet.mock.calls.find((c: unknown[][]) =>
+    const callWithTimed = mockEventsServiceSet.mock.calls.find((c: { title: string }[][]) =>
       c[0]?.some((e: { title: string }) => e.title === 'Timed'),
     )
     expect(callWithTimed).toBeTruthy()
@@ -1449,7 +1449,7 @@ describe('Page: Index', () => {
     })
     await mount()
     await triggerFetchEvents()
-    const callWithRecurring = mockEventsServiceSet.mock.calls.find((c: unknown[][]) =>
+    const callWithRecurring = mockEventsServiceSet.mock.calls.find((c: { title: string }[][]) =>
       c[0]?.some((e: { title: string }) => e.title === 'Recurring'),
     )
     expect(callWithRecurring).toBeTruthy()
@@ -1475,7 +1475,7 @@ describe('Page: Index', () => {
     })
     await mount()
     await triggerFetchEvents()
-    const callWithOrphan = mockEventsServiceSet.mock.calls.find((c: unknown[][]) =>
+    const callWithOrphan = mockEventsServiceSet.mock.calls.find((c: { title: string }[][]) =>
       c[0]?.some((e: { title: string }) => e.title === 'Orphan'),
     )
     expect(callWithOrphan).toBeTruthy()

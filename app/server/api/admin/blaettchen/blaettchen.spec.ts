@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { nitro } from '../../../../test/setup-server'
 
 import deleteHandler from './delete.post'
 import uploadHandler from './upload.post'
@@ -39,12 +40,12 @@ const deleteFn = deleteHandler as unknown as (event: unknown) => Promise<unknown
 const PDF = Buffer.from('%PDF-1.4 a real issue')
 
 function asAdmin(): void {
-  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+  vi.mocked(nitro.requireUserSession).mockResolvedValue({
     user: { uid: 'admin-1', name: 'Admin', email: 'admin@example.com', role: 'admin' },
   })
 }
 function asUser(): void {
-  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+  vi.mocked(nitro.requireUserSession).mockResolvedValue({
     user: { uid: 'u1', name: 'User', email: 'user@example.com', role: 'user' },
   })
 }
@@ -59,14 +60,14 @@ function sending(
     name,
     data: Buffer.from(value, 'utf-8'),
   }))
-  vi.mocked(globalThis.readMultipartFormData).mockResolvedValue([
+  vi.mocked(nitro.readMultipartFormData).mockResolvedValue([
     ...parts,
     ...(filename === null ? [] : [{ name: 'file', filename, type: 'application/pdf', data }]),
   ])
 }
 
 function body(value: Record<string, unknown>): void {
-  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, validate) =>
+  vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, validate) =>
     (validate as (data: unknown) => unknown)(value),
   )
 }
@@ -95,7 +96,7 @@ describe('admin/blaettchen/upload.post', () => {
   })
 
   it('refuses an anonymous request', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(uploadFn({})).rejects.toThrow('Unauthorized')
     expect(fs.writeFile).not.toHaveBeenCalled()
   })
@@ -138,7 +139,7 @@ describe('admin/blaettchen/upload.post', () => {
     })
   })
 
-  it.each([
+  it.each<[Record<string, string>, string]>([
     [{ number: '13', date: '2026-02-30' }, 'a day February does not have'],
     [{ number: '13', date: '01.09.2026' }, 'a German date'],
     [{ number: '13', date: '' }, 'no date at all'],
@@ -160,13 +161,13 @@ describe('admin/blaettchen/upload.post', () => {
   })
 
   it('rejects a request that is not multipart at all', async () => {
-    vi.mocked(globalThis.readMultipartFormData).mockResolvedValue(undefined)
+    vi.mocked(nitro.readMultipartFormData).mockResolvedValue(undefined)
     await expect(uploadFn({})).rejects.toThrow('No file')
   })
 
   it('rejects a plain text field that merely calls itself "file"', async () => {
     // Only a part with a file name is an upload; a field named `file` is not.
-    vi.mocked(globalThis.readMultipartFormData).mockResolvedValue([
+    vi.mocked(nitro.readMultipartFormData).mockResolvedValue([
       { name: 'number', data: Buffer.from('13') },
       { name: 'date', data: Buffer.from('2026-09-01') },
       { name: 'file', data: Buffer.from('%PDF-1.4') },

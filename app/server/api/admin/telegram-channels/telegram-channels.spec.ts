@@ -1,5 +1,4 @@
 // @vitest-environment node
-import '../../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { z } from 'zod'
 
@@ -10,6 +9,7 @@ import {
   queueDbResults,
   resetDb,
 } from '../../../../test/helpers/mock-db'
+import { nitro } from '../../../../test/setup-server'
 
 import createHandler from './create.post'
 import deleteHandler from './delete.post'
@@ -24,18 +24,18 @@ const deleteFn = deleteHandler as unknown as (event: unknown) => Promise<unknown
 const moveFn = moveHandler as unknown as (event: unknown) => Promise<unknown>
 
 function asAdmin(): void {
-  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+  vi.mocked(nitro.requireUserSession).mockResolvedValue({
     user: { uid: 'admin-1', name: 'Admin', email: 'admin@example.com', role: 'admin' },
   })
 }
 function asUser(): void {
-  vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+  vi.mocked(nitro.requireUserSession).mockResolvedValue({
     user: { uid: 'u1', name: 'User', email: 'user@example.com', role: 'user' },
   })
 }
 
 function body(value: Record<string, unknown>): void {
-  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validate) =>
+  vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validate) =>
     (validate as (data: unknown) => unknown)(value),
   )
 }
@@ -76,7 +76,7 @@ describe('admin/telegram-channels', () => {
     })
 
     it('refuses an anonymous request', async () => {
-      vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+      vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
       await expect(createFn({})).rejects.toThrow('Unauthorized')
     })
 
@@ -121,7 +121,7 @@ describe('admin/telegram-channels', () => {
       expect(written('values')).toMatchObject({ name: 'Kultur-Steher' })
     })
 
-    it.each([
+    it.each<[Record<string, unknown>, string]>([
       [{ ...VALID, url: 'https://example.com/phish' }, 'a link that does not go to Telegram'],
       [{ ...VALID, url: 'https://t.me/' }, 'the bare prefix without a channel'],
       [{ ...VALID, url: 'not a url' }, 'something that is not a URL'],

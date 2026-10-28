@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { nitro } from '../../test/setup-server'
 
 import {
   AREA_FILE_KEY,
@@ -46,7 +47,7 @@ const PLACES: [number, number, number, string][] = [
 ]
 
 function storageServing(value: unknown): void {
-  vi.mocked(globalThis.useStorage).mockReturnValue({
+  vi.mocked(nitro.useStorage).mockReturnValue({
     getItem: vi.fn().mockResolvedValue(value),
   })
 }
@@ -184,14 +185,14 @@ describe('loadPlzAreas', () => {
     expect(loaded?.viewBox).toBe('0 0 4000 5000')
     expect(loaded?.outline).toBe('M0 0l10 0 0 10z')
     expect(loaded?.areas.get('64673')?.o).toBe('Zwingenberg')
-    expect(vi.mocked(globalThis.useStorage).mock.calls[0]).toStrictEqual(['assets:server'])
+    expect(vi.mocked(nitro.useStorage).mock.calls[0]).toStrictEqual(['assets:server'])
   })
 
   it('parses it once and keeps it — the geometry never changes at runtime', async () => {
     storageServing(FILE)
     const first = await loadPlzAreas()
     await expect(loadPlzAreas()).resolves.toBe(first)
-    expect(globalThis.useStorage).toHaveBeenCalledTimes(1)
+    expect(nitro.useStorage).toHaveBeenCalledTimes(1)
   })
 
   it.each([
@@ -206,7 +207,7 @@ describe('loadPlzAreas', () => {
 
   it('looks the artefact up under the key the build script writes', async () => {
     const getItem = vi.fn().mockResolvedValue(FILE)
-    vi.mocked(globalThis.useStorage).mockReturnValue({ getItem })
+    vi.mocked(nitro.useStorage).mockReturnValue({ getItem })
     await loadPlzAreas()
     expect(getItem).toHaveBeenCalledWith(AREA_FILE_KEY)
   })
@@ -245,7 +246,7 @@ describe('loadPlaces', () => {
 
   it('reads the place artefact and keeps it', async () => {
     const getItem = vi.fn().mockResolvedValue({ viewBox: FILE.viewBox, places: PLACES })
-    vi.mocked(globalThis.useStorage).mockReturnValue({ getItem })
+    vi.mocked(nitro.useStorage).mockReturnValue({ getItem })
     const first = await loadPlaces()
     expect(first).toHaveLength(4)
     await expect(loadPlaces()).resolves.toBe(first)
@@ -366,7 +367,7 @@ describe('loadBoundaries', () => {
 
   it('reads the border artefact and keeps it', async () => {
     const getItem = vi.fn().mockResolvedValue(BORDERS)
-    vi.mocked(globalThis.useStorage).mockReturnValue({ getItem })
+    vi.mocked(nitro.useStorage).mockReturnValue({ getItem })
     const first = await loadBoundaries()
     expect(first?.levels.state.arcs).toHaveLength(2)
     await expect(loadBoundaries()).resolves.toBe(first)

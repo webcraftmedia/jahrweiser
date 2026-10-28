@@ -3,6 +3,8 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 import middleware from './admin'
 
+import type { RouteLocationNormalized } from 'vue-router'
+
 const mockUser = ref<{ role?: string } | null>(null)
 const mockLoggedIn = ref(true)
 mockNuxtImport('useUserSession', () => () => ({
@@ -21,13 +23,13 @@ describe('admin middleware', () => {
 
   it('allows admin users', () => {
     mockUser.value = { role: 'admin' }
-    middleware({} as unknown, {} as unknown)
+    middleware({} as RouteLocationNormalized, {} as RouteLocationNormalized)
     expect(mockNavigateTo).not.toHaveBeenCalled()
   })
 
   it('redirects non-admin users', () => {
     mockUser.value = { role: 'user' }
-    middleware({} as unknown, {} as unknown)
+    middleware({} as RouteLocationNormalized, {} as RouteLocationNormalized)
     expect(mockNavigateTo).toHaveBeenCalledWith('/')
   })
 })

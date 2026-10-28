@@ -1,5 +1,4 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import {
@@ -11,6 +10,7 @@ import {
   RECURRING_EVENT_WITH_OVERRIDE,
   RECURRING_EVENT_OVERRIDE_FIRST,
 } from '../../test/fixtures/ical-data'
+import { nitro } from '../../test/setup-server'
 
 import handler from './event.post'
 
@@ -32,10 +32,10 @@ const handlerFn = handler as unknown as (event: unknown) => Promise<unknown>
 describe('event.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
     })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         id: 'event-123',
@@ -62,7 +62,7 @@ describe('event.post', () => {
   })
 
   it('returns correct occurrence for recurring event', async () => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         id: 'event-123',
@@ -78,7 +78,7 @@ describe('event.post', () => {
   })
 
   it('returns description and location for recurring event with occurrence', async () => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         id: 'event-123',
@@ -102,7 +102,7 @@ describe('event.post', () => {
   })
 
   it('registers VTIMEZONE and returns local time for recurring event', async () => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         id: 'event-123',
@@ -117,7 +117,7 @@ describe('event.post', () => {
   })
 
   const withOccurrence = (occurrence: number) => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         id: 'event-123',

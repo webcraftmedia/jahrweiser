@@ -85,7 +85,7 @@ describe('keepStartPages', () => {
     withCaches = true,
     fetch = vi.fn(async () => page()),
   }: { online?: boolean; withCaches?: boolean; fetch?: ReturnType<typeof vi.fn> } = {}) {
-    const cache = { put: vi.fn(async () => {}) }
+    const cache = { put: vi.fn(async (_url: string, _response: Response) => {}) }
     const open = vi.fn(async () => cache)
     const win = {
       navigator: { onLine: online },

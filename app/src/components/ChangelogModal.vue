@@ -114,6 +114,7 @@
 </template>
 
 <script setup lang="ts">
+  import type Modal from './Modal.vue'
   import type { Changelog, ChangelogRelease } from '~~/shared/changelog'
 
   const REPO_URL = 'https://github.com/webcraftmedia/jahrweiser'

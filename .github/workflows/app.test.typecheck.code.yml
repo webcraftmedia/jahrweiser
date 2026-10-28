@@ -31,6 +31,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WORKING_DIRECTORY: ./app
+      # As in the lint job: outside production nuxt.config.ts loads @nuxt/eslint,
+      # whose prepare step writes .nuxt/eslint.config.mjs — which eslint.config.ts
+      # imports, so the typecheck needs it too.
+      NODE_ENV: development
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.1.7

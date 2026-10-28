@@ -9,6 +9,7 @@ import {
   waitForHydration,
 } from './helpers/api-mocks'
 
+import type { ApiResponse } from './helpers/api-mocks'
 import type { Page } from '@playwright/test'
 
 /**
@@ -281,7 +282,10 @@ test.describe('PWA: installed app, calendar offline', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ user: MEMBER, loggedInAt: new Date().toISOString() }),
+        body: JSON.stringify({
+          user: MEMBER,
+          loggedInAt: new Date().toISOString(),
+        } satisfies ApiResponse<'/api/_auth/session', 'get'>),
       }),
     )
     await page.route('**/api/calendars', async (route) =>

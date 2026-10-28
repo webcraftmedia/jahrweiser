@@ -1,14 +1,26 @@
 import { expect } from '@playwright/test'
 
 import type { Page } from '@playwright/test'
+import type { InternalApi } from 'nitropack/types'
+
+/**
+ * What the server answers on `path` for `method`, as Nitro derives it from the
+ * handler's return type. Mocks are checked against it with `satisfies`, so a
+ * server change that the browser would see fails the typecheck here instead of
+ * leaving the mocked suite green against a response that no longer exists.
+ */
+export type ApiResponse<
+  P extends keyof InternalApi,
+  M extends keyof InternalApi[P],
+> = InternalApi[P][M]
 
 export const DEFAULT_USER = { name: 'Test User', email: 'test@example.com', role: 'user' }
 export const ADMIN_USER = { name: 'Admin User', email: 'admin@example.com', role: 'admin' }
 
 export const MOCK_CALENDARS = [
-  { name: 'Vereinskalender', color: '#3b82f6' },
-  { name: 'Geburtstage', color: '#10b981' },
-]
+  { key: 'vereinskalender', name: 'Vereinskalender', color: '#3b82f6' },
+  { key: 'geburtstage', name: 'Geburtstage', color: '#10b981' },
+] satisfies ApiResponse<'/api/calendars', 'get'>
 
 const today = new Date()
 const tomorrow = new Date(today)
@@ -33,19 +45,28 @@ export const MOCK_EVENTS = [
     title: 'Geburtstag Max',
     isRecurring: true,
   },
-]
+] satisfies ApiResponse<'/api/calendar', 'post'>
 
 export const MOCK_TELEGRAM_CHANNELS = [
-  { name: 'Vereinskanal', description: 'Alle Infos', url: 'https://t.me/verein', public: true },
-]
+  {
+    id: 1,
+    name: 'Vereinskanal',
+    description: 'Alle Infos',
+    url: 'https://t.me/verein',
+    public: true,
+  },
+] satisfies ApiResponse<'/api/telegram-channels', 'get'>
 
 export const MOCK_BLAETTCHEN = {
   issues: [{ number: 12, date: '2026-05-01', file: '12_2026-05-01.pdf' }],
   contact: 'redaktion@example.com',
-}
+} satisfies ApiResponse<'/api/blaettchen', 'get'>
 
 /** A square country and two postal codes — enough to draw and to assert on. */
-export const MOCK_MAP_OUTLINE = { viewBox: '0 0 4000 5000', d: 'M0 0l4000 0 0 5000-4000 0z' }
+export const MOCK_MAP_OUTLINE = {
+  viewBox: '0 0 4000 5000',
+  d: 'M0 0l4000 0 0 5000-4000 0z',
+} satisfies ApiResponse<'/api/map/outline', 'get'>
 export const MOCK_MAP = {
   areas: [
     {
@@ -63,7 +84,7 @@ export const MOCK_MAP = {
   located: 10,
   total: 14,
   max: 7,
-}
+} satisfies ApiResponse<'/api/map/members', 'get'>
 
 /**
  * The administrative borders the map orients by. Both levels, so the staging in
@@ -82,12 +103,12 @@ export const MOCK_BORDERS = {
     // is simply off screen once it would appear.
     labels: [{ name: 'Kreis Bergstraße', x: 1700, y: 2040, size: 90_000 }],
   },
-}
+} satisfies ApiResponse<'/api/map/boundaries', 'get'>
 
 export const MOCK_PLACES = [
   { name: 'Zwingenberg', x: 500, y: 500, rank: 7291 },
   { name: 'Bensheim', x: 2900, y: 900, rank: 40000 },
-]
+] satisfies ApiResponse<'/api/map/places', 'get'>
 
 export const MOCK_EVENT_DETAIL = {
   summary: 'Jahresversammlung',
@@ -97,7 +118,8 @@ export const MOCK_EVENT_DETAIL = {
   startDate: today.toISOString().slice(0, 19),
   endDate: new Date(today.getTime() + 2 * 60 * 60 * 1000).toISOString().slice(0, 19),
   uid: 'event-1',
-}
+  url: '',
+} satisfies ApiResponse<'/api/event', 'post'>
 
 export const MOCK_METRICS = {
   current: {
@@ -120,13 +142,13 @@ export const MOCK_METRICS = {
     active30d: index < 10 ? null : 15 + index,
   })),
   activity: { day: 4, week: 6, month: 10, quarter: 7, older: 5, never: 10 },
-}
+} satisfies ApiResponse<'/api/admin/metrics', 'get'>
 
 export const MOCK_TAGS = [
-  { name: 'Vereinskalender', state: true },
-  { name: 'Geburtstage', state: false },
-  { name: 'Vorstand', state: true },
-]
+  { name: 'Vereinskalender', label: 'Vereinskalender', state: true },
+  { name: 'Geburtstage', label: 'Geburtstage', state: false },
+  { name: 'Vorstand', label: 'Vorstand', state: true },
+] satisfies ApiResponse<'/api/admin/getUserTags', 'post'>
 
 export async function mockCalendarEndpoints(page: Page) {
   await page.route('**/api/calendars', async (route) =>
@@ -169,7 +191,7 @@ export async function mockCalendarEndpoints(page: Page) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasPostalCode: true }),
+      body: JSON.stringify({ hasPostalCode: true } satisfies ApiResponse<'/api/map/status', 'get'>),
     }),
   )
 
@@ -200,7 +222,10 @@ export async function mockMapEndpoints(page: Page, { locked = false } = {}) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ hasPostalCode: !locked }),
+      body: JSON.stringify({ hasPostalCode: !locked } satisfies ApiResponse<
+        '/api/map/status',
+        'get'
+      >),
     }),
   )
 
@@ -257,7 +282,11 @@ export async function mockProfileEndpoints(
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ firstName: 'Test', lastName: 'User', postalCode }),
+      body: JSON.stringify({
+        firstName: 'Test',
+        lastName: 'User',
+        postalCode,
+      } satisfies ApiResponse<'/api/me/profile', 'get'>),
     })
   })
 
@@ -267,7 +296,11 @@ export async function mockProfileEndpoints(
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ known: Boolean(ort), plz: ort ? plz : null, ort: ort ?? null }),
+      body: JSON.stringify({
+        known: Boolean(ort),
+        plz: ort ? plz : null,
+        ort: ort ?? null,
+      } satisfies ApiResponse<'/api/map/postal-code', 'get'>),
     })
   })
 }
@@ -295,13 +328,13 @@ export async function mockFeedbackEndpoints(page: Page, { enabled = true } = {})
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ sent: true }),
+        body: JSON.stringify({ sent: true } satisfies ApiResponse<'/api/feedback', 'post'>),
       })
     }
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ enabled }),
+      body: JSON.stringify({ enabled } satisfies ApiResponse<'/api/feedback', 'get'>),
     })
   })
   return sent
@@ -313,7 +346,10 @@ export async function loginAs(page: Page, user: typeof DEFAULT_USER) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ user, loggedInAt: new Date().toISOString() }),
+      body: JSON.stringify({
+        user,
+        loggedInAt: new Date().toISOString(),
+      } satisfies ApiResponse<'/api/_auth/session', 'get'>),
     }),
   )
 
@@ -368,7 +404,7 @@ export async function mockAdminEndpoints(page: Page) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(true),
+      body: JSON.stringify(true satisfies ApiResponse<'/api/admin/updateUserTags', 'post'>),
     }),
   )
 }

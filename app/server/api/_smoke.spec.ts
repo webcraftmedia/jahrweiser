@@ -1,4 +1,5 @@
 // @vitest-environment node
+/// <reference types="vite/client" />
 import '../../test/setup-server'
 import { describe, it, expect, vi } from 'vitest'
 

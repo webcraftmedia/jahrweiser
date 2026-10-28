@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
+import { nitro } from '../../../test/setup-server'
 
 import handler from './newsletter.post'
 
@@ -19,16 +19,16 @@ describe('me/newsletter.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'A', email: 'a@x.de', role: 'user' },
     })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
       (v as (d: unknown) => unknown)({ subscribed: true }),
     )
   })
 
   it('rejects when the session has no uid', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({ user: { email: 'a@x.de' } })
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({ user: { email: 'a@x.de' } })
     await expect(fn({})).rejects.toThrow('No user context')
   })
 
@@ -48,7 +48,7 @@ describe('me/newsletter.post', () => {
   })
 
   it('unsubscribes when subscribed is false', async () => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
       (v as (d: unknown) => unknown)({ subscribed: false }),
     )
     queueDbResults([{ unsubscribeToken: 'existing-token' }], {})
@@ -61,7 +61,7 @@ describe('me/newsletter.post', () => {
     [true, 'newsletter.subscribed'],
     [false, 'newsletter.unsubscribed'],
   ])('records the decision (subscribed=%s)', async (subscribed, type) => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
       (v as (d: unknown) => unknown)({ subscribed }),
     )
     queueDbResults([{ unsubscribeToken: 'existing-token' }], {})

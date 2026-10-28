@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { nitro } from '../../../test/setup-server'
 
 import handler from './[file].get'
 
@@ -31,19 +32,19 @@ const PDF = Buffer.from('%PDF-1.4 …')
 
 /** Drives the `[file]` route parameter the way h3 hands it to the handler. */
 function requesting(file: string | undefined): void {
-  vi.mocked(globalThis.getRouterParam).mockReturnValue(file)
+  vi.mocked(nitro.getRouterParam).mockReturnValue(file)
 }
 
 function headers(): Record<string, string> {
   return Object.fromEntries(
-    vi.mocked(globalThis.setHeader).mock.calls.map(([, name, value]) => [name, value as string]),
+    vi.mocked(nitro.setHeader).mock.calls.map(([, name, value]) => [name, value as string]),
   )
 }
 
 describe('blaettchen/[file].get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'User', email: 'user@example.com', role: 'user' },
     })
     mockReadFile.mockResolvedValue(PDF)
@@ -52,7 +53,7 @@ describe('blaettchen/[file].get', () => {
   })
 
   it('requires a session — a direct link must not bypass the login', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(handlerFn({})).rejects.toThrow('Unauthorized')
     expect(mockReadFile).not.toHaveBeenCalled()
   })
@@ -134,6 +135,6 @@ describe('blaettchen/[file].get', () => {
 
   it('decodes the route parameter, because issue names contain spaces', async () => {
     await handlerFn({})
-    expect(globalThis.getRouterParam).toHaveBeenCalledWith({}, 'file', { decode: true })
+    expect(nitro.getRouterParam).toHaveBeenCalledWith({}, 'file', { decode: true })
   })
 })

@@ -1,5 +1,6 @@
 import { purgeOfflineData, recordSessionExpiry } from '../utils/offlineSession'
 
+import type { $Fetch } from 'ofetch'
 import type { Ref } from 'vue'
 
 import { SESSION_EXPIRES_HEADER } from '~~/shared/session'
@@ -72,10 +73,16 @@ export default defineNuxtPlugin(() => {
 
   return {
     provide: {
+      // Typed as plain ofetch on purpose. Nitro's route-typed $fetch matches
+      // every request against all ~50 routes in the type system; the first
+      // instantiation in the program exceeds tsc's depth limit (TS2321) — on
+      // whichever call happens to be checked first, so it cannot be fixed per
+      // call. Callers state the response type (`api<T>(...)`) instead, which
+      // they did already. Upstream: https://github.com/nitrojs/nitro/pull/3941
       api: $fetch.create({
         onResponse: createSessionExpiryHandler(user),
         onResponseError: createUnauthorizedHandler(clear),
-      }),
+      }) as $Fetch,
     },
   }
 })

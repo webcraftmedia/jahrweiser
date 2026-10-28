@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
+import { nitro } from '../../../test/setup-server'
 
 import { unsubscribeByToken } from './unsubscribe'
 import getHandler from './unsubscribe.get'
@@ -60,14 +60,14 @@ describe('unsubscribe.get', () => {
   beforeEach(resetDb)
 
   it('renders the success page when the token is valid', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({ token: 'tok' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ token: 'tok' })
     queueDbResults([{ uid: 'u1' }], {})
     const html = await getFn({})
     expect(html).toContain('Newsletter abbestellt')
   })
 
   it('renders the 404 page when the token is missing/invalid', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({})
+    vi.mocked(nitro.getQuery).mockReturnValue({})
     const html = await getFn({})
     expect(html).toContain('Token ungültig')
   })
@@ -77,13 +77,13 @@ describe('unsubscribe.post', () => {
   beforeEach(resetDb)
 
   it('returns an empty 200 when the token is valid', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({ token: 'tok' })
+    vi.mocked(nitro.getQuery).mockReturnValue({ token: 'tok' })
     queueDbResults([{ uid: 'u1' }], {})
     await expect(postFn({})).resolves.toStrictEqual({})
   })
 
   it('throws 404 when the token is missing/invalid', async () => {
-    vi.mocked(globalThis.getQuery).mockReturnValue({})
+    vi.mocked(nitro.getQuery).mockReturnValue({})
     await expect(postFn({})).rejects.toThrow('Token invalid')
   })
 })

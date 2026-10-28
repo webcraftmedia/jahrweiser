@@ -431,7 +431,10 @@
   let calendarControls: ReturnType<typeof createCalendarControlsPlugin>
 
   // shallowRef — Schedule-X uses Preact Signals internally, no deep reactivity needed
-  const calendarApp = shallowRef<ReturnType<typeof createCalendar>>()
+  const calendarApp =
+    shallowRef<
+      ReturnType<typeof createCalendar<(typeof eventsService | typeof calendarControls)[]>>
+    >()
 
   const today = Temporal.PlainDate.from(localDateStr())
 
@@ -512,12 +515,12 @@
           onEventClick(calendarEvent) {
             void clickItem(calendarEvent as JahrweiserEvent)
           },
-          onClickPlusEvents(date: string) {
+          onClickPlusEvents(date) {
             isListView.value = true
             calendarControls.setView('list')
             applyFutureClassRepeatedly()
             setTimeout(() => {
-              const el = document.querySelector(`.sx__list-day[data-date="${date}"]`)
+              const el = document.querySelector(`.sx__list-day[data-date="${date.toString()}"]`)
               if (el) {
                 scrollToEl(el)
                 el.classList.add('highlight-day')

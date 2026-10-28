@@ -8,6 +8,19 @@ Three layers of tests:
 | E2E (mock) | `npm run test:e2e` | UI flows against mocked API responses (no backend needed) |
 | E2E (full-stack) | `npm run test:e2e:full-stack` | Real app hitting real Baikal + MariaDB + Maildev |
 
+## Typecheck
+
+`npm run test:lint:typecheck` runs `vue-tsc -b --noEmit`. The `-b` is load-bearing:
+`app/tsconfig.json` is a solution config (`"files": []` plus `references` to the
+generated `.nuxt/tsconfig.{app,server,shared,node}.json`), and without build mode
+tsc does not follow references — it checks no file at all and exits 0. That is
+how a year of type errors piled up unseen.
+
+Prepare with `NODE_ENV=development` (CI does): `eslint.config.ts` imports
+`.nuxt/eslint.config.mjs`, which only `@nuxt/eslint` writes, and `nuxt.config.ts`
+loads that module only outside production — a bare `nuxt prepare` counts as
+production.
+
 ## Unit tests
 
 ```sh

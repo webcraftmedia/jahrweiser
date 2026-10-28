@@ -222,7 +222,7 @@ async function* streamElements<T>(file: string, arrayKey = 'features'): AsyncGen
       } else if (char === '}') {
         depth -= 1
         if (depth === 0) {
-          yield JSON.parse(buffer.slice(start, scan + 1)) as Feature
+          yield JSON.parse(buffer.slice(start, scan + 1)) as T
           // Drop what was consumed, so the buffer never holds more than the
           // feature being read plus the chunk it arrived in.
           buffer = buffer.slice(scan + 1)
@@ -383,7 +383,7 @@ function ringsOf(geometry: Feature['geometry']): { outer: Ring[]; holes: Ring[] 
 function signedArea(ring: Ring): number {
   let sum = 0
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    sum += (ring[j][0] - ring[i][0]) * (ring[j][1] + ring[i][1])
+    sum += (ring[j]![0] - ring[i]![0]) * (ring[j]![1] + ring[i]![1])
   }
   return sum / 2
 }
@@ -395,10 +395,10 @@ function centroidOf(rings: Ring[]): Point {
   let cy = 0
   for (const ring of rings) {
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const cross = ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1]
+      const cross = ring[j]![0] * ring[i]![1] - ring[i]![0] * ring[j]![1]
       area += cross
-      cx += (ring[j][0] + ring[i][0]) * cross
-      cy += (ring[j][1] + ring[i][1]) * cross
+      cx += (ring[j]![0] + ring[i]![0]) * cross
+      cy += (ring[j]![1] + ring[i]![1]) * cross
     }
   }
   // A ring with no area left after quantisation has no meaningful centroid.
@@ -426,9 +426,9 @@ function simplifyRing(ring: Ring, tolerance: number): Ring {
     const stop = Math.min(start + REPAIR_WINDOW, closed.length)
     // Each window ends on the next one's first vertex, the last one on the
     // ring's — so the pieces meet and the ring closes.
-    const window = [...closed.slice(start, stop), closed[stop % closed.length]]
+    const window = [...closed.slice(start, stop), closed[stop % closed.length]!]
     const kept = simplifySafely(window, tolerance)
-    for (let i = 0; i < kept.length - 1; i++) out.push(kept[i])
+    for (let i = 0; i < kept.length - 1; i++) out.push(kept[i]!)
   }
   return dedupe(out)
 }
@@ -499,9 +499,9 @@ function findJunctions(rings: Iterable<Ring>): Set<number> {
     const n = ring.length
     if (n < 3) continue
     for (let i = 0; i < n; i++) {
-      const point = pointKey(ring[i])
-      note(point, pointKey(ring[(i + 1) % n]))
-      note(point, pointKey(ring[(i + n - 1) % n]))
+      const point = pointKey(ring[i]!)
+      note(point, pointKey(ring[(i + 1) % n]!))
+      note(point, pointKey(ring[(i + n - 1) % n]!))
     }
   }
   return junctions
@@ -517,7 +517,7 @@ function findJunctions(rings: Iterable<Ring>): Set<number> {
 function simplifyRingByArcs(ring: Ring, junctions: Set<number>, tolerance: number): Ring {
   const cuts: number[] = []
   for (let i = 0; i < ring.length; i++) {
-    if (junctions.has(pointKey(ring[i]))) cuts.push(i)
+    if (junctions.has(pointKey(ring[i]!))) cuts.push(i)
   }
   if (cuts.length === 0) return simplifyRing(ring, tolerance)
 
@@ -525,9 +525,9 @@ function simplifyRingByArcs(ring: Ring, junctions: Set<number>, tolerance: numbe
   for (let c = 0; c < cuts.length; c++) {
     const from = cuts[c] as number
     const to = cuts[(c + 1) % cuts.length] as number
-    const arc: Ring = [ring[from]]
+    const arc: Ring = [ring[from]!]
     for (let i = (from + 1) % ring.length; ; i = (i + 1) % ring.length) {
-      arc.push(ring[i])
+      arc.push(ring[i]!)
       if (i === to) break
     }
     // The decision needs no coordination with the neighbour that walks this
@@ -537,7 +537,7 @@ function simplifyRingByArcs(ring: Ring, junctions: Set<number>, tolerance: numbe
     const simplified = simplifySafely(arc, tolerance)
     // The closing point is the next arc's opening one; emitting it here would
     // duplicate every junction.
-    for (let i = 0; i < simplified.length - 1; i++) out.push(simplified[i])
+    for (let i = 0; i < simplified.length - 1; i++) out.push(simplified[i]!)
   }
   return dedupe(out)
 }
@@ -584,7 +584,7 @@ function stitchRings(lines: Ring[]): Ring[] {
   // Which lines start or end at a given point.
   const ends = new Map<string, number[]>()
   usable.forEach((line, index) => {
-    for (const point of [line[0], line[line.length - 1]]) {
+    for (const point of [line[0]!, line[line.length - 1]!]) {
       const key = endpoint(point)
       const list = ends.get(key)
       if (list) list.push(index)
@@ -597,17 +597,17 @@ function stitchRings(lines: Ring[]): Ring[] {
   for (let start = 0; start < usable.length; start++) {
     if (used.has(start)) continue
     used.add(start)
-    const ring = [...usable[start]]
+    const ring = [...usable[start]!]
     for (;;) {
-      const tail = ring[ring.length - 1]
+      const tail = ring[ring.length - 1]!
       const candidate = (ends.get(endpoint(tail)) ?? []).find((index) => !used.has(index))
       if (candidate === undefined) break
       used.add(candidate)
-      const line = usable[candidate]
+      const line = usable[candidate]!
       // The next line may be recorded in either direction.
-      const next = endpoint(line[0]) === endpoint(tail) ? line : [...line].reverse()
+      const next = endpoint(line[0]!) === endpoint(tail) ? line : [...line].reverse()
       ring.push(...next.slice(1))
-      if (endpoint(ring[0]) === endpoint(ring[ring.length - 1])) break
+      if (endpoint(ring[0]!) === endpoint(ring[ring.length - 1]!)) break
     }
     if (ring.length >= 4) rings.push(ring)
   }
@@ -619,8 +619,8 @@ function isInside(point: Point, rings: Ring[]): boolean {
   let inside = false
   for (const ring of rings) {
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const [xi, yi]: Point = ring[i]
-      const [xj, yj]: Point = ring[j]
+      const [xi, yi]: Point = ring[i]!
+      const [xj, yj]: Point = ring[j]!
       if (yi > point[1] !== yj > point[1]) {
         if (point[0] < ((xj - xi) * (point[1] - yi)) / (yj - yi) + xi) inside = !inside
       }
@@ -704,7 +704,7 @@ async function loadBoundary(
   const coastLines = coastData.elements
     .filter((way) => way.type === 'way' && way.geometry)
     .map(toLine)
-    .filter((line) => line.length >= 2 && isInside(line[Math.floor(line.length / 2)], territorial))
+    .filter((line) => line.length >= 2 && isInside(line[Math.floor(line.length / 2)]!, territorial))
   console.warn(`  coast: ${coastLines.length} ways inside the country`)
 
   return { rings: stitchRings([...landLines, ...coastLines]), ways }

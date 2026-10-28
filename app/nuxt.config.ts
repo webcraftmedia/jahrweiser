@@ -2,6 +2,8 @@ import { defineNuxtConfig } from 'nuxt/config'
 
 import pwaIcons from './assets/pwa-icons.json'
 
+import type { NuxtConfig } from 'nuxt/schema'
+
 const isTest = !!process.env.VITEST
 
 /** Shown in the footer, and the cache-buster for the polyfill script. */
@@ -99,10 +101,10 @@ export default defineNuxtConfig({
   },
   modules: [
     ...(process.env.NODE_ENV !== 'production'
-      ? [
+      ? ([
           ['@nuxt/eslint', { config: { typescript: { tsconfigPath: 'tsconfig.json' } } }],
           '@nuxt/test-utils',
-        ]
+        ] satisfies NuxtConfig['modules'])
       : []),
     '@nuxtjs/tailwindcss',
     '@nuxtjs/i18n',

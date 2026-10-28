@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
 
   let selectedCalendar
   let caldata
-  let userQuery
+  let userQuery: Awaited<ReturnType<typeof findUserByEmail>> | undefined
 
   try {
     const calDavAccount = createCalDAVAccount(config)

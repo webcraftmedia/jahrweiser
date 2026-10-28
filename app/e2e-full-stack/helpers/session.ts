@@ -16,8 +16,8 @@ import type { Locator, Page } from '@playwright/test'
 /**
  * How long the *first* interaction of a run may take.
  *
- * The suite talks to a dev server: the first hit on a route compiles it, opens
- * the DAV connection and warms the pool. Configurable rather than a literal, so
+ * Against a dev server (`E2E_SERVER=dev`) the first hit on a route compiles
+ * it; against either server it opens the DAV connection and warms the pool. Configurable rather than a literal, so
  * a slow machine raises the number instead of adding a retry that hides what is
  * actually a cold start.
  */

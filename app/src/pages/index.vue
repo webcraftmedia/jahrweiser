@@ -503,6 +503,7 @@
         views: [createViewMonthGrid(), createViewList()],
         defaultView: 'month-grid',
         isDark: isDark.value,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment -- schedule-x does not export its WeekDay enum; 1 = MONDAY
         firstDayOfWeek: 1,
         isResponsive: true,
         timezone: Temporal.Now.timeZoneId(),

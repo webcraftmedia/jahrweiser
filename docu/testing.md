@@ -16,6 +16,11 @@ generated `.nuxt/tsconfig.{app,server,shared,node}.json`), and without build mod
 tsc does not follow references — it checks no file at all and exits 0. That is
 how a year of type errors piled up unseen.
 
+Prepare with `NODE_ENV=development` (CI does): `eslint.config.ts` imports
+`.nuxt/eslint.config.mjs`, which only `@nuxt/eslint` writes, and `nuxt.config.ts`
+loads that module only outside production — a bare `nuxt prepare` counts as
+production.
+
 ## Unit tests
 
 ```sh

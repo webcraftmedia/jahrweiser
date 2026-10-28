@@ -118,6 +118,8 @@
 </template>
 
 <script setup lang="ts">
+  import type ChangelogModal from './ChangelogModal.vue'
+
   const changelogModal = ref<InstanceType<typeof ChangelogModal>>()
   const runtimeConfig = useRuntimeConfig()
   const { zoomLevel: zoom, chromeZoom } = useZoom()

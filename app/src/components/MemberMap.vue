@@ -288,8 +288,14 @@
    */
   let pinch: { gap: number; x: number; y: number; left: number; top: number } | null = null
 
-  function beginPinch(): void {
+  /** The first two pointers held — only asked while at least two are down. */
+  function heldPair(): [{ x: number; y: number }, { x: number; y: number }] {
     const [first, second] = [...pointers.values()]
+    return [first!, second!]
+  }
+
+  function beginPinch(): void {
+    const [first, second] = heldPair()
     const rect = svg.value!.getBoundingClientRect()
     pinch = {
       gap: Math.hypot(first.x - second.x, first.y - second.y),
@@ -330,7 +336,7 @@
     }
 
     if (pinch && pointers.size >= 2) {
-      const [first, second] = [...pointers.values()]
+      const [first, second] = heldPair()
       const gap = Math.hypot(first.x - second.x, first.y - second.y)
       const x = (first.x + second.x) / 2
       const y = (first.y + second.y) / 2
@@ -578,10 +584,10 @@
   const legend = computed<{ step: number; from: number; to: number | null }[]>(() => [
     ...CLASS_EDGES.map((edge, index) => ({
       step: index + 1,
-      from: index === 0 ? 1 : CLASS_EDGES[index - 1],
+      from: index === 0 ? 1 : CLASS_EDGES[index - 1]!,
       to: edge - 1,
     })),
-    { step: CLASS_EDGES.length + 1, from: CLASS_EDGES[CLASS_EDGES.length - 1], to: null },
+    { step: CLASS_EDGES.length + 1, from: CLASS_EDGES.at(-1)!, to: null },
   ])
 
   /**

@@ -9,7 +9,7 @@ const mock$fetch = vi.fn()
 stubApi(mock$fetch)
 
 function findButtonByText(
-  wrapper: ReturnType<Awaited<ReturnType<typeof mountSuspended>>>,
+  wrapper: Awaited<ReturnType<typeof mountSuspended<typeof Page>>>,
   text: string,
 ) {
   return wrapper.findAll('button[type="button"]').find((b) => b.text().includes(text))!

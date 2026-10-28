@@ -17,6 +17,8 @@ import {
 
 import withNuxt from './.nuxt/eslint.config.mjs'
 
+import type { Linter } from 'eslint'
+
 // it4c ESLint-Basisregeln extrahieren (recommended + custom, kein Plugin/Parser-Overlap mit Nuxt)
 const it4cEslintRules = Object.assign({}, ...it4cEslint.map((c) => c.rules))
 
@@ -29,10 +31,9 @@ const it4cVue3Rules = Object.assign({}, ...it4cVue3.map((c) => c.rules))
 // it4c Import-X-Regeln extrahieren und auf Nuxt-Pluginname `import` umbenennen
 // (Nuxt registriert eslint-plugin-import-x als `import`, it4c als `import-x`)
 const it4cImportRules = Object.fromEntries(
-  Object.entries(Object.assign({}, ...it4cImportX.map((c) => c.rules))).map(([key, value]) => [
-    key.replace('import-x/', 'import/'),
-    value,
-  ]),
+  Object.entries<Linter.RuleEntry>(Object.assign({}, ...it4cImportX.map((c) => c.rules))).map(
+    ([key, value]) => [key.replace('import-x/', 'import/'), value],
+  ),
 )
 
 // it4c reicht mit dem Import-X-Modul auch `flatConfigs.typescript` von

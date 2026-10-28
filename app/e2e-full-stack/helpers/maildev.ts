@@ -98,7 +98,7 @@ export async function waitForMailFor(address: string, timeoutMs = 10_000): Promi
 }
 
 export function extractLoginTokenFromMail(message: MaildevMessage): string {
-  const match = /\/login\/([a-f0-9]+)/.exec(message.html || message.text)
+  const match = /\/login\/([a-f0-9]+)/.exec(message.html || message.text || '')
   if (!match) {
     throw new Error(`No login token found in mail body. Subject: ${message.subject}`)
   }

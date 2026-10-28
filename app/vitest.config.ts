@@ -12,7 +12,6 @@ export default defineVitestConfig({
     execArgv: ['--import', path.resolve(__dirname, 'test/preload.mjs')],
     coverage: {
       reporter: ['text', 'json', 'html'],
-      all: true,
       // `shared/` is measured too: it holds the rules both sides depend on
       // (validation limits, the feedback contract, the calendar palette), so an
       // untested branch there is one neither the client nor the server notices.

@@ -70,9 +70,19 @@ function write(name: string, payload: unknown): void {
   console.log(`written: ${file}\n`)
 }
 
-async function metrics(cdp: CDPSession): Promise<Record<string, number>> {
+const METRICS = ['TaskDuration', 'LayoutDuration', 'RecalcStyleDuration', 'ScriptDuration'] as const
+type Metric = (typeof METRICS)[number]
+
+/** The CDP counters the cost columns are made of; a missing one fails loudly, not as NaN. */
+async function metrics(cdp: CDPSession): Promise<Record<Metric, number>> {
   const { metrics: values } = await cdp.send('Performance.getMetrics')
-  return Object.fromEntries(values.map((metric) => [metric.name, metric.value]))
+  const byName = new Map(values.map((metric) => [metric.name, metric.value]))
+  const read = (name: Metric) => {
+    const value = byName.get(name)
+    if (value === undefined) throw new Error(`CDP reported no ${name}`)
+    return value
+  }
+  return Object.fromEntries(METRICS.map((name) => [name, read(name)])) as Record<Metric, number>
 }
 
 /** The view's width as a share of the country — the map's own staging unit. */
@@ -381,7 +391,9 @@ test.describe('Karte — Performance', () => {
       const handle = await page.addStyleTag({ content: variant.css || '/* as shipped */' })
       await page.waitForTimeout(200)
       rows.push({ ...(await probe(page, cdp, boundaryLog)), variant: variant.name })
-      await handle.evaluate((el) => el.remove())
+      await handle.evaluate((el) => {
+        ;(el as HTMLStyleElement).remove()
+      })
     }
 
     reportVariants(rows)

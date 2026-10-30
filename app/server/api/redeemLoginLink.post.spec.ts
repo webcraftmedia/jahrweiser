@@ -1,9 +1,9 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { MySqlDialect } from 'drizzle-orm/mysql-core'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { firstDbCall, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
+import { nitro } from '../../test/setup-server'
 import { isWithinLoginCooldown, markLoginRequested } from '../helpers/loginCooldown'
 import { sha256 } from '../helpers/sha256'
 
@@ -27,7 +27,7 @@ describe('redeemLoginLink.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetDb()
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
       (v as (d: unknown) => unknown)({ token: 'tok' }),
     )
   })
@@ -129,7 +129,7 @@ describe('redeemLoginLink.post', () => {
       [{ affectedRows: 0 }],
     )
     await expect(fn({})).rejects.toMatchObject({ data: { reason: 'used' } })
-    expect(globalThis.setUserSession).not.toHaveBeenCalled()
+    expect(nitro.setUserSession).not.toHaveBeenCalled()
   })
 
   it('throws 500 when no session id is established', async () => {
@@ -147,7 +147,7 @@ describe('redeemLoginLink.post', () => {
       ],
       [{ affectedRows: 1 }], // consume update
     )
-    vi.mocked(globalThis.getUserSession).mockResolvedValue({})
+    vi.mocked(nitro.getUserSession).mockResolvedValue({})
     await expect(fn({})).rejects.toThrow('Failed to establish session id')
   })
 
@@ -167,7 +167,7 @@ describe('redeemLoginLink.post', () => {
       [{ affectedRows: 1 }], // consume update
       {}, // session insert
     )
-    vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
+    vi.mocked(nitro.getUserSession).mockResolvedValue({ id: 'sess-1' })
     await expect(fn({})).resolves.toStrictEqual({})
   })
 
@@ -190,7 +190,7 @@ describe('redeemLoginLink.post', () => {
       [{ affectedRows: 1 }],
       {},
     )
-    vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
+    vi.mocked(nitro.getUserSession).mockResolvedValue({ id: 'sess-1' })
     await fn({})
     expect(isWithinLoginCooldown('a@x.de', 60_000)).toBe(false)
   })
@@ -214,7 +214,7 @@ describe('redeemLoginLink.post', () => {
       [{ affectedRows: 1 }],
       {},
     )
-    vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
+    vi.mocked(nitro.getUserSession).mockResolvedValue({ id: 'sess-1' })
     await fn({})
     expect(mockRecordEvent).toHaveBeenCalledWith({
       type: 'auth.redeem_ok',
@@ -238,7 +238,7 @@ describe('redeemLoginLink.post', () => {
       ],
       [{ affectedRows: 1 }],
     )
-    vi.mocked(globalThis.getUserSession).mockResolvedValue({})
+    vi.mocked(nitro.getUserSession).mockResolvedValue({})
     await expect(fn({})).rejects.toThrow('Failed to establish session id')
     expect(mockRecordEvent).not.toHaveBeenCalled()
   })

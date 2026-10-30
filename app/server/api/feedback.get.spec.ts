@@ -1,23 +1,24 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+import { nitro } from '../../test/setup-server'
 
 import handler from './feedback.get'
 
 const fn = handler as unknown as (e: unknown) => Promise<{ enabled: boolean }>
 
-const originalConfig = globalThis.useRuntimeConfig
+const originalConfig = nitro.useRuntimeConfig
 
 describe('feedback.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'A', email: 'a@x.de', role: 'user' },
     })
   })
 
   afterEach(() => {
-    globalThis.useRuntimeConfig = originalConfig
+    nitro.useRuntimeConfig = originalConfig
   })
 
   it('reports feedback as available when an address is configured', async () => {
@@ -25,7 +26,7 @@ describe('feedback.get', () => {
   })
 
   it('reports it as unavailable without one', async () => {
-    globalThis.useRuntimeConfig = () => ({
+    nitro.useRuntimeConfig = () => ({
       FEEDBACK_EMAIL: '',
     })
     await expect(fn({})).resolves.toStrictEqual({ enabled: false })
@@ -38,7 +39,7 @@ describe('feedback.get', () => {
   })
 
   it('requires a session', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(fn({})).rejects.toThrow('Unauthorized')
   })
 })

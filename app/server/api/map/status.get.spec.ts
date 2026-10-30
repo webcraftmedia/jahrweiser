@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockDb, queueDbResults, resetDb } from '../../../test/helpers/mock-db'
+import { nitro } from '../../../test/setup-server'
 
 import handler from './status.get'
 
@@ -29,18 +29,18 @@ describe('map/status.get', () => {
     vi.clearAllMocks()
     resetDb()
     mockLoadPlzAreas.mockResolvedValue(GEOMETRY)
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'A', email: 'a@x.de', role: 'user' },
     })
   })
 
   it('requires a session', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(fn({})).rejects.toThrow('Unauthorized')
   })
 
   it('rejects when the session has no uid', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({ user: { email: 'a@x.de' } })
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({ user: { email: 'a@x.de' } })
     await expect(fn({})).rejects.toThrow('No user context')
   })
 

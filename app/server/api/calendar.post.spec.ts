@@ -1,5 +1,4 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import {
@@ -17,6 +16,7 @@ import {
   RECURRING_EVENT_WITH_OVERRIDE,
 } from '../../test/fixtures/ical-data'
 import { createMockVCard } from '../../test/fixtures/vcard-data'
+import { nitro } from '../../test/setup-server'
 
 import handler from './calendar.post'
 
@@ -44,10 +44,10 @@ describe('calendar.post', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-04-01T12:00:00Z'))
     vi.clearAllMocks()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { name: 'Test', email: 'test@example.com', role: 'user' },
     })
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         startDate: '2025-03-01T00:00:00Z',
@@ -69,7 +69,7 @@ describe('calendar.post', () => {
   })
 
   it('returns empty array when startDate is too far in the past', async () => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         startDate: '2024-01-01T00:00:00Z',
@@ -84,7 +84,7 @@ describe('calendar.post', () => {
 
   it('allows requests within the permitted past range', async () => {
     // With fake time at 2025-04-01, previous month is March, minus 7 days = Feb 22
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         startDate: '2025-02-23T00:00:00Z',
@@ -219,7 +219,7 @@ describe('calendar.post', () => {
   })
 
   it('stops expanding recurring events past endDate', async () => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         startDate: '2025-03-01T00:00:00Z',
@@ -280,7 +280,7 @@ describe('calendar.post', () => {
   })
 
   it('skips recurring occurrences before startDate', async () => {
-    vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_event, validator) => {
+    vi.mocked(nitro.readValidatedBody).mockImplementation(async (_event, validator) => {
       return (validator as (data: unknown) => unknown)({
         calendar: 'Work',
         startDate: '2025-03-05T00:00:00Z',

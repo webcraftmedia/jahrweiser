@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
+import { nitro } from '../../test/setup-server'
 
 import handler from './telegram-channels.get'
 
@@ -32,13 +32,13 @@ describe('telegram-channels.get', () => {
   beforeEach(() => {
     resetDb()
     vi.clearAllMocks()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'User', email: 'user@example.com', role: 'user' },
     })
   })
 
   it('requires a session — an invite link is the permission itself', async () => {
-    vi.mocked(globalThis.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
+    vi.mocked(nitro.requireUserSession).mockRejectedValue(new Error('Unauthorized'))
     await expect(handlerFn({})).rejects.toThrow('Unauthorized')
   })
 

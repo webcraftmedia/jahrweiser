@@ -1,6 +1,7 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { nitro } from '../../test/setup-server'
 
 import {
   LOGIN_CODE_COOKIE,
@@ -36,7 +37,7 @@ describe('loginCode', () => {
     const second = bindLoginCode(event as never, DEV)
     expect(first).toMatch(/^[0-9a-f]{64}$/)
     expect(second).not.toBe(first)
-    expect(globalThis.setCookie).toHaveBeenCalledWith(event, LOGIN_CODE_COOKIE, first, {
+    expect(nitro.setCookie).toHaveBeenCalledWith(event, LOGIN_CODE_COOKIE, first, {
       httpOnly: true,
       secure: false,
       sameSite: 'strict',
@@ -47,18 +48,18 @@ describe('loginCode', () => {
 
   it('marks the cookie secure where the app is served over https', () => {
     bindLoginCode({} as never, { CLIENT_URI: 'https://jahrweiser.example' })
-    expect(vi.mocked(globalThis.setCookie).mock.calls[0]![3]).toMatchObject({ secure: true })
+    expect(vi.mocked(nitro.setCookie).mock.calls[0]![3]).toMatchObject({ secure: true })
   })
 
   it('reads the nonce back, treating an empty cookie as none', () => {
-    vi.mocked(globalThis.getCookie).mockReturnValueOnce('n1').mockReturnValueOnce('')
+    vi.mocked(nitro.getCookie).mockReturnValueOnce('n1').mockReturnValueOnce('')
     expect(readLoginCodeNonce({} as never)).toBe('n1')
     expect(readLoginCodeNonce({} as never)).toBeUndefined()
   })
 
   it('clears the cookie on the same path it was set on', () => {
     clearLoginCodeBinding({} as never)
-    expect(globalThis.deleteCookie).toHaveBeenCalledWith({}, LOGIN_CODE_COOKIE, {
+    expect(nitro.deleteCookie).toHaveBeenCalledWith({}, LOGIN_CODE_COOKIE, {
       path: '/api/redeemLoginCode',
     })
   })

@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { createMockVCard } from '../../../test/fixtures/vcard-data'
+import { nitro } from '../../../test/setup-server'
 
 import handler from './profile.get'
 
@@ -17,7 +17,7 @@ const fn = handler as unknown as (e: unknown) => Promise<{ firstName: string; la
 describe('profile.get', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: 'Anna Mustermann', email: 'anna@example.com', role: 'user' },
     })
   })
@@ -44,7 +44,7 @@ describe('profile.get', () => {
   })
 
   it('handles a session without a name', async () => {
-    vi.mocked(globalThis.requireUserSession).mockResolvedValue({
+    vi.mocked(nitro.requireUserSession).mockResolvedValue({
       user: { uid: 'u1', name: null, email: 'x@x.de', role: 'user' },
     })
     mockFindUserByEmail.mockResolvedValue(false)

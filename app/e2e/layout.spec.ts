@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test'
 
 import { loginAs, DEFAULT_USER, navigateClientSide, waitForHydration } from './helpers/api-mocks'
 
+import type { ApiResponse } from './helpers/api-mocks'
+
 /**
  * Enough issues that /blaettchen is taller than any viewport — the archive is
  * the longest page in the app and the one the rail used to scroll away on.
@@ -13,7 +15,7 @@ const MANY_ISSUES = {
     file: `${40 - i}_2026-05-01.pdf`,
   })),
   contact: 'redaktion@example.com',
-}
+} satisfies ApiResponse<'/api/blaettchen', 'get'>
 
 test.describe('Layout: desktop icon rail', () => {
   test('stays put while a long page scrolls', async ({ page }) => {
@@ -68,7 +70,11 @@ test.describe('Layout: mobile menu', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(
-          Array.from({ length: 40 }, (_, i) => ({ name: `Kalender ${i + 1}`, color: '#3b82f6' })),
+          Array.from({ length: 40 }, (_, i) => ({
+            key: `kalender-${i + 1}`,
+            name: `Kalender ${i + 1}`,
+            color: '#3b82f6',
+          })) satisfies ApiResponse<'/api/calendars', 'get'>,
         ),
       }),
     )

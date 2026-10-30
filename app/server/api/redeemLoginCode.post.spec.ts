@@ -1,8 +1,8 @@
 // @vitest-environment node
-import '../../test/setup-server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { dbCalls, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
+import { nitro } from '../../test/setup-server'
 import { codeHashOf } from '../helpers/loginCode'
 
 import handler from './redeemLoginCode.post'
@@ -43,7 +43,7 @@ const user = {
 }
 
 function withBody(code: string) {
-  vi.mocked(globalThis.readValidatedBody).mockImplementation(async (_e, v) =>
+  vi.mocked(nitro.readValidatedBody).mockImplementation(async (_e, v) =>
     (v as (d: unknown) => unknown)({ code }),
   )
 }
@@ -53,7 +53,7 @@ describe('redeemLoginCode.post', () => {
     vi.clearAllMocks()
     resetDb()
     withBody(CODE)
-    vi.mocked(globalThis.getCookie).mockReturnValue(NONCE)
+    vi.mocked(nitro.getCookie).mockReturnValue(NONCE)
   })
 
   it('rejects anything but six digits before touching the database', async () => {
@@ -65,7 +65,7 @@ describe('redeemLoginCode.post', () => {
   })
 
   it('refuses a browser that never asked for a code', async () => {
-    vi.mocked(globalThis.getCookie).mockReturnValue(undefined)
+    vi.mocked(nitro.getCookie).mockReturnValue(undefined)
     await expect(fn({})).rejects.toMatchObject({ data: { reason: 'unknown' } })
     expect(mockRecordEvent).toHaveBeenCalledWith({
       type: 'auth.redeem_unknown',
@@ -120,7 +120,7 @@ describe('redeemLoginCode.post', () => {
     expect(mockRecordEvent).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'auth.redeem_wrong', userUid: 'u1' }),
     )
-    expect(globalThis.setUserSession).not.toHaveBeenCalled()
+    expect(nitro.setUserSession).not.toHaveBeenCalled()
   })
 
   it('refuses a blocked account even with the right code', async () => {
@@ -142,7 +142,7 @@ describe('redeemLoginCode.post', () => {
       [{ affectedRows: 0 }],
     )
     await expect(fn({})).rejects.toMatchObject({ data: { reason: 'used' } })
-    expect(globalThis.setUserSession).not.toHaveBeenCalled()
+    expect(nitro.setUserSession).not.toHaveBeenCalled()
   })
 
   it('logs in, drops the binding and records the success', async () => {
@@ -154,10 +154,10 @@ describe('redeemLoginCode.post', () => {
       [{ affectedRows: 1 }],
       {}, // session insert
     )
-    vi.mocked(globalThis.getUserSession).mockResolvedValue({ id: 'sess-1' })
+    vi.mocked(nitro.getUserSession).mockResolvedValue({ id: 'sess-1' })
     await expect(fn({})).resolves.toStrictEqual({})
-    expect(globalThis.setUserSession).toHaveBeenCalledTimes(1)
-    expect(globalThis.deleteCookie).toHaveBeenCalledTimes(1)
+    expect(nitro.setUserSession).toHaveBeenCalledTimes(1)
+    expect(nitro.deleteCookie).toHaveBeenCalledTimes(1)
     expect(mockRecordEvent).toHaveBeenCalledWith({
       type: 'auth.redeem_ok',
       userUid: 'u1',

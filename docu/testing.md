@@ -8,6 +8,19 @@ Three layers of tests:
 | E2E (mock) | `npm run test:e2e` | UI flows against mocked API responses (no backend needed) |
 | E2E (full-stack) | `npm run test:e2e:full-stack` | Real app hitting real Baikal + MariaDB + Maildev |
 
+## Typecheck
+
+`npm run test:lint:typecheck` runs `vue-tsc -b --noEmit`. The `-b` is load-bearing:
+`app/tsconfig.json` is a solution config (`"files": []` plus `references` to the
+generated `.nuxt/tsconfig.{app,server,shared,node}.json`), and without build mode
+tsc does not follow references — it checks no file at all and exits 0. That is
+how a year of type errors piled up unseen.
+
+Prepare with `NODE_ENV=development` (CI does): `eslint.config.ts` imports
+`.nuxt/eslint.config.mjs`, which only `@nuxt/eslint` writes, and `nuxt.config.ts`
+loads that module only outside production — a bare `nuxt prepare` counts as
+production.
+
 ## Unit tests
 
 ```sh
@@ -67,6 +80,22 @@ DAV_URL=http://localhost:8088/dav.php \
 # 5. In another shell: run the tests
 SYNC_SECRET=test-sync-secret npm run test:e2e:full-stack
 ```
+
+### Dev server or production build
+
+`E2E_SERVER` picks what Playwright starts:
+
+- `dev` (default) — `nuxt dev`. Quick to restart while working on a spec.
+- `prod` — `nuxt build`, then `node .output/server/index.mjs`, the way
+  `deploy.sh` runs the app. CI uses this, so the suite also covers what only
+  exists in the built bundle. Locally: `E2E_SERVER=prod npm run test:e2e:full-stack`.
+
+In `prod` the suite's settings (`LOGIN_RATE_LIMIT_MS=0`, `BLAETTCHEN_DIR`, …)
+are passed to the *build*: `nuxt.config.ts` reads `process.env` into
+`runtimeConfig`, and the build bakes that into `.output`. At runtime only
+`NUXT_*` variables override it. `NUXT_SESSION_PASSWORD` is passed at runtime,
+because `node` does not read `.env` and `nuxt dev` is the only mode in which
+nuxt-auth-utils makes one up.
 
 The tests call `cli:seed:reset` and `cli:seed:demo` in `beforeAll` so they're
 self-provisioning. They wipe state between runs.

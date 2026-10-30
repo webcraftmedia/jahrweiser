@@ -30,6 +30,13 @@ ein Release riskant macht, nicht nach Fachbereichen:
 | `release` | release-please |
 | `other` | der ehrliche Rest |
 
+Jeder Typ, den das PR-Linting zulässt, landet im Changelog und erweitert den
+Release-PR — auch `build(deps)` von Dependabot, `chore`, `ci` und `test`.
+release-please blendet diese Typen per Default aus; `changelog-sections` in
+`release-please-config.json` schaltet sie sichtbar. Releases heißen nach dem
+`package-name` der Config: Release-PR `chore(release): release jahrweiser <version>`,
+Tag `jahrweiser-v<version>`.
+
 ### Nutzersichtbare Texte
 
 Sie liegen vollständig in `app/locales/de.json` und `app/server/emails/_locales/de.json`,
@@ -179,3 +186,10 @@ For the github webhook configure the following:
 | SSL verification                                     | Enable SSL verification       |
 | Which events would you like to trigger this webhook? | Send me everything.           |
 | Active                                               | [x]                           |
+
+## Lizenz
+
+[Apache License 2.0](LICENSE), Copyright Ulf Gebhardt — siehe [NOTICE](NOTICE).
+
+Ausnahme: `admin/` ist eine angepasste Kopie von InfCloud und steht unter der
+[GNU AGPL 3.0](admin/license.txt).

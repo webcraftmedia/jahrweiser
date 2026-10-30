@@ -3,6 +3,8 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 import middleware from './authenticated'
 
+import type { RouteLocationNormalized } from 'vue-router'
+
 const mockLoggedIn = ref(false)
 mockNuxtImport('useUserSession', () => () => ({
   loggedIn: mockLoggedIn,
@@ -20,12 +22,15 @@ describe('authenticated middleware', () => {
 
   it('allows authenticated users', () => {
     mockLoggedIn.value = true
-    middleware({ path: '/2025/03' } as unknown, {} as unknown)
+    middleware({ path: '/2025/03' } as RouteLocationNormalized, {} as RouteLocationNormalized)
     expect(mockNavigateTo).not.toHaveBeenCalled()
   })
 
   it('redirects to /login with redirect query for non-root paths', () => {
-    middleware({ path: '/2025/03/event/abc' } as unknown, {} as unknown)
+    middleware(
+      { path: '/2025/03/event/abc' } as RouteLocationNormalized,
+      {} as RouteLocationNormalized,
+    )
     expect(mockNavigateTo).toHaveBeenCalledWith({
       path: '/login',
       query: { redirect: '/2025/03/event/abc' },
@@ -33,7 +38,7 @@ describe('authenticated middleware', () => {
   })
 
   it('redirects to /login without redirect query for root path', () => {
-    middleware({ path: '/' } as unknown, {} as unknown)
+    middleware({ path: '/' } as RouteLocationNormalized, {} as RouteLocationNormalized)
     expect(mockNavigateTo).toHaveBeenCalledWith({
       path: '/login',
       query: undefined,

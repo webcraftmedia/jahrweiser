@@ -1,11 +1,15 @@
 // @vitest-environment node
 import '../../test/setup-server'
+import { MySqlDialect } from 'drizzle-orm/mysql-core'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
+import { firstDbCall, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
 import { isWithinLoginCooldown, markLoginRequested } from '../helpers/loginCooldown'
+import { sha256 } from '../helpers/sha256'
 
 import handler from './redeemLoginLink.post'
+
+import type { SQL } from 'drizzle-orm'
 
 vi.mock('../db', () => ({ useDb: () => mockDb }))
 
@@ -32,6 +36,13 @@ describe('redeemLoginLink.post', () => {
   // login page turns into a sentence somebody can act on. Asserting it here is
   // the point — collapsing all four into one message is how a mail scanner ate
   // a member's links for three months without anyone being able to tell.
+  it('looks the row up by the hash of the token, not the token', async () => {
+    queueDbResults([])
+    await expect(fn({})).rejects.toThrow('Bad credentials')
+    const where = firstDbCall('where')![0] as SQL
+    expect(new MySqlDialect().sqlToQuery(where).params).toStrictEqual([sha256('tok')])
+  })
+
   it('rejects an unknown token', async () => {
     queueDbResults([])
     await expect(fn({})).rejects.toThrow('Bad credentials')

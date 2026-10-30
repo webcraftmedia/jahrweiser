@@ -20,11 +20,17 @@ vi.mock('~~/server/helpers/events', () => ({
 const fn = handler as unknown as (e: unknown) => Promise<unknown>
 const originalConfig = globalThis.useRuntimeConfig
 
+const mockPruneTokens = vi.fn()
+vi.mock('~~/server/helpers/loginLink', () => ({
+  pruneLoginTokens: (...a: unknown[]) => mockPruneTokens(...a),
+}))
+
 describe('sync-now.post', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     globalThis.useRuntimeConfig = originalConfig
     mockPrune.mockResolvedValue({ deleted: 0, anonymised: 0 })
+    mockPruneTokens.mockResolvedValue(0)
   })
 
   it('returns 503 when no sync secret is configured', async () => {
@@ -67,6 +73,29 @@ describe('sync-now.post', () => {
     await expect(fn({})).resolves.toStrictEqual({ added: 2, updated: 0, deleted: 0 })
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('Failed to record daily metrics'),
+      expect.anything(),
+    )
+    consoleSpy.mockRestore()
+  })
+
+  it('forgets dead login tokens and says how many', async () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.mocked(globalThis.getHeader).mockReturnValue('Bearer test-sync-secret')
+    mockSync.mockResolvedValue({ added: 0, updated: 0, deleted: 0 })
+    mockPruneTokens.mockResolvedValue(4)
+    await fn({})
+    expect(consoleSpy).toHaveBeenCalledWith('[login] pruned 4 dead login token(s)')
+    consoleSpy.mockRestore()
+  })
+
+  it('still reports the sync as successful when forgetting tokens fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.mocked(globalThis.getHeader).mockReturnValue('Bearer test-sync-secret')
+    mockSync.mockResolvedValue({ added: 3, updated: 0, deleted: 0 })
+    mockPruneTokens.mockRejectedValue(new Error('table missing'))
+    await expect(fn({})).resolves.toStrictEqual({ added: 3, updated: 0, deleted: 0 })
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to prune login tokens'),
       expect.anything(),
     )
     consoleSpy.mockRestore()

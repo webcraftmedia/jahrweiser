@@ -6,7 +6,11 @@ import { users } from './users'
 export const loginTokens = mysqlTable(
   'login_tokens',
   {
-    token: varchar('token', { length: 64 }).primaryKey(),
+    // SHA-256 of the token in the mail, never the token itself: whoever can read
+    // this table must not be able to log in as somebody with an open link. No
+    // salt or slow hash, those defend guessable secrets and this is 32 random
+    // bytes.
+    tokenHash: varchar('token_hash', { length: 64 }).primaryKey(),
     userUid: varchar('user_uid', { length: 255 })
       .notNull()
       .references(() => users.uid, { onDelete: 'cascade' }),

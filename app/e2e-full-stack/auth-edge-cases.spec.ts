@@ -99,7 +99,9 @@ test.describe('token expiry', () => {
     const token = extractLoginTokenFromMail(mail)
 
     // Force-expire the token by writing a past expires_at
-    mariadb(`UPDATE login_tokens SET expires_at = '2000-01-01 00:00:00' WHERE token = '${token}'`)
+    mariadb(
+      `UPDATE login_tokens SET expires_at = '2000-01-01 00:00:00' WHERE token_hash = SHA2('${token}', 256)`,
+    )
 
     const resp = await request.post('/api/redeemLoginLink', { data: { token } })
     expect(resp.status()).toBe(401)

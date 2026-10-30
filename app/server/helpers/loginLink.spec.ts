@@ -1,11 +1,15 @@
 // @vitest-environment node
 import '../../test/setup-server'
+import { MySqlDialect } from 'drizzle-orm/mysql-core'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { dbCalls, firstDbCall, mockDb, queueDbResults, resetDb } from '../../test/helpers/mock-db'
 
 import { codeHashOf, codeKeyOf } from './loginCode'
-import { sendLoginLink } from './loginLink'
+import { pruneLoginTokens, sendLoginLink } from './loginLink'
+import { sha256 } from './sha256'
+
+import type { SQL } from 'drizzle-orm'
 
 const mockSend = vi.fn()
 vi.mock('../db', () => ({ useDb: () => mockDb }))
@@ -89,6 +93,20 @@ describe('sendLoginLink', () => {
     expect(mockSend).toHaveBeenCalledTimes(2)
   })
 
+  it('stores only the hash of the token it mails', async () => {
+    // Reading the table must not be enough to log in as somebody with an open
+    // link, so the mailed token and the stored value have to differ.
+    queueDbResults({})
+    mockSend.mockResolvedValue(undefined)
+    await sendLoginLink(config, user)
+    const { tokenHash } = firstDbCall('values')![0] as { tokenHash: string }
+    const url = mockSend.mock.calls[0]![0].locals.authURL as URL
+    const mailed = url.pathname.replace('/login/', '')
+    expect(mailed).toMatch(/^[0-9a-f]{64}$/)
+    expect(tokenHash).toBe(sha256(mailed))
+    expect(tokenHash).not.toBe(mailed)
+  })
+
   it('drops the token of a mail that never went out', async () => {
     // A live credential nobody received, which would also keep the durable
     // cooldown in requestLoginLink running for a mail that does not exist.
@@ -126,5 +144,19 @@ describe('sendLoginLink', () => {
     mockSend.mockRejectedValue(new Error('smtp down'))
     await expect(sendLoginLink(config, user)).rejects.toThrow('Failed to send login email')
     expect(mockRecordEvent).toHaveBeenCalledWith({ type: 'auth.mail_failed', userUid: 'u1' })
+  })
+})
+
+describe('pruneLoginTokens', () => {
+  beforeEach(() => {
+    resetDb()
+  })
+
+  it('deletes rows past the retention and reports how many', async () => {
+    queueDbResults([{ affectedRows: 3 }])
+    const now = Date.UTC(2026, 9, 30)
+    await expect(pruneLoginTokens(now)).resolves.toBe(3)
+    const where = firstDbCall('where')![0] as SQL
+    expect(new MySqlDialect().sqlToQuery(where).params).toStrictEqual(['2026-09-30 00:00:00.000'])
   })
 })

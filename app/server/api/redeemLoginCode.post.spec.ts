@@ -22,7 +22,7 @@ const future = new Date(Date.now() + 60_000)
 
 function tokenRow(overrides: Record<string, unknown> = {}) {
   return {
-    token: 'tok',
+    tokenHash: 'tok-hash',
     userUid: 'u1',
     requestedAt: new Date(),
     expiresAt: future,

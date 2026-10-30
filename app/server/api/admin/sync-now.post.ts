@@ -1,4 +1,5 @@
 import { pruneUserEvents } from '~~/server/helpers/events'
+import { pruneLoginTokens } from '~~/server/helpers/loginLink'
 import { recordDailyMetrics } from '~~/server/helpers/metrics'
 import { syncDavToSidecar } from '~~/server/helpers/sync'
 
@@ -59,6 +60,14 @@ export default defineEventHandler(async (event) => {
     // eslint-disable-next-line no-catch-all/no-catch-all -- Aufräumen ist Beiwerk; ein Fehler darf den Sync nicht als gescheitert melden
   } catch (error) {
     console.error('Failed to prune user events:', error)
+  }
+
+  try {
+    const pruned = await pruneLoginTokens()
+    if (pruned > 0) console.warn(`[login] pruned ${pruned} dead login token(s)`)
+    // eslint-disable-next-line no-catch-all/no-catch-all -- Aufräumen ist Beiwerk; ein Fehler darf den Sync nicht als gescheitert melden
+  } catch (error) {
+    console.error('Failed to prune login tokens:', error)
   }
 
   // The cron still sees a failed sync as a failed sync. `syncDavToSidecar`

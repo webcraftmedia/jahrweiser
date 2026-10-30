@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 
-import { eq } from 'drizzle-orm'
+import { eq, lt } from 'drizzle-orm'
 
 import { firstNameOf } from '../../shared/userName'
 import { useDb } from '../db'
@@ -10,6 +10,7 @@ import { loginTokens } from '../db/schema'
 import { defaultParams, emailRenderer } from './email'
 import { recordEvent } from './events'
 import { LOGIN_CODE_TTL_MS, codeHashOf, codeKeyOf, generateLoginCode } from './loginCode'
+import { sha256 } from './sha256'
 
 /**
  * How long a magic link stays redeemable.
@@ -25,6 +26,15 @@ import { LOGIN_CODE_TTL_MS, codeHashOf, codeKeyOf, generateLoginCode } from './l
  * start covering "somebody else opens that mailbox tomorrow".
  */
 export const LOGIN_TOKEN_TTL_MS = 6 * 60 * 60 * 1000
+
+/**
+ * How long a row outlives its link. A dead row is harmless, but it is the only
+ * thing that tells "expired" from "never existed" and the trail of a support
+ * call — see docu/login-troubleshooting.md.
+ */
+export const LOGIN_TOKEN_RETENTION_DAYS = 30
+
+const DAY_MS = 24 * 60 * 60 * 1000
 
 interface LoginLinkUser {
   uid: string
@@ -48,10 +58,11 @@ export async function sendLoginLink(
 ): Promise<void> {
   const db = useDb()
   const token = randomBytes(32).toString('hex')
+  const tokenHash = sha256(token)
   const expiresAt = new Date(Date.now() + LOGIN_TOKEN_TTL_MS)
   const code = codeNonce ? generateLoginCode() : undefined
   await db.insert(loginTokens).values({
-    token,
+    tokenHash,
     userUid: user.uid,
     expiresAt,
     ...(codeNonce && code
@@ -95,9 +106,16 @@ export async function sendLoginLink(
       // Never delivered, so never usable: drop it rather than leave a live
       // credential behind that also keeps the durable cooldown in
       // requestLoginLink running for a mail nobody got.
-      await db.delete(loginTokens).where(eq(loginTokens.token, token))
+      await db.delete(loginTokens).where(eq(loginTokens.tokenHash, tokenHash))
       throw createError({ statusCode: 500, statusMessage: 'Failed to send login email' })
     }
   }
   await recordEvent({ type: 'auth.mail_sent', userUid: user.uid })
+}
+
+/** Forget rows past their retention. Run by the same cron as the sync. */
+export async function pruneLoginTokens(now: number = Date.now()): Promise<number> {
+  const deleteBefore = new Date(now - LOGIN_TOKEN_RETENTION_DAYS * DAY_MS)
+  const deleted = await useDb().delete(loginTokens).where(lt(loginTokens.expiresAt, deleteBefore))
+  return deleted[0].affectedRows
 }

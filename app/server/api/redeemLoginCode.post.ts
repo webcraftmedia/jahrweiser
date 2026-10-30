@@ -110,7 +110,7 @@ export default defineEventHandler(async (event) => {
       .set({ codeAttempts: sql`${loginTokens.codeAttempts} + 1` })
       .where(
         and(
-          eq(loginTokens.token, row.token),
+          eq(loginTokens.tokenHash, row.tokenHash),
           lt(loginTokens.codeAttempts, LOGIN_CODE_MAX_ATTEMPTS),
         ),
       ),
@@ -137,7 +137,7 @@ export default defineEventHandler(async (event) => {
     db
       .update(loginTokens)
       .set({ consumedAt: new Date() })
-      .where(and(eq(loginTokens.token, row.token), isNull(loginTokens.consumedAt))),
+      .where(and(eq(loginTokens.tokenHash, row.tokenHash), isNull(loginTokens.consumedAt))),
   )
   if (consumed[0].affectedRows === 0) throw await refuse('used', row.userUid)
 

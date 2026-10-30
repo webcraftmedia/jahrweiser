@@ -1,4 +1,6 @@
-import { createHash, randomBytes, randomInt } from 'node:crypto'
+import { randomBytes, randomInt } from 'node:crypto'
+
+import { sha256 } from './sha256'
 
 /**
  * The login code: six digits in the login mail, next to the link, for every
@@ -38,10 +40,6 @@ const COOKIE_PATH = '/api/redeemLoginCode'
 
 /** The request, typed without importing h3 (see server/helpers/events.ts). */
 type RequestEvent = Parameters<typeof getCookie>[0]
-
-function sha256(value: string): string {
-  return createHash('sha256').update(value).digest('hex')
-}
 
 /** What the row stores to find the code again from the cookie alone. */
 export function codeKeyOf(nonce: string): string {

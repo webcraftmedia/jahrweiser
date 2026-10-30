@@ -85,6 +85,13 @@
       "when": 1791137369009,
       "tag": "0011_login_code",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1791137370009,
+      "tag": "0012_hash_login_tokens",
+      "breakpoints": true
     }
   ]
 }

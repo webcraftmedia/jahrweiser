@@ -6,6 +6,7 @@ import { loginTokens, users } from '../db/schema'
 import { withDbTimeout } from '../helpers/dbTimeout'
 import { recordEvent } from '../helpers/events'
 import { startUserSession } from '../helpers/loginSession'
+import { sha256 } from '../helpers/sha256'
 
 import type { UserEventType } from '../helpers/events'
 
@@ -47,6 +48,7 @@ const REDEEM_EVENT: Record<RedeemFailure, UserEventType> = {
 
 export default defineEventHandler(async (event) => {
   const { token } = await readValidatedBody(event, bodySchema.parse)
+  const tokenHash = sha256(token)
   const db = useDb()
 
   /**
@@ -66,7 +68,9 @@ export default defineEventHandler(async (event) => {
   // Consumed rows are selected too, so "already used" stays distinguishable
   // from "never existed".
   const tokenRow = (
-    await withDbTimeout(db.select().from(loginTokens).where(eq(loginTokens.token, token)).limit(1))
+    await withDbTimeout(
+      db.select().from(loginTokens).where(eq(loginTokens.tokenHash, tokenHash)).limit(1),
+    )
   )[0]
 
   if (!tokenRow) throw await refuse('unknown')
@@ -87,7 +91,7 @@ export default defineEventHandler(async (event) => {
     db
       .update(loginTokens)
       .set({ consumedAt: new Date() })
-      .where(and(eq(loginTokens.token, token), isNull(loginTokens.consumedAt))),
+      .where(and(eq(loginTokens.tokenHash, tokenHash), isNull(loginTokens.consumedAt))),
   )
   if (consumed[0].affectedRows === 0) throw await refuse('used', tokenRow.userUid)
 

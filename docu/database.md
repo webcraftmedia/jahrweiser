@@ -15,7 +15,7 @@ the app writes automatically.
 | postal code (`ADR`)      | DAV + mirror    | DAV authoritative; mirrored so the member map can `GROUP BY` (see `docu/karte.md`) |
 | `role`                   | MariaDB         | Set via `cli:admin:grant`, never via DAV  |
 | admin tags (categories)  | DAV + mirror    | DAV authoritative; sync overwrites sidecar |
-| login tokens             | MariaDB         | One-time magic links                      |
+| login tokens             | MariaDB         | One-time magic links, stored as SHA-256   |
 | sessions                 | MariaDB         | DB-backed, revocable                      |
 | sync state               | MariaDB         | Per-collection sync token + lock          |
 | registration links       | MariaDB         | Admin-minted self-signup links            |

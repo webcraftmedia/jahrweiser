@@ -56,7 +56,7 @@
     "@schedule-x/events-service": "4.9.1",
     "@schedule-x/theme-default": "4.9.1",
     "@schedule-x/vue": "4.1.0",
-    "@vite-pwa/nuxt": "^1.1.1",
+    "@vite-pwa/nuxt": "^2.0.2",
     "cross-env": "^10.1.0",
     "drizzle-orm": "^0.45.4",
     "email-templates": "^13.0.1",
